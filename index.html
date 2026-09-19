@@ -505,7 +505,7 @@
       background: radial-gradient(circle at 35% 35%, #34c759, #1b5e20 90%);
     }
 
-    .push-btn-inner:active, .push-btn-inner.pressed {
+    .push-btn-inner:active, .push-btn-inner.pressed, .push-btn-inner.latched {
       transform: scale(0.92);
       box-shadow: 0 1px 2px rgba(0,0,0,0.8), inset 0 3px 6px rgba(0,0,0,0.7);
       filter: brightness(0.85);
@@ -637,7 +637,7 @@
     .tick-3-mid   { top: 3px;  left: 50%; }
     .tick-3-right { top: 22px; left: 82px; }
 
-    /* ATP후진 커버형 전용 명판 틱 라벨 */
+    /* ATP후진 커버형 전용 명판 틱 라벨 (커버 바로 위 및 우측에 밀착) */
     .atp-cover-ticks {
       position: absolute;
       top: 0;
@@ -646,12 +646,12 @@
       height: 100%;
       pointer-events: none;
       font-size: 10px;
-      font-weight: 800;
+      font-weight: 900;
       color: #f8fafc;
       text-shadow: 0 1px 3px #000;
     }
-    .atp-tick-off { position: absolute; top: 0px; left: 14px; }
-    .atp-tick-on  { position: absolute; top: 20px; right: -6px; }
+    .atp-tick-off { position: absolute; top: -16px; left: 2px; }
+    .atp-tick-on  { position: absolute; top: 22px; right: -24px; }
 
     /* 실물 사진 기반: 공기질개선장치 사각 은색 명판 */
     .air-clean-plate {
@@ -756,9 +756,10 @@
     .rotary-unit.main-compact .tick-2-right { top: 12px; left: 60px; font-size: 9px; }
 
     /* 실물 사진 100% 반영: 와이퍼 5단계 사각 셀렉터 유닛 (AUTO, OFF, INT, SLOW, FAST) */
+    /* 실물 사진 100% 반영: 와이퍼 5단계 사각 셀렉터 유닛 (AUTO, OFF, INT, SLOW, FAST) */
     .wiper-unit-box {
-      width: 86px;
-      height: 94px;
+      width: 90px;
+      height: 96px;
       background: #191c22;
       border: 2px solid #333a46;
       border-radius: 6px;
@@ -773,47 +774,47 @@
       position: absolute;
       top: 5px;
       left: 7px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       color: #cbd5e1;
       line-height: 1;
       font-family: serif, 'Times New Roman', sans-serif;
     }
 
-    /* 5단계 텍스트 라벨 */
+    /* 5단계 텍스트 라벨 (원 밖으로 완전 분리) */
     .wiper-lbl-off {
       position: absolute;
       top: 6px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 9px;
+      font-size: 8.5px;
       font-weight: 900;
       color: #e2e8f0;
       text-shadow: 0 1px 2px #000;
     }
     .wiper-lbl-auto {
       position: absolute;
-      top: 25px;
-      left: 5px;
-      font-size: 8.5px;
+      top: 29px;
+      left: 4px;
+      font-size: 8px;
       font-weight: 900;
       color: #94a3b8;
       text-shadow: 0 1px 2px #000;
     }
     .wiper-lbl-int {
       position: absolute;
-      top: 27px;
-      right: 6px;
-      font-size: 8.5px;
+      top: 29px;
+      right: 5px;
+      font-size: 8px;
       font-weight: 900;
       color: #94a3b8;
       text-shadow: 0 1px 2px #000;
     }
     .wiper-lbl-slow {
       position: absolute;
-      top: 52px;
-      right: 5px;
-      font-size: 8.5px;
+      top: 55px;
+      right: 4px;
+      font-size: 8px;
       font-weight: 900;
       color: #94a3b8;
       text-shadow: 0 1px 2px #000;
@@ -823,7 +824,7 @@
       bottom: 5px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 9px;
+      font-size: 8.5px;
       font-weight: 900;
       color: #e2e8f0;
       text-shadow: 0 1px 2px #000;
@@ -832,24 +833,24 @@
     /* 실물 틱 도트 */
     .wiper-dot {
       position: absolute;
-      width: 2.5px;
-      height: 2.5px;
+      width: 2px;
+      height: 2px;
       background: #94a3b8;
       border-radius: 50%;
       pointer-events: none;
     }
-    .wiper-dot-auto { top: 38px; left: 24px; }
-    .wiper-dot-int  { top: 39px; right: 23px; }
-    .wiper-dot-slow { top: 56px; right: 26px; }
+    .wiper-dot-auto { top: 38px; left: 21px; }
+    .wiper-dot-int  { top: 38px; right: 21px; }
+    .wiper-dot-slow { top: 57px; right: 23px; }
 
-    /* 원형 베이스 플레이트 */
+    /* 원형 베이스 플레이트 (슬림화하여 글자와 겹치지 않음) */
     .wiper-dial-plate {
       position: absolute;
       top: 50px;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 48px;
-      height: 48px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       border: 2px solid #3c4452;
       background: radial-gradient(circle, #252b35 30%, #15181e 100%);
@@ -1186,9 +1187,9 @@
 
       <!-- 패널 전환 뷰 스위처 (OP1 ~ OP5) -->
       <div class="panel-view-switcher">
-        <button id="view-op1" class="panel-toggle-btn active" onclick="switchPanelView('OP1')">OP1</button>
+        <button id="view-op1" class="panel-toggle-btn" onclick="switchPanelView('OP1')">OP1</button>
         <button id="view-op2" class="panel-toggle-btn" onclick="switchPanelView('OP2')">OP2</button>
-        <button id="view-op3" class="panel-toggle-btn" onclick="switchPanelView('OP3')">OP3</button>
+        <button id="view-op3" class="panel-toggle-btn active" onclick="switchPanelView('OP3')">OP3</button>
         <button id="view-op4" class="panel-toggle-btn" onclick="switchPanelView('OP4')">OP4</button>
         <button id="view-op5" class="panel-toggle-btn" onclick="switchPanelView('OP5')">OP5</button>
       </div>
@@ -1215,11 +1216,22 @@
   <!-- 2. 중앙 패널 인터랙션 뷰포트 -->
   <main id="panel-viewport">
 
-    <!-- [패널 1] OP1 : A필러 긴급 제동 조작반 -->
-    <section id="panel-op1" class="train-metal-panel">
+    <!-- [패널 1] OP1 : 예비 빈 패널 -->
+    <section id="panel-op1" class="train-metal-panel" style="display:none; min-height:480px;">
       <div class="screw tl"></div><div class="screw tr"></div>
       <div class="screw bl"></div><div class="screw br"></div>
-      <div class="panel-header-tag">OP1 : A-PILLAR EMERGENCY / BRAKE PANEL</div>
+    </section>
+
+    <!-- [패널 2] OP2 : 예비 빈 패널 -->
+    <section id="panel-op2" class="train-metal-panel" style="display:none; min-height:480px;">
+      <div class="screw tl"></div><div class="screw tr"></div>
+      <div class="screw bl"></div><div class="screw br"></div>
+    </section>
+
+    <!-- [패널 3] OP3 : A필러 긴급 제동 조작반 -->
+    <section id="panel-op3" class="train-metal-panel">
+      <div class="screw tl"></div><div class="screw tr"></div>
+      <div class="screw bl"></div><div class="screw br"></div>
 
       <div class="panel-grid">
 
@@ -1274,8 +1286,13 @@
         </div>
 
         <!-- 2행 우: ATP후진 (투명 안전커버 + 내부 2단 로터리) -->
-        <div class="component-cell" id="wrap-SW_ATP_REV" style="position:relative;">
+        <div class="component-cell" id="wrap-SW_ATP_REV">
           <div class="cover-guard-unit">
+            <!-- 커버 바깥 상단/우측에 실물처럼 인쇄된 OFF / ON -->
+            <div class="atp-cover-ticks">
+              <span class="atp-tick-off">OFF</span>
+              <span class="atp-tick-on">ON</span>
+            </div>
             <div id="comp-SW_ATP_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_ATP_COVER', event)">
               <div class="cover-hinge"></div>
             </div>
@@ -1286,11 +1303,6 @@
                 <div class="rotary-pointer" style="height:18px; width:6px; left:10px; top:-5px;"></div>
               </div>
             </div>
-          </div>
-          <!-- 커버 바깥 상단/우측에 실물처럼 인쇄된 OFF / ON -->
-          <div class="atp-cover-ticks">
-            <span class="atp-tick-off">OFF</span>
-            <span class="atp-tick-on">ON</span>
           </div>
           <div class="component-label">ATP후진</div>
         </div>
@@ -1384,11 +1396,10 @@
       </div>
     </section>
 
-    <!-- [패널 2] OP2 : 메인 계기 및 바이패스 조작반 -->
-    <section id="panel-op2" class="train-metal-panel" style="display:none;">
+    <!-- [패널 4] OP4 : 메인 계기 및 바이패스 조작반 -->
+    <section id="panel-op4" class="train-metal-panel" style="display:none;">
       <div class="screw tl"></div><div class="screw tr"></div>
       <div class="screw bl"></div><div class="screw br"></div>
-      <div class="panel-header-tag">OP2 : MAIN INSTRUMENT & BYPASS PANEL</div>
 
       <div class="main-panel-grid">
 
@@ -1523,11 +1534,10 @@
       </div>
     </section>
  
-    <!-- [패널 3] OP3 : 보조 조작반 (실물 사진 100% 동일 2행 4열 레이아웃) -->
-    <section id="panel-op3" class="train-metal-panel" style="display:none;">
+    <!-- [패널 5] OP5 : 보조 조작반 (실물 사진 100% 동일 2행 4열 레이아웃) -->
+    <section id="panel-op5" class="train-metal-panel" style="display:none;">
       <div class="screw tl"></div><div class="screw tr"></div>
       <div class="screw bl"></div><div class="screw br"></div>
-      <div class="panel-header-tag">OP3 : AUXILIARY CONTROL PANEL</div>
 
       <div class="op3-panel-grid">
 
@@ -1616,30 +1626,6 @@
           <div class="component-label">주차제동BP</div>
         </div>
 
-      </div>
-    </section>
-
-    <!-- [패널 4] OP4 : 예비 조작반 (스위치 배치 준비) -->
-    <section id="panel-op4" class="train-metal-panel" style="display:none;">
-      <div class="screw tl"></div><div class="screw tr"></div>
-      <div class="screw bl"></div><div class="screw br"></div>
-      <div class="panel-header-tag">OP4 : CONTROL PANEL (RESERVED)</div>
-      <div class="empty-panel-placeholder">
-        <div class="empty-panel-icon">⚙️</div>
-        <div class="empty-panel-title">OP4 조작반 (예비 영역)</div>
-        <div class="empty-panel-desc">스위치 및 계기 배치를 대기 중인 빈 패널입니다.</div>
-      </div>
-    </section>
-
-    <!-- [패널 5] OP5 : 예비 조작반 (스위치 배치 준비) -->
-    <section id="panel-op5" class="train-metal-panel" style="display:none;">
-      <div class="screw tl"></div><div class="screw tr"></div>
-      <div class="screw bl"></div><div class="screw br"></div>
-      <div class="panel-header-tag">OP5 : CONTROL PANEL (RESERVED)</div>
-      <div class="empty-panel-placeholder">
-        <div class="empty-panel-icon">⚙️</div>
-        <div class="empty-panel-title">OP5 조작반 (예비 영역)</div>
-        <div class="empty-panel-desc">스위치 및 계기 배치를 대기 중인 빈 패널입니다.</div>
       </div>
     </section>
 
@@ -1935,39 +1921,39 @@ function triggerHaptic(pattern) {
  * 부품 상태 관리자
  */
 const COMPONENT_REGISTRY = {
-  // [OP1] A필러 부품군 (비상제동완해, ATP후진, 무인모드 투명커버 보호)
-  SW_EMG_STOP: { name: '비상제동체결', type: 'LATCH', state: 'RELEASED', panel: 'OP1' },
-  SW_FORCE_REL: { name: '강제완해', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
-  SW_EMG_COVER: { name: '비상완해 보호커버', type: 'COVER', state: 'CLOSED', panel: 'OP1' },
-  SW_EMG_RELEASE: { name: '비상제동완해', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1', requiresCover: 'SW_EMG_COVER' },
-  SW_ATP_COVER: { name: 'ATP후진 보호커버', type: 'COVER', state: 'CLOSED', panel: 'OP1' },
-  SW_ATP_REV: { name: 'ATP후진', type: 'ROTARY_2', state: 'OFF', panel: 'OP1', requiresCover: 'SW_ATP_COVER' },
-  SW_LOW_SPEED: { name: '저속도', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP1' },
-  SW_PARK_SET: { name: '주차제동체결', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
-  SW_WIRELESS_COVER: { name: '무인모드 보호커버', type: 'COVER', state: 'CLOSED', panel: 'OP1' },
-  SW_WIRELESS_MODE: { name: '무인모드', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1', requiresCover: 'SW_WIRELESS_COVER' },
-  SW_PARK_REL: { name: '주차제동완해', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
-  SW_ROOM_LIGHT: { name: '실내등', type: 'ROTARY_3', state: 'AUTO', panel: 'OP1' }, // MANUAL, AUTO, EMERGENCY
-  SW_RESCUE_DRIVE: { name: '구원운전', type: 'ROTARY_3', state: 'NORMAL', panel: 'OP1' }, // RESCUE, NORMAL, EMERGENCY
+  // [OP3] A필러 부품군 (비상제동완해, ATP후진, 무인모드 투명커버 보호)
+  SW_EMG_STOP: { name: '비상제동체결', type: 'LATCH', state: 'RELEASED', panel: 'OP3' },
+  SW_FORCE_REL: { name: '강제완해', type: 'MOMENTARY', state: 'IDLE', panel: 'OP3' },
+  SW_EMG_COVER: { name: '비상완해 보호커버', type: 'COVER', state: 'CLOSED', panel: 'OP3' },
+  SW_EMG_RELEASE: { name: '비상제동완해', type: 'MOMENTARY', state: 'IDLE', panel: 'OP3', requiresCover: 'SW_EMG_COVER' },
+  SW_ATP_COVER: { name: 'ATP후진 보호커버', type: 'COVER', state: 'CLOSED', panel: 'OP3' },
+  SW_ATP_REV: { name: 'ATP후진', type: 'ROTARY_2', state: 'OFF', panel: 'OP3', requiresCover: 'SW_ATP_COVER' },
+  SW_LOW_SPEED: { name: '저속도', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP3' },
+  SW_PARK_SET: { name: '주차제동체결', type: 'MOMENTARY', state: 'IDLE', panel: 'OP3' },
+  SW_WIRELESS_COVER: { name: '무인모드 보호커버', type: 'COVER', state: 'CLOSED', panel: 'OP3' },
+  SW_WIRELESS_MODE: { name: '무인모드', type: 'MOMENTARY', state: 'IDLE', panel: 'OP3', requiresCover: 'SW_WIRELESS_COVER' },
+  SW_PARK_REL: { name: '주차제동완해', type: 'MOMENTARY', state: 'IDLE', panel: 'OP3' },
+  SW_ROOM_LIGHT: { name: '실내등', type: 'ROTARY_3', state: 'AUTO', panel: 'OP3' }, // MANUAL, AUTO, EMERGENCY
+  SW_RESCUE_DRIVE: { name: '구원운전', type: 'ROTARY_3', state: 'NORMAL', panel: 'OP3' }, // RESCUE, NORMAL, EMERGENCY
 
-  // [OP2] 좌측 메인 패널 부품군 (실물 사진 100% 반영 3열 배치)
-  SW_RESERVE_ROTARY: { name: '예비(로터리)', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP2' },
-  SW_WIPER: { name: '와이퍼 제어', type: 'ROTARY_5', state: 'OFF', panel: 'OP2' },
-  SW_RESERVE_BTN: { name: '예비(버튼)', type: 'MOMENTARY', state: 'IDLE', panel: 'OP2' },
-  SW_OBSTACLE_BYPASS: { name: '장애물 감지', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP2' },
-  SW_DOOR_BYPASS: { name: '출입문', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP2' },
-  SW_DOOR_HEATER: { name: '출입문 히터', type: 'MOMENTARY', state: 'IDLE', panel: 'OP2' },
-  SW_AIR_CLEAN: { name: '공기질개선장치', type: 'ROTARY_3', state: 'AUTO', panel: 'OP2' },
+  // [OP4] 좌측 메인 패널 부품군 (실물 사진 100% 반영 3열 배치)
+  SW_RESERVE_ROTARY: { name: '예비(로터리)', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP4' },
+  SW_WIPER: { name: '와이퍼 제어', type: 'ROTARY_5', state: 'OFF', panel: 'OP4' },
+  SW_RESERVE_BTN: { name: '예비(버튼)', type: 'MOMENTARY', state: 'IDLE', panel: 'OP4' },
+  SW_OBSTACLE_BYPASS: { name: '장애물 감지', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP4' },
+  SW_DOOR_BYPASS: { name: '출입문', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP4' },
+  SW_DOOR_HEATER: { name: '출입문 히터', type: 'LATCH', state: 'RELEASED', panel: 'OP4' },
+  SW_AIR_CLEAN: { name: '공기질개선장치', type: 'ROTARY_3', state: 'AUTO', panel: 'OP4' },
 
-  // [OP3] 보조 조작반 부품군 (실물 사진 100% 반영 2행 4열)
-  SW_VOBC_RESET: { name: 'VOBC리셋', type: 'MOMENTARY', state: 'IDLE', panel: 'OP3' },
-  SW_UNCOUPLING: { name: '언커플링', type: 'LATCH_LIT', state: 'RELEASED', panel: 'OP3' },
-  SW_HB_ACTION: { name: '고속도차단기동작', type: 'LATCH_LIT', state: 'RELEASED', panel: 'OP3' },
-  SW_MR_BP: { name: '주공기BP', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP3' },
-  SW_PWM_CUT: { name: 'PWM차단', type: 'LATCH_LIT', state: 'RELEASED', panel: 'OP3' },
-  SW_SAND_TEST: { name: '살사시험', type: 'MOMENTARY', state: 'IDLE', panel: 'OP3' },
-  SW_INSUL_SECT: { name: '절연구간', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP3' },
-  SW_PARK_BP: { name: '주차제동BP', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP3' }
+  // [OP5] 보조 조작반 부품군 (실물 사진 100% 반영 2행 4열)
+  SW_VOBC_RESET: { name: 'VOBC리셋', type: 'MOMENTARY', state: 'IDLE', panel: 'OP5' },
+  SW_UNCOUPLING: { name: '언커플링', type: 'LATCH_LIT', state: 'RELEASED', panel: 'OP5' },
+  SW_HB_ACTION: { name: '고속도차단기동작', type: 'LATCH_LIT', state: 'RELEASED', panel: 'OP5' },
+  SW_MR_BP: { name: '주공기BP', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP5' },
+  SW_PWM_CUT: { name: 'PWM차단', type: 'LATCH_LIT', state: 'RELEASED', panel: 'OP5' },
+  SW_SAND_TEST: { name: '살사시험', type: 'MOMENTARY', state: 'IDLE', panel: 'OP5' },
+  SW_INSUL_SECT: { name: '절연구간', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP5' },
+  SW_PARK_BP: { name: '주차제동BP', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP5' }
 };
 
 /**
