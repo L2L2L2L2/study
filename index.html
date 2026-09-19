@@ -40,7 +40,7 @@
       align-items: center;
     }
 
-    /* 모바일 프레임 컨테이너 */
+    /* 모바일 프레임 컨테이너 (대화면 시 반응형 확장) */
     #app-container {
       width: 100%;
       max-width: 480px;
@@ -51,6 +51,7 @@
       position: relative;
       box-shadow: 0 0 35px rgba(0,0,0,0.8);
       overflow: hidden;
+      transition: max-width 0.25s ease;
     }
 
     /* ========================================================
@@ -354,7 +355,7 @@
     }
 
     /* ========================================================
-       2. 중앙 패널 뷰포트 영역
+       2. 중앙 패널 뷰포트 영역 (단일 / 듀얼 뷰포트)
     ======================================================== */
     #panel-viewport {
       flex: 1;
@@ -362,10 +363,135 @@
       overflow-x: hidden;
       position: relative;
       background: #181c22 url('data:image/svg+xml;utf8,<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" fill="%231a1e24"/><path d="M0 0h40v40H0z" fill="none" stroke="%23222730" stroke-width="1"/></svg>');
-      padding: 12px 10px 80px 10px;
+      padding: 10px 8px 80px 8px;
       display: flex;
       flex-direction: column;
       gap: 12px;
+    }
+
+    .viewport-slot {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    /* 슬롯 상단 독립 패널 선택 바 (대화면에서만 노출) */
+    .slot-header {
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 5px 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      user-select: none;
+    }
+    .slot-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #c9d1d9;
+    }
+    .slot-indicator {
+      font-size: 9px;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+    .slot-left-ind {
+      background: #1f6feb;
+      color: #ffffff;
+    }
+    .slot-right-ind {
+      background: #238636;
+      color: #ffffff;
+    }
+
+    .slot-panel-switcher {
+      display: flex;
+      gap: 3px;
+    }
+    .slot-switch-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #8b949e;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 7px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .slot-switch-btn:hover {
+      background: #30363d;
+      color: #fff;
+    }
+    .slot-header#slot-header-left .slot-switch-btn.active {
+      background: #1f6feb;
+      border-color: #388bfd;
+      color: #ffffff;
+      box-shadow: 0 1px 4px rgba(31, 111, 235, 0.4);
+    }
+    .slot-header#slot-header-right .slot-switch-btn.active {
+      background: #238636;
+      border-color: #2ea043;
+      color: #ffffff;
+      box-shadow: 0 1px 4px rgba(35, 134, 54, 0.4);
+    }
+
+    .slot-content {
+      width: 100%;
+    }
+
+    /* 대화면 듀얼 뷰포트 배지 */
+    .dual-view-badge {
+      display: none;
+      font-size: 11px;
+      font-weight: 800;
+      color: #8b949e;
+      background: #21262d;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    /* 모바일 기본: 우측 슬롯 숨김 */
+    #slot-right {
+      display: none;
+    }
+
+    /* 대화면 (태블릿, 폴드 펼침, PC 데스크톱: >= 768px) 반응형 듀얼 확장 */
+    @media (min-width: 768px) {
+      #app-container {
+        max-width: 1180px;
+      }
+      .panel-view-switcher {
+        display: none !important; /* 상단 단일 탭 대신 슬롯별 독립 탭 활성화 */
+      }
+      .dual-view-badge {
+        display: inline-flex !important;
+      }
+      #panel-viewport {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        align-items: start;
+        padding: 14px 16px 80px 16px;
+      }
+      #slot-right {
+        display: flex !important;
+      }
+      .slot-header {
+        display: flex !important;
+      }
     }
 
     /* 메탈 패널 공통 */
@@ -1524,6 +1650,9 @@
         <button id="view-op4" class="panel-toggle-btn" onclick="switchPanelView('OP4')">OP4</button>
         <button id="view-op5" class="panel-toggle-btn" onclick="switchPanelView('OP5')">OP5</button>
       </div>
+
+      <!-- 대화면(폴드/패드/PC) 듀얼 뷰포트 배지 -->
+      <div class="dual-view-badge">🖥️ 2분할 듀얼 뷰포트</div>
     </div>
 
     <!-- 상태 알림창 -->
@@ -1544,8 +1673,47 @@
     </div>
   </header>
 
-  <!-- 2. 중앙 패널 인터랙션 뷰포트 -->
+  <!-- 2. 중앙 패널 인터랙션 뷰포트 (모바일 1분할 / 폴드·태블릿·PC 2분할 듀얼 뷰) -->
   <main id="panel-viewport">
+
+    <!-- 좌측 슬롯 (모바일 단일 뷰 / 대화면 좌측 뷰) -->
+    <div id="slot-left" class="viewport-slot">
+      <div class="slot-header" id="slot-header-left">
+        <div class="slot-title">
+          <span class="slot-indicator slot-left-ind">LEFT</span>
+          <span id="slot-left-label">OP3 (긴급 제동 조작반)</span>
+        </div>
+        <div class="slot-panel-switcher">
+          <button id="slot-l-op1" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP1')">OP1</button>
+          <button id="slot-l-op2" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP2')">OP2</button>
+          <button id="slot-l-op3" class="slot-switch-btn active" onclick="selectSlotPanel('left', 'OP3')">OP3</button>
+          <button id="slot-l-op4" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP4')">OP4</button>
+          <button id="slot-l-op5" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP5')">OP5</button>
+        </div>
+      </div>
+      <div id="slot-left-content" class="slot-content"></div>
+    </div>
+
+    <!-- 우측 슬롯 (대화면 듀얼 전용 뷰) -->
+    <div id="slot-right" class="viewport-slot">
+      <div class="slot-header" id="slot-header-right">
+        <div class="slot-title">
+          <span class="slot-indicator slot-right-ind">RIGHT</span>
+          <span id="slot-right-label">OP4 (메인 계기 & 바이패스)</span>
+        </div>
+        <div class="slot-panel-switcher">
+          <button id="slot-r-op1" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP1')">OP1</button>
+          <button id="slot-r-op2" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP2')">OP2</button>
+          <button id="slot-r-op3" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP3')">OP3</button>
+          <button id="slot-r-op4" class="slot-switch-btn active" onclick="selectSlotPanel('right', 'OP4')">OP4</button>
+          <button id="slot-r-op5" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP5')">OP5</button>
+        </div>
+      </div>
+      <div id="slot-right-content" class="slot-content"></div>
+    </div>
+
+    <!-- 패널 저장소 풀 (미표시 패널 대기 영역) -->
+    <div id="panel-storage-pool" style="display:none;" aria-hidden="true">
 
     <!-- [패널 1] OP1 : 예비 빈 패널 -->
     <section id="panel-op1" class="train-metal-panel" style="display:none; min-height:480px;">
@@ -2002,6 +2170,7 @@
         </div>
       </div>
     </div>
+    <!-- /panel-storage-pool -->
 
     <!-- 중앙 플로팅 VOBC 결과 메시지 토스트 -->
     <div id="vobc-result-toast" class="vobc-result-toast">
@@ -2510,36 +2679,149 @@ let currentGaugeMR = 9.0;
 let recordedSteps = [];
 let pendingRecordedStep = null;
 
+// ========================================================
+// 듀얼 뷰포트 시스템 (모바일 1분할 / 폴드·태블릿·PC 2분할)
+// ========================================================
+const ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5'];
+let activeLeftPanel = 'OP3';   // 기본 좌측 패널 OP3
+let activeRightPanel = 'OP4';  // 기본 우측 패널 OP4 (대화면 전용)
+
+function checkIsDualMode() {
+  return window.innerWidth >= 768;
+}
+
+function selectSlotPanel(slot, panelId) {
+  panelId = panelId.toUpperCase();
+  if (!ALL_PANELS.includes(panelId)) return;
+
+  const isDual = checkIsDualMode();
+
+  if (slot === 'left') {
+    // 만약 대화면 듀얼 모드에서 이미 우측에 띄워져 있다면 스마트 스왑(자리 맞바꿈)
+    if (isDual && panelId === activeRightPanel) {
+      activeRightPanel = activeLeftPanel;
+    }
+    activeLeftPanel = panelId;
+  } else if (slot === 'right') {
+    // 만약 이미 좌측에 띄워져 있다면 스마트 스왑
+    if (panelId === activeLeftPanel) {
+      activeLeftPanel = activeRightPanel;
+    }
+    activeRightPanel = panelId;
+  }
+
+  renderDualPanels();
+  triggerHaptic(25);
+  hideVobcGuide();
+}
+
+function renderDualPanels() {
+  const isDual = checkIsDualMode();
+  const leftContent = document.getElementById('slot-left-content');
+  const rightContent = document.getElementById('slot-right-content');
+  const pool = document.getElementById('panel-storage-pool');
+
+  if (!leftContent || !rightContent || !pool) return;
+
+  // 1. 패널 DOM 마운트 및 표시 제어
+  ALL_PANELS.forEach(p => {
+    const el = document.getElementById(`panel-${p.toLowerCase()}`);
+    if (!el) return;
+
+    if (p === activeLeftPanel) {
+      el.style.display = 'block';
+      if (el.parentElement !== leftContent) {
+        leftContent.appendChild(el);
+      }
+    } else if (isDual && p === activeRightPanel) {
+      el.style.display = 'block';
+      if (el.parentElement !== rightContent) {
+        rightContent.appendChild(el);
+      }
+    } else {
+      el.style.display = 'none';
+      if (el.parentElement !== pool) {
+        pool.appendChild(el);
+      }
+    }
+  });
+
+  // 2. 버튼 액티브 클래스 동기화
+  ALL_PANELS.forEach(p => {
+    const pLower = p.toLowerCase();
+
+    // 좌측 슬롯 스위처 버튼
+    const lBtn = document.getElementById(`slot-l-${pLower}`);
+    if (lBtn) {
+      if (p === activeLeftPanel) lBtn.classList.add('active');
+      else lBtn.classList.remove('active');
+    }
+
+    // 우측 슬롯 스위처 버튼
+    const rBtn = document.getElementById(`slot-r-${pLower}`);
+    if (rBtn) {
+      if (p === activeRightPanel) rBtn.classList.add('active');
+      else rBtn.classList.remove('active');
+    }
+
+    // 상단 모바일 HUD 버튼
+    const hudBtn = document.getElementById(`view-${pLower}`);
+    if (hudBtn) {
+      if (p === activeLeftPanel) hudBtn.classList.add('active');
+      else hudBtn.classList.remove('active');
+    }
+  });
+
+  // 3. 슬롯 제목 라벨 갱신
+  const lLabel = document.getElementById('slot-left-label');
+  if (lLabel) lLabel.innerText = getPanelDisplayName(activeLeftPanel);
+  const rLabel = document.getElementById('slot-right-label');
+  if (rLabel) rLabel.innerText = getPanelDisplayName(activeRightPanel);
+}
+
+function getPanelDisplayName(panelId) {
+  switch (panelId) {
+    case 'OP1': return 'OP1 (예비 빈 패널)';
+    case 'OP2': return 'OP2 (예비 빈 패널)';
+    case 'OP3': return 'OP3 (긴급 제동 조작반)';
+    case 'OP4': return 'OP4 (메인 계기 & 바이패스)';
+    case 'OP5': return 'OP5 (하부 바이패스 & 차상)';
+    default: return panelId;
+  }
+}
+
+// 상단 HUD 및 시나리오 스텝 가이드 호출용 함수
+function switchPanelView(view) {
+  if (view === 'A_PILLAR') view = 'OP1';
+  if (view === 'MAIN_LEFT') view = 'OP2';
+  view = view.toUpperCase();
+  if (!ALL_PANELS.includes(view)) return;
+
+  if (checkIsDualMode()) {
+    // 듀얼 모드일 때: 이미 좌측 또는 우측에 열려 있다면 유지
+    if (view === activeLeftPanel || view === activeRightPanel) {
+      return;
+    }
+    // 둘 다 없으면 우측 슬롯에 열어줌
+    selectSlotPanel('right', view);
+  } else {
+    // 모바일 모드: 좌측(단일) 슬롯에 열어줌
+    selectSlotPanel('left', view);
+  }
+}
+
+// 창 크기 조절 / 화면 회전 시 뷰포트 레이아웃 동적 갱신
+window.addEventListener('resize', () => {
+  renderDualPanels();
+});
+
 // 초기화
 window.addEventListener('DOMContentLoaded', () => {
+  renderDualPanels();
   loadScenarioListUI();
   applyScenario(currentScenario);
   updateGaugeUI(0.0);
 });
-
-// 패널 탭 뷰 전환 (OP1 ~ OP5)
-const ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5'];
-
-function switchPanelView(view) {
-  if (view === 'A_PILLAR') view = 'OP1';
-  if (view === 'MAIN_LEFT') view = 'OP2';
-
-  ALL_PANELS.forEach(p => {
-    const pLower = p.toLowerCase();
-    const panelEl = document.getElementById(`panel-${pLower}`);
-    const btnEl = document.getElementById(`view-${pLower}`);
-
-    const isTarget = (p === view);
-    if (panelEl) panelEl.style.display = isTarget ? 'block' : 'none';
-    if (btnEl) {
-      if (isTarget) btnEl.classList.add('active');
-      else btnEl.classList.remove('active');
-    }
-  });
-
-  // 패널 전환 시 VOBC 안내 오버레이 숨김
-  hideVobcGuide();
-}
 
 // 모드 드롭다운 토글 및 조작 함수
 function toggleModeDropdown(event) {
