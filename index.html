@@ -473,10 +473,10 @@
       filter: brightness(0.85);
     }
 
-    /* [D] 로터리 스위치 (Rotary Switch) */
+    /* [D] 로터리 스위치 (Rotary Switch) - 포인터 간섭 방지 & 와이드 부채꼴 극좌표 배치 */
     .rotary-unit {
-      width: 78px;
-      height: 74px;
+      width: 96px;
+      height: 90px;
       position: relative;
       display: flex;
       justify-content: center;
@@ -486,20 +486,24 @@
 
     .rotary-dial-plate {
       position: absolute;
-      bottom: 2px;
-      width: 52px;
-      height: 52px;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
       border: 2px solid #8e99a8;
       background: radial-gradient(circle, #2a2f38, #181b20);
-      box-shadow: inset 0 0 6px rgba(0,0,0,0.8), 0 2px 5px rgba(0,0,0,0.6);
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.8), 0 2px 6px rgba(0,0,0,0.6);
     }
 
     .rotary-knob {
       position: absolute;
-      bottom: 12px;
-      width: 32px;
-      height: 32px;
+      bottom: 14px;
+      left: 50%;
+      margin-left: -15px;
+      width: 30px;
+      height: 30px;
       background: linear-gradient(135deg, #424955 0%, #1e2229 100%);
       border-radius: 50%;
       box-shadow: 0 4px 8px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.3);
@@ -509,10 +513,10 @@
 
     .rotary-pointer {
       position: absolute;
-      top: -10px;
-      left: 12px;
+      top: -6px;
+      left: 11px;
       width: 8px;
-      height: 26px;
+      height: 21px;
       background: linear-gradient(to bottom, #d2d8e2 0%, #3a404c 100%);
       border-radius: 3px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.8);
@@ -523,7 +527,7 @@
       top: 2px;
       left: 3px;
       width: 2px;
-      height: 10px;
+      height: 9px;
       background: #fff;
     }
 
@@ -534,25 +538,59 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      font-size: 10px;
+      font-size: 10.5px;
       font-weight: 800;
-      color: #e2e8f0;
-      text-shadow: 0 1px 2px #000, 0 0 3px rgba(0,0,0,0.9);
-      letter-spacing: -0.3px;
+      color: #f8fafc;
+      text-shadow: 0 1px 3px #000, 0 0 4px rgba(0,0,0,0.9);
+      letter-spacing: -0.2px;
     }
+
     .tick-label {
       position: absolute;
       white-space: nowrap;
-      transform: none;
+      transform: translate(-50%, -50%);
+      text-align: center;
     }
-    /* 2단 스위치 틱 위치 (OFF / ON 또는 정상 / 바이패스) */
-    .tick-2-left { top: 0px; left: 6px; }
-    .tick-2-right { top: 0px; right: 4px; }
 
-    /* 3단 스위치 틱 위치 (수동 / 자동 / 비상등) */
-    .tick-3-left { top: 2px; left: 4px; }
-    .tick-3-mid { top: -6px; left: 50%; transform: translateX(-50%); }
-    .tick-3-right { top: 2px; right: 4px; }
+    /* 2단 스위치 틱 위치 (OFF / ON 또는 정상 / 바이패스) */
+    .tick-2-left  { top: 14px; left: 18px; }
+    .tick-2-right { top: 14px; left: 78px; }
+
+    /* 3단 스위치 틱 위치 (수동 / 자동 / 비상등) - 중앙은 높이고 좌우는 넓게 벌려 회전 시에도 겹침 0% */
+    .tick-3-left  { top: 22px; left: 14px; }
+    .tick-3-mid   { top: 3px;  left: 50%; }
+    .tick-3-right { top: 22px; left: 82px; }
+
+    /* ATP후진 커버형 전용 명판 틱 라벨 */
+    .atp-cover-ticks {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      font-size: 10px;
+      font-weight: 800;
+      color: #f8fafc;
+      text-shadow: 0 1px 3px #000;
+    }
+    .atp-tick-off { position: absolute; top: 0px; left: 14px; }
+    .atp-tick-on  { position: absolute; top: 20px; right: -6px; }
+
+    /* 실물 사진 기반: 공기질개선장치 사각 은색 명판 */
+    .air-clean-plate {
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+      border: 1px solid #94a3b8;
+      border-radius: 6px;
+      padding: 6px 4px 2px 4px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 1px #fff;
+    }
+    .air-clean-plate .rotary-ticks {
+      color: #1e293b;
+      text-shadow: none;
+      font-weight: 900;
+      font-size: 9.5px;
+    }
 
     /* [E] 아날로그 공기 압력계 (Dual Gauge: MR / BC) */
     .gauge-container {
@@ -867,11 +905,29 @@
 
       <div class="panel-grid">
 
-        <!-- 1행 좌: 비상제동체결 (버섯형 래치) -->
+        <!-- 1행 좌: 비상제동체결 (실물 3-Arrow 버섯형 래치) -->
         <div class="component-cell" id="wrap-SW_EMG_STOP">
           <div class="btn-estop-wrapper" onclick="handleComponentTouch('SW_EMG_STOP')">
             <div id="comp-SW_EMG_STOP" class="btn-estop">
-              <svg viewBox="0 0 24 24"><path d="M12 2A10 10 0 1 0 22 12A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8a8 8 0 0 1-8 8Zm1-13h-2v6h2Zm0 8h-2v2h2Z"/></svg>
+              <svg viewBox="0 0 100 100" class="estop-arrows" style="width:38px; height:38px; pointer-events:none;">
+                <g transform="translate(50,50)">
+                  <!-- 화살표 1 (0도) -->
+                  <g>
+                    <path d="M 0 -35 A 35 35 0 0 1 30.3 -17.5" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" />
+                    <polygon points="32,-26 38,-10 23,-13" fill="#ffffff" />
+                  </g>
+                  <!-- 화살표 2 (120도) -->
+                  <g transform="rotate(120)">
+                    <path d="M 0 -35 A 35 35 0 0 1 30.3 -17.5" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" />
+                    <polygon points="32,-26 38,-10 23,-13" fill="#ffffff" />
+                  </g>
+                  <!-- 화살표 3 (240도) -->
+                  <g transform="rotate(240)">
+                    <path d="M 0 -35 A 35 35 0 0 1 30.3 -17.5" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" />
+                    <polygon points="32,-26 38,-10 23,-13" fill="#ffffff" />
+                  </g>
+                </g>
+              </svg>
             </div>
           </div>
           <div class="component-label">비상제동체결</div>
@@ -885,25 +941,38 @@
           <div class="component-label">강제완해</div>
         </div>
 
-        <!-- 2행 좌: 비상제동완해 (적색 푸시버튼) -->
+        <!-- 2행 좌: 비상제동완해 (투명 안전커버 + 내부 적색 푸시) -->
         <div class="component-cell" id="wrap-SW_EMG_RELEASE">
-          <div class="metal-bezel-btn" onclick="handleComponentTouch('SW_EMG_RELEASE')">
-            <div id="comp-SW_EMG_RELEASE" class="push-btn-inner red"></div>
+          <div class="cover-guard-unit">
+            <div id="comp-SW_EMG_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_EMG_COVER', event)">
+              <div class="cover-hinge"></div>
+            </div>
+            <div class="cover-close-hint" onclick="toggleFlipCover('SW_EMG_COVER', event)">닫기 ✕</div>
+            <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_EMG_RELEASE')">
+              <div id="comp-SW_EMG_RELEASE" class="push-btn-inner red" style="width:34px; height:34px;"></div>
+            </div>
           </div>
           <div class="component-label">비상제동완해</div>
         </div>
 
-        <!-- 2행 우: ATP후진 (2단 로터리) -->
-        <div class="component-cell" id="wrap-SW_ATP_REV">
-          <div class="rotary-unit" onclick="handleComponentTouch('SW_ATP_REV')">
-            <div class="rotary-dial-plate"></div>
-            <div id="comp-SW_ATP_REV" class="rotary-knob">
-              <div class="rotary-pointer"></div>
+        <!-- 2행 우: ATP후진 (투명 안전커버 + 내부 2단 로터리) -->
+        <div class="component-cell" id="wrap-SW_ATP_REV" style="position:relative;">
+          <div class="cover-guard-unit">
+            <div id="comp-SW_ATP_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_ATP_COVER', event)">
+              <div class="cover-hinge"></div>
             </div>
-            <div class="rotary-ticks">
-              <span class="tick-label tick-2-left">OFF</span>
-              <span class="tick-label tick-2-right">ON</span>
+            <div class="cover-close-hint" onclick="toggleFlipCover('SW_ATP_COVER', event)">닫기 ✕</div>
+            <div class="rotary-unit" style="width:58px; height:58px;" onclick="handleComponentTouch('SW_ATP_REV')">
+              <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px;"></div>
+              <div id="comp-SW_ATP_REV" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px;">
+                <div class="rotary-pointer" style="height:18px; width:6px; left:10px; top:-5px;"></div>
+              </div>
             </div>
+          </div>
+          <!-- 커버 바깥 상단/우측에 실물처럼 인쇄된 OFF / ON -->
+          <div class="atp-cover-ticks">
+            <span class="atp-tick-off">OFF</span>
+            <span class="atp-tick-on">ON</span>
           </div>
           <div class="component-label">ATP후진</div>
         </div>
@@ -1059,36 +1128,40 @@
           <div class="component-label">장애물 감지</div>
         </div>
 
-        <!-- 2행 좌: 공기질 개선장치 (AUTO / OFF / ON) -->
+        <!-- 2행 좌: 공기질 개선장치 (실물 사각 알루미늄 플레이트형) -->
         <div class="component-cell" id="wrap-SW_AIR_CLEAN">
-          <div class="rotary-unit" onclick="handleComponentTouch('SW_AIR_CLEAN')">
-            <div class="rotary-dial-plate"></div>
-            <div id="comp-SW_AIR_CLEAN" class="rotary-knob">
-              <div class="rotary-pointer"></div>
-            </div>
-            <div class="rotary-ticks">
-              <span class="tick-label tick-3-left">AUTO</span>
-              <span class="tick-label tick-3-mid">OFF</span>
-              <span class="tick-label tick-3-right">ON</span>
+          <div class="air-clean-plate">
+            <div class="rotary-unit" style="width:84px; height:74px;" onclick="handleComponentTouch('SW_AIR_CLEAN')">
+              <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px; border-color:#64748b;"></div>
+              <div id="comp-SW_AIR_CLEAN" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px;">
+                <div class="rotary-pointer" style="height:18px; width:6px; left:10px; top:-5px;"></div>
+              </div>
+              <div class="rotary-ticks">
+                <span class="tick-label tick-3-left" style="top:18px; left:16px; font-size:9px; line-height:1;">AUTO<br><span style="font-size:7px; color:#475569;">(미세먼지)</span></span>
+                <span class="tick-label tick-3-mid" style="top:4px; left:50%; font-size:10px;">OFF</span>
+                <span class="tick-label tick-3-right" style="top:18px; left:70px; font-size:10px;">ON</span>
+              </div>
             </div>
           </div>
-          <div class="component-label">공기질개선장치</div>
+          <div class="component-label" style="font-size:10px; margin-top:4px;">공기질개선장치 작동스위치</div>
         </div>
 
-        <!-- 2행 우: 와이퍼 스위치 (다단) -->
+        <!-- 2행 우: 와이퍼 스위치 (실물 검은색 사각 유닛) -->
         <div class="component-cell" id="wrap-SW_WIPER">
-          <div class="rotary-unit" onclick="handleComponentTouch('SW_WIPER')">
-            <div class="rotary-dial-plate"></div>
-            <div id="comp-SW_WIPER" class="rotary-knob">
-              <div class="rotary-pointer"></div>
-            </div>
-            <div class="rotary-ticks">
-              <span class="tick-label tick-3-left">OFF</span>
-              <span class="tick-label tick-3-mid">INT</span>
-              <span class="tick-label tick-3-right">FAST</span>
+          <div style="background:#16191f; border:2px solid #334155; border-radius:6px; padding:4px 6px; box-shadow:0 3px 6px rgba(0,0,0,0.6);">
+            <div class="rotary-unit" style="width:84px; height:74px;" onclick="handleComponentTouch('SW_WIPER')">
+              <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px; border-color:#475569;"></div>
+              <div id="comp-SW_WIPER" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px;">
+                <div class="rotary-pointer" style="height:18px; width:6px; left:10px; top:-5px;"></div>
+              </div>
+              <div class="rotary-ticks">
+                <span class="tick-label tick-3-left" style="top:18px; left:14px; font-size:10px;">OFF</span>
+                <span class="tick-label tick-3-mid" style="top:4px; left:50%; font-size:10px;">INT</span>
+                <span class="tick-label tick-3-right" style="top:18px; left:70px; font-size:10px;">FAST</span>
+              </div>
             </div>
           </div>
-          <div class="component-label">와이퍼 제어</div>
+          <div class="component-label" style="font-size:10px; margin-top:4px;">와이퍼</div>
         </div>
 
       </div>
@@ -1386,11 +1459,13 @@ function triggerHaptic(pattern) {
  * 부품 상태 관리자
  */
 const COMPONENT_REGISTRY = {
-  // A필러 부품군 (무인모드만 투명커버 적용)
+  // A필러 부품군 (비상제동완해, ATP후진, 무인모드 투명커버 보호)
   SW_EMG_STOP: { name: '비상제동체결', type: 'LATCH', state: 'RELEASED', panel: 'A_PILLAR' },
   SW_FORCE_REL: { name: '강제완해', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR' },
-  SW_EMG_RELEASE: { name: '비상제동완해', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR' },
-  SW_ATP_REV: { name: 'ATP후진', type: 'ROTARY_2', state: 'OFF', panel: 'A_PILLAR' },
+  SW_EMG_COVER: { name: '비상완해 보호커버', type: 'COVER', state: 'CLOSED', panel: 'A_PILLAR' },
+  SW_EMG_RELEASE: { name: '비상제동완해', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR', requiresCover: 'SW_EMG_COVER' },
+  SW_ATP_COVER: { name: 'ATP후진 보호커버', type: 'COVER', state: 'CLOSED', panel: 'A_PILLAR' },
+  SW_ATP_REV: { name: 'ATP후진', type: 'ROTARY_2', state: 'OFF', panel: 'A_PILLAR', requiresCover: 'SW_ATP_COVER' },
   SW_LOW_SPEED: { name: '저속도', type: 'ROTARY_2', state: 'NORMAL', panel: 'A_PILLAR' },
   SW_PARK_SET: { name: '주차제동체결', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR' },
   SW_WIRELESS_COVER: { name: '무인모드 보호커버', type: 'COVER', state: 'CLOSED', panel: 'A_PILLAR' },
@@ -1431,7 +1506,7 @@ const DEFAULT_SCENARIOS = [
   {
     id: "SCN_EMG_DEFAULT",
     title: "1. 비상제동 체결 및 완해 절차",
-    description: "열차 운행 중 비상 상황 발생 시 비상제동을 체결하고, 완해 버튼을 눌러 복구하는 기본 안전 절차입니다.",
+    description: "열차 운행 중 비상 상황 발생 시 비상제동을 체결하고, 확인 후 완해 커버를 열어 복구하는 기본 안전 절차입니다.",
     steps: [
       {
         step: 1,
@@ -1443,14 +1518,21 @@ const DEFAULT_SCENARIOS = [
       },
       {
         step: 2,
-        target: "SW_EMG_RELEASE",
-        targetName: "비상제동완해",
-        expectedState: "PRESSED",
-        instruction: "빨간색 [비상제동완해] 푸시버튼을 눌러 제동을 푸십시오.",
-        gaugeEffect: { bc: 0.0 }
+        target: "SW_EMG_COVER",
+        targetName: "비상완해 보호커버",
+        expectedState: "OPEN",
+        instruction: "비상 상황이 해제되었습니다. [비상완해 보호커버]를 위로 여십시오."
       },
       {
         step: 3,
+        target: "SW_EMG_RELEASE",
+        targetName: "비상제동완해",
+        expectedState: "PRESSED",
+        instruction: "보호커버 내부의 빨간색 [비상제동완해] 푸시버튼을 누르십시오.",
+        gaugeEffect: { bc: 0.0 }
+      },
+      {
+        step: 4,
         target: "SW_EMG_STOP",
         targetName: "비상제동체결",
         expectedState: "RELEASED",
@@ -1510,14 +1592,21 @@ const DEFAULT_SCENARIOS = [
   {
     id: "SCN_ATP_REVERSE",
     title: "4. ATP 차상장치 이상 후진 운전 절차",
-    description: "신호설비 이상으로 지정된 저속 후진을 위해 ATP후진 스위치를 인가하는 절차입니다.",
+    description: "신호설비 이상으로 지정된 저속 후진을 위해 투명 커버를 열고 ATP후진 스위치를 인가하는 절차입니다.",
     steps: [
       {
         step: 1,
+        target: "SW_ATP_COVER",
+        targetName: "ATP후진 보호커버",
+        expectedState: "OPEN",
+        instruction: "[ATP후진] 스위치의 아크릴 보호커버를 들어올려 여십시오."
+      },
+      {
+        step: 2,
         target: "SW_ATP_REV",
         targetName: "ATP후진",
         expectedState: "ON",
-        instruction: "[ATP후진] 스위치를 'ON' 위치로 돌리십시오."
+        instruction: "커버 안쪽의 [ATP후진] 스위치를 'ON' 위치로 돌리십시오."
       }
     ]
   }
