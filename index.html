@@ -475,8 +475,8 @@
 
     /* [D] 로터리 스위치 (Rotary Switch) */
     .rotary-unit {
-      width: 64px;
-      height: 64px;
+      width: 78px;
+      height: 74px;
       position: relative;
       display: flex;
       justify-content: center;
@@ -486,20 +486,22 @@
 
     .rotary-dial-plate {
       position: absolute;
-      width: 58px;
-      height: 58px;
+      bottom: 2px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       border: 2px solid #8e99a8;
       background: radial-gradient(circle, #2a2f38, #181b20);
-      box-shadow: inset 0 0 6px rgba(0,0,0,0.8);
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.8), 0 2px 5px rgba(0,0,0,0.6);
     }
 
     .rotary-knob {
+      position: absolute;
+      bottom: 12px;
       width: 32px;
       height: 32px;
       background: linear-gradient(135deg, #424955 0%, #1e2229 100%);
       border-radius: 50%;
-      position: relative;
       box-shadow: 0 4px 8px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.3);
       border: 1px solid #636d7d;
       transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
@@ -527,17 +529,30 @@
 
     .rotary-ticks {
       position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       pointer-events: none;
-      font-size: 8px;
+      font-size: 10px;
       font-weight: 800;
-      color: #94a3b8;
+      color: #e2e8f0;
+      text-shadow: 0 1px 2px #000, 0 0 3px rgba(0,0,0,0.9);
+      letter-spacing: -0.3px;
     }
     .tick-label {
       position: absolute;
-      transform: translate(-50%, -50%);
+      white-space: nowrap;
+      transform: none;
     }
+    /* 2단 스위치 틱 위치 (OFF / ON 또는 정상 / 바이패스) */
+    .tick-2-left { top: 0px; left: 6px; }
+    .tick-2-right { top: 0px; right: 4px; }
+
+    /* 3단 스위치 틱 위치 (수동 / 자동 / 비상등) */
+    .tick-3-left { top: 2px; left: 4px; }
+    .tick-3-mid { top: -6px; left: 50%; transform: translateX(-50%); }
+    .tick-3-right { top: 2px; right: 4px; }
 
     /* [E] 아날로그 공기 압력계 (Dual Gauge: MR / BC) */
     .gauge-container {
@@ -886,8 +901,8 @@
               <div class="rotary-pointer"></div>
             </div>
             <div class="rotary-ticks">
-              <span class="tick-label" style="top:8px; left:14px;">OFF</span>
-              <span class="tick-label" style="top:8px; right:10px;">ON</span>
+              <span class="tick-label tick-2-left">OFF</span>
+              <span class="tick-label tick-2-right">ON</span>
             </div>
           </div>
           <div class="component-label">ATP후진</div>
@@ -901,8 +916,8 @@
               <div class="rotary-pointer"></div>
             </div>
             <div class="rotary-ticks">
-              <span class="tick-label" style="top:6px; left:12px;">정상</span>
-              <span class="tick-label" style="top:6px; right:6px;">우회</span>
+              <span class="tick-label tick-2-left">정상</span>
+              <span class="tick-label tick-2-right">바이패스</span>
             </div>
           </div>
           <div class="component-label">저속도</div>
@@ -938,7 +953,7 @@
           <div class="component-label">주차제동완해</div>
         </div>
 
-        <!-- 5행 좌: 실내등 (3단 셀렉터: 수동/자동/비상) -->
+        <!-- 5행 좌: 실내등 (3단 셀렉터: 수동/자동/비상등) -->
         <div class="component-cell" id="wrap-SW_ROOM_LIGHT">
           <div class="rotary-unit" onclick="handleComponentTouch('SW_ROOM_LIGHT')">
             <div class="rotary-dial-plate"></div>
@@ -946,9 +961,9 @@
               <div class="rotary-pointer"></div>
             </div>
             <div class="rotary-ticks">
-              <span class="tick-label" style="top:6px; left:8px;">수동</span>
-              <span class="tick-label" style="top:2px; left:50%;">자동</span>
-              <span class="tick-label" style="top:6px; right:8px;">비상</span>
+              <span class="tick-label tick-3-left">수동</span>
+              <span class="tick-label tick-3-mid">자동</span>
+              <span class="tick-label tick-3-right">비상등</span>
             </div>
           </div>
           <div class="component-label">실내등</div>
@@ -962,9 +977,9 @@
               <div class="rotary-pointer"></div>
             </div>
             <div class="rotary-ticks">
-              <span class="tick-label" style="top:6px; left:8px;">구원</span>
-              <span class="tick-label" style="top:2px; left:50%;">정상</span>
-              <span class="tick-label" style="top:6px; right:8px;">비상</span>
+              <span class="tick-label tick-3-left">구원</span>
+              <span class="tick-label tick-3-mid">정상</span>
+              <span class="tick-label tick-3-right">비상</span>
             </div>
           </div>
           <div class="component-label">구원운전</div>
@@ -1022,8 +1037,8 @@
               <div class="rotary-pointer"></div>
             </div>
             <div class="rotary-ticks">
-              <span class="tick-label" style="top:6px; left:10px;">정상</span>
-              <span class="tick-label" style="top:6px; right:8px;">바이패스</span>
+              <span class="tick-label tick-2-left">정상</span>
+              <span class="tick-label tick-2-right">바이패스</span>
             </div>
           </div>
           <div class="component-label">출입문 바이패스</div>
@@ -1037,8 +1052,8 @@
               <div class="rotary-pointer"></div>
             </div>
             <div class="rotary-ticks">
-              <span class="tick-label" style="top:6px; left:10px;">정상</span>
-              <span class="tick-label" style="top:6px; right:8px;">바이패스</span>
+              <span class="tick-label tick-2-left">정상</span>
+              <span class="tick-label tick-2-right">바이패스</span>
             </div>
           </div>
           <div class="component-label">장애물 감지</div>
@@ -1052,9 +1067,9 @@
               <div class="rotary-pointer"></div>
             </div>
             <div class="rotary-ticks">
-              <span class="tick-label" style="top:6px; left:8px;">AUTO</span>
-              <span class="tick-label" style="top:2px; left:50%;">OFF</span>
-              <span class="tick-label" style="top:6px; right:8px;">ON</span>
+              <span class="tick-label tick-3-left">AUTO</span>
+              <span class="tick-label tick-3-mid">OFF</span>
+              <span class="tick-label tick-3-right">ON</span>
             </div>
           </div>
           <div class="component-label">공기질개선장치</div>
@@ -1068,9 +1083,9 @@
               <div class="rotary-pointer"></div>
             </div>
             <div class="rotary-ticks">
-              <span class="tick-label" style="top:6px; left:8px;">OFF</span>
-              <span class="tick-label" style="top:2px; left:50%;">INT</span>
-              <span class="tick-label" style="top:6px; right:8px;">FAST</span>
+              <span class="tick-label tick-3-left">OFF</span>
+              <span class="tick-label tick-3-mid">INT</span>
+              <span class="tick-label tick-3-right">FAST</span>
             </div>
           </div>
           <div class="component-label">와이퍼 제어</div>
