@@ -755,7 +755,7 @@
     .tick-3-mid   { top: 3px;  left: 50%; }
     .tick-3-right { top: 22px; left: 82px; }
 
-    /* ATP후진 커버형 전용 명판 틱 라벨 (10시 방향 OFF, 2시 방향 ON 대칭 배치) */
+    /* ATP후진 커버형 전용 명판 틱 라벨 (실물 사진 100% 일치: 12시/0시 상단 OFF, 3시/90° 우측 ON 완벽 시인성 확보) */
     .atp-cover-ticks {
       position: absolute;
       top: 0;
@@ -763,24 +763,24 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      font-size: 10.5px;
+      font-size: 11px;
       font-weight: 900;
-      color: #f8fafc;
-      text-shadow: 0 1px 3px #000, 0 0 4px rgba(0,0,0,0.8);
-      letter-spacing: 0.3px;
+      color: #ffffff;
+      text-shadow: 0 1px 3px #000, 0 0 6px rgba(0,0,0,0.95);
+      letter-spacing: 0.5px;
     }
     .atp-tick-off {
       position: absolute;
-      top: 6px;
-      left: calc(50% - 30px);
-      transform: translate(-50%, -50%);
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
       white-space: nowrap;
     }
     .atp-tick-on {
       position: absolute;
-      top: 6px;
-      left: calc(50% + 30px);
-      transform: translate(-50%, -50%);
+      top: 50%;
+      right: -26px;
+      transform: translateY(-50%);
       white-space: nowrap;
     }
 
@@ -1630,7 +1630,7 @@
             <div class="cover-close-hint" onclick="toggleFlipCover('SW_ATP_COVER', event)">닫기 ✕</div>
             <div class="rotary-unit" style="width:58px; height:58px;" onclick="handleComponentTouch('SW_ATP_REV')">
               <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px;"></div>
-              <div id="comp-SW_ATP_REV" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px; transform: rotate(-45deg);">
+              <div id="comp-SW_ATP_REV" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px; transform: rotate(0deg);">
                 <div class="rotary-pointer" style="height:18px; width:6px; left:10px; top:-5px;"></div>
               </div>
             </div>
@@ -3087,7 +3087,7 @@ function handleComponentTouch(compId) {
 
     if (compId === 'SW_ATP_REV') {
       newState = (comp.state === 'OFF') ? 'ON' : 'OFF';
-      el.style.transform = (newState === 'ON') ? 'rotate(45deg)' : 'rotate(-45deg)';
+      el.style.transform = (newState === 'ON') ? 'rotate(90deg)' : 'rotate(0deg)';
     } else if (compId === 'SW_INSUL_SECT') {
       newState = (comp.state === 'NORMAL') ? 'INSUL' : 'NORMAL';
       el.style.transform = (newState === 'INSUL') ? 'rotate(45deg)' : 'rotate(-45deg)';
