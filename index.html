@@ -755,7 +755,230 @@
     .rotary-unit.main-compact .tick-2-left  { top: 12px; left: 14px; font-size: 9px; }
     .rotary-unit.main-compact .tick-2-right { top: 12px; left: 60px; font-size: 9px; }
 
-    /* 실물 사진 100% 반영: 와이퍼 5단계 사각 셀렉터 유닛 (AUTO, OFF, INT, SLOW, FAST) */
+    /* OP5 하단 VOBC 리셋 취급 가이드 오버레이 박스 */
+    .vobc-overlay-card {
+      margin: 18px 4px 16px 4px;
+      background: rgba(22, 26, 33, 0.94);
+      border: 1.5px solid #3b424d;
+      border-radius: 10px;
+      padding: 14px 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(8px);
+      color: #e2e8f0;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .vobc-overlay-card.handling {
+      border-color: #38bdf8;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    }
+
+    .vobc-overlay-card.shake {
+      animation: cardShake 0.4s ease;
+    }
+
+    @keyframes cardShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+
+    .vobc-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .vobc-card-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #f1f5f9;
+      letter-spacing: -0.2px;
+    }
+
+    .vobc-card-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 12px;
+      background: #252e3d;
+      color: #94a3b8;
+      border: 1px solid #3b424d;
+      transition: all 0.2s ease;
+    }
+
+    .vobc-card-badge.active-green {
+      background: rgba(0, 230, 118, 0.18);
+      color: #00e676;
+      border-color: #00e676;
+      box-shadow: 0 0 10px rgba(0, 230, 118, 0.3);
+    }
+
+    .vobc-card-badge.active-cyan {
+      background: rgba(0, 229, 255, 0.18);
+      color: #00e5ff;
+      border-color: #00e5ff;
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.35);
+    }
+
+    .vobc-guide-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .vobc-guide-item {
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1.5px solid transparent;
+      color: #cbd5e1;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .vobc-guide-item.highlight-green {
+      background: rgba(0, 230, 118, 0.15);
+      border-color: #00e676;
+      color: #ffffff;
+      box-shadow: 0 0 14px rgba(0, 230, 118, 0.35);
+      font-weight: 800;
+      transform: scale(1.01);
+    }
+
+    .vobc-guide-item.highlight-cyan {
+      background: rgba(0, 229, 255, 0.15);
+      border-color: #00e5ff;
+      color: #ffffff;
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.4);
+      font-weight: 800;
+      transform: scale(1.01);
+    }
+
+    /* 실시간 미터 및 진행바 */
+    .vobc-meter-wrap {
+      margin-top: 12px;
+      background: #0f1217;
+      padding: 10px 12px;
+      border-radius: 7px;
+      border: 1px solid #28303d;
+    }
+
+    .vobc-meter-track {
+      position: relative;
+      height: 8px;
+      background: #1e2530;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .vobc-meter-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8 0%, #00e676 38%, #ffd600 70%, #00e5ff 100%);
+      border-radius: 4px;
+      transition: width 0.04s linear;
+    }
+
+    .vobc-meter-zones {
+      position: relative;
+      height: 14px;
+      margin-top: 5px;
+      font-size: 9.5px;
+      color: #64748b;
+      font-weight: 700;
+    }
+
+    .vobc-meter-zones span {
+      position: absolute;
+      transform: translateX(-50%);
+    }
+
+    .vobc-meter-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+
+    #vobc-live-timer {
+      color: #38bdf8;
+      font-family: monospace, sans-serif;
+      font-size: 12.5px;
+      font-weight: 800;
+    }
+
+    /* 중앙 플로팅 결과 토스트 모달 */
+    .vobc-result-toast {
+      position: fixed;
+      top: 76px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-25px);
+      background: rgba(18, 22, 28, 0.96);
+      border: 2px solid #00e676;
+      border-radius: 12px;
+      padding: 12px 22px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85), 0 0 25px rgba(0, 230, 118, 0.35);
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transition: transform 0.32s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.25s ease;
+    }
+
+    .vobc-result-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .vobc-result-toast.theme-cyan {
+      border-color: #00e5ff;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85), 0 0 30px rgba(0, 229, 255, 0.45);
+    }
+
+    .vobc-toast-icon {
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .vobc-toast-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .vobc-toast-title {
+      font-size: 16px;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: -0.3px;
+    }
+
+    .vobc-toast-desc {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+
+    #vobc-progress-svg .hold-progress-circle {
+      transition: none;
+    }
+
     /* 실물 사진 100% 반영: 와이퍼 5단계 사각 셀렉터 유닛 (AUTO, OFF, INT, SLOW, FAST) */
     .wiper-unit-box {
       width: 90px;
@@ -1535,10 +1758,19 @@
 
       <div class="op3-panel-grid">
 
-        <!-- 1행 1열: VOBC리셋 (원형 녹색 푸시버튼) -->
+        <!-- 1행 1열: VOBC리셋 (원형 녹색 푸시버튼, 2~3초 / 5~7초 롱프레스 연동) -->
         <div class="component-cell" id="wrap-SW_VOBC_RESET">
-          <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_VOBC_RESET')">
-            <div id="comp-SW_VOBC_RESET" class="push-btn-inner green" style="width:34px; height:34px;"></div>
+          <div class="metal-bezel-btn" style="width:48px; height:48px;">
+            <div class="hold-progress-wrap"
+                 onpointerdown="startVobcResetPress(event)"
+                 onpointerup="endVobcResetPress(event)"
+                 onpointerleave="endVobcResetPress(event)"
+                 oncontextmenu="event.preventDefault()">
+              <div id="comp-SW_VOBC_RESET" class="push-btn-inner green" style="width:34px; height:34px;"></div>
+              <svg class="hold-progress-svg" id="vobc-progress-svg" viewBox="0 0 40 40">
+                <circle id="vobc-progress-circle" class="hold-progress-circle" cx="20" cy="20" r="18" fill="none" stroke="#34d399" stroke-width="3.5" stroke-dasharray="113.1" stroke-dashoffset="113.1"/>
+              </svg>
+            </div>
           </div>
           <div class="component-label">VOBC리셋</div>
         </div>
@@ -1622,6 +1854,53 @@
 
       </div>
     </section>
+
+    <!-- [OP5 하단] 버튼 박스 아래 남는 공간의 VOBC 리셋 안내 오버레이 박스 -->
+    <div id="vobc-overlay-card" class="vobc-overlay-card" style="display:none;">
+      <div class="vobc-card-header">
+        <div class="vobc-card-title-wrap">
+          <span>💡</span>
+          <span>VOBC 리셋 취급 가이드</span>
+        </div>
+        <span id="vobc-card-badge" class="vobc-card-badge">대기 중</span>
+      </div>
+
+      <div class="vobc-guide-list">
+        <div id="vobc-guide-step1" class="vobc-guide-item">
+          - 2~3초 누름 : 해당차 재설정
+        </div>
+        <div id="vobc-guide-step2" class="vobc-guide-item">
+          - 5~7초 누름 : 전·후부 VOBC 모두 리셋
+        </div>
+      </div>
+
+      <!-- 실시간 게이지 및 타이머 -->
+      <div class="vobc-meter-wrap">
+        <div class="vobc-meter-track">
+          <div id="vobc-meter-fill" class="vobc-meter-fill"></div>
+        </div>
+        <div class="vobc-meter-zones">
+          <span style="left: 0%;">0s</span>
+          <span style="left: 28.5%; color: #00e676;">2s</span>
+          <span style="left: 42.8%; color: #00e676;">3s</span>
+          <span style="left: 71.4%; color: #00e5ff;">5s</span>
+          <span style="left: 100%; color: #00e5ff;">7s</span>
+        </div>
+        <div class="vobc-meter-info">
+          <span id="vobc-live-timer">⏱️ 0.0초</span>
+          <span id="vobc-live-status">버튼을 길게 누르면 측정됩니다</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 중앙 플로팅 VOBC 결과 메시지 토스트 -->
+    <div id="vobc-result-toast" class="vobc-result-toast">
+      <div class="vobc-toast-icon" id="vobc-toast-icon">🟢</div>
+      <div class="vobc-toast-content">
+        <div class="vobc-toast-title" id="vobc-toast-title">해당차 재설정</div>
+        <div class="vobc-toast-desc" id="vobc-toast-desc">VOBC 리셋 인가 완료</div>
+      </div>
+    </div>
 
   </main>
 
@@ -2122,6 +2401,12 @@ function switchPanelView(view) {
       else btnEl.classList.remove('active');
     }
   });
+
+  // OP5 전용 VOBC 리셋 안내 오버레이 박스 표시 전환
+  const vobcOverlay = document.getElementById('vobc-overlay-card');
+  if (vobcOverlay) {
+    vobcOverlay.style.display = (view === 'OP5') ? 'block' : 'none';
+  }
 }
 
 // 모드 전환 (실습 / 시험 / 녹화)
@@ -2235,6 +2520,262 @@ function completeUnmannedModeToggle() {
 }
 
 /**
+ * [VOBC 리셋 전용 롱프레스 취급 로직]
+ * - 2~3초 누름 : 해당차 재설정
+ * - 5~7초 누름 : 전·후부 VOBC 모두 리셋
+ */
+let vobcStartTime = 0;
+let vobcInterval = null;
+let vobcToastTimeout = null;
+
+function startVobcResetPress(evt) {
+  if (evt) evt.preventDefault();
+  const btnEl = document.getElementById('comp-SW_VOBC_RESET');
+  const cardEl = document.getElementById('vobc-overlay-card');
+  const fillEl = document.getElementById('vobc-meter-fill');
+  const circleEl = document.getElementById('vobc-progress-circle');
+  const timerEl = document.getElementById('vobc-live-timer');
+  const statusEl = document.getElementById('vobc-live-status');
+  const badgeEl = document.getElementById('vobc-card-badge');
+  const step1El = document.getElementById('vobc-guide-step1');
+  const step2El = document.getElementById('vobc-guide-step2');
+
+  if (btnEl) btnEl.classList.add('pressed');
+  if (cardEl) {
+    cardEl.style.display = 'block';
+    cardEl.classList.add('handling');
+    cardEl.classList.remove('shake');
+  }
+
+  sound.playClick();
+  triggerHaptic(25);
+  vobcStartTime = Date.now();
+
+  clearInterval(vobcInterval);
+  vobcInterval = setInterval(() => {
+    if (!vobcStartTime) return;
+    const elapsed = Date.now() - vobcStartTime;
+    const sec = (elapsed / 1000).toFixed(1);
+    const progress = Math.min(elapsed / 7000, 1.0);
+
+    if (timerEl) timerEl.innerText = `⏱️ ${sec}초`;
+    if (fillEl) fillEl.style.width = `${progress * 100}%`;
+    if (circleEl) circleEl.style.strokeDashoffset = `${113.1 * (1 - progress)}`;
+
+    if (elapsed >= 2000 && elapsed <= 3800) {
+      // 2~3초 구간 (해당차 재설정)
+      if (badgeEl) {
+        badgeEl.innerText = '🟢 해당차 재설정 범위';
+        badgeEl.className = 'vobc-card-badge active-green';
+      }
+      if (statusEl) statusEl.innerText = '👉 지금 손을 떼면 [해당차 재설정]';
+      if (step1El) step1El.classList.add('highlight-green');
+      if (step2El) step2El.classList.remove('highlight-cyan');
+      if (circleEl) circleEl.style.stroke = '#00e676';
+    } else if (elapsed > 3800 && elapsed < 5000) {
+      // 3초 초과 ~ 5초 미만 전환 구간
+      if (badgeEl) {
+        badgeEl.innerText = '전·후부 리셋으로 진행 중';
+        badgeEl.className = 'vobc-card-badge';
+      }
+      if (statusEl) statusEl.innerText = '전·후부 리셋은 5초까지 유지하세요';
+      if (step1El) step1El.classList.remove('highlight-green');
+      if (step2El) step2El.classList.remove('highlight-cyan');
+      if (circleEl) circleEl.style.stroke = '#ffd600';
+    } else if (elapsed >= 5000 && elapsed <= 7800) {
+      // 5~7초 구간 (전·후부 VOBC 모두 리셋)
+      if (badgeEl) {
+        badgeEl.innerText = '⚡ 전·후부 리셋 범위';
+        badgeEl.className = 'vobc-card-badge active-cyan';
+      }
+      if (statusEl) statusEl.innerText = '👉 지금 손을 떼면 [전·후부 VOBC 모두 리셋]';
+      if (step1El) step1El.classList.remove('highlight-green');
+      if (step2El) step2El.classList.add('highlight-cyan');
+      if (circleEl) circleEl.style.stroke = '#00e5ff';
+    } else if (elapsed > 7800) {
+      // 7초 초과
+      if (badgeEl) {
+        badgeEl.innerText = '⚠️ 시간 초과';
+        badgeEl.className = 'vobc-card-badge';
+      }
+      if (statusEl) statusEl.innerText = '최대 권장 시간(7초)을 초과했습니다';
+      if (step1El) step1El.classList.remove('highlight-green');
+      if (step2El) step2El.classList.remove('highlight-cyan');
+      if (circleEl) circleEl.style.stroke = '#ef4444';
+    } else {
+      // 0~2초 초기 인가
+      if (badgeEl) {
+        badgeEl.innerText = '인가 중...';
+        badgeEl.className = 'vobc-card-badge';
+      }
+      if (statusEl) statusEl.innerText = '버튼을 계속 유지하세요';
+      if (step1El) step1El.classList.remove('highlight-green');
+      if (step2El) step2El.classList.remove('highlight-cyan');
+      if (circleEl) circleEl.style.stroke = '#38bdf8';
+    }
+  }, 40);
+}
+
+function endVobcResetPress(evt) {
+  if (evt) evt.preventDefault();
+  const btnEl = document.getElementById('comp-SW_VOBC_RESET');
+  const cardEl = document.getElementById('vobc-overlay-card');
+  const circleEl = document.getElementById('vobc-progress-circle');
+  const fillEl = document.getElementById('vobc-meter-fill');
+  const badgeEl = document.getElementById('vobc-card-badge');
+  const statusEl = document.getElementById('vobc-live-status');
+  const step1El = document.getElementById('vobc-guide-step1');
+  const step2El = document.getElementById('vobc-guide-step2');
+
+  if (btnEl) btnEl.classList.remove('pressed');
+  if (cardEl) cardEl.classList.remove('handling');
+
+  clearInterval(vobcInterval);
+  vobcInterval = null;
+
+  if (!vobcStartTime) return;
+  const elapsed = Date.now() - vobcStartTime;
+  vobcStartTime = 0;
+
+  const comp = COMPONENT_REGISTRY['SW_VOBC_RESET'];
+
+  if (elapsed >= 2000 && elapsed <= 3800) {
+    // 2~3초: 해당차 재설정
+    sound.playSuccess();
+    triggerHaptic([40, 50, 80]);
+    showVobcToast('해당차 재설정', `VOBC 리셋 완료 (${(elapsed / 1000).toFixed(1)}초 인가)`, 'green');
+    showTemporaryHudFeedback('🟢 [VOBC 리셋] 해당차 재설정', false);
+
+    if (badgeEl) {
+      badgeEl.innerText = '🟢 해당차 재설정 완료';
+      badgeEl.className = 'vobc-card-badge active-green';
+    }
+    if (statusEl) statusEl.innerText = '완료: 해당차 재설정이 정상 수행되었습니다';
+
+    if (currentMode === 'REC') {
+      promptRecordStep('SW_VOBC_RESET', comp.name, '해당차 재설정');
+    } else {
+      evaluateStepAction('SW_VOBC_RESET', '해당차 재설정');
+    }
+  } else if (elapsed >= 5000 && elapsed <= 7800) {
+    // 5~7초: 전·후부 VOBC 모두 리셋
+    sound.playSuccess();
+    triggerHaptic([60, 60, 100]);
+    showVobcToast('전·후부 VOBC 모두 리셋', `VOBC 전·후부 리셋 완료 (${(elapsed / 1000).toFixed(1)}초 인가)`, 'cyan');
+    showTemporaryHudFeedback('⚡ [VOBC 리셋] 전·후부 VOBC 모두 리셋', false);
+
+    if (badgeEl) {
+      badgeEl.innerText = '⚡ 전·후부 VOBC 모두 리셋 완료';
+      badgeEl.className = 'vobc-card-badge active-cyan';
+    }
+    if (statusEl) statusEl.innerText = '완료: 전·후부 VOBC가 모두 리셋되었습니다';
+
+    if (currentMode === 'REC') {
+      promptRecordStep('SW_VOBC_RESET', comp.name, '전·후부 VOBC 모두 리셋');
+    } else {
+      evaluateStepAction('SW_VOBC_RESET', '전·후부 VOBC 모두 리셋');
+    }
+  } else if (elapsed < 2000) {
+    // 2초 미만 (너무 짧음)
+    sound.playError();
+    triggerHaptic(40);
+    if (cardEl) cardEl.classList.add('shake');
+    showTemporaryHudFeedback('⚠️ 최소 2초 이상 눌러야 합니다 (- 2~3초: 해당차 재설정 / - 5~7초: 전·후부 VOBC 모두 리셋)', true);
+
+    if (badgeEl) {
+      badgeEl.innerText = '취급 시간 부족';
+      badgeEl.className = 'vobc-card-badge';
+    }
+    if (statusEl) statusEl.innerText = '최소 2초 이상 길게 눌러주세요';
+  } else if (elapsed > 3800 && elapsed < 5000) {
+    // 3초 초과 5초 미만
+    sound.playError();
+    triggerHaptic(40);
+    showTemporaryHudFeedback(`⚠️ ${(elapsed / 1000).toFixed(1)}초 누름: 전·후부 리셋은 5초 이상 유지해야 합니다.`, true);
+
+    if (badgeEl) {
+      badgeEl.innerText = '인가 미완료';
+      badgeEl.className = 'vobc-card-badge';
+    }
+    if (statusEl) statusEl.innerText = '2~3초 또는 5~7초 범위를 지켜주세요';
+  } else {
+    // 7.8초 초과
+    sound.playError();
+    triggerHaptic(40);
+    showTemporaryHudFeedback('⚠️ 최대 권장 시간(7초)을 초과했습니다.', true);
+
+    if (badgeEl) {
+      badgeEl.innerText = '시간 초과';
+      badgeEl.className = 'vobc-card-badge';
+    }
+    if (statusEl) statusEl.innerText = '5~7초 범위 내에서 손을 떼야 합니다';
+  }
+
+  // 게이지 및 하이라이트 원상 복귀 지연
+  setTimeout(() => {
+    if (circleEl) {
+      circleEl.style.strokeDashoffset = '113.1';
+      circleEl.style.stroke = '#34d399';
+    }
+    if (fillEl) fillEl.style.width = '0%';
+    if (step1El) step1El.classList.remove('highlight-green');
+    if (step2El) step2El.classList.remove('highlight-cyan');
+  }, 1400);
+}
+
+// 중앙 플로팅 토스트 메시지 출력
+function showVobcToast(title, desc, theme = 'green') {
+  const toast = document.getElementById('vobc-result-toast');
+  const titleEl = document.getElementById('vobc-toast-title');
+  const descEl = document.getElementById('vobc-toast-desc');
+  const iconEl = document.getElementById('vobc-toast-icon');
+
+  if (!toast || !titleEl) return;
+
+  titleEl.innerText = title;
+  if (descEl) descEl.innerText = desc;
+  if (iconEl) iconEl.innerText = (theme === 'cyan') ? '⚡' : '🟢';
+
+  toast.className = 'vobc-result-toast show' + (theme === 'cyan' ? ' theme-cyan' : '');
+
+  clearTimeout(vobcToastTimeout);
+  vobcToastTimeout = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3200);
+}
+
+function resetVobcUI() {
+  clearInterval(vobcInterval);
+  vobcInterval = null;
+  vobcStartTime = 0;
+  const circleEl = document.getElementById('vobc-progress-circle');
+  const fillEl = document.getElementById('vobc-meter-fill');
+  const timerEl = document.getElementById('vobc-live-timer');
+  const statusEl = document.getElementById('vobc-live-status');
+  const badgeEl = document.getElementById('vobc-card-badge');
+  const step1El = document.getElementById('vobc-guide-step1');
+  const step2El = document.getElementById('vobc-guide-step2');
+  const cardEl = document.getElementById('vobc-overlay-card');
+
+  if (circleEl) {
+    circleEl.style.strokeDashoffset = '113.1';
+    circleEl.style.stroke = '#34d399';
+  }
+  if (fillEl) fillEl.style.width = '0%';
+  if (timerEl) timerEl.innerText = '⏱️ 0.0초';
+  if (statusEl) statusEl.innerText = '버튼을 길게 누르면 측정됩니다';
+  if (badgeEl) {
+    badgeEl.innerText = '대기 중';
+    badgeEl.className = 'vobc-card-badge';
+  }
+  if (step1El) step1El.classList.remove('highlight-green');
+  if (step2El) step2El.classList.remove('highlight-cyan');
+  if (cardEl) {
+    cardEl.classList.remove('handling', 'shake');
+  }
+}
+
+/**
  * 터치 및 클릭 인터랙션 핸들러
  */
 function handleComponentTouch(compId) {
@@ -2306,6 +2847,13 @@ function handleComponentTouch(compId) {
     } else if (compId === 'SW_EMG_RELEASE') {
       // 비상제동완해: 일반 딸깍 소리만 나고, 제동통 공기압만 0으로 감압
       updateGaugeUI(0.0);
+    } else if (compId === 'SW_VOBC_RESET') {
+      const cardEl = document.getElementById('vobc-overlay-card');
+      if (cardEl) {
+        cardEl.style.display = 'block';
+        cardEl.classList.add('shake');
+      }
+      showTemporaryHudFeedback("💡 VOBC 리셋 버튼을 길게 누르세요 (- 2~3초: 해당차 재설정 / - 5~7초: 전·후부 VOBC 모두 리셋)", false);
     }
 
     setTimeout(() => {
@@ -2686,6 +3234,8 @@ function resetCurrentScenario() {
         comp.state = 'OFF';
         const svgEl = document.getElementById('unmanned-progress-svg');
         if (svgEl) svgEl.classList.remove('charging');
+      } else if (id === 'SW_VOBC_RESET') {
+        resetVobcUI();
       }
     }
   });
