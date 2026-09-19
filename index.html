@@ -870,36 +870,24 @@
           <div class="component-label">강제완해</div>
         </div>
 
-        <!-- 2행 좌: 비상제동완해 (안전커버 + 적색 푸시) -->
+        <!-- 2행 좌: 비상제동완해 (적색 푸시버튼) -->
         <div class="component-cell" id="wrap-SW_EMG_RELEASE">
-          <div class="cover-guard-unit">
-            <div id="comp-SW_EMG_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_EMG_COVER', event)">
-              <div class="cover-hinge"></div>
-            </div>
-            <div class="cover-close-hint" onclick="toggleFlipCover('SW_EMG_COVER', event)">닫기 ✕</div>
-            <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_EMG_RELEASE')">
-              <div id="comp-SW_EMG_RELEASE" class="push-btn-inner red" style="width:34px; height:34px;"></div>
-            </div>
+          <div class="metal-bezel-btn" onclick="handleComponentTouch('SW_EMG_RELEASE')">
+            <div id="comp-SW_EMG_RELEASE" class="push-btn-inner red"></div>
           </div>
           <div class="component-label">비상제동완해</div>
         </div>
 
-        <!-- 2행 우: ATP후진 (안전커버 + 2단 로터리) -->
+        <!-- 2행 우: ATP후진 (2단 로터리) -->
         <div class="component-cell" id="wrap-SW_ATP_REV">
-          <div class="cover-guard-unit">
-            <div id="comp-SW_ATP_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_ATP_COVER', event)">
-              <div class="cover-hinge"></div>
+          <div class="rotary-unit" onclick="handleComponentTouch('SW_ATP_REV')">
+            <div class="rotary-dial-plate"></div>
+            <div id="comp-SW_ATP_REV" class="rotary-knob">
+              <div class="rotary-pointer"></div>
             </div>
-            <div class="cover-close-hint" onclick="toggleFlipCover('SW_ATP_COVER', event)">닫기 ✕</div>
-            <div class="rotary-unit" onclick="handleComponentTouch('SW_ATP_REV')">
-              <div class="rotary-dial-plate"></div>
-              <div id="comp-SW_ATP_REV" class="rotary-knob">
-                <div class="rotary-pointer"></div>
-              </div>
-              <div class="rotary-ticks">
-                <span class="tick-label" style="top:8px; left:14px;">OFF</span>
-                <span class="tick-label" style="top:8px; right:10px;">ON</span>
-              </div>
+            <div class="rotary-ticks">
+              <span class="tick-label" style="top:8px; left:14px;">OFF</span>
+              <span class="tick-label" style="top:8px; right:10px;">ON</span>
             </div>
           </div>
           <div class="component-label">ATP후진</div>
@@ -928,7 +916,7 @@
           <div class="component-label">주차제동체결</div>
         </div>
 
-        <!-- 4행 좌: 무선모드 (안전커버 + 녹색 버튼) -->
+        <!-- 4행 좌: 무인모드 (안전커버 + 녹색 버튼) -->
         <div class="component-cell" id="wrap-SW_WIRELESS_MODE">
           <div class="cover-guard-unit">
             <div id="comp-SW_WIRELESS_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_WIRELESS_COVER', event)">
@@ -939,7 +927,7 @@
               <div id="comp-SW_WIRELESS_MODE" class="push-btn-inner green" style="width:34px; height:34px;"></div>
             </div>
           </div>
-          <div class="component-label">무선모드</div>
+          <div class="component-label">무인모드</div>
         </div>
 
         <!-- 4행 우: 주차제동완해 (적색 푸시) -->
@@ -1310,14 +1298,72 @@ class SoundEngine {
     osc.start(now);
     osc.stop(now + 0.3);
   }
+  // 로터리 스위치 묵직한 기계식 "딱!" (Rotary Snap) 사운드
+  playRotarySnap() {
+    this.init();
+    const now = this.ctx.currentTime;
+    
+    // 1. 단단한 타격 펄스 ("딱!" 어택)
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(450, now);
+    osc.frequency.exponentialRampToValueAtTime(70, now + 0.04);
+    gain.gain.setValueAtTime(0.75, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.045);
+
+    // 2. 고주파 플라스틱/메탈 걸쇠 찰칵음
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.025);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(2000, now);
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.45, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.025);
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(this.ctx.destination);
+    noise.start(now);
+  }
 }
 
 const sound = new SoundEngine();
 
-// 햅틱 진동 유틸
+// 햅틱 진동 유틸 (안드로이드 navigator.vibrate + 아이폰 iOS 저주파 오디오 햅틱 하이브리드)
 function triggerHaptic(pattern) {
-  if ('vibrate' in navigator) {
+  // 1. 안드로이드 등 표준 Vibration API 지원 기기
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
     try { navigator.vibrate(pattern); } catch(e) {}
+  }
+  // 2. 아이폰(iOS Safari는 보안상 navigator.vibrate 미지원)을 위한 초저주파 서브베이스 햅틱 펄스 (손끝 물리 진동 체감)
+  if (sound) {
+    try {
+      sound.init();
+      const now = sound.ctx.currentTime;
+      const osc = sound.ctx.createOscillator();
+      const gain = sound.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(52, now); // 아이폰 스피커 모듈 공진 주파수 대역
+      const dur = Array.isArray(pattern) ? (pattern[0] / 1000) : (pattern / 1000);
+      const safeDur = Math.min(Math.max(dur || 0.04, 0.035), 0.1);
+      gain.gain.setValueAtTime(0.85, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + safeDur);
+      osc.connect(gain);
+      gain.connect(sound.ctx.destination);
+      osc.start(now);
+      osc.stop(now + safeDur + 0.01);
+    } catch(e) {}
   }
 }
 
@@ -1325,17 +1371,15 @@ function triggerHaptic(pattern) {
  * 부품 상태 관리자
  */
 const COMPONENT_REGISTRY = {
-  // A필러 부품군
+  // A필러 부품군 (무인모드만 투명커버 적용)
   SW_EMG_STOP: { name: '비상제동체결', type: 'LATCH', state: 'RELEASED', panel: 'A_PILLAR' },
   SW_FORCE_REL: { name: '강제완해', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR' },
-  SW_EMG_COVER: { name: '비상완해 보호커버', type: 'COVER', state: 'CLOSED', panel: 'A_PILLAR' },
-  SW_EMG_RELEASE: { name: '비상제동완해', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR', requiresCover: 'SW_EMG_COVER' },
-  SW_ATP_COVER: { name: 'ATP후진 보호커버', type: 'COVER', state: 'CLOSED', panel: 'A_PILLAR' },
-  SW_ATP_REV: { name: 'ATP후진', type: 'ROTARY_2', state: 'OFF', panel: 'A_PILLAR', requiresCover: 'SW_ATP_COVER' },
+  SW_EMG_RELEASE: { name: '비상제동완해', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR' },
+  SW_ATP_REV: { name: 'ATP후진', type: 'ROTARY_2', state: 'OFF', panel: 'A_PILLAR' },
   SW_LOW_SPEED: { name: '저속도', type: 'ROTARY_2', state: 'NORMAL', panel: 'A_PILLAR' },
   SW_PARK_SET: { name: '주차제동체결', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR' },
-  SW_WIRELESS_COVER: { name: '무선모드 보호커버', type: 'COVER', state: 'CLOSED', panel: 'A_PILLAR' },
-  SW_WIRELESS_MODE: { name: '무선모드', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR', requiresCover: 'SW_WIRELESS_COVER' },
+  SW_WIRELESS_COVER: { name: '무인모드 보호커버', type: 'COVER', state: 'CLOSED', panel: 'A_PILLAR' },
+  SW_WIRELESS_MODE: { name: '무인모드', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR', requiresCover: 'SW_WIRELESS_COVER' },
   SW_PARK_REL: { name: '주차제동완해', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR' },
   SW_ROOM_LIGHT: { name: '실내등', type: 'ROTARY_3', state: 'AUTO', panel: 'A_PILLAR' }, // MANUAL, AUTO, EMERGENCY
   SW_RESCUE_DRIVE: { name: '구원운전', type: 'ROTARY_3', state: 'NORMAL', panel: 'A_PILLAR' }, // RESCUE, NORMAL, EMERGENCY
@@ -1348,13 +1392,31 @@ const COMPONENT_REGISTRY = {
 };
 
 /**
+ * 3단 로터리 스위치 왕복 이동 관리자 (끝까지 도달 시 반대 방향으로 바운스)
+ * 실내등: 수동 ↔ 자동 ↔ 비상
+ * 구원운전: 구원 ↔ 정상 ↔ 비상
+ */
+const ROTARY3_BOUNCE = {
+  SW_ROOM_LIGHT: {
+    states: ['MANUAL', 'AUTO', 'EMERGENCY'],
+    angles: [-45, 0, 45],
+    dir: 1 // 1: 오른쪽, -1: 왼쪽
+  },
+  SW_RESCUE_DRIVE: {
+    states: ['RESCUE', 'NORMAL', 'EMERGENCY'],
+    angles: [-45, 0, 45],
+    dir: 1
+  }
+};
+
+/**
  * 기본 탑재 실무 교육 시나리오 4종
  */
 const DEFAULT_SCENARIOS = [
   {
     id: "SCN_EMG_DEFAULT",
     title: "1. 비상제동 체결 및 완해 절차",
-    description: "열차 운행 중 비상 상황 발생 시 비상제동을 체결하고, 확인 후 완해 커버를 열어 복구하는 기본 안전 절차입니다.",
+    description: "열차 운행 중 비상 상황 발생 시 비상제동을 체결하고, 완해 버튼을 눌러 복구하는 기본 안전 절차입니다.",
     steps: [
       {
         step: 1,
@@ -1366,21 +1428,14 @@ const DEFAULT_SCENARIOS = [
       },
       {
         step: 2,
-        target: "SW_EMG_COVER",
-        targetName: "비상완해 보호커버",
-        expectedState: "OPEN",
-        instruction: "비상 상황이 해제되었습니다. [비상완해 보호커버]를 위로 여십시오."
-      },
-      {
-        step: 3,
         target: "SW_EMG_RELEASE",
         targetName: "비상제동완해",
         expectedState: "PRESSED",
-        instruction: "보호커버 내부의 빨간색 [비상제동완해] 푸시버튼을 누르십시오.",
+        instruction: "빨간색 [비상제동완해] 푸시버튼을 눌러 제동을 푸십시오.",
         gaugeEffect: { bc: 0.0 }
       },
       {
-        step: 4,
+        step: 3,
         target: "SW_EMG_STOP",
         targetName: "비상제동체결",
         expectedState: "RELEASED",
@@ -1440,21 +1495,14 @@ const DEFAULT_SCENARIOS = [
   {
     id: "SCN_ATP_REVERSE",
     title: "4. ATP 차상장치 이상 후진 운전 절차",
-    description: "신호설비 이상으로 지정된 저속 후진을 위해 투명 커버를 열고 ATP후진 스위치를 인가하는 절차입니다.",
+    description: "신호설비 이상으로 지정된 저속 후진을 위해 ATP후진 스위치를 인가하는 절차입니다.",
     steps: [
       {
         step: 1,
-        target: "SW_ATP_COVER",
-        targetName: "ATP후진 보호커버",
-        expectedState: "OPEN",
-        instruction: "[ATP후진] 스위치의 아크릴 보호커버를 들어올려 여십시오."
-      },
-      {
-        step: 2,
         target: "SW_ATP_REV",
         targetName: "ATP후진",
         expectedState: "ON",
-        instruction: "커버 안쪽의 [ATP후진] 스위치를 'ON' 위치로 돌리십시오."
+        instruction: "[ATP후진] 스위치를 'ON' 위치로 돌리십시오."
       }
     ]
   }
@@ -1573,7 +1621,7 @@ function handleComponentTouch(compId) {
     sound.playClick();
     triggerHaptic(25);
 
-    // 공압 배기음 (칙~ / 슉~) 및 햅틱 연동 (1.0초 배기음)
+    // 공압 배기음은 오직 주차제동체결 / 주차제동완해에만 들림 (1.0초)
     if (compId === 'SW_PARK_SET') {
       // 주차제동체결: 스프링 챔버 공기가 1초간 빠지며 강력 체결 (묵직한 칙~~~~)
       sound.playAirExhaust(1.0, 950, 0.75);
@@ -1583,13 +1631,8 @@ function handleComponentTouch(compId) {
       sound.playAirExhaust(1.0, 1400, 0.7);
       triggerHaptic([30, 40]);
     } else if (compId === 'SW_EMG_RELEASE') {
-      // 비상제동완해: 제동통 공기 1초간 배기 및 게이지 감압
-      sound.playAirExhaust(1.0, 1200, 0.65);
+      // 비상제동완해: 일반 딸깍 소리만 나고, 제동통 공기압만 0으로 감압
       updateGaugeUI(0.0);
-    } else if (compId === 'SW_FORCE_REL') {
-      // 강제완해: 전자밸브 강제 여자 에어 배기 (1.0초)
-      sound.playAirExhaust(1.0, 1300, 0.6);
-      triggerHaptic(35);
     }
 
     setTimeout(() => {
@@ -1597,10 +1640,10 @@ function handleComponentTouch(compId) {
       comp.state = 'IDLE';
     }, 220);
   } else if (comp.type === 'ROTARY_2') {
-    // 2단 로터리 스위치
+    // 2단 로터리 스위치 (ATP후진, 저속도 등 움직일 때 기계식 딱! 소리)
     const el = document.getElementById(`comp-${compId}`);
-    sound.playClick();
-    triggerHaptic(25);
+    sound.playRotarySnap();
+    triggerHaptic(30);
 
     if (compId === 'SW_ATP_REV') {
       newState = (comp.state === 'OFF') ? 'ON' : 'OFF';
@@ -1611,29 +1654,39 @@ function handleComponentTouch(compId) {
     }
     comp.state = newState;
   } else if (comp.type === 'ROTARY_3') {
-    // 3단 셀렉터 스위치
+    // 3단 셀렉터 스위치 (실내등, 구원운전 등 움직일 때 기계식 딱! 소리)
     const el = document.getElementById(`comp-${compId}`);
-    sound.playClick();
-    triggerHaptic(30);
+    sound.playRotarySnap();
+    triggerHaptic(35);
 
-    if (compId === 'SW_ROOM_LIGHT') {
-      // 수동(-45deg) -> 자동(0deg) -> 비상(45deg)
-      if (comp.state === 'MANUAL') newState = 'AUTO';
-      else if (comp.state === 'AUTO') newState = 'EMERGENCY';
-      else newState = 'MANUAL';
-      
-      const rot = (newState === 'MANUAL') ? -45 : (newState === 'AUTO' ? 0 : 45);
-      el.style.transform = `rotate(${rot}deg)`;
-    } else if (compId === 'SW_RESCUE_DRIVE') {
-      // 구원(-45deg) -> 정상(0deg) -> 비상(45deg)
-      if (comp.state === 'RESCUE') newState = 'NORMAL';
-      else if (comp.state === 'NORMAL') newState = 'EMERGENCY';
-      else newState = 'RESCUE';
+    // 실내등과 구원운전: 오른쪽 끝(비상)까지 갔다가 다시 누르면 왼쪽 끝(수동/구원)으로 왕복 이동
+    if (compId === 'SW_ROOM_LIGHT' || compId === 'SW_RESCUE_DRIVE') {
+      const bounce = ROTARY3_BOUNCE[compId];
+      let currIdx = bounce.states.indexOf(comp.state);
+      if (currIdx === -1) currIdx = 1;
 
-      const rot = (newState === 'RESCUE') ? -45 : (newState === 'NORMAL' ? 0 : 45);
+      // 끝에 도달했을 경우 방향 반전
+      if (currIdx >= bounce.states.length - 1) {
+        bounce.dir = -1; // 왼쪽으로 반전
+      } else if (currIdx <= 0) {
+        bounce.dir = 1;  // 오른쪽으로 반전
+      }
+
+      let nextIdx = currIdx + bounce.dir;
+      // 안전 경계 처리
+      if (nextIdx >= bounce.states.length - 1) {
+        nextIdx = bounce.states.length - 1;
+        bounce.dir = -1; // 다음 턴에는 반대 방향
+      } else if (nextIdx <= 0) {
+        nextIdx = 0;
+        bounce.dir = 1;  // 다음 턴에는 반대 방향
+      }
+
+      newState = bounce.states[nextIdx];
+      const rot = bounce.angles[nextIdx];
       el.style.transform = `rotate(${rot}deg)`;
     } else {
-      // 기본 3단 (AUTO, OFF, ON)
+      // 일반 3단 스위치 (공기질개선장치, 와이퍼 등: AUTO -> OFF -> ON)
       if (comp.state === 'AUTO') newState = 'OFF';
       else if (comp.state === 'OFF') newState = 'ON';
       else newState = 'AUTO';
@@ -1841,9 +1894,13 @@ function resetCurrentScenario() {
     } else if (comp.type === 'ROTARY_2' || comp.type === 'ROTARY_3') {
       const el = document.getElementById(`comp-${id}`);
       if (id === 'SW_ATP_REV') comp.state = 'OFF';
-      else if (id === 'SW_ROOM_LIGHT') comp.state = 'AUTO';
-      else if (id === 'SW_RESCUE_DRIVE') comp.state = 'NORMAL';
-      else comp.state = 'NORMAL';
+      else if (id === 'SW_ROOM_LIGHT') {
+        comp.state = 'AUTO';
+        ROTARY3_BOUNCE.SW_ROOM_LIGHT.dir = 1;
+      } else if (id === 'SW_RESCUE_DRIVE') {
+        comp.state = 'NORMAL';
+        ROTARY3_BOUNCE.SW_RESCUE_DRIVE.dir = 1;
+      } else comp.state = 'NORMAL';
       if (el) el.style.transform = 'rotate(0deg)';
     }
   });
