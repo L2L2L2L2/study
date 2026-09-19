@@ -769,75 +769,70 @@
       user-select: none;
     }
 
-    /* 상단 좌측 그리스 문자 파이 심볼 */
-    .wiper-sym-phi {
+    /* 5단계 텍스트 라벨 (각 위치별 직접 터치 및 클릭 가능) */
+    .wiper-lbl {
       position: absolute;
-      top: 5px;
-      left: 7px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #cbd5e1;
-      line-height: 1;
-      font-family: serif, 'Times New Roman', sans-serif;
+      font-weight: 900;
+      color: #94a3b8;
+      text-shadow: 0 1px 2px #000;
+      cursor: pointer;
+      z-index: 6;
+      padding: 3px 4px;
+      border-radius: 3px;
+      transition: color 0.15s ease, text-shadow 0.15s ease;
+      touch-action: manipulation;
+    }
+    .wiper-lbl:hover {
+      color: #ffffff;
+    }
+    .wiper-lbl.active {
+      color: #38bdf8 !important;
+      text-shadow: 0 0 8px rgba(56, 189, 248, 0.8), 0 1px 2px #000 !important;
     }
 
-    /* 5단계 텍스트 라벨 (원 밖으로 완전 분리) */
     .wiper-lbl-off {
-      position: absolute;
       top: 6px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 8.5px;
-      font-weight: 900;
       color: #e2e8f0;
-      text-shadow: 0 1px 2px #000;
     }
     .wiper-lbl-auto {
-      position: absolute;
       top: 29px;
       left: 4px;
       font-size: 8px;
-      font-weight: 900;
-      color: #94a3b8;
-      text-shadow: 0 1px 2px #000;
     }
     .wiper-lbl-int {
-      position: absolute;
       top: 29px;
       right: 5px;
       font-size: 8px;
-      font-weight: 900;
-      color: #94a3b8;
-      text-shadow: 0 1px 2px #000;
     }
     .wiper-lbl-slow {
-      position: absolute;
       top: 55px;
       right: 4px;
       font-size: 8px;
-      font-weight: 900;
-      color: #94a3b8;
-      text-shadow: 0 1px 2px #000;
     }
     .wiper-lbl-fast {
-      position: absolute;
       bottom: 5px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 8.5px;
-      font-weight: 900;
       color: #e2e8f0;
-      text-shadow: 0 1px 2px #000;
     }
 
-    /* 실물 틱 도트 */
+    /* 실물 틱 도트 (터치 시 해당 위치로 전환) */
     .wiper-dot {
       position: absolute;
-      width: 2px;
-      height: 2px;
+      width: 4px;
+      height: 4px;
       background: #94a3b8;
       border-radius: 50%;
-      pointer-events: none;
+      cursor: pointer;
+      z-index: 6;
+      transition: background-color 0.15s ease;
+    }
+    .wiper-dot:hover {
+      background: #38bdf8;
     }
     .wiper-dot-auto { top: 38px; left: 21px; }
     .wiper-dot-int  { top: 38px; right: 21px; }
@@ -1417,15 +1412,14 @@
         <!-- 1행 2열: 와이퍼 (실물 사진 100% 동일 5단계 셀렉터: AUTO / OFF / INT / SLOW / FAST) -->
         <div class="component-cell" id="wrap-SW_WIPER">
           <div class="wiper-unit-box" onclick="handleComponentTouch('SW_WIPER')">
-            <span class="wiper-sym-phi">Φ</span>
-            <span class="wiper-lbl-off">OFF</span>
-            <span class="wiper-lbl-auto">AUTO</span>
-            <span class="wiper-lbl-int">INT</span>
-            <span class="wiper-lbl-slow">SLOW</span>
-            <span class="wiper-lbl-fast">FAST</span>
-            <div class="wiper-dot wiper-dot-auto"></div>
-            <div class="wiper-dot wiper-dot-int"></div>
-            <div class="wiper-dot wiper-dot-slow"></div>
+            <span class="wiper-lbl wiper-lbl-off active" id="wiper-lbl-OFF" onclick="setWiperPosition('OFF', event)">OFF</span>
+            <span class="wiper-lbl wiper-lbl-auto" id="wiper-lbl-AUTO" onclick="setWiperPosition('AUTO', event)">AUTO</span>
+            <span class="wiper-lbl wiper-lbl-int" id="wiper-lbl-INT" onclick="setWiperPosition('INT', event)">INT</span>
+            <span class="wiper-lbl wiper-lbl-slow" id="wiper-lbl-SLOW" onclick="setWiperPosition('SLOW', event)">SLOW</span>
+            <span class="wiper-lbl wiper-lbl-fast" id="wiper-lbl-FAST" onclick="setWiperPosition('FAST', event)">FAST</span>
+            <div class="wiper-dot wiper-dot-auto" title="AUTO" onclick="setWiperPosition('AUTO', event)"></div>
+            <div class="wiper-dot wiper-dot-int" title="INT" onclick="setWiperPosition('INT', event)"></div>
+            <div class="wiper-dot wiper-dot-slow" title="SLOW" onclick="setWiperPosition('SLOW', event)"></div>
 
             <div class="wiper-dial-plate"></div>
             <div id="comp-SW_WIPER" class="wiper-bar-knob" style="transform: rotate(0deg);">
@@ -1938,7 +1932,7 @@ const COMPONENT_REGISTRY = {
 
   // [OP4] 좌측 메인 패널 부품군 (실물 사진 100% 반영 3열 배치)
   SW_RESERVE_ROTARY: { name: '예비(로터리)', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP4' },
-  SW_WIPER: { name: '와이퍼 제어', type: 'ROTARY_5', state: 'OFF', panel: 'OP4' },
+  SW_WIPER: { name: '와이퍼', type: 'ROTARY_5', state: 'OFF', panel: 'OP4' },
   SW_RESERVE_BTN: { name: '예비(버튼)', type: 'MOMENTARY', state: 'IDLE', panel: 'OP4' },
   SW_OBSTACLE_BYPASS: { name: '장애물 감지', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP4' },
   SW_DOOR_BYPASS: { name: '출입문', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP4' },
@@ -2367,22 +2361,6 @@ function handleComponentTouch(compId) {
       newState = bounce.states[nextIdx];
       const rot = bounce.angles[nextIdx];
       el.style.transform = `rotate(${rot}deg)`;
-    } else if (compId === 'SW_WIPER') {
-      // 와이퍼 실물 5단계 (AUTO: -70도, OFF: 0도, INT: 55도, SLOW: 115도, FAST: 180도)
-      const wiperSteps = [
-        { state: 'OFF',  angle: 0,   label: 'OFF (정지)' },
-        { state: 'INT',  angle: 55,  label: 'INT (간헐 작동)' },
-        { state: 'SLOW', angle: 115, label: 'SLOW (저속 연속)' },
-        { state: 'FAST', angle: 180, label: 'FAST (고속 연속)' },
-        { state: 'AUTO', angle: -70, label: 'AUTO (자동 감지)' }
-      ];
-      let currIdx = wiperSteps.findIndex(s => s.state === comp.state);
-      if (currIdx === -1) currIdx = 0;
-      const nextIdx = (currIdx + 1) % wiperSteps.length;
-      const nextStep = wiperSteps[nextIdx];
-      newState = nextStep.state;
-      el.style.transform = `rotate(${nextStep.angle}deg)`;
-      showTemporaryHudFeedback(`🌧️ [와이퍼] ${nextStep.label}`, false);
     } else if (compId === 'SW_AIR_CLEAN') {
       // 공기질개선장치 3단 (AUTO: -45도 -> OFF: 0도 -> ON: 45도)
       if (comp.state === 'AUTO') newState = 'OFF';
@@ -2401,6 +2379,28 @@ function handleComponentTouch(compId) {
       el.style.transform = `rotate(${rot}deg)`;
     }
     comp.state = newState;
+  } else if (comp.type === 'ROTARY_5' || compId === 'SW_WIPER') {
+    // 와이퍼 실물 5단계 로터리 스위치 (AUTO: -65도, OFF: 0도, INT: 55도, SLOW: 115도, FAST: 180도)
+    const el = document.getElementById(`comp-${compId}`);
+    sound.playRotarySnap();
+    triggerHaptic(30);
+
+    const wiperSteps = [
+      { state: 'OFF',  angle: 0,   label: 'OFF (정지)' },
+      { state: 'INT',  angle: 55,  label: 'INT (간헐 작동)' },
+      { state: 'SLOW', angle: 115, label: 'SLOW (저속 연속)' },
+      { state: 'FAST', angle: 180, label: 'FAST (고속 연속)' },
+      { state: 'AUTO', angle: -65, label: 'AUTO (자동 감지)' }
+    ];
+    let currIdx = wiperSteps.findIndex(s => s.state === comp.state);
+    if (currIdx === -1) currIdx = 0;
+    const nextIdx = (currIdx + 1) % wiperSteps.length;
+    const nextStep = wiperSteps[nextIdx];
+    newState = nextStep.state;
+    comp.state = newState;
+    el.style.transform = `rotate(${nextStep.angle}deg)`;
+    updateWiperActiveLabel(newState);
+    showTemporaryHudFeedback(`🌧️ [와이퍼] ${nextStep.label}`, false);
   }
 
   // 모드별 비즈니스 로직 처리
@@ -2436,6 +2436,53 @@ function toggleFlipCover(coverId, evt) {
   } else {
     evaluateStepAction(coverId, newState);
   }
+}
+
+// 와이퍼 각 위치 직접 선택 함수 (AUTO, OFF, INT, SLOW, FAST 터치 시)
+function setWiperPosition(targetState, evt) {
+  if (evt) evt.stopPropagation();
+  const comp = COMPONENT_REGISTRY['SW_WIPER'];
+  if (!comp) return;
+
+  const wiperSteps = {
+    'AUTO': { angle: -65, label: 'AUTO (자동 감지)' },
+    'OFF':  { angle: 0,   label: 'OFF (정지)' },
+    'INT':  { angle: 55,  label: 'INT (간헐 작동)' },
+    'SLOW': { angle: 115, label: 'SLOW (저속 연속)' },
+    'FAST': { angle: 180, label: 'FAST (고속 연속)' }
+  };
+
+  const step = wiperSteps[targetState];
+  if (!step) return;
+
+  comp.state = targetState;
+  const el = document.getElementById('comp-SW_WIPER');
+  if (el) el.style.transform = `rotate(${step.angle}deg)`;
+
+  sound.playRotarySnap();
+  triggerHaptic(30);
+  updateWiperActiveLabel(targetState);
+  showTemporaryHudFeedback(`🌧️ [와이퍼] ${step.label}`, false);
+
+  if (currentMode === 'REC') {
+    promptRecordStep('SW_WIPER', comp.name, targetState);
+  } else {
+    evaluateStepAction('SW_WIPER', targetState);
+  }
+}
+
+// 와이퍼 현재 활성화 위치 라벨 강조 표시
+function updateWiperActiveLabel(state) {
+  ['AUTO', 'OFF', 'INT', 'SLOW', 'FAST'].forEach(pos => {
+    const lbl = document.getElementById(`wiper-lbl-${pos}`);
+    if (lbl) {
+      if (pos === state) {
+        lbl.classList.add('active');
+      } else {
+        lbl.classList.remove('active');
+      }
+    }
+  });
 }
 
 /**
@@ -2615,6 +2662,7 @@ function resetCurrentScenario() {
         comp.state = 'AUTO';
       } else if (id === 'SW_WIPER') {
         comp.state = 'OFF';
+        updateWiperActiveLabel('OFF');
       } else {
         comp.state = 'NORMAL';
       }
