@@ -664,6 +664,114 @@
     .rotary-unit.main-compact .tick-2-left  { top: 12px; left: 14px; font-size: 9px; }
     .rotary-unit.main-compact .tick-2-right { top: 12px; left: 60px; font-size: 9px; }
 
+    /* 실물 사진 기반: 와이퍼 전용 사각 유닛 */
+    .wiper-unit-box {
+      width: 82px;
+      height: 78px;
+      background: #181b22;
+      border: 2px solid #334155;
+      border-radius: 8px;
+      position: relative;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.08);
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .wiper-dial-plate {
+      position: absolute;
+      top: 48%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid #475569;
+      background: radial-gradient(circle, #2a2f38, #16181e);
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
+      pointer-events: none;
+    }
+
+    .wiper-knob {
+      position: absolute;
+      top: 48%;
+      left: 50%;
+      width: 26px;
+      height: 26px;
+      margin-top: -13px;
+      margin-left: -13px;
+      background: linear-gradient(135deg, #424955 0%, #1e2229 100%);
+      border-radius: 50%;
+      border: 1px solid #636d7d;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.3);
+      transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .wiper-pointer {
+      position: absolute;
+      top: -5px;
+      left: 10px;
+      width: 6px;
+      height: 17px;
+      background: linear-gradient(to bottom, #d2d8e2 0%, #3a404c 100%);
+      border-radius: 3px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+    .wiper-pointer::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 2px;
+      height: 8px;
+      background: #fff;
+    }
+
+    .wiper-labels {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      font-size: 8.5px;
+      font-weight: 800;
+      color: #cbd5e1;
+      text-shadow: 0 1px 3px #000;
+    }
+
+    .wiper-lbl-auto {
+      position: absolute;
+      top: 5px;
+      left: 6px;
+      text-align: left;
+      line-height: 1.1;
+      color: #94a3b8;
+      font-weight: 900;
+    }
+
+    .wiper-lbl-slow {
+      position: absolute;
+      top: 5px;
+      right: 6px;
+      text-align: right;
+      line-height: 1.1;
+      color: #94a3b8;
+      font-weight: 900;
+    }
+
+    .wiper-lbl-fast {
+      position: absolute;
+      bottom: 3px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #f1f5f9;
+      font-weight: 900;
+      font-size: 9px;
+    }
+
     /* [E] 아날로그 공기 압력계 (Dual Gauge: MR / BC) - 실물 검은색 사각 베젤 프레임 */
     .gauge-square-frame {
       grid-column: span 2;
@@ -1160,17 +1268,15 @@
 
         <!-- 1행 2열: 와이퍼 (사각 유닛 다단 셀렉터) -->
         <div class="component-cell" id="wrap-SW_WIPER">
-          <div style="background:#181b22; border:2px solid #334155; border-radius:6px; padding:3px 4px; box-shadow:0 3px 6px rgba(0,0,0,0.6); position:relative;">
-            <div style="position:relative; width:72px; height:68px;" onclick="handleComponentTouch('SW_WIPER')">
-              <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px; left:50%; margin-left:-22px; border-color:#475569;"></div>
-              <div id="comp-SW_WIPER" class="rotary-knob" style="bottom:10px; width:26px; height:26px; left:50%; margin-left:-13px; transform: rotate(-45deg);">
-                <div class="rotary-pointer" style="height:17px; width:6px; left:10px; top:-5px;"></div>
-              </div>
-              <div class="rotary-ticks" style="font-size:8px;">
-                <span style="position:absolute; top:2px; left:4px; color:#94a3b8; font-weight:900; line-height:1.1;">Φ<br>AUTO</span>
-                <span style="position:absolute; top:2px; right:4px; color:#94a3b8; font-weight:900; line-height:1.1;">INT<br>SLOW</span>
-                <span style="position:absolute; bottom:0px; left:50%; transform:translateX(-50%); color:#cbd5e1; font-weight:900;">FAST</span>
-              </div>
+          <div class="wiper-unit-box" onclick="handleComponentTouch('SW_WIPER')">
+            <div class="wiper-dial-plate"></div>
+            <div id="comp-SW_WIPER" class="wiper-knob" style="transform: rotate(-45deg);">
+              <div class="wiper-pointer"></div>
+            </div>
+            <div class="wiper-labels">
+              <span class="wiper-lbl-auto">Φ<br>AUTO</span>
+              <span class="wiper-lbl-slow">INT<br>SLOW</span>
+              <span class="wiper-lbl-fast">FAST</span>
             </div>
           </div>
           <div class="component-label">와이퍼</div>
@@ -1983,13 +2089,13 @@ function handleComponentTouch(compId) {
       const rot = bounce.angles[nextIdx];
       el.style.transform = `rotate(${rot}deg)`;
     } else if (compId === 'SW_WIPER') {
-      // 와이퍼 3단 (AUTO: -45도 -> INT SLOW: 45도 -> FAST: 135도)
+      // 와이퍼 3단 (AUTO: -45도 10시 방향 -> INT SLOW: 45도 2시 방향 -> FAST: 180도 6시 방향)
       if (comp.state === 'AUTO') {
         newState = 'SLOW';
         el.style.transform = 'rotate(45deg)';
       } else if (comp.state === 'SLOW') {
         newState = 'FAST';
-        el.style.transform = 'rotate(135deg)';
+        el.style.transform = 'rotate(180deg)';
       } else {
         newState = 'AUTO';
         el.style.transform = 'rotate(-45deg)';
