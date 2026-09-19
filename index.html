@@ -1,0 +1,2043 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>열차 운전실 좌측 패널 모바일 훈련 시뮬레이터</title>
+  <style>
+    :root {
+      --bg-dark: #121519;
+      --panel-border: #3b424d;
+      --panel-metal: #23272e;
+      --panel-screw: #6a7382;
+      --hud-bg: rgba(18, 21, 25, 0.94);
+      --accent-green: #00e676;
+      --accent-red: #ff3d00;
+      --accent-yellow: #ffd600;
+      --accent-cyan: #00e5ff;
+      --bezel-color: #8c939e;
+      --font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    body {
+      background-color: #0b0d10;
+      color: #e0e6ed;
+      font-family: var(--font-family);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* 모바일 프레임 컨테이너 */
+    #app-container {
+      width: 100%;
+      max-width: 480px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--bg-dark);
+      position: relative;
+      box-shadow: 0 0 35px rgba(0,0,0,0.8);
+      overflow: hidden;
+    }
+
+    /* ========================================================
+       1. 상단 HUD 헤더 영역
+    ======================================================== */
+    header.hud-header {
+      background: var(--hud-bg);
+      border-bottom: 2px solid #2d333b;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .hud-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mode-tabs {
+      display: flex;
+      background: #1c2128;
+      border-radius: 6px;
+      padding: 2px;
+      border: 1px solid #30363d;
+    }
+
+    .mode-tab-btn {
+      background: transparent;
+      border: none;
+      color: #8b949e;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 9px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .mode-tab-btn.active {
+      background: #238636;
+      color: #ffffff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+    .mode-tab-btn.active.rec-mode {
+      background: #da3633;
+      animation: pulse-red 1.5s infinite;
+    }
+
+    @keyframes pulse-red {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.75; }
+    }
+
+    .panel-view-switcher {
+      display: flex;
+      gap: 4px;
+    }
+
+    .panel-toggle-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .panel-toggle-btn.active {
+      background: #1f6feb;
+      border-color: #388bfd;
+      color: #fff;
+    }
+
+    /* HUD 안내 디스플레이 */
+    .hud-status-display {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-left: 4px solid var(--accent-cyan);
+      border-radius: 4px;
+      padding: 6px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-height: 48px;
+      transition: border-color 0.3s;
+    }
+
+    .hud-status-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #8b949e;
+      letter-spacing: 0.5px;
+    }
+
+    .hud-step-badge {
+      background: #1f6feb;
+      color: #fff;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+    }
+
+    .hud-instruction-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f0f6fc;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hud-rec-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      color: #f85149;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .rec-dot {
+      width: 10px;
+      height: 10px;
+      background: #f85149;
+      border-radius: 50%;
+      display: inline-block;
+      animation: blink 0.8s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    /* ========================================================
+       2. 중앙 패널 뷰포트 영역
+    ======================================================== */
+    #panel-viewport {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      background: #181c22 url('data:image/svg+xml;utf8,<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" fill="%231a1e24"/><path d="M0 0h40v40H0z" fill="none" stroke="%23222730" stroke-width="1"/></svg>');
+      padding: 12px 10px 80px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* 메탈 패널 공통 */
+    .train-metal-panel {
+      background: linear-gradient(145deg, #2a2f38 0%, #1f232a 100%);
+      border: 2px solid #3b424d;
+      box-shadow: inset 1px 1px 3px rgba(255,255,255,0.08), 0 8px 18px rgba(0,0,0,0.5);
+      border-radius: 8px;
+      position: relative;
+      padding: 16px 12px;
+    }
+
+    /* 볼트/나사 디테일 */
+    .screw {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: radial-gradient(circle, #8a94a6 30%, #444b57 90%);
+      border-radius: 50%;
+      box-shadow: inset 1px 1px 1px rgba(255,255,255,0.4), 0 1px 2px rgba(0,0,0,0.6);
+    }
+    .screw::after {
+      content: '';
+      position: absolute;
+      top: 3.5px;
+      left: 1px;
+      width: 6px;
+      height: 1px;
+      background: #1a1c20;
+    }
+    .screw.tl { top: 6px; left: 6px; }
+    .screw.tr { top: 6px; right: 6px; }
+    .screw.bl { bottom: 6px; left: 6px; }
+    .screw.br { bottom: 6px; right: 6px; }
+
+    .panel-header-tag {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: #9aa5b5;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      text-shadow: 0 1px 2px #000;
+      border-bottom: 1px solid #363d47;
+      padding-bottom: 4px;
+    }
+
+    /* 2열 그리드 배치 */
+    .panel-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px 10px;
+      justify-items: center;
+      align-items: center;
+    }
+
+    /* 컴포넌트 셀 컨테이너 */
+    .component-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 90px;
+      position: relative;
+    }
+
+    .component-label {
+      margin-top: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #cbd5e1;
+      text-align: center;
+      line-height: 1.2;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+      background: rgba(15, 20, 26, 0.6);
+      padding: 2px 6px;
+      border-radius: 3px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    /* 힌트 하이라이트 효과 */
+    .target-hint-pulse {
+      position: relative;
+    }
+    .target-hint-pulse::after {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      right: -6px;
+      bottom: -6px;
+      border: 3px dashed var(--accent-yellow);
+      border-radius: 12px;
+      pointer-events: none;
+      animation: hint-border-pulse 1s infinite;
+      z-index: 50;
+    }
+
+    @keyframes hint-border-pulse {
+      0% { opacity: 0.3; transform: scale(0.97); }
+      50% { opacity: 1; transform: scale(1.03); }
+      100% { opacity: 0.3; transform: scale(0.97); }
+    }
+
+    /* ========================================================
+       3. 물리 부품 상세 스타일 (버튼, 커버, 로터리, 게이지)
+    ======================================================== */
+
+    /* [A] 비상제동 E-STOP 버섯형 래치 버튼 */
+    .btn-estop-wrapper {
+      width: 68px;
+      height: 68px;
+      background: radial-gradient(circle, #3a3f47 0%, #1a1c22 100%);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.7), inset 0 2px 3px rgba(255,255,255,0.2);
+      border: 2px solid #545b68;
+      cursor: pointer;
+    }
+
+    .btn-estop {
+      width: 54px;
+      height: 54px;
+      background: radial-gradient(circle at 35% 35%, #ff4d4d, #b30000 70%, #660000 100%);
+      border-radius: 50%;
+      border: 2px solid #ff8080;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.6), inset 0 3px 5px rgba(255,255,255,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+    }
+
+    .btn-estop svg {
+      width: 30px;
+      height: 30px;
+      fill: #ffffff;
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    /* 체결 상태 (LATCHED) */
+    .btn-estop.latched {
+      transform: scale(0.86);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.9), inset 0 4px 8px rgba(0,0,0,0.8);
+      border-color: #990000;
+      background: radial-gradient(circle at 45% 45%, #990000, #4d0000 85%);
+    }
+
+    /* [B] 투명 안전 플립 커버 (Flip Cover) */
+    .cover-guard-unit {
+      width: 60px;
+      height: 74px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .acrylic-cover {
+      position: absolute;
+      top: 0;
+      left: 3px;
+      width: 54px;
+      height: 72px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.38) 0%, rgba(200,230,255,0.12) 60%, rgba(255,255,255,0.2) 100%);
+      border: 2px solid rgba(255, 255, 255, 0.65);
+      border-radius: 6px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 1px 3px rgba(255,255,255,0.5);
+      transform-origin: top center;
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+      z-index: 20;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+
+    .acrylic-cover::before {
+      content: '▲ PULL';
+      font-size: 8px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: 0.5px;
+    }
+
+    .cover-hinge {
+      width: 28px;
+      height: 6px;
+      background: #7a828e;
+      border-radius: 2px;
+      border: 1px solid #4a515c;
+    }
+
+    /* 커버 열림 상태 */
+    .acrylic-cover.open {
+      transform: perspective(300px) rotateX(-125deg) translateY(-8px);
+      box-shadow: 0 -8px 16px rgba(0,0,0,0.5);
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .cover-close-hint {
+      display: none;
+      position: absolute;
+      top: -24px;
+      background: #da3633;
+      color: #fff;
+      font-size: 9px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 3px;
+      z-index: 30;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .acrylic-cover.open ~ .cover-close-hint {
+      display: block;
+    }
+
+    /* [C] 표준 원형 푸시 버튼 (Push Button) */
+    .metal-bezel-btn {
+      width: 54px;
+      height: 54px;
+      background: radial-gradient(circle, #bcc5d3 20%, #687383 90%);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.7);
+      border: 2px solid #444b55;
+    }
+
+    .push-btn-inner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.4);
+      cursor: pointer;
+      box-shadow: 0 3px 5px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.4);
+      transition: all 0.1s;
+    }
+
+    /* 버튼 색상 바리에이션 */
+    .push-btn-inner.red {
+      background: radial-gradient(circle at 35% 35%, #ff3b30, #b71c1c 90%);
+    }
+    .push-btn-inner.green {
+      background: radial-gradient(circle at 35% 35%, #34c759, #1b5e20 90%);
+    }
+
+    .push-btn-inner:active, .push-btn-inner.pressed {
+      transform: scale(0.92);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.8), inset 0 3px 6px rgba(0,0,0,0.7);
+      filter: brightness(0.85);
+    }
+
+    /* [D] 로터리 스위치 (Rotary Switch) */
+    .rotary-unit {
+      width: 64px;
+      height: 64px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .rotary-dial-plate {
+      position: absolute;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 2px solid #8e99a8;
+      background: radial-gradient(circle, #2a2f38, #181b20);
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.8);
+    }
+
+    .rotary-knob {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #424955 0%, #1e2229 100%);
+      border-radius: 50%;
+      position: relative;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.3);
+      border: 1px solid #636d7d;
+      transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .rotary-pointer {
+      position: absolute;
+      top: -10px;
+      left: 12px;
+      width: 8px;
+      height: 26px;
+      background: linear-gradient(to bottom, #d2d8e2 0%, #3a404c 100%);
+      border-radius: 3px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+    .rotary-pointer::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 3px;
+      width: 2px;
+      height: 10px;
+      background: #fff;
+    }
+
+    .rotary-ticks {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      font-size: 8px;
+      font-weight: 800;
+      color: #94a3b8;
+    }
+    .tick-label {
+      position: absolute;
+      transform: translate(-50%, -50%);
+    }
+
+    /* [E] 아날로그 공기 압력계 (Dual Gauge: MR / BC) */
+    .gauge-container {
+      grid-column: span 2;
+      width: 100%;
+      max-width: 260px;
+      background: #15181e;
+      border: 3px solid #3d4450;
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    .gauge-body {
+      width: 160px;
+      height: 160px;
+      background: #f8fafc;
+      border-radius: 50%;
+      border: 8px solid #232730;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.35), 0 4px 8px rgba(0,0,0,0.8);
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .gauge-face {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .gauge-needle {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      width: 3px;
+      height: 62px;
+      transform-origin: bottom center;
+      transition: transform 0.6s cubic-bezier(0.1, 0.9, 0.2, 1);
+      border-radius: 2px 2px 0 0;
+      z-index: 10;
+    }
+
+    .needle-mr {
+      background: #1e293b; /* 검은 바늘 MR */
+      transform: rotate(115deg); /* 기본 9.0 bar */
+    }
+    .needle-bc {
+      background: #ef4444; /* 붉은 바늘 BC */
+      width: 2px;
+      transform: rotate(-135deg); /* 기본 0.0 bar */
+      box-shadow: 0 0 3px rgba(239, 68, 68, 0.8);
+    }
+
+    .gauge-center-cap {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      background: radial-gradient(circle, #8a94a6 30%, #333842 100%);
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      z-index: 15;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .gauge-readout-legend {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      margin-top: 8px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .readout-mr { color: #cbd5e1; }
+    .readout-bc { color: #f87171; }
+
+    /* ========================================================
+       4. 하단 플로팅 툴바
+    ======================================================== */
+    footer.floating-toolbar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(18, 21, 26, 0.96);
+      border-top: 1px solid #30363d;
+      padding: 8px 12px 14px 12px;
+      display: flex;
+      gap: 8px;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    .toolbar-btn {
+      flex: 1;
+      background: #21262d;
+      border: 1px solid #363d47;
+      color: #c9d1d9;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 10px 4px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .toolbar-btn:active {
+      transform: scale(0.96);
+      background: #30363d;
+    }
+
+    .toolbar-btn.primary {
+      background: #1f6feb;
+      border-color: #388bfd;
+      color: #ffffff;
+    }
+
+    .toolbar-btn.danger {
+      background: #b62324;
+      border-color: #e5534b;
+      color: #ffffff;
+    }
+
+    /* ========================================================
+       5. 모달 및 팝업 대화상자
+    ======================================================== */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.78);
+      z-index: 1000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-window {
+      background: #1c2128;
+      border: 1px solid #3b424d;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.8);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: modal-appear 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+    }
+
+    @keyframes modal-appear {
+      from { transform: translateY(20px) scale(0.95); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      background: #24292f;
+      padding: 12px 16px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: #f0f6fc;
+    }
+
+    .modal-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #30363d;
+      background: #161b22;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .form-group label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #8b949e;
+    }
+    .form-control {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 8px 10px;
+      border-radius: 5px;
+      font-size: 13px;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: #58a6ff;
+    }
+
+    /* 오조작 경고 흔들림 애니메이션 */
+    .shake-screen {
+      animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-2px, 0, 0); }
+      20%, 80% { transform: translate3d(4px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+      40%, 60% { transform: translate3d(6px, 0, 0); }
+    }
+
+    /* 리포트 카드 */
+    .report-card {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+    }
+    .grade-stamp {
+      font-size: 38px;
+      font-weight: 900;
+      color: var(--accent-green);
+      margin: 8px 0;
+    }
+
+    /* 모바일 스크롤바 미세조정 */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #30363d;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app-container">
+
+  <!-- 1. 상단 HUD 영역 -->
+  <header class="hud-header">
+    <div class="hud-top-bar">
+      <!-- 모드 선택 탭 -->
+      <div class="mode-tabs">
+        <button id="tab-play" class="mode-tab-btn active" onclick="switchMode('PLAY')">
+          🕹️ 실습 훈련
+        </button>
+        <button id="tab-exam" class="mode-tab-btn" onclick="switchMode('EXAM')">
+          ⏱️ 실전 평가
+        </button>
+        <button id="tab-rec" class="mode-tab-btn" onclick="switchMode('REC')">
+          🔴 동작 녹화
+        </button>
+      </div>
+
+      <!-- 패널 전환 뷰 스위처 -->
+      <div class="panel-view-switcher">
+        <button id="view-a-pillar" class="panel-toggle-btn active" onclick="switchPanelView('A_PILLAR')">A필러 패널</button>
+        <button id="view-main-left" class="panel-toggle-btn" onclick="switchPanelView('MAIN_LEFT')">메인 패널</button>
+      </div>
+    </div>
+
+    <!-- 상태 알림창 -->
+    <div id="hud-status" class="hud-status-display">
+      <div class="hud-status-meta">
+        <span id="hud-mode-title">시나리오: 비상제동 체결 및 완해</span>
+        <span id="hud-step-count" class="hud-step-badge">STEP 1 / 4</span>
+      </div>
+      <div id="hud-instruction" class="hud-instruction-text">
+        비상 상황 발생! 빨간색 비상제동체결 버튼을 누르십시오.
+      </div>
+    </div>
+
+    <!-- 녹화 전용 상태바 -->
+    <div id="hud-rec-bar" class="hud-rec-bar">
+      <span><span class="rec-dot"></span> RECORDING : <span id="rec-step-count">0</span> 단계 기록됨</span>
+      <button class="panel-toggle-btn active" style="background:#da3633; border-color:#f85149;" onclick="finishRecording()">녹화 완료 및 저장</button>
+    </div>
+  </header>
+
+  <!-- 2. 중앙 패널 인터랙션 뷰포트 -->
+  <main id="panel-viewport">
+
+    <!-- [패널 1] 우측 A필러 스위치 패널 -->
+    <section id="panel-a-pillar" class="train-metal-panel">
+      <div class="screw tl"></div><div class="screw tr"></div>
+      <div class="screw bl"></div><div class="screw br"></div>
+      <div class="panel-header-tag">A-PILLAR EMERGENCY / BRAKE CONTROL PANEL</div>
+
+      <div class="panel-grid">
+
+        <!-- 1행 좌: 비상제동체결 (버섯형 래치) -->
+        <div class="component-cell" id="wrap-SW_EMG_STOP">
+          <div class="btn-estop-wrapper" onclick="handleComponentTouch('SW_EMG_STOP')">
+            <div id="comp-SW_EMG_STOP" class="btn-estop">
+              <svg viewBox="0 0 24 24"><path d="M12 2A10 10 0 1 0 22 12A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8a8 8 0 0 1-8 8Zm1-13h-2v6h2Zm0 8h-2v2h2Z"/></svg>
+            </div>
+          </div>
+          <div class="component-label">비상제동체결</div>
+        </div>
+
+        <!-- 1행 우: 강제완해 (적색 푸시) -->
+        <div class="component-cell" id="wrap-SW_FORCE_REL">
+          <div class="metal-bezel-btn" onclick="handleComponentTouch('SW_FORCE_REL')">
+            <div id="comp-SW_FORCE_REL" class="push-btn-inner red"></div>
+          </div>
+          <div class="component-label">강제완해</div>
+        </div>
+
+        <!-- 2행 좌: 비상제동완해 (안전커버 + 적색 푸시) -->
+        <div class="component-cell" id="wrap-SW_EMG_RELEASE">
+          <div class="cover-guard-unit">
+            <div id="comp-SW_EMG_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_EMG_COVER', event)">
+              <div class="cover-hinge"></div>
+            </div>
+            <div class="cover-close-hint" onclick="toggleFlipCover('SW_EMG_COVER', event)">닫기 ✕</div>
+            <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_EMG_RELEASE')">
+              <div id="comp-SW_EMG_RELEASE" class="push-btn-inner red" style="width:34px; height:34px;"></div>
+            </div>
+          </div>
+          <div class="component-label">비상제동완해</div>
+        </div>
+
+        <!-- 2행 우: ATP후진 (안전커버 + 2단 로터리) -->
+        <div class="component-cell" id="wrap-SW_ATP_REV">
+          <div class="cover-guard-unit">
+            <div id="comp-SW_ATP_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_ATP_COVER', event)">
+              <div class="cover-hinge"></div>
+            </div>
+            <div class="cover-close-hint" onclick="toggleFlipCover('SW_ATP_COVER', event)">닫기 ✕</div>
+            <div class="rotary-unit" onclick="handleComponentTouch('SW_ATP_REV')">
+              <div class="rotary-dial-plate"></div>
+              <div id="comp-SW_ATP_REV" class="rotary-knob">
+                <div class="rotary-pointer"></div>
+              </div>
+              <div class="rotary-ticks">
+                <span class="tick-label" style="top:8px; left:14px;">OFF</span>
+                <span class="tick-label" style="top:8px; right:10px;">ON</span>
+              </div>
+            </div>
+          </div>
+          <div class="component-label">ATP후진</div>
+        </div>
+
+        <!-- 3행 좌: 저속도 (2단 로터리) -->
+        <div class="component-cell" id="wrap-SW_LOW_SPEED">
+          <div class="rotary-unit" onclick="handleComponentTouch('SW_LOW_SPEED')">
+            <div class="rotary-dial-plate"></div>
+            <div id="comp-SW_LOW_SPEED" class="rotary-knob">
+              <div class="rotary-pointer"></div>
+            </div>
+            <div class="rotary-ticks">
+              <span class="tick-label" style="top:6px; left:12px;">정상</span>
+              <span class="tick-label" style="top:6px; right:6px;">우회</span>
+            </div>
+          </div>
+          <div class="component-label">저속도</div>
+        </div>
+
+        <!-- 3행 우: 주차제동체결 (녹색 푸시) -->
+        <div class="component-cell" id="wrap-SW_PARK_SET">
+          <div class="metal-bezel-btn" onclick="handleComponentTouch('SW_PARK_SET')">
+            <div id="comp-SW_PARK_SET" class="push-btn-inner green"></div>
+          </div>
+          <div class="component-label">주차제동체결</div>
+        </div>
+
+        <!-- 4행 좌: 무선모드 (안전커버 + 녹색 버튼) -->
+        <div class="component-cell" id="wrap-SW_WIRELESS_MODE">
+          <div class="cover-guard-unit">
+            <div id="comp-SW_WIRELESS_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_WIRELESS_COVER', event)">
+              <div class="cover-hinge"></div>
+            </div>
+            <div class="cover-close-hint" onclick="toggleFlipCover('SW_WIRELESS_COVER', event)">닫기 ✕</div>
+            <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_WIRELESS_MODE')">
+              <div id="comp-SW_WIRELESS_MODE" class="push-btn-inner green" style="width:34px; height:34px;"></div>
+            </div>
+          </div>
+          <div class="component-label">무선모드</div>
+        </div>
+
+        <!-- 4행 우: 주차제동완해 (적색 푸시) -->
+        <div class="component-cell" id="wrap-SW_PARK_REL">
+          <div class="metal-bezel-btn" onclick="handleComponentTouch('SW_PARK_REL')">
+            <div id="comp-SW_PARK_REL" class="push-btn-inner red"></div>
+          </div>
+          <div class="component-label">주차제동완해</div>
+        </div>
+
+        <!-- 5행 좌: 실내등 (3단 셀렉터: 수동/자동/비상) -->
+        <div class="component-cell" id="wrap-SW_ROOM_LIGHT">
+          <div class="rotary-unit" onclick="handleComponentTouch('SW_ROOM_LIGHT')">
+            <div class="rotary-dial-plate"></div>
+            <div id="comp-SW_ROOM_LIGHT" class="rotary-knob">
+              <div class="rotary-pointer"></div>
+            </div>
+            <div class="rotary-ticks">
+              <span class="tick-label" style="top:6px; left:8px;">수동</span>
+              <span class="tick-label" style="top:2px; left:50%;">자동</span>
+              <span class="tick-label" style="top:6px; right:8px;">비상</span>
+            </div>
+          </div>
+          <div class="component-label">실내등</div>
+        </div>
+
+        <!-- 5행 우: 구원운전 (3단 셀렉터: 구원/정상/비상) -->
+        <div class="component-cell" id="wrap-SW_RESCUE_DRIVE">
+          <div class="rotary-unit" onclick="handleComponentTouch('SW_RESCUE_DRIVE')">
+            <div class="rotary-dial-plate"></div>
+            <div id="comp-SW_RESCUE_DRIVE" class="rotary-knob">
+              <div class="rotary-pointer"></div>
+            </div>
+            <div class="rotary-ticks">
+              <span class="tick-label" style="top:6px; left:8px;">구원</span>
+              <span class="tick-label" style="top:2px; left:50%;">정상</span>
+              <span class="tick-label" style="top:6px; right:8px;">비상</span>
+            </div>
+          </div>
+          <div class="component-label">구원운전</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- [패널 2] 좌측 메인 패널 (아날로그 공기압력계 & 우회 스위치군) -->
+    <section id="panel-main-left" class="train-metal-panel" style="display:none;">
+      <div class="screw tl"></div><div class="screw tr"></div>
+      <div class="screw bl"></div><div class="screw br"></div>
+      <div class="panel-header-tag">MAIN INSTRUMENT & BYPASS PANEL</div>
+
+      <div class="panel-grid">
+
+        <!-- 듀얼 아날로그 공기 압력계 (MR / BC) -->
+        <div class="gauge-container">
+          <div class="gauge-body">
+            <!-- 게이지 눈금 SVG 배경 -->
+            <svg class="gauge-face" viewBox="0 0 160 160">
+              <!-- 외부 원형 링 -->
+              <circle cx="80" cy="80" r="74" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+              <!-- 눈금 눈표시 0 ~ 12 bar -->
+              <path d="M 30 130 A 70 70 0 1 1 130 130" fill="none" stroke="#334155" stroke-width="4" stroke-dasharray="2, 6"/>
+              <text x="32" y="125" font-size="9" font-weight="900" fill="#1e293b">0</text>
+              <text x="25" y="85" font-size="9" font-weight="900" fill="#1e293b">2</text>
+              <text x="44" y="48" font-size="9" font-weight="900" fill="#1e293b">4</text>
+              <text x="76" y="32" font-size="10" font-weight="900" fill="#1e293b">6</text>
+              <text x="110" y="48" font-size="9" font-weight="900" fill="#1e293b">8</text>
+              <text x="126" y="85" font-size="9" font-weight="900" fill="#1e293b">10</text>
+              <text x="118" y="125" font-size="9" font-weight="900" fill="#1e293b">12</text>
+              <text x="80" y="68" font-size="8" font-weight="800" text-anchor="middle" fill="#64748b">PRESSURE</text>
+              <text x="80" y="78" font-size="7" font-weight="700" text-anchor="middle" fill="#94a3b8">MR(검정) / BC(적색)</text>
+            </svg>
+
+            <!-- 바늘 2개 (MR 검은색, BC 붉은색) -->
+            <div id="needle-mr" class="gauge-needle needle-mr"></div>
+            <div id="needle-bc" class="gauge-needle needle-bc"></div>
+            <div class="gauge-center-cap"></div>
+          </div>
+
+          <div class="gauge-readout-legend">
+            <span class="readout-mr">MR 주공기: <strong id="val-mr">9.0</strong> bar</span>
+            <span class="readout-bc">BC 제동통: <strong id="val-bc">0.0</strong> bar</span>
+          </div>
+          <div class="component-label" style="margin-top:6px;">공기 압력계 (MR, BC)</div>
+        </div>
+
+        <!-- 1행 좌: 출입문 바이패스 -->
+        <div class="component-cell" id="wrap-SW_DOOR_BYPASS">
+          <div class="rotary-unit" onclick="handleComponentTouch('SW_DOOR_BYPASS')">
+            <div class="rotary-dial-plate"></div>
+            <div id="comp-SW_DOOR_BYPASS" class="rotary-knob">
+              <div class="rotary-pointer"></div>
+            </div>
+            <div class="rotary-ticks">
+              <span class="tick-label" style="top:6px; left:10px;">정상</span>
+              <span class="tick-label" style="top:6px; right:8px;">바이패스</span>
+            </div>
+          </div>
+          <div class="component-label">출입문 바이패스</div>
+        </div>
+
+        <!-- 1행 우: 장애물 감지 바이패스 -->
+        <div class="component-cell" id="wrap-SW_OBSTACLE_BYPASS">
+          <div class="rotary-unit" onclick="handleComponentTouch('SW_OBSTACLE_BYPASS')">
+            <div class="rotary-dial-plate"></div>
+            <div id="comp-SW_OBSTACLE_BYPASS" class="rotary-knob">
+              <div class="rotary-pointer"></div>
+            </div>
+            <div class="rotary-ticks">
+              <span class="tick-label" style="top:6px; left:10px;">정상</span>
+              <span class="tick-label" style="top:6px; right:8px;">바이패스</span>
+            </div>
+          </div>
+          <div class="component-label">장애물 감지</div>
+        </div>
+
+        <!-- 2행 좌: 공기질 개선장치 (AUTO / OFF / ON) -->
+        <div class="component-cell" id="wrap-SW_AIR_CLEAN">
+          <div class="rotary-unit" onclick="handleComponentTouch('SW_AIR_CLEAN')">
+            <div class="rotary-dial-plate"></div>
+            <div id="comp-SW_AIR_CLEAN" class="rotary-knob">
+              <div class="rotary-pointer"></div>
+            </div>
+            <div class="rotary-ticks">
+              <span class="tick-label" style="top:6px; left:8px;">AUTO</span>
+              <span class="tick-label" style="top:2px; left:50%;">OFF</span>
+              <span class="tick-label" style="top:6px; right:8px;">ON</span>
+            </div>
+          </div>
+          <div class="component-label">공기질개선장치</div>
+        </div>
+
+        <!-- 2행 우: 와이퍼 스위치 (다단) -->
+        <div class="component-cell" id="wrap-SW_WIPER">
+          <div class="rotary-unit" onclick="handleComponentTouch('SW_WIPER')">
+            <div class="rotary-dial-plate"></div>
+            <div id="comp-SW_WIPER" class="rotary-knob">
+              <div class="rotary-pointer"></div>
+            </div>
+            <div class="rotary-ticks">
+              <span class="tick-label" style="top:6px; left:8px;">OFF</span>
+              <span class="tick-label" style="top:2px; left:50%;">INT</span>
+              <span class="tick-label" style="top:6px; right:8px;">FAST</span>
+            </div>
+          </div>
+          <div class="component-label">와이퍼 제어</div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 3. 하단 플로팅 툴바 -->
+  <footer class="floating-toolbar">
+    <button class="toolbar-btn" onclick="triggerHint()">
+      💡 힌트 보기
+    </button>
+    <button class="toolbar-btn" onclick="resetCurrentScenario()">
+      ↺ 처음부터
+    </button>
+    <button class="toolbar-btn primary" onclick="openScenarioModal()">
+      📋 시나리오 선택
+    </button>
+  </footer>
+
+  <!-- ========================================================
+       4. 모달 팝업들
+  ======================================================== -->
+
+  <!-- [A] 녹화 단계 입력 모달 -->
+  <div id="modal-record-step" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <span>🔴 [Step <span id="rec-modal-step-idx">1</span>] 녹화 스텝 등록</span>
+        <span style="cursor:pointer;" onclick="closeModal('modal-record-step')">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>감지된 조작 부품</label>
+          <input type="text" id="rec-input-target-name" class="form-control" readonly />
+        </div>
+        <div class="form-group">
+          <label>목표 상태 (Expected State)</label>
+          <input type="text" id="rec-input-state" class="form-control" readonly />
+        </div>
+        <div class="form-group">
+          <label>교육생 안내 지시문구 (Instruction)</label>
+          <textarea id="rec-input-instruction" class="form-control" rows="3" placeholder="예: 비상제동 완해 커버를 여십시오."></textarea>
+        </div>
+        <div class="form-group">
+          <label>연동 BC 압력 (선택: 0.0 ~ 4.5 bar)</label>
+          <input type="number" step="0.5" id="rec-input-bc-gauge" class="form-control" placeholder="비워두면 이전 압력 유지" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="toolbar-btn" onclick="closeModal('modal-record-step')">취소</button>
+        <button class="toolbar-btn primary" onclick="saveRecordedStep()">이 단계 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- [B] 시나리오 관리 / 선택 모달 -->
+  <div id="modal-scenario-list" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <span>📋 훈련 시나리오 선택 & 관리</span>
+        <span style="cursor:pointer;" onclick="closeModal('modal-scenario-list')">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>내장 & 커스텀 시나리오 목록</label>
+          <select id="scenario-selector" class="form-control" size="4" onchange="previewScenarioInfo()">
+          </select>
+        </div>
+        <div id="scenario-preview-desc" style="font-size:12px; color:#8b949e; line-height:1.4;"></div>
+        <div class="form-group" style="margin-top:8px;">
+          <label>JSON 데이터 백업 / 불러오기</label>
+          <div style="display:flex; gap:6px;">
+            <button class="toolbar-btn" onclick="exportScenarioJSON()">내보내기(복사)</button>
+            <button class="toolbar-btn" onclick="importScenarioJSONPrompt()">가져오기(붙여넣기)</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="toolbar-btn" onclick="closeModal('modal-scenario-list')">닫기</button>
+        <button class="toolbar-btn primary" onclick="loadSelectedScenario()">시나리오 시작</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- [C] 훈련 / 평가 완료 결과 모달 -->
+  <div id="modal-completion" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <span id="complete-modal-title">🎉 훈련 절차 완료</span>
+        <span style="cursor:pointer;" onclick="closeModal('modal-completion')">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="report-card">
+          <div style="font-size:14px; color:#8b949e;">최종 평가 결과</div>
+          <div id="complete-grade" class="grade-stamp">PASSED</div>
+          <div id="complete-summary-text" style="font-size:13px; color:#f0f6fc; margin-bottom:8px;">
+            모든 비상제동 조작 절차를 규정대로 정확하게 이행하였습니다.
+          </div>
+          <div style="display:flex; justify-content:space-around; font-size:11px; color:#8b949e; border-top:1px solid #30363d; padding-top:8px;">
+            <span>소요 시간: <b id="stat-elapsed" style="color:#fff;">18초</b></span>
+            <span>오조작 횟수: <b id="stat-mistakes" style="color:#ff7b72;">0회</b></span>
+            <span>달성 점수: <b id="stat-score" style="color:#7ee787;">100점</b></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="toolbar-btn" onclick="closeModal('modal-completion')">닫기</button>
+        <button class="toolbar-btn primary" onclick="resetCurrentScenario(); closeModal('modal-completion');">다시 연습하기</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================================================
+     5. 핵심 시뮬레이션 엔진 및 비즈니스 로직
+======================================================== -->
+<script>
+/**
+ * [Web Audio API 기반 합성 사운드 엔진]
+ * 외부 오디오 파일 없이 순수 브라우저 오디오 오실레이터로 기계식 릴레이 사운드 구현
+ */
+class SoundEngine {
+  constructor() {
+    this.ctx = null;
+  }
+  init() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioContext();
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+  // 딸깍 스위치 클릭음
+  playClick() {
+    this.init();
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.035);
+    gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.035);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.04);
+  }
+  // 묵직한 래치 버튼 체결음
+  playHeavyLatch() {
+    this.init();
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.09);
+  }
+  // 공압 에어 릴리즈 및 배기 (칙~ / 슉~) 사운드 (1초 배기)
+  playAirExhaust(duration = 1.0, filterFreq = 1100, volume = 0.7) {
+    this.init();
+    const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(filterFreq, this.ctx.currentTime);
+    // 공기가 빠져나가며 주파수가 서서히 내려가는 효과
+    filter.frequency.exponentialRampToValueAtTime(Math.max(200, filterFreq * 0.4), this.ctx.currentTime + duration);
+    filter.Q.setValueAtTime(1.6, this.ctx.currentTime);
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+    // 초반 강한 분출 후 1초간 완만하게 감쇄
+    gain.gain.setValueAtTime(volume, this.ctx.currentTime + 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.005, this.ctx.currentTime + duration);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+    noise.start();
+  }
+  // 성공 통과 비프음
+  playSuccess() {
+    this.init();
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(587.33, now); // D5
+    osc.frequency.setValueAtTime(880, now + 0.08); // A5
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.25);
+  }
+  // 오조작 경고 버저
+  playError() {
+    this.init();
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(160, now);
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  }
+}
+
+const sound = new SoundEngine();
+
+// 햅틱 진동 유틸
+function triggerHaptic(pattern) {
+  if ('vibrate' in navigator) {
+    try { navigator.vibrate(pattern); } catch(e) {}
+  }
+}
+
+/**
+ * 부품 상태 관리자
+ */
+const COMPONENT_REGISTRY = {
+  // A필러 부품군
+  SW_EMG_STOP: { name: '비상제동체결', type: 'LATCH', state: 'RELEASED', panel: 'A_PILLAR' },
+  SW_FORCE_REL: { name: '강제완해', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR' },
+  SW_EMG_COVER: { name: '비상완해 보호커버', type: 'COVER', state: 'CLOSED', panel: 'A_PILLAR' },
+  SW_EMG_RELEASE: { name: '비상제동완해', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR', requiresCover: 'SW_EMG_COVER' },
+  SW_ATP_COVER: { name: 'ATP후진 보호커버', type: 'COVER', state: 'CLOSED', panel: 'A_PILLAR' },
+  SW_ATP_REV: { name: 'ATP후진', type: 'ROTARY_2', state: 'OFF', panel: 'A_PILLAR', requiresCover: 'SW_ATP_COVER' },
+  SW_LOW_SPEED: { name: '저속도', type: 'ROTARY_2', state: 'NORMAL', panel: 'A_PILLAR' },
+  SW_PARK_SET: { name: '주차제동체결', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR' },
+  SW_WIRELESS_COVER: { name: '무선모드 보호커버', type: 'COVER', state: 'CLOSED', panel: 'A_PILLAR' },
+  SW_WIRELESS_MODE: { name: '무선모드', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR', requiresCover: 'SW_WIRELESS_COVER' },
+  SW_PARK_REL: { name: '주차제동완해', type: 'MOMENTARY', state: 'IDLE', panel: 'A_PILLAR' },
+  SW_ROOM_LIGHT: { name: '실내등', type: 'ROTARY_3', state: 'AUTO', panel: 'A_PILLAR' }, // MANUAL, AUTO, EMERGENCY
+  SW_RESCUE_DRIVE: { name: '구원운전', type: 'ROTARY_3', state: 'NORMAL', panel: 'A_PILLAR' }, // RESCUE, NORMAL, EMERGENCY
+
+  // 좌측 메인 패널 부품군
+  SW_DOOR_BYPASS: { name: '출입문 바이패스', type: 'ROTARY_2', state: 'NORMAL', panel: 'MAIN_LEFT' },
+  SW_OBSTACLE_BYPASS: { name: '장애물 감지', type: 'ROTARY_2', state: 'NORMAL', panel: 'MAIN_LEFT' },
+  SW_AIR_CLEAN: { name: '공기질개선장치', type: 'ROTARY_3', state: 'AUTO', panel: 'MAIN_LEFT' },
+  SW_WIPER: { name: '와이퍼 제어', type: 'ROTARY_3', state: 'OFF', panel: 'MAIN_LEFT' }
+};
+
+/**
+ * 기본 탑재 실무 교육 시나리오 4종
+ */
+const DEFAULT_SCENARIOS = [
+  {
+    id: "SCN_EMG_DEFAULT",
+    title: "1. 비상제동 체결 및 완해 절차",
+    description: "열차 운행 중 비상 상황 발생 시 비상제동을 체결하고, 확인 후 완해 커버를 열어 복구하는 기본 안전 절차입니다.",
+    steps: [
+      {
+        step: 1,
+        target: "SW_EMG_STOP",
+        targetName: "비상제동체결",
+        expectedState: "LATCHED",
+        instruction: "비상 상황입니다! 빨간색 [비상제동체결] 버섯형 버튼을 누르십시오.",
+        gaugeEffect: { bc: 4.5 }
+      },
+      {
+        step: 2,
+        target: "SW_EMG_COVER",
+        targetName: "비상완해 보호커버",
+        expectedState: "OPEN",
+        instruction: "비상 상황이 해제되었습니다. [비상완해 보호커버]를 위로 여십시오."
+      },
+      {
+        step: 3,
+        target: "SW_EMG_RELEASE",
+        targetName: "비상제동완해",
+        expectedState: "PRESSED",
+        instruction: "보호커버 내부의 빨간색 [비상제동완해] 푸시버튼을 누르십시오.",
+        gaugeEffect: { bc: 0.0 }
+      },
+      {
+        step: 4,
+        target: "SW_EMG_STOP",
+        targetName: "비상제동체결",
+        expectedState: "RELEASED",
+        instruction: "마지막으로 체결되어 있던 [비상제동체결] 버튼을 다시 눌러 락을 해제(복귀)하십시오."
+      }
+    ]
+  },
+  {
+    id: "SCN_DOOR_BYPASS",
+    title: "2. 출입문 닫힘 불량 바이패스 및 구원운전",
+    description: "승강장 출입문 닫힘 신호 불량 시 메인 패널의 출입문 바이패스를 취급하고 구원운전 모드로 전환하는 절차입니다.",
+    steps: [
+      {
+        step: 1,
+        target: "SW_DOOR_BYPASS",
+        targetName: "출입문 바이패스",
+        expectedState: "BYPASS",
+        instruction: "메인 패널에서 [출입문 바이패스] 스위치를 '바이패스' 위치로 회전하십시오."
+      },
+      {
+        step: 2,
+        target: "SW_LOW_SPEED",
+        targetName: "저속도",
+        expectedState: "BYPASS",
+        instruction: "A필러 패널로 이동하여 [저속도] 스위치를 '우회' 위치로 돌리십시오."
+      },
+      {
+        step: 3,
+        target: "SW_RESCUE_DRIVE",
+        targetName: "구원운전",
+        expectedState: "RESCUE",
+        instruction: "[구원운전] 스위치를 '구원' 위치로 절체하십시오."
+      }
+    ]
+  },
+  {
+    id: "SCN_PARK_BRAKE",
+    title: "3. 주차제동 점검 및 체결 절차",
+    description: "입고 및 유치선 주차 시 주차제동을 수동으로 체결하고 실내등을 비상등으로 전환하는 점검 절차입니다.",
+    steps: [
+      {
+        step: 1,
+        target: "SW_PARK_SET",
+        targetName: "주차제동체결",
+        expectedState: "PRESSED",
+        instruction: "녹색 [주차제동체결] 버튼을 눌러 주차제동을 거십시오."
+      },
+      {
+        step: 2,
+        target: "SW_ROOM_LIGHT",
+        targetName: "실내등",
+        expectedState: "EMERGENCY",
+        instruction: "[실내등] 스위치를 '비상' 위치로 돌려 절전 상태로 전환하십시오."
+      }
+    ]
+  },
+  {
+    id: "SCN_ATP_REVERSE",
+    title: "4. ATP 차상장치 이상 후진 운전 절차",
+    description: "신호설비 이상으로 지정된 저속 후진을 위해 투명 커버를 열고 ATP후진 스위치를 인가하는 절차입니다.",
+    steps: [
+      {
+        step: 1,
+        target: "SW_ATP_COVER",
+        targetName: "ATP후진 보호커버",
+        expectedState: "OPEN",
+        instruction: "[ATP후진] 스위치의 아크릴 보호커버를 들어올려 여십시오."
+      },
+      {
+        step: 2,
+        target: "SW_ATP_REV",
+        targetName: "ATP후진",
+        expectedState: "ON",
+        instruction: "커버 안쪽의 [ATP후진] 스위치를 'ON' 위치로 돌리십시오."
+      }
+    ]
+  }
+];
+
+// 전역 시뮬레이터 상태
+let currentMode = 'PLAY'; // PLAY, EXAM, REC
+let currentScenario = DEFAULT_SCENARIOS[0];
+let currentStepIndex = 0;
+let mistakeCount = 0;
+let examStartTime = 0;
+
+// 게이지 상태
+let currentGaugeBC = 0.0;
+let currentGaugeMR = 9.0;
+
+// 녹화 버퍼
+let recordedSteps = [];
+let pendingRecordedStep = null;
+
+// 초기화
+window.addEventListener('DOMContentLoaded', () => {
+  loadScenarioListUI();
+  applyScenario(currentScenario);
+  updateGaugeUI(0.0);
+});
+
+// 패널 탭 뷰 전환 (A필러 ↔ 좌측 메인 패널)
+function switchPanelView(view) {
+  const panelA = document.getElementById('panel-a-pillar');
+  const panelMain = document.getElementById('panel-main-left');
+  const btnA = document.getElementById('view-a-pillar');
+  const btnMain = document.getElementById('view-main-left');
+
+  if (view === 'A_PILLAR') {
+    panelA.style.display = 'block';
+    panelMain.style.display = 'none';
+    btnA.classList.add('active');
+    btnMain.classList.remove('active');
+  } else {
+    panelA.style.display = 'none';
+    panelMain.style.display = 'block';
+    btnA.classList.remove('active');
+    btnMain.classList.add('active');
+  }
+}
+
+// 모드 전환 (실습 / 시험 / 녹화)
+function switchMode(mode) {
+  currentMode = mode;
+  document.getElementById('tab-play').className = 'mode-tab-btn' + (mode === 'PLAY' ? ' active' : '');
+  document.getElementById('tab-exam').className = 'mode-tab-btn' + (mode === 'EXAM' ? ' active' : '');
+  const recBtn = document.getElementById('tab-rec');
+  recBtn.className = 'mode-tab-btn' + (mode === 'REC' ? ' active rec-mode' : '');
+
+  const hudStatus = document.getElementById('hud-status');
+  const hudRecBar = document.getElementById('hud-rec-bar');
+
+  if (mode === 'REC') {
+    hudStatus.style.display = 'none';
+    hudRecBar.style.display = 'flex';
+    recordedSteps = [];
+    document.getElementById('rec-step-count').innerText = '0';
+  } else {
+    hudStatus.style.display = 'flex';
+    hudRecBar.style.display = 'none';
+    if (mode === 'EXAM') {
+      mistakeCount = 0;
+      examStartTime = Date.now();
+    }
+    resetCurrentScenario();
+  }
+}
+
+/**
+ * 터치 및 클릭 인터랙션 핸들러
+ */
+function handleComponentTouch(compId) {
+  const comp = COMPONENT_REGISTRY[compId];
+  if (!comp) return;
+
+  // 보호커버가 있는 부품 검증
+  if (comp.requiresCover) {
+    const coverComp = COMPONENT_REGISTRY[comp.requiresCover];
+    if (coverComp && coverComp.state !== 'OPEN') {
+      sound.playError();
+      triggerHaptic([50, 50, 50]);
+      triggerShakeScreen();
+      showTemporaryHudFeedback(`⚠️ [${coverComp.name}]를 먼저 열어야 조작할 수 있습니다!`, true);
+      return;
+    }
+  }
+
+  let newState = comp.state;
+
+  if (comp.type === 'LATCH') {
+    // 버섯형 래치 버튼 (토글)
+    newState = (comp.state === 'RELEASED') ? 'LATCHED' : 'RELEASED';
+    comp.state = newState;
+    const el = document.getElementById(`comp-${compId}`);
+    if (newState === 'LATCHED') {
+      el.classList.add('latched');
+      sound.playHeavyLatch();
+      triggerHaptic(50);
+      updateGaugeUI(4.5); // 비상제동 시 BC 압력 상승
+    } else {
+      el.classList.remove('latched');
+      sound.playClick();
+      triggerHaptic(20);
+    }
+  } else if (comp.type === 'MOMENTARY') {
+    // 모멘터리 푸시 버튼 (자동 복귀)
+    newState = 'PRESSED';
+    const el = document.getElementById(`comp-${compId}`);
+    el.classList.add('pressed');
+    sound.playClick();
+    triggerHaptic(25);
+
+    // 공압 배기음 (칙~ / 슉~) 및 햅틱 연동 (1.0초 배기음)
+    if (compId === 'SW_PARK_SET') {
+      // 주차제동체결: 스프링 챔버 공기가 1초간 빠지며 강력 체결 (묵직한 칙~~~~)
+      sound.playAirExhaust(1.0, 950, 0.75);
+      triggerHaptic([40, 50, 80]);
+    } else if (compId === 'SW_PARK_REL') {
+      // 주차제동완해: 1초간 시원하게 뿜어져 나오는 에어 릴리즈 (치이이익-슉)
+      sound.playAirExhaust(1.0, 1400, 0.7);
+      triggerHaptic([30, 40]);
+    } else if (compId === 'SW_EMG_RELEASE') {
+      // 비상제동완해: 제동통 공기 1초간 배기 및 게이지 감압
+      sound.playAirExhaust(1.0, 1200, 0.65);
+      updateGaugeUI(0.0);
+    } else if (compId === 'SW_FORCE_REL') {
+      // 강제완해: 전자밸브 강제 여자 에어 배기 (1.0초)
+      sound.playAirExhaust(1.0, 1300, 0.6);
+      triggerHaptic(35);
+    }
+
+    setTimeout(() => {
+      el.classList.remove('pressed');
+      comp.state = 'IDLE';
+    }, 220);
+  } else if (comp.type === 'ROTARY_2') {
+    // 2단 로터리 스위치
+    const el = document.getElementById(`comp-${compId}`);
+    sound.playClick();
+    triggerHaptic(25);
+
+    if (compId === 'SW_ATP_REV') {
+      newState = (comp.state === 'OFF') ? 'ON' : 'OFF';
+      el.style.transform = (newState === 'ON') ? 'rotate(45deg)' : 'rotate(-45deg)';
+    } else { // 저속도, 바이패스 스위치류
+      newState = (comp.state === 'NORMAL') ? 'BYPASS' : 'NORMAL';
+      el.style.transform = (newState === 'BYPASS') ? 'rotate(45deg)' : 'rotate(-45deg)';
+    }
+    comp.state = newState;
+  } else if (comp.type === 'ROTARY_3') {
+    // 3단 셀렉터 스위치
+    const el = document.getElementById(`comp-${compId}`);
+    sound.playClick();
+    triggerHaptic(30);
+
+    if (compId === 'SW_ROOM_LIGHT') {
+      // 수동(-45deg) -> 자동(0deg) -> 비상(45deg)
+      if (comp.state === 'MANUAL') newState = 'AUTO';
+      else if (comp.state === 'AUTO') newState = 'EMERGENCY';
+      else newState = 'MANUAL';
+      
+      const rot = (newState === 'MANUAL') ? -45 : (newState === 'AUTO' ? 0 : 45);
+      el.style.transform = `rotate(${rot}deg)`;
+    } else if (compId === 'SW_RESCUE_DRIVE') {
+      // 구원(-45deg) -> 정상(0deg) -> 비상(45deg)
+      if (comp.state === 'RESCUE') newState = 'NORMAL';
+      else if (comp.state === 'NORMAL') newState = 'EMERGENCY';
+      else newState = 'RESCUE';
+
+      const rot = (newState === 'RESCUE') ? -45 : (newState === 'NORMAL' ? 0 : 45);
+      el.style.transform = `rotate(${rot}deg)`;
+    } else {
+      // 기본 3단 (AUTO, OFF, ON)
+      if (comp.state === 'AUTO') newState = 'OFF';
+      else if (comp.state === 'OFF') newState = 'ON';
+      else newState = 'AUTO';
+
+      const rot = (newState === 'AUTO') ? -45 : (newState === 'OFF' ? 0 : 45);
+      el.style.transform = `rotate(${rot}deg)`;
+    }
+    comp.state = newState;
+  }
+
+  // 모드별 비즈니스 로직 처리
+  if (currentMode === 'REC') {
+    promptRecordStep(compId, comp.name, newState);
+  } else {
+    evaluateStepAction(compId, newState);
+  }
+}
+
+// 투명 아크릴 커버 개폐 핸들러
+function toggleFlipCover(coverId, evt) {
+  if (evt) evt.stopPropagation();
+  const coverComp = COMPONENT_REGISTRY[coverId];
+  if (!coverComp) return;
+
+  const el = document.getElementById(`comp-${coverId}`);
+  const newState = (coverComp.state === 'CLOSED') ? 'OPEN' : 'CLOSED';
+  coverComp.state = newState;
+
+  if (newState === 'OPEN') {
+    el.classList.add('open');
+    sound.playClick();
+    triggerHaptic(20);
+  } else {
+    el.classList.remove('open');
+    sound.playClick();
+    triggerHaptic(20);
+  }
+
+  if (currentMode === 'REC') {
+    promptRecordStep(coverId, coverComp.name, newState);
+  } else {
+    evaluateStepAction(coverId, newState);
+  }
+}
+
+/**
+ * 실습 & 평가 모드 판정 엔진
+ */
+function evaluateStepAction(compId, state) {
+  if (!currentScenario || !currentScenario.steps[currentStepIndex]) return;
+  const targetStep = currentScenario.steps[currentStepIndex];
+
+  // 정답 조작 판정
+  if (targetStep.target === compId && targetStep.expectedState === state) {
+    sound.playSuccess();
+    triggerHaptic(40);
+    clearHints();
+
+    // 부가 게이지 효과 반영
+    if (targetStep.gaugeEffect && targetStep.gaugeEffect.bc !== undefined) {
+      updateGaugeUI(targetStep.gaugeEffect.bc);
+    }
+
+    currentStepIndex++;
+    if (currentStepIndex >= currentScenario.steps.length) {
+      finishScenarioSuccess();
+    } else {
+      renderStepHUD();
+    }
+  } else {
+    // 오조작 판정
+    mistakeCount++;
+    sound.playError();
+    triggerHaptic([100, 50, 100]);
+    triggerShakeScreen();
+    showTemporaryHudFeedback(`⚠️ 잘못된 조작입니다! (${COMPONENT_REGISTRY[compId].name})`, true);
+  }
+}
+
+// HUD 스텝 안내 업데이트
+function renderStepHUD() {
+  if (!currentScenario) return;
+  const targetStep = currentScenario.steps[currentStepIndex];
+  if (!targetStep) return;
+
+  document.getElementById('hud-mode-title').innerText = `${currentScenario.title}`;
+  document.getElementById('hud-step-count').innerText = `STEP ${currentStepIndex + 1} / ${currentScenario.steps.length}`;
+  document.getElementById('hud-instruction').innerText = targetStep.instruction;
+
+  // 필요 시 타겟 부품이 있는 패널로 자동 시야 유도
+  const targetComp = COMPONENT_REGISTRY[targetStep.target];
+  if (targetComp && targetComp.panel) {
+    // 훈련 모드일 때만 자동 전환
+    if (currentMode === 'PLAY') {
+      switchPanelView(targetComp.panel);
+    }
+  }
+}
+
+// 오조작 시 임시 피드백 안내
+function showTemporaryHudFeedback(text, isError) {
+  const hudText = document.getElementById('hud-instruction');
+  const hudStatus = document.getElementById('hud-status');
+  const original = currentScenario.steps[currentStepIndex] ? currentScenario.steps[currentStepIndex].instruction : '';
+
+  hudText.innerText = text;
+  hudStatus.style.borderLeftColor = isError ? 'var(--accent-red)' : 'var(--accent-green)';
+
+  setTimeout(() => {
+    hudText.innerText = original;
+    hudStatus.style.borderLeftColor = 'var(--accent-cyan)';
+  }, 1800);
+}
+
+// 힌트 가이드 표시
+function triggerHint() {
+  if (currentMode === 'EXAM') {
+    alert("⚠️ 실전 평가 모드에서는 힌트가 제공되지 않습니다.");
+    return;
+  }
+  clearHints();
+  if (!currentScenario || !currentScenario.steps[currentStepIndex]) return;
+  const targetStep = currentScenario.steps[currentStepIndex];
+  const targetComp = COMPONENT_REGISTRY[targetStep.target];
+
+  if (targetComp && targetComp.panel) {
+    switchPanelView(targetComp.panel);
+  }
+
+  const wrapper = document.getElementById(`wrap-${targetStep.target}`);
+  if (wrapper) {
+    wrapper.classList.add('target-hint-pulse');
+    setTimeout(() => {
+      wrapper.classList.remove('target-hint-pulse');
+    }, 3500);
+  }
+}
+
+function clearHints() {
+  document.querySelectorAll('.target-hint-pulse').forEach(el => el.classList.remove('target-hint-pulse'));
+}
+
+// 화면 흔들림 효과
+function triggerShakeScreen() {
+  const app = document.getElementById('app-container');
+  app.classList.remove('shake-screen');
+  void app.offsetWidth;
+  app.classList.add('shake-screen');
+}
+
+// 아날로그 공기 압력계 바늘 회전 업데이트
+function updateGaugeUI(bcBar) {
+  currentGaugeBC = bcBar;
+  document.getElementById('val-bc').innerText = bcBar.toFixed(1);
+
+  // 0 bar = -135deg, 12 bar = 135deg (총 270도 각도 범위)
+  const anglePerBar = 270 / 12;
+  const bcAngle = -135 + (bcBar * anglePerBar);
+  document.getElementById('needle-bc').style.transform = `rotate(${bcAngle}deg)`;
+}
+
+// 훈련 완료 처리
+function finishScenarioSuccess() {
+  const elapsedSec = Math.round((Date.now() - examStartTime) / 1000);
+  const score = Math.max(0, 100 - (mistakeCount * 15));
+  let grade = 'PASSED';
+
+  if (currentMode === 'EXAM') {
+    if (score >= 90) grade = 'A+';
+    else if (score >= 80) grade = 'A';
+    else if (score >= 70) grade = 'B';
+    else grade = 'RE-EXAM';
+    document.getElementById('complete-modal-title').innerText = '⏱️ 실전 평가 채점 결과';
+  } else {
+    document.getElementById('complete-modal-title').innerText = '🎉 훈련 절차 완료!';
+  }
+
+  document.getElementById('complete-grade').innerText = grade;
+  document.getElementById('complete-grade').style.color = (grade === 'RE-EXAM') ? '#f85149' : '#00e676';
+  document.getElementById('stat-elapsed').innerText = `${elapsedSec}초`;
+  document.getElementById('stat-mistakes').innerText = `${mistakeCount}회`;
+  document.getElementById('stat-score').innerText = `${score}점`;
+
+  openModal('modal-completion');
+}
+
+// 시나리오 리셋
+function resetCurrentScenario() {
+  currentStepIndex = 0;
+  mistakeCount = 0;
+  examStartTime = Date.now();
+  clearHints();
+
+  // 모든 부품 상태 기본 초기화
+  Object.keys(COMPONENT_REGISTRY).forEach(id => {
+    const comp = COMPONENT_REGISTRY[id];
+    if (comp.type === 'LATCH') {
+      comp.state = 'RELEASED';
+      const el = document.getElementById(`comp-${id}`);
+      if (el) el.classList.remove('latched');
+    } else if (comp.type === 'COVER') {
+      comp.state = 'CLOSED';
+      const el = document.getElementById(`comp-${id}`);
+      if (el) el.classList.remove('open');
+    } else if (comp.type === 'ROTARY_2' || comp.type === 'ROTARY_3') {
+      const el = document.getElementById(`comp-${id}`);
+      if (id === 'SW_ATP_REV') comp.state = 'OFF';
+      else if (id === 'SW_ROOM_LIGHT') comp.state = 'AUTO';
+      else if (id === 'SW_RESCUE_DRIVE') comp.state = 'NORMAL';
+      else comp.state = 'NORMAL';
+      if (el) el.style.transform = 'rotate(0deg)';
+    }
+  });
+
+  updateGaugeUI(0.0);
+  renderStepHUD();
+}
+
+/**
+ * [노코드 녹화 모드 기능군]
+ */
+function promptRecordStep(compId, compName, state) {
+  pendingRecordedStep = {
+    step: recordedSteps.length + 1,
+    target: compId,
+    targetName: compName,
+    expectedState: state,
+    gaugeEffect: {}
+  };
+
+  document.getElementById('rec-modal-step-idx').innerText = pendingRecordedStep.step;
+  document.getElementById('rec-input-target-name').value = `${compName} (${compId})`;
+  document.getElementById('rec-input-state').value = state;
+
+  // 기본 추천 안내문구 자동 생성
+  let defaultInstruction = `[${compName}]을(를) ${state} 상태로 조작하십시오.`;
+  if (state === 'LATCHED') defaultInstruction = `[${compName}] 버튼을 눌러 체결하십시오.`;
+  else if (state === 'OPEN') defaultInstruction = `[${compName}]을(를) 위로 여십시오.`;
+  else if (state === 'PRESSED') defaultInstruction = `[${compName}] 푸시버튼을 누르십시오.`;
+
+  document.getElementById('rec-input-instruction').value = defaultInstruction;
+  document.getElementById('rec-input-bc-gauge').value = '';
+
+  openModal('modal-record-step');
+}
+
+function saveRecordedStep() {
+  if (!pendingRecordedStep) return;
+  pendingRecordedStep.instruction = document.getElementById('rec-input-instruction').value;
+  const bcVal = parseFloat(document.getElementById('rec-input-bc-gauge').value);
+  if (!isNaN(bcVal)) {
+    pendingRecordedStep.gaugeEffect = { bc: bcVal };
+  }
+
+  recordedSteps.push(pendingRecordedStep);
+  pendingRecordedStep = null;
+  document.getElementById('rec-step-count').innerText = recordedSteps.length;
+  closeModal('modal-record-step');
+}
+
+function finishRecording() {
+  if (recordedSteps.length === 0) {
+    alert("녹화된 조작 단계가 없습니다. 스위치를 먼저 조작해주세요.");
+    return;
+  }
+  const title = prompt("저장할 신규 시나리오 제목을 입력하세요:", `커스텀 훈련 절차 (${recordedSteps.length}단계)`);
+  if (!title) return;
+
+  const newScenario = {
+    id: `SCN_CUSTOM_${Date.now()}`,
+    title: title,
+    description: "사용자가 녹화 모드로 생성한 커스텀 시나리오입니다.",
+    steps: recordedSteps
+  };
+
+  saveCustomScenario(newScenario);
+  alert(`✅ 시나리오 '${title}'이 성공적으로 저장되었습니다! 실습 모드로 전환합니다.`);
+  switchMode('PLAY');
+  applyScenario(newScenario);
+}
+
+function saveCustomScenario(scenario) {
+  let customList = [];
+  try {
+    const raw = localStorage.getItem('TRAIN_CUSTOM_SCENARIOS');
+    if (raw) customList = JSON.parse(raw);
+  } catch(e) {}
+  customList.push(scenario);
+  localStorage.setItem('TRAIN_CUSTOM_SCENARIOS', JSON.stringify(customList));
+  loadScenarioListUI();
+}
+
+/**
+ * [시나리오 모달 & JSON 가져오기/내보내기]
+ */
+function loadScenarioListUI() {
+  const sel = document.getElementById('scenario-selector');
+  sel.innerHTML = '';
+
+  // 기본 시나리오
+  DEFAULT_SCENARIOS.forEach(sc => {
+    const opt = document.createElement('option');
+    opt.value = sc.id;
+    opt.innerText = `[기본] ${sc.title}`;
+    sel.appendChild(opt);
+  });
+
+  // 로컬 저장 커스텀 시나리오
+  try {
+    const raw = localStorage.getItem('TRAIN_CUSTOM_SCENARIOS');
+    if (raw) {
+      const customs = JSON.parse(raw);
+      customs.forEach(sc => {
+        const opt = document.createElement('option');
+        opt.value = sc.id;
+        opt.innerText = `[커스텀] ${sc.title}`;
+        sel.appendChild(opt);
+      });
+    }
+  } catch(e) {}
+
+  if (sel.options.length > 0) {
+    sel.selectedIndex = 0;
+    previewScenarioInfo();
+  }
+}
+
+function previewScenarioInfo() {
+  const sc = getScenarioById(document.getElementById('scenario-selector').value);
+  if (sc) {
+    document.getElementById('scenario-preview-desc').innerHTML = `
+      <b>설명:</b> ${sc.description || '설명 없음'}<br>
+      <b>총 단계:</b> ${sc.steps.length}단계 구성
+    `;
+  }
+}
+
+function getScenarioById(id) {
+  const def = DEFAULT_SCENARIOS.find(s => s.id === id);
+  if (def) return def;
+  try {
+    const raw = localStorage.getItem('TRAIN_CUSTOM_SCENARIOS');
+    if (raw) {
+      const customs = JSON.parse(raw);
+      return customs.find(s => s.id === id);
+    }
+  } catch(e) {}
+  return null;
+}
+
+function loadSelectedScenario() {
+  const sc = getScenarioById(document.getElementById('scenario-selector').value);
+  if (sc) {
+    applyScenario(sc);
+    closeModal('modal-scenario-list');
+  }
+}
+
+function applyScenario(sc) {
+  currentScenario = sc;
+  resetCurrentScenario();
+}
+
+function exportScenarioJSON() {
+  const sc = getScenarioById(document.getElementById('scenario-selector').value);
+  if (!sc) return;
+  const jsonStr = JSON.stringify(sc, null, 2);
+  navigator.clipboard.writeText(jsonStr).then(() => {
+    alert("📋 시나리오 JSON 데이터가 클립보드에 복사되었습니다!");
+  }).catch(() => {
+    prompt("아래 JSON 텍스트를 복사하십시오:", jsonStr);
+  });
+}
+
+function importScenarioJSONPrompt() {
+  const jsonStr = prompt("가져올 시나리오 JSON 코드를 붙여넣으세요:");
+  if (!jsonStr) return;
+  try {
+    const sc = JSON.parse(jsonStr);
+    if (!sc.title || !Array.isArray(sc.steps)) {
+      throw new Error("유효하지 않은 시나리오 포맷입니다.");
+    }
+    sc.id = `SCN_IMPORTED_${Date.now()}`;
+    saveCustomScenario(sc);
+    alert(`✅ 시나리오 '${sc.title}'를 성공적으로 가져왔습니다!`);
+    applyScenario(sc);
+    closeModal('modal-scenario-list');
+  } catch(err) {
+    alert("JSON 파싱 에러: 형식이 올바르지 않습니다.");
+  }
+}
+
+// 모달 제어
+function openModal(id) {
+  document.getElementById(id).style.display = 'flex';
+}
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+function openScenarioModal() {
+  loadScenarioListUI();
+  openModal('modal-scenario-list');
+}
+</script>
+
+</body>
+</html>
