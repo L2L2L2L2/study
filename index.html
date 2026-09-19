@@ -630,19 +630,54 @@
       font-size: 9.5px;
     }
 
-    /* [E] 아날로그 공기 압력계 (Dual Gauge: MR / BC) */
-    .gauge-container {
+    /* 메인 패널 전용 3열 그리드 레이아웃 (실물 사진 100% 반영) */
+    .main-panel-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px 6px;
+      justify-items: center;
+      align-items: center;
+    }
+
+    /* 메인 패널용 3열 컴팩트 로터리 */
+    .rotary-unit.main-compact {
+      width: 74px;
+      height: 72px;
+    }
+    .rotary-unit.main-compact .rotary-dial-plate {
+      width: 44px;
+      height: 44px;
+      bottom: 2px;
+    }
+    .rotary-unit.main-compact .rotary-knob {
+      width: 26px;
+      height: 26px;
+      bottom: 11px;
+      margin-left: -13px;
+    }
+    .rotary-unit.main-compact .rotary-pointer {
+      height: 17px;
+      width: 6px;
+      top: -5px;
+      left: 10px;
+    }
+    .rotary-unit.main-compact .tick-2-left  { top: 12px; left: 14px; font-size: 9px; }
+    .rotary-unit.main-compact .tick-2-right { top: 12px; left: 60px; font-size: 9px; }
+
+    /* [E] 아날로그 공기 압력계 (Dual Gauge: MR / BC) - 실물 검은색 사각 베젤 프레임 */
+    .gauge-square-frame {
       grid-column: span 2;
       width: 100%;
-      max-width: 260px;
-      background: #15181e;
+      max-width: 205px;
+      background: #181b22;
       border: 3px solid #3d4450;
       border-radius: 12px;
-      padding: 10px;
+      padding: 8px 6px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 4px 10px rgba(0,0,0,0.5);
+      box-shadow: inset 0 0 14px rgba(0,0,0,0.9), 0 4px 10px rgba(0,0,0,0.6);
+      position: relative;
     }
 
     .gauge-body {
@@ -1002,7 +1037,7 @@
             <div class="cover-close-hint" onclick="toggleFlipCover('SW_ATP_COVER', event)">닫기 ✕</div>
             <div class="rotary-unit" style="width:58px; height:58px;" onclick="handleComponentTouch('SW_ATP_REV')">
               <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px;"></div>
-              <div id="comp-SW_ATP_REV" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px;">
+              <div id="comp-SW_ATP_REV" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px; transform: rotate(-45deg);">
                 <div class="rotary-pointer" style="height:18px; width:6px; left:10px; top:-5px;"></div>
               </div>
             </div>
@@ -1019,7 +1054,7 @@
         <div class="component-cell" id="wrap-SW_LOW_SPEED">
           <div class="rotary-unit" onclick="handleComponentTouch('SW_LOW_SPEED')">
             <div class="rotary-dial-plate"></div>
-            <div id="comp-SW_LOW_SPEED" class="rotary-knob">
+            <div id="comp-SW_LOW_SPEED" class="rotary-knob" style="transform: rotate(-45deg);">
               <div class="rotary-pointer"></div>
             </div>
             <div class="rotary-ticks">
@@ -1104,67 +1139,56 @@
       </div>
     </section>
 
-    <!-- [패널 2] 좌측 메인 패널 (아날로그 공기압력계 & 우회 스위치군) -->
+    <!-- [패널 2] 좌측 메인 패널 (실물 사진 100% 동일 3열 그리드 레이아웃) -->
     <section id="panel-main-left" class="train-metal-panel" style="display:none;">
       <div class="screw tl"></div><div class="screw tr"></div>
       <div class="screw bl"></div><div class="screw br"></div>
       <div class="panel-header-tag">MAIN INSTRUMENT & BYPASS PANEL</div>
 
-      <div class="panel-grid">
+      <div class="main-panel-grid">
 
-        <!-- 듀얼 아날로그 공기 압력계 (MR / BC) -->
-        <div class="gauge-container">
-          <div class="gauge-body">
-            <!-- 게이지 눈금 SVG 배경 -->
-            <svg class="gauge-face" viewBox="0 0 160 160">
-              <!-- 외부 원형 링 -->
-              <circle cx="80" cy="80" r="74" fill="none" stroke="#e2e8f0" stroke-width="2"/>
-              <!-- 눈금 눈표시 0 ~ 12 bar -->
-              <path d="M 30 130 A 70 70 0 1 1 130 130" fill="none" stroke="#334155" stroke-width="4" stroke-dasharray="2, 6"/>
-              <text x="32" y="125" font-size="9" font-weight="900" fill="#1e293b">0</text>
-              <text x="25" y="85" font-size="9" font-weight="900" fill="#1e293b">2</text>
-              <text x="44" y="48" font-size="9" font-weight="900" fill="#1e293b">4</text>
-              <text x="76" y="32" font-size="10" font-weight="900" fill="#1e293b">6</text>
-              <text x="110" y="48" font-size="9" font-weight="900" fill="#1e293b">8</text>
-              <text x="126" y="85" font-size="9" font-weight="900" fill="#1e293b">10</text>
-              <text x="118" y="125" font-size="9" font-weight="900" fill="#1e293b">12</text>
-              <text x="80" y="68" font-size="8" font-weight="800" text-anchor="middle" fill="#64748b">PRESSURE</text>
-              <text x="80" y="78" font-size="7" font-weight="700" text-anchor="middle" fill="#94a3b8">MR(검정) / BC(적색)</text>
-            </svg>
-
-            <!-- 바늘 2개 (MR 검은색, BC 붉은색) -->
-            <div id="needle-mr" class="gauge-needle needle-mr"></div>
-            <div id="needle-bc" class="gauge-needle needle-bc"></div>
-            <div class="gauge-center-cap"></div>
-          </div>
-
-          <div class="gauge-readout-legend">
-            <span class="readout-mr">MR 주공기: <strong id="val-mr">9.0</strong> bar</span>
-            <span class="readout-bc">BC 제동통: <strong id="val-bc">0.0</strong> bar</span>
-          </div>
-          <div class="component-label" style="margin-top:6px;">공기 압력계 (MR, BC)</div>
-        </div>
-
-        <!-- 1행 좌: 출입문 바이패스 -->
-        <div class="component-cell" id="wrap-SW_DOOR_BYPASS">
-          <div class="rotary-unit" onclick="handleComponentTouch('SW_DOOR_BYPASS')">
+        <!-- 1행 1열: 예비 (로터리 스위치) -->
+        <div class="component-cell" id="wrap-SW_RESERVE_ROTARY">
+          <div class="rotary-unit main-compact" onclick="handleComponentTouch('SW_RESERVE_ROTARY')">
             <div class="rotary-dial-plate"></div>
-            <div id="comp-SW_DOOR_BYPASS" class="rotary-knob">
+            <div id="comp-SW_RESERVE_ROTARY" class="rotary-knob" style="transform: rotate(-45deg);">
               <div class="rotary-pointer"></div>
             </div>
-            <div class="rotary-ticks">
-              <span class="tick-label tick-2-left">정상</span>
-              <span class="tick-label tick-2-right">바이패스</span>
-            </div>
           </div>
-          <div class="component-label">출입문 바이패스</div>
+          <div class="component-label">예비</div>
         </div>
 
-        <!-- 1행 우: 장애물 감지 바이패스 -->
+        <!-- 1행 2열: 와이퍼 (사각 유닛 다단 셀렉터) -->
+        <div class="component-cell" id="wrap-SW_WIPER">
+          <div style="background:#181b22; border:2px solid #334155; border-radius:6px; padding:3px 4px; box-shadow:0 3px 6px rgba(0,0,0,0.6); position:relative;">
+            <div style="position:relative; width:72px; height:68px;" onclick="handleComponentTouch('SW_WIPER')">
+              <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px; left:50%; margin-left:-22px; border-color:#475569;"></div>
+              <div id="comp-SW_WIPER" class="rotary-knob" style="bottom:10px; width:26px; height:26px; left:50%; margin-left:-13px; transform: rotate(-45deg);">
+                <div class="rotary-pointer" style="height:17px; width:6px; left:10px; top:-5px;"></div>
+              </div>
+              <div class="rotary-ticks" style="font-size:8px;">
+                <span style="position:absolute; top:2px; left:4px; color:#94a3b8; font-weight:900; line-height:1.1;">Φ<br>AUTO</span>
+                <span style="position:absolute; top:2px; right:4px; color:#94a3b8; font-weight:900; line-height:1.1;">INT<br>SLOW</span>
+                <span style="position:absolute; bottom:0px; left:50%; transform:translateX(-50%); color:#cbd5e1; font-weight:900;">FAST</span>
+              </div>
+            </div>
+          </div>
+          <div class="component-label">와이퍼</div>
+        </div>
+
+        <!-- 1행 3열: 예비 (원형 녹색 버튼) -->
+        <div class="component-cell" id="wrap-SW_RESERVE_BTN">
+          <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_RESERVE_BTN')">
+            <div id="comp-SW_RESERVE_BTN" class="push-btn-inner green" style="width:34px; height:34px;"></div>
+          </div>
+          <div class="component-label">예비</div>
+        </div>
+
+        <!-- 2행 1열: 장애물 감지 (정상 / 바이패스 로터리) -->
         <div class="component-cell" id="wrap-SW_OBSTACLE_BYPASS">
-          <div class="rotary-unit" onclick="handleComponentTouch('SW_OBSTACLE_BYPASS')">
+          <div class="rotary-unit main-compact" onclick="handleComponentTouch('SW_OBSTACLE_BYPASS')">
             <div class="rotary-dial-plate"></div>
-            <div id="comp-SW_OBSTACLE_BYPASS" class="rotary-knob">
+            <div id="comp-SW_OBSTACLE_BYPASS" class="rotary-knob" style="transform: rotate(-45deg);">
               <div class="rotary-pointer"></div>
             </div>
             <div class="rotary-ticks">
@@ -1175,40 +1199,76 @@
           <div class="component-label">장애물 감지</div>
         </div>
 
-        <!-- 2행 좌: 공기질 개선장치 (실물 사각 알루미늄 플레이트형) -->
-        <div class="component-cell" id="wrap-SW_AIR_CLEAN">
-          <div class="air-clean-plate">
-            <div class="rotary-unit" style="width:84px; height:74px;" onclick="handleComponentTouch('SW_AIR_CLEAN')">
-              <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px; border-color:#64748b;"></div>
-              <div id="comp-SW_AIR_CLEAN" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px;">
-                <div class="rotary-pointer" style="height:18px; width:6px; left:10px; top:-5px;"></div>
-              </div>
-              <div class="rotary-ticks">
-                <span class="tick-label tick-3-left" style="top:18px; left:16px; font-size:9px; line-height:1;">AUTO<br><span style="font-size:7px; color:#475569;">(미세먼지)</span></span>
-                <span class="tick-label tick-3-mid" style="top:4px; left:50%; font-size:10px;">OFF</span>
-                <span class="tick-label tick-3-right" style="top:18px; left:70px; font-size:10px;">ON</span>
-              </div>
+        <!-- 2행 2열: 출입문 (정상 / 바이패스 로터리) -->
+        <div class="component-cell" id="wrap-SW_DOOR_BYPASS">
+          <div class="rotary-unit main-compact" onclick="handleComponentTouch('SW_DOOR_BYPASS')">
+            <div class="rotary-dial-plate"></div>
+            <div id="comp-SW_DOOR_BYPASS" class="rotary-knob" style="transform: rotate(-45deg);">
+              <div class="rotary-pointer"></div>
+            </div>
+            <div class="rotary-ticks">
+              <span class="tick-label tick-2-left">정상</span>
+              <span class="tick-label tick-2-right">바이패스</span>
             </div>
           </div>
-          <div class="component-label" style="font-size:10px; margin-top:4px;">공기질개선장치 작동스위치</div>
+          <div class="component-label">출입문</div>
         </div>
 
-        <!-- 2행 우: 와이퍼 스위치 (실물 검은색 사각 유닛) -->
-        <div class="component-cell" id="wrap-SW_WIPER">
-          <div style="background:#16191f; border:2px solid #334155; border-radius:6px; padding:4px 6px; box-shadow:0 3px 6px rgba(0,0,0,0.6);">
-            <div class="rotary-unit" style="width:84px; height:74px;" onclick="handleComponentTouch('SW_WIPER')">
-              <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px; border-color:#475569;"></div>
-              <div id="comp-SW_WIPER" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px;">
-                <div class="rotary-pointer" style="height:18px; width:6px; left:10px; top:-5px;"></div>
+        <!-- 2행 3열: 출입문 히터 (원형 녹색 버튼) -->
+        <div class="component-cell" id="wrap-SW_DOOR_HEATER">
+          <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_DOOR_HEATER')">
+            <div id="comp-SW_DOOR_HEATER" class="push-btn-inner green" style="width:34px; height:34px;"></div>
+          </div>
+          <div class="component-label">출입문 히터</div>
+        </div>
+
+        <!-- 3행 좌측 (2열 차지): 실물 사각 볼트 베젤 공기 압력계 (MR, BC) -->
+        <div class="gauge-square-frame">
+          <div class="screw tl" style="top:4px; left:4px;"></div>
+          <div class="screw tr" style="top:4px; right:4px;"></div>
+          <div class="screw bl" style="bottom:4px; left:4px;"></div>
+          <div class="screw br" style="bottom:4px; right:4px;"></div>
+          <div class="gauge-body" style="width:136px; height:136px;">
+            <svg class="gauge-face" viewBox="0 0 160 160">
+              <circle cx="80" cy="80" r="74" fill="none" stroke="#cbd5e1" stroke-width="2"/>
+              <path d="M 30 130 A 70 70 0 1 1 130 130" fill="none" stroke="#334155" stroke-width="4" stroke-dasharray="2, 6"/>
+              <text x="32" y="125" font-size="9" font-weight="900" fill="#1e293b">0</text>
+              <text x="25" y="85" font-size="9" font-weight="900" fill="#1e293b">2</text>
+              <text x="44" y="48" font-size="9" font-weight="900" fill="#1e293b">4</text>
+              <text x="76" y="32" font-size="10" font-weight="900" fill="#1e293b">6</text>
+              <text x="110" y="48" font-size="9" font-weight="900" fill="#1e293b">8</text>
+              <text x="126" y="85" font-size="9" font-weight="900" fill="#1e293b">10</text>
+              <text x="118" y="125" font-size="9" font-weight="900" fill="#1e293b">12</text>
+              <text x="80" y="68" font-size="8" font-weight="800" text-anchor="middle" fill="#64748b">PRESSURE GAUGE</text>
+              <text x="80" y="78" font-size="7" font-weight="700" text-anchor="middle" fill="#dc2626">MR(RED) / BC(BLACK)</text>
+            </svg>
+            <div id="needle-mr" class="gauge-needle needle-mr" style="height:52px;"></div>
+            <div id="needle-bc" class="gauge-needle needle-bc" style="height:52px;"></div>
+            <div class="gauge-center-cap"></div>
+          </div>
+          <div class="gauge-readout-legend" style="font-size:9.5px; margin-top:4px;">
+            <span class="readout-mr">MR: <strong id="val-mr">9.0</strong> bar</span>
+            <span class="readout-bc">BC: <strong id="val-bc">0.0</strong> bar</span>
+          </div>
+          <div class="component-label" style="margin-top:4px; font-size:9.5px;">공기 압력계(MR, BC)</div>
+        </div>
+
+        <!-- 3행 우측 (1열 차지): 공기질개선장치 작동스위치 (실물 사각 알루미늄 명판) -->
+        <div class="component-cell" id="wrap-SW_AIR_CLEAN" style="grid-column: span 1;">
+          <div class="air-clean-plate" style="width:84px;">
+            <div class="rotary-unit" style="width:76px; height:74px;" onclick="handleComponentTouch('SW_AIR_CLEAN')">
+              <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px; border-color:#64748b;"></div>
+              <div id="comp-SW_AIR_CLEAN" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px; transform: rotate(-45deg);">
+                <div class="rotary-pointer" style="height:17px; width:6px; left:10px; top:-5px;"></div>
               </div>
               <div class="rotary-ticks">
-                <span class="tick-label tick-3-left" style="top:18px; left:14px; font-size:10px;">OFF</span>
-                <span class="tick-label tick-3-mid" style="top:4px; left:50%; font-size:10px;">INT</span>
-                <span class="tick-label tick-3-right" style="top:18px; left:70px; font-size:10px;">FAST</span>
+                <span class="tick-label" style="top:15px; left:14px; font-size:8px; line-height:1.05;">AUTO<br><span style="font-size:6.5px; color:#475569;">(미세먼지)</span></span>
+                <span class="tick-label" style="top:4px; left:50%; font-size:9px;">OFF</span>
+                <span class="tick-label" style="top:15px; left:62px; font-size:9px;">ON</span>
               </div>
             </div>
           </div>
-          <div class="component-label" style="font-size:10px; margin-top:4px;">와이퍼</div>
+          <div class="component-label" style="font-size:9px; margin-top:4px;">공기질개선장치 작동스위치</div>
         </div>
 
       </div>
@@ -1521,11 +1581,14 @@ const COMPONENT_REGISTRY = {
   SW_ROOM_LIGHT: { name: '실내등', type: 'ROTARY_3', state: 'AUTO', panel: 'A_PILLAR' }, // MANUAL, AUTO, EMERGENCY
   SW_RESCUE_DRIVE: { name: '구원운전', type: 'ROTARY_3', state: 'NORMAL', panel: 'A_PILLAR' }, // RESCUE, NORMAL, EMERGENCY
 
-  // 좌측 메인 패널 부품군
-  SW_DOOR_BYPASS: { name: '출입문 바이패스', type: 'ROTARY_2', state: 'NORMAL', panel: 'MAIN_LEFT' },
+  // 좌측 메인 패널 부품군 (실물 사진 100% 반영 3열 배치)
+  SW_RESERVE_ROTARY: { name: '예비(로터리)', type: 'ROTARY_2', state: 'NORMAL', panel: 'MAIN_LEFT' },
+  SW_WIPER: { name: '와이퍼 제어', type: 'ROTARY_3', state: 'AUTO', panel: 'MAIN_LEFT' },
+  SW_RESERVE_BTN: { name: '예비(버튼)', type: 'MOMENTARY', state: 'IDLE', panel: 'MAIN_LEFT' },
   SW_OBSTACLE_BYPASS: { name: '장애물 감지', type: 'ROTARY_2', state: 'NORMAL', panel: 'MAIN_LEFT' },
-  SW_AIR_CLEAN: { name: '공기질개선장치', type: 'ROTARY_3', state: 'AUTO', panel: 'MAIN_LEFT' },
-  SW_WIPER: { name: '와이퍼 제어', type: 'ROTARY_3', state: 'OFF', panel: 'MAIN_LEFT' }
+  SW_DOOR_BYPASS: { name: '출입문', type: 'ROTARY_2', state: 'NORMAL', panel: 'MAIN_LEFT' },
+  SW_DOOR_HEATER: { name: '출입문 히터', type: 'MOMENTARY', state: 'IDLE', panel: 'MAIN_LEFT' },
+  SW_AIR_CLEAN: { name: '공기질개선장치', type: 'ROTARY_3', state: 'AUTO', panel: 'MAIN_LEFT' }
 };
 
 /**
@@ -1919,13 +1982,33 @@ function handleComponentTouch(compId) {
       newState = bounce.states[nextIdx];
       const rot = bounce.angles[nextIdx];
       el.style.transform = `rotate(${rot}deg)`;
-    } else {
-      // 일반 3단 스위치 (공기질개선장치, 와이퍼 등: AUTO -> OFF -> ON)
+    } else if (compId === 'SW_WIPER') {
+      // 와이퍼 3단 (AUTO: -45도 -> INT SLOW: 45도 -> FAST: 135도)
+      if (comp.state === 'AUTO') {
+        newState = 'SLOW';
+        el.style.transform = 'rotate(45deg)';
+      } else if (comp.state === 'SLOW') {
+        newState = 'FAST';
+        el.style.transform = 'rotate(135deg)';
+      } else {
+        newState = 'AUTO';
+        el.style.transform = 'rotate(-45deg)';
+      }
+    } else if (compId === 'SW_AIR_CLEAN') {
+      // 공기질개선장치 3단 (AUTO: -45도 -> OFF: 0도 -> ON: 45도)
       if (comp.state === 'AUTO') newState = 'OFF';
       else if (comp.state === 'OFF') newState = 'ON';
       else newState = 'AUTO';
 
       const rot = (newState === 'AUTO') ? -45 : (newState === 'OFF' ? 0 : 45);
+      el.style.transform = `rotate(${rot}deg)`;
+    } else {
+      // 기타 3단 스위치 기본 순환
+      if (comp.state === 'AUTO' || comp.state === 'NORMAL') newState = 'OFF';
+      else if (comp.state === 'OFF') newState = 'ON';
+      else newState = 'AUTO';
+
+      const rot = (newState === 'AUTO' || newState === 'NORMAL') ? -45 : (newState === 'OFF' ? 0 : 45);
       el.style.transform = `rotate(${rot}deg)`;
     }
     comp.state = newState;
@@ -2127,21 +2210,37 @@ function resetCurrentScenario() {
       if (el) el.classList.remove('open');
     } else if (comp.type === 'ROTARY_2' || comp.type === 'ROTARY_3') {
       const el = document.getElementById(`comp-${id}`);
-      if (id === 'SW_ATP_REV') comp.state = 'OFF';
-      else if (id === 'SW_ROOM_LIGHT') {
+      if (id === 'SW_ATP_REV') {
+        comp.state = 'OFF';
+      } else if (id === 'SW_ROOM_LIGHT') {
         comp.state = 'AUTO';
         ROTARY3_BOUNCE.SW_ROOM_LIGHT.dir = 1;
       } else if (id === 'SW_RESCUE_DRIVE') {
         comp.state = 'NORMAL';
         ROTARY3_BOUNCE.SW_RESCUE_DRIVE.dir = 1;
-      } else comp.state = 'NORMAL';
-      if (el) el.style.transform = 'rotate(0deg)';
-    } else if (id === 'SW_WIRELESS_MODE') {
-      comp.state = 'OFF';
-      const el = document.getElementById('comp-SW_WIRELESS_MODE');
-      if (el) el.classList.remove('lit', 'pressed');
-      const svgEl = document.getElementById('unmanned-progress-svg');
-      if (svgEl) svgEl.classList.remove('charging');
+      } else if (id === 'SW_AIR_CLEAN' || id === 'SW_WIPER') {
+        comp.state = 'AUTO';
+      } else {
+        comp.state = 'NORMAL';
+      }
+
+      if (el) {
+        if (id === 'SW_ATP_REV' || id === 'SW_LOW_SPEED' || id === 'SW_RESERVE_ROTARY' ||
+            id === 'SW_OBSTACLE_BYPASS' || id === 'SW_DOOR_BYPASS' || id === 'SW_AIR_CLEAN' || id === 'SW_WIPER') {
+          el.style.transform = 'rotate(-45deg)';
+        } else {
+          el.style.transform = 'rotate(0deg)';
+        }
+      }
+    } else if (comp.type === 'MOMENTARY') {
+      comp.state = 'IDLE';
+      const el = document.getElementById(`comp-${id}`);
+      if (el) el.classList.remove('pressed', 'lit');
+      if (id === 'SW_WIRELESS_MODE') {
+        comp.state = 'OFF';
+        const svgEl = document.getElementById('unmanned-progress-svg');
+        if (svgEl) svgEl.classList.remove('charging');
+      }
     }
   });
 
