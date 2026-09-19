@@ -1002,21 +1002,16 @@
     .wiper-lbl {
       position: absolute;
       font-weight: 900;
-      color: #94a3b8;
+      color: #e2e8f0;
       text-shadow: 0 1px 2px #000;
       cursor: pointer;
       z-index: 6;
       padding: 3px 4px;
       border-radius: 3px;
-      transition: color 0.15s ease, text-shadow 0.15s ease;
       touch-action: manipulation;
     }
     .wiper-lbl:hover {
       color: #ffffff;
-    }
-    .wiper-lbl.active {
-      color: #38bdf8 !important;
-      text-shadow: 0 0 8px rgba(56, 189, 248, 0.8), 0 1px 2px #000 !important;
     }
 
     .wiper-lbl-off {
@@ -1024,7 +1019,6 @@
       left: 50%;
       transform: translateX(-50%);
       font-size: 8.5px;
-      color: #e2e8f0;
     }
     .wiper-lbl-auto {
       top: 29px;
@@ -1046,26 +1040,7 @@
       left: 50%;
       transform: translateX(-50%);
       font-size: 8.5px;
-      color: #e2e8f0;
     }
-
-    /* 실물 틱 도트 (터치 시 해당 위치로 전환) */
-    .wiper-dot {
-      position: absolute;
-      width: 4px;
-      height: 4px;
-      background: #94a3b8;
-      border-radius: 50%;
-      cursor: pointer;
-      z-index: 6;
-      transition: background-color 0.15s ease;
-    }
-    .wiper-dot:hover {
-      background: #38bdf8;
-    }
-    .wiper-dot-auto { top: 38px; left: 21px; }
-    .wiper-dot-int  { top: 38px; right: 21px; }
-    .wiper-dot-slow { top: 57px; right: 23px; }
 
     /* 원형 베이스 플레이트 (슬림화하여 글자와 겹치지 않음) */
     .wiper-dial-plate {
@@ -1641,14 +1616,11 @@
         <!-- 1행 2열: 와이퍼 (실물 사진 100% 동일 5단계 셀렉터: AUTO / OFF / INT / SLOW / FAST) -->
         <div class="component-cell" id="wrap-SW_WIPER">
           <div class="wiper-unit-box" onclick="handleComponentTouch('SW_WIPER')">
-            <span class="wiper-lbl wiper-lbl-off active" id="wiper-lbl-OFF" onclick="setWiperPosition('OFF', event)">OFF</span>
+            <span class="wiper-lbl wiper-lbl-off" id="wiper-lbl-OFF" onclick="setWiperPosition('OFF', event)">OFF</span>
             <span class="wiper-lbl wiper-lbl-auto" id="wiper-lbl-AUTO" onclick="setWiperPosition('AUTO', event)">AUTO</span>
             <span class="wiper-lbl wiper-lbl-int" id="wiper-lbl-INT" onclick="setWiperPosition('INT', event)">INT</span>
             <span class="wiper-lbl wiper-lbl-slow" id="wiper-lbl-SLOW" onclick="setWiperPosition('SLOW', event)">SLOW</span>
             <span class="wiper-lbl wiper-lbl-fast" id="wiper-lbl-FAST" onclick="setWiperPosition('FAST', event)">FAST</span>
-            <div class="wiper-dot wiper-dot-auto" title="AUTO" onclick="setWiperPosition('AUTO', event)"></div>
-            <div class="wiper-dot wiper-dot-int" title="INT" onclick="setWiperPosition('INT', event)"></div>
-            <div class="wiper-dot wiper-dot-slow" title="SLOW" onclick="setWiperPosition('SLOW', event)"></div>
 
             <div class="wiper-dial-plate"></div>
             <div id="comp-SW_WIPER" class="wiper-bar-knob" style="transform: rotate(0deg);">
@@ -3046,18 +3018,9 @@ function setWiperPosition(targetState, evt) {
   }
 }
 
-// 와이퍼 현재 활성화 위치 라벨 강조 표시
+// 와이퍼 위치 라벨 (라벨 강조색 없음)
 function updateWiperActiveLabel(state) {
-  ['AUTO', 'OFF', 'INT', 'SLOW', 'FAST'].forEach(pos => {
-    const lbl = document.getElementById(`wiper-lbl-${pos}`);
-    if (lbl) {
-      if (pos === state) {
-        lbl.classList.add('active');
-      } else {
-        lbl.classList.remove('active');
-      }
-    }
-  });
+  // 설정 위치 하늘색 표시 제거 완료
 }
 
 /**
