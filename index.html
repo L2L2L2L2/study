@@ -766,6 +766,12 @@
       backdrop-filter: blur(8px);
       color: #e2e8f0;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      animation: vobcCardFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes vobcCardFadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .vobc-overlay-card.handling {
@@ -1859,8 +1865,8 @@
     <div id="vobc-overlay-card" class="vobc-overlay-card" style="display:none;">
       <div class="vobc-card-header">
         <div class="vobc-card-title-wrap">
-          <span>💡</span>
-          <span>VOBC 리셋 취급 가이드</span>
+          <span>⚠️</span>
+          <span style="color:#fde047;">VOBC 리셋 버튼은 관제 지시 있을때만 취급</span>
         </div>
         <span id="vobc-card-badge" class="vobc-card-badge">대기 중</span>
       </div>
@@ -2402,11 +2408,8 @@ function switchPanelView(view) {
     }
   });
 
-  // OP5 전용 VOBC 리셋 안내 오버레이 박스 표시 전환
-  const vobcOverlay = document.getElementById('vobc-overlay-card');
-  if (vobcOverlay) {
-    vobcOverlay.style.display = (view === 'OP5') ? 'block' : 'none';
-  }
+  // 패널 전환 시 VOBC 안내 오버레이 숨김
+  hideVobcGuide();
 }
 
 // 모드 전환 (실습 / 시험 / 녹화)
@@ -2445,6 +2448,7 @@ let unmannedStartTime = 0;
 
 function startUnmannedPress(evt) {
   if (evt) evt.preventDefault();
+  hideVobcGuide();
   const coverComp = COMPONENT_REGISTRY['SW_WIRELESS_COVER'];
   if (coverComp && coverComp.state !== 'OPEN') {
     sound.playError();
@@ -2524,6 +2528,22 @@ function completeUnmannedModeToggle() {
  * - 2~3초 누름 : 해당차 재설정
  * - 5~7초 누름 : 전·후부 VOBC 모두 리셋
  */
+// VOBC 리셋 취급 가이드 표시/숨김 함수
+function hideVobcGuide() {
+  const card = document.getElementById('vobc-overlay-card');
+  if (card && card.style.display !== 'none') {
+    card.style.display = 'none';
+    card.classList.remove('handling', 'shake');
+  }
+}
+
+function showVobcGuide() {
+  const card = document.getElementById('vobc-overlay-card');
+  if (card) {
+    card.style.display = 'block';
+  }
+}
+
 let vobcStartTime = 0;
 let vobcInterval = null;
 let vobcToastTimeout = null;
@@ -2782,6 +2802,11 @@ function handleComponentTouch(compId) {
   const comp = COMPONENT_REGISTRY[compId];
   if (!comp) return;
 
+  // 다른 부품 조작 시 VOBC 취급 가이드 숨김
+  if (compId !== 'SW_VOBC_RESET') {
+    hideVobcGuide();
+  }
+
   // 보호커버가 있는 부품 검증
   if (comp.requiresCover) {
     const coverComp = COMPONENT_REGISTRY[comp.requiresCover];
@@ -2962,6 +2987,7 @@ function handleComponentTouch(compId) {
 // 투명 아크릴 커버 개폐 핸들러
 function toggleFlipCover(coverId, evt) {
   if (evt) evt.stopPropagation();
+  hideVobcGuide();
   const coverComp = COMPONENT_REGISTRY[coverId];
   if (!coverComp) return;
 
@@ -2989,6 +3015,7 @@ function toggleFlipCover(coverId, evt) {
 // 와이퍼 각 위치 직접 선택 함수 (AUTO, OFF, INT, SLOW, FAST 터치 시)
 function setWiperPosition(targetState, evt) {
   if (evt) evt.stopPropagation();
+  hideVobcGuide();
   const comp = COMPONENT_REGISTRY['SW_WIPER'];
   if (!comp) return;
 
@@ -3242,6 +3269,7 @@ function resetCurrentScenario() {
 
   updateGaugeUI(0.0);
   renderStepHUD();
+  hideVobcGuide();
 }
 
 /**
