@@ -755,7 +755,7 @@
     .tick-3-mid   { top: 3px;  left: 50%; }
     .tick-3-right { top: 22px; left: 82px; }
 
-    /* ATP후진 커버형 전용 명판 틱 라벨 (실물 사진 100% 동일: 12시 중앙 OFF, 3시 ON) */
+    /* ATP후진 커버형 전용 명판 틱 라벨 (10시 방향 OFF, 2시 방향 ON 대칭 배치) */
     .atp-cover-ticks {
       position: absolute;
       top: 0;
@@ -771,16 +771,16 @@
     }
     .atp-tick-off {
       position: absolute;
-      top: -16px;
-      left: 50%;
-      transform: translateX(-50%);
+      top: 6px;
+      left: calc(50% - 30px);
+      transform: translate(-50%, -50%);
       white-space: nowrap;
     }
     .atp-tick-on {
       position: absolute;
-      top: 50%;
-      right: -24px;
-      transform: translateY(-50%);
+      top: 6px;
+      left: calc(50% + 30px);
+      transform: translate(-50%, -50%);
       white-space: nowrap;
     }
 
@@ -1630,7 +1630,7 @@
             <div class="cover-close-hint" onclick="toggleFlipCover('SW_ATP_COVER', event)">닫기 ✕</div>
             <div class="rotary-unit" style="width:58px; height:58px;" onclick="handleComponentTouch('SW_ATP_REV')">
               <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px;"></div>
-              <div id="comp-SW_ATP_REV" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px; transform: rotate(0deg);">
+              <div id="comp-SW_ATP_REV" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px; transform: rotate(-45deg);">
                 <div class="rotary-pointer" style="height:18px; width:6px; left:10px; top:-5px;"></div>
               </div>
             </div>
@@ -2875,14 +2875,14 @@ function endVobcResetPress(evt) {
     // 5~7초: 전·후부 VOBC 모두 리셋
     sound.playSuccess();
     triggerHaptic([60, 60, 100]);
-    showVobcToast('전·후부 VOBC 모두 리셋', `VOBC 전·후부 리셋 완료 (${(elapsed / 1000).toFixed(1)}초 인가)`, 'cyan');
-    showTemporaryHudFeedback('⚡ [VOBC 리셋] 전·후부 VOBC 모두 리셋', false);
+    showVobcToast('전·후부 VOBC 모두 리셋', `전·후부 VOBC 모두 리셋되어 타임아웃 발생! (${(elapsed / 1000).toFixed(1)}초)`, 'cyan');
+    showTemporaryHudFeedback('⚠️ [VOBC 리셋] 전·후부 VOBC 모두 리셋되어 타임아웃 발생!', true);
 
     if (badgeEl) {
-      badgeEl.innerText = '⚡ 전·후부 VOBC 모두 리셋 완료';
+      badgeEl.innerText = '⚡ 전·후부 리셋 (타임아웃 발생)';
       badgeEl.className = 'vobc-card-badge active-cyan';
     }
-    if (statusEl) statusEl.innerText = '완료: 전·후부 VOBC가 모두 리셋되었습니다';
+    if (statusEl) statusEl.innerText = '전·후부 VOBC 모두 리셋되어 타임아웃 발생!';
 
     if (currentMode === 'REC') {
       promptRecordStep('SW_VOBC_RESET', comp.name, '전·후부 VOBC 모두 리셋');
@@ -3087,7 +3087,7 @@ function handleComponentTouch(compId) {
 
     if (compId === 'SW_ATP_REV') {
       newState = (comp.state === 'OFF') ? 'ON' : 'OFF';
-      el.style.transform = (newState === 'ON') ? 'rotate(90deg)' : 'rotate(0deg)';
+      el.style.transform = (newState === 'ON') ? 'rotate(45deg)' : 'rotate(-45deg)';
     } else if (compId === 'SW_INSUL_SECT') {
       newState = (comp.state === 'NORMAL') ? 'INSUL' : 'NORMAL';
       el.style.transform = (newState === 'INSUL') ? 'rotate(45deg)' : 'rotate(-45deg)';
