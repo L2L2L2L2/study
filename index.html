@@ -73,37 +73,155 @@
       align-items: center;
     }
 
-    .mode-tabs {
-      display: flex;
-      background: #1c2128;
-      border-radius: 6px;
-      padding: 2px;
-      border: 1px solid #30363d;
+    /* 모드 드롭다운 메뉴 (수직 접이식 컴팩트 셀렉터) */
+    .mode-dropdown-wrap {
+      position: relative;
+      display: inline-flex;
+      z-index: 150;
     }
 
-    .mode-tab-btn {
-      background: transparent;
-      border: none;
-      color: #8b949e;
+    .mode-trigger-btn {
+      background: #1c2128;
+      border: 1px solid #30363d;
+      color: #ffffff;
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 800;
       padding: 5px 9px;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 4px;
-      transition: all 0.2s;
+      gap: 5px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+      white-space: nowrap;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mode-trigger-btn.mode-play {
+      background: #238636;
+      border-color: #2ea043;
+      color: #ffffff;
+    }
+    .mode-trigger-btn.mode-exam {
+      background: #1f6feb;
+      border-color: #388bfd;
+      color: #ffffff;
+    }
+    .mode-trigger-btn.mode-rec {
+      background: #da3633;
+      border-color: #f85149;
+      color: #ffffff;
+      animation: pulse-red 1.5s infinite;
     }
 
-    .mode-tab-btn.active {
-      background: #238636;
-      color: #ffffff;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    .mode-trigger-icon {
+      font-size: 13px;
+      line-height: 1;
     }
-    .mode-tab-btn.active.rec-mode {
-      background: #da3633;
-      animation: pulse-red 1.5s infinite;
+    .mode-trigger-text {
+      font-size: 11px;
+      letter-spacing: -0.2px;
+    }
+    .mode-dropdown-arrow {
+      font-size: 8px;
+      opacity: 0.75;
+      transition: transform 0.2s ease;
+      margin-left: 2px;
+    }
+    .mode-dropdown-wrap.open .mode-dropdown-arrow {
+      transform: rotate(180deg);
+    }
+
+    .mode-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255,255,255,0.05);
+      padding: 5px;
+      min-width: 135px;
+      flex-direction: column;
+      gap: 3px;
+      z-index: 9999;
+      animation: menuSlideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mode-dropdown-wrap.open .mode-dropdown-menu {
+      display: flex;
+    }
+
+    @keyframes menuSlideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .mode-dropdown-title {
+      font-size: 10px;
+      color: #8b949e;
+      font-weight: 700;
+      padding: 3px 8px 2px;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #21262d;
+      margin-bottom: 2px;
+    }
+
+    .mode-dropdown-item {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #c9d1d9;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      transition: all 0.15s ease;
+      text-align: left;
+      white-space: nowrap;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mode-dropdown-item .item-text {
+      flex: 1;
+    }
+    .mode-dropdown-item .item-check {
+      font-size: 11px;
+      opacity: 0;
+      font-weight: 900;
+    }
+    .mode-dropdown-item:active, .mode-dropdown-item:hover {
+      background: #21262d;
+      color: #fff;
+    }
+    .mode-dropdown-item.active {
+      background: rgba(35, 134, 54, 0.22);
+      border-color: #238636;
+      color: #3fb950;
+    }
+    .mode-dropdown-item.active.exam-active {
+      background: rgba(31, 111, 235, 0.22);
+      border-color: #1f6feb;
+      color: #58a6ff;
+    }
+    .mode-dropdown-item.active.rec-active {
+      background: rgba(218, 54, 51, 0.22);
+      border-color: #da3633;
+      color: #f85149;
+    }
+    .mode-dropdown-item.active .item-check {
+      opacity: 1;
     }
 
     @keyframes pulse-red {
@@ -113,9 +231,9 @@
 
     .panel-view-switcher {
       display: flex;
-      gap: 3px;
+      gap: 4px;
       overflow-x: auto;
-      max-width: 60%;
+      flex-shrink: 0;
     }
 
     .panel-toggle-btn {
@@ -780,15 +898,7 @@
     }
 
     .vobc-overlay-card.shake {
-      animation: cardShake 0.4s ease;
-    }
-
-    @keyframes cardShake {
-      0%, 100% { transform: translateX(0); }
-      20% { transform: translateX(-6px); }
-      40% { transform: translateX(6px); }
-      60% { transform: translateX(-4px); }
-      80% { transform: translateX(4px); }
+      /* 흔들림 비활성화 */
     }
 
     .vobc-card-header {
@@ -1327,16 +1437,9 @@
       border-color: #58a6ff;
     }
 
-    /* 오조작 경고 흔들림 애니메이션 */
+    /* 오조작 경고 흔들림 (비활성화) */
     .shake-screen {
-      animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-    }
-
-    @keyframes shake {
-      10%, 90% { transform: translate3d(-2px, 0, 0); }
-      20%, 80% { transform: translate3d(4px, 0, 0); }
-      30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
-      40%, 60% { transform: translate3d(6px, 0, 0); }
+      /* 사용자 요청으로 흔들림 완전 비활성화 */
     }
 
     /* 리포트 카드 */
@@ -1367,21 +1470,37 @@
 <body>
 
 <div id="app-container">
+  <!-- iOS Safari 17.4+ Taptic Engine 네이티브 햅틱 유도용 스위치 요소 -->
+  <input type="checkbox" switch id="ios-haptic-switch" style="position:fixed; opacity:0; pointer-events:none; top:-9999px; left:-9999px;" aria-hidden="true" tabindex="-1" />
 
   <!-- 1. 상단 HUD 영역 -->
   <header class="hud-header">
     <div class="hud-top-bar">
-      <!-- 모드 선택 탭 -->
-      <div class="mode-tabs">
-        <button id="tab-play" class="mode-tab-btn active" onclick="switchMode('PLAY')">
-          🕹️ 실습 훈련
+      <!-- 모드 선택 드롭다운 (수직 접이식 메뉴) -->
+      <div class="mode-dropdown-wrap" id="mode-dropdown-wrap">
+        <button id="mode-trigger-btn" class="mode-trigger-btn mode-play" onclick="toggleModeDropdown(event)" aria-haspopup="true" aria-expanded="false" title="모드 전환 메뉴 열기">
+          <span id="mode-trigger-icon" class="mode-trigger-icon">🕹️</span>
+          <span id="mode-trigger-text" class="mode-trigger-text">실습 훈련</span>
+          <span class="mode-dropdown-arrow">▼</span>
         </button>
-        <button id="tab-exam" class="mode-tab-btn" onclick="switchMode('EXAM')">
-          ⏱️ 실전 평가
-        </button>
-        <button id="tab-rec" class="mode-tab-btn" onclick="switchMode('REC')">
-          🔴 동작 녹화
-        </button>
+        <div id="mode-dropdown-menu" class="mode-dropdown-menu">
+          <div class="mode-dropdown-title">MODE SELECT</div>
+          <button id="tab-play" class="mode-dropdown-item active" onclick="selectModeFromDropdown('PLAY')">
+            <span class="item-icon">🕹️</span>
+            <span class="item-text">실습 훈련</span>
+            <span class="item-check">✓</span>
+          </button>
+          <button id="tab-exam" class="mode-dropdown-item" onclick="selectModeFromDropdown('EXAM')">
+            <span class="item-icon">⏱️</span>
+            <span class="item-text">실전 평가</span>
+            <span class="item-check">✓</span>
+          </button>
+          <button id="tab-rec" class="mode-dropdown-item" onclick="selectModeFromDropdown('REC')">
+            <span class="item-icon">🔴</span>
+            <span class="item-text">동작 녹화</span>
+            <span class="item-check">✓</span>
+          </button>
+        </div>
       </div>
 
       <!-- 패널 전환 뷰 스위처 (OP1 ~ OP5) -->
@@ -2141,13 +2260,38 @@ class SoundEngine {
 
 const sound = new SoundEngine();
 
-// 햅틱 진동 유틸 (안드로이드 navigator.vibrate + 아이폰 iOS 저주파 오디오 햅틱 하이브리드)
+// 햅틱 진동 유틸 (iOS Safari Taptic Engine + 안드로이드 navigator.vibrate + 서브베이스 하이브리드)
 function triggerHaptic(pattern) {
-  // 1. 안드로이드 등 표준 Vibration API 지원 기기
-  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-    try { navigator.vibrate(pattern); } catch(e) {}
+  // 1. iOS Safari 17.4+ 네이티브 Taptic Engine 연동 (Switch 체크박스 클릭 기법)
+  const iosSwitch = document.getElementById('ios-haptic-switch');
+  if (iosSwitch) {
+    try {
+      iosSwitch.click();
+      if (Array.isArray(pattern) && pattern.length > 1) {
+        setTimeout(() => {
+          try { iosSwitch.click(); } catch(e) {}
+        }, 90);
+      }
+    } catch (e) {}
   }
-  // 2. 아이폰(iOS Safari는 보안상 navigator.vibrate 미지원)을 위한 초저주파 서브베이스 햅틱 펄스 (손끝 물리 진동 체감)
+
+  // 2. 안드로이드 등 표준 Vibration API 지원 기기
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      let vibSuccess = false;
+      if (Array.isArray(pattern)) {
+        vibSuccess = navigator.vibrate(pattern);
+      } else {
+        vibSuccess = navigator.vibrate(Number(pattern) || 50);
+      }
+      // 배열 패턴 미지원 시 단일 값 폴백
+      if (!vibSuccess && Array.isArray(pattern) && pattern.length > 0) {
+        navigator.vibrate(pattern[0] || 60);
+      }
+    } catch (e) {}
+  }
+
+  // 3. 초저주파 서브베이스 햅틱 펄스 (손끝 물리 진동 체감 보완)
   if (sound) {
     try {
       sound.init();
@@ -2155,9 +2299,9 @@ function triggerHaptic(pattern) {
       const osc = sound.ctx.createOscillator();
       const gain = sound.ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(52, now); // 아이폰 스피커 모듈 공진 주파수 대역
+      osc.frequency.setValueAtTime(52, now); // 스피커 모듈 공진 주파수
       const dur = Array.isArray(pattern) ? (pattern[0] / 1000) : (pattern / 1000);
-      const safeDur = Math.min(Math.max(dur || 0.04, 0.035), 0.1);
+      const safeDur = Math.min(Math.max(dur || 0.04, 0.035), 0.12);
       gain.gain.setValueAtTime(0.85, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + safeDur);
       osc.connect(gain);
@@ -2384,13 +2528,78 @@ function switchPanelView(view) {
   hideVobcGuide();
 }
 
+// 모드 드롭다운 토글 및 조작 함수
+function toggleModeDropdown(event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const wrap = document.getElementById('mode-dropdown-wrap');
+  if (!wrap) return;
+  const isOpen = wrap.classList.toggle('open');
+  const trigger = document.getElementById('mode-trigger-btn');
+  if (trigger) {
+    trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+  triggerHaptic(20);
+}
+
+function closeModeDropdown() {
+  const wrap = document.getElementById('mode-dropdown-wrap');
+  if (wrap && wrap.classList.contains('open')) {
+    wrap.classList.remove('open');
+    const trigger = document.getElementById('mode-trigger-btn');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  }
+}
+
+function selectModeFromDropdown(mode) {
+  closeModeDropdown();
+  switchMode(mode);
+  triggerHaptic(30);
+}
+
+// 외부 터치/클릭 시 모드 드롭다운 자동 닫기
+document.addEventListener('pointerdown', (e) => {
+  const wrap = document.getElementById('mode-dropdown-wrap');
+  if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target)) {
+    closeModeDropdown();
+  }
+});
+
 // 모드 전환 (실습 / 시험 / 녹화)
 function switchMode(mode) {
   currentMode = mode;
-  document.getElementById('tab-play').className = 'mode-tab-btn' + (mode === 'PLAY' ? ' active' : '');
-  document.getElementById('tab-exam').className = 'mode-tab-btn' + (mode === 'EXAM' ? ' active' : '');
-  const recBtn = document.getElementById('tab-rec');
-  recBtn.className = 'mode-tab-btn' + (mode === 'REC' ? ' active rec-mode' : '');
+
+  // 드롭다운 트리거 버튼 라벨 & 스타일 동기화
+  const triggerBtn = document.getElementById('mode-trigger-btn');
+  const triggerIcon = document.getElementById('mode-trigger-icon');
+  const triggerText = document.getElementById('mode-trigger-text');
+
+  if (triggerBtn && triggerIcon && triggerText) {
+    triggerBtn.className = 'mode-trigger-btn';
+    if (mode === 'PLAY') {
+      triggerBtn.classList.add('mode-play');
+      triggerIcon.innerText = '🕹️';
+      triggerText.innerText = '실습 훈련';
+    } else if (mode === 'EXAM') {
+      triggerBtn.classList.add('mode-exam');
+      triggerIcon.innerText = '⏱️';
+      triggerText.innerText = '실전 평가';
+    } else if (mode === 'REC') {
+      triggerBtn.classList.add('mode-rec');
+      triggerIcon.innerText = '🔴';
+      triggerText.innerText = '동작 녹화';
+    }
+  }
+
+  // 드롭다운 내부 아이템 선택 상태 표시 동기화
+  const tabPlay = document.getElementById('tab-play');
+  const tabExam = document.getElementById('tab-exam');
+  const tabRec = document.getElementById('tab-rec');
+  if (tabPlay) tabPlay.className = 'mode-dropdown-item' + (mode === 'PLAY' ? ' active' : '');
+  if (tabExam) tabExam.className = 'mode-dropdown-item' + (mode === 'EXAM' ? ' active exam-active' : '');
+  if (tabRec) tabRec.className = 'mode-dropdown-item' + (mode === 'REC' ? ' active rec-active' : '');
 
   const hudStatus = document.getElementById('hud-status');
   const hudRecBar = document.getElementById('hud-rec-bar');
@@ -3120,12 +3329,9 @@ function clearHints() {
   document.querySelectorAll('.target-hint-pulse').forEach(el => el.classList.remove('target-hint-pulse'));
 }
 
-// 화면 흔들림 효과
+// 화면 흔들림 효과 (사용자 요청: 정신없는 화면 흔들림 완전 비활성화)
 function triggerShakeScreen() {
-  const app = document.getElementById('app-container');
-  app.classList.remove('shake-screen');
-  void app.offsetWidth;
-  app.classList.add('shake-screen');
+  /* 사용자 요청으로 화면 흔들림 완전 비활성화 */
 }
 
 // 아날로그 공기 압력계 바늘 회전 업데이트
