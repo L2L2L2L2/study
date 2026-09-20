@@ -974,7 +974,7 @@
       transform: translate(-50%, -50%) scale(1.15);
     }
 
-    /* ATP후진 커버형 전용 명판 틱 라벨 (실물 사진 100% 일치: 12시/0시 상단 OFF, 3시/90° 우측 ON 완벽 시인성 확보) */
+    /* ATP후진 커버형 전용 명판 틱 라벨 (12시 원 바로 위 OFF, 3시/90° 우측 ON) */
     .atp-cover-ticks {
       position: absolute;
       top: 0;
@@ -987,13 +987,19 @@
       color: #ffffff;
       text-shadow: 0 1px 3px #000, 0 0 6px rgba(0,0,0,0.95);
       letter-spacing: 0.5px;
+      z-index: 10;
     }
     .atp-tick-off {
       position: absolute;
-      top: -18px;
+      top: 6px;
       left: 50%;
       transform: translateX(-50%);
       white-space: nowrap;
+      pointer-events: auto;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+      transition: color 0.15s, transform 0.1s;
     }
     .atp-tick-on {
       position: absolute;
@@ -1001,6 +1007,14 @@
       right: -26px;
       transform: translateY(-50%);
       white-space: nowrap;
+      pointer-events: auto;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+      transition: color 0.15s, transform 0.1s;
+    }
+    .atp-tick-off:hover, .atp-tick-on:hover {
+      color: #38bdf8;
     }
 
     /* 실물 사진 기반: 공기질개선장치 사각 은색 명판 */
@@ -2388,8 +2402,8 @@
           <div class="cover-guard-unit">
             <!-- 커버 바깥 상단/우측에 실물처럼 인쇄된 OFF / ON -->
             <div class="atp-cover-ticks">
-              <span class="atp-tick-off">OFF</span>
-              <span class="atp-tick-on">ON</span>
+              <span class="atp-tick-off interactive-tick" onclick="setAtpRevPosition('OFF', event)">OFF</span>
+              <span class="atp-tick-on interactive-tick" onclick="setAtpRevPosition('ON', event)">ON</span>
             </div>
             <div id="comp-SW_ATP_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_ATP_COVER', event)">
               <div class="cover-hinge"></div>
@@ -4584,6 +4598,37 @@ function setHeadlightPosition(targetState, evt) {
     promptRecordStep('SW_HEADLIGHT', comp.name, targetState);
   } else {
     evaluateStepAction('SW_HEADLIGHT', targetState);
+  }
+}
+
+// ATP후진 2단 각 위치 직접 선택 함수 (OFF, ON 터치 시)
+function setAtpRevPosition(targetState, evt) {
+  if (evt) evt.stopPropagation();
+  hideVobcGuide();
+  const comp = COMPONENT_REGISTRY['SW_ATP_REV'];
+  if (!comp) return;
+
+  // 보호커버 개방 여부 검증
+  const coverComp = COMPONENT_REGISTRY['SW_ATP_COVER'];
+  if (coverComp && coverComp.state !== 'OPEN') {
+    sound.playError();
+    triggerHaptic([50, 50, 50]);
+    showTemporaryHudFeedback(`⚠️ [${coverComp.name}]를 먼저 열어야 조작할 수 있습니다!`, true);
+    return;
+  }
+
+  comp.state = targetState;
+  const el = document.getElementById('comp-SW_ATP_REV');
+  if (el) el.style.transform = (targetState === 'ON') ? 'rotate(90deg)' : 'rotate(0deg)';
+
+  sound.playRotarySnap();
+  triggerHaptic(30);
+  showTemporaryHudFeedback(`🔄 [ATP후진] ${targetState === 'ON' ? 'ON (후진 인가)' : 'OFF (정지)'}`, false);
+
+  if (currentMode === 'REC') {
+    promptRecordStep('SW_ATP_REV', comp.name, targetState);
+  } else {
+    evaluateStepAction('SW_ATP_REV', targetState);
   }
 }
 
