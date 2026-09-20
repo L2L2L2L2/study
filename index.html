@@ -290,6 +290,15 @@
       color: #f85149;
     }
 
+    /* 상단 우측 컨트롤 그룹 (듀얼 뷰포트 배지 + 음소거 버튼 묶음) */
+    .hud-top-right-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
     /* OP3~OP5 빈 패널 안내 영역 */
     .empty-panel-placeholder {
       display: flex;
@@ -2121,13 +2130,16 @@
         <button id="view-op5" class="panel-toggle-btn" onclick="switchPanelView('OP5')">OP5</button>
       </div>
 
-      <!-- 대화면(폴드/패드/PC) 듀얼 뷰포트 배지 -->
-      <div class="dual-view-badge">🖥️ 2분할 듀얼 뷰포트</div>
+      <!-- 상단 우측 컨트롤 그룹 (듀얼 뷰포트 배지 + 음소거 버튼 묶음) -->
+      <div class="hud-top-right-group">
+        <!-- 대화면(폴드/패드/PC) 듀얼 뷰포트 배지 (음소거 좌측 배치) -->
+        <div class="dual-view-badge">🖥️ 2분할 듀얼 뷰포트</div>
 
-      <!-- 상단 오른쪽 위 소리 끄기/켜기 토글 버튼 -->
-      <button id="btn-sound-toggle" class="sound-toggle-btn" onclick="toggleMuteSound()" title="소리 끄기/켜기 (음소거 토글)">
-        <span id="sound-toggle-icon">🔊</span>
-      </button>
+        <!-- 상단 오른쪽 위 소리 끄기/켜기 토글 버튼 -->
+        <button id="btn-sound-toggle" class="sound-toggle-btn" onclick="toggleMuteSound()" title="소리 끄기/켜기 (음소거 토글)">
+          <span id="sound-toggle-icon">🔊</span>
+        </button>
+      </div>
     </div>
 
     <!-- 상태 알림창 -->
