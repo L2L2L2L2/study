@@ -5148,7 +5148,15 @@ function handleComponentTouch(compId) {
           el.classList.remove('unlatching');
         }, 360);
         const lampApply = document.getElementById('lamp-brake-apply');
-        if (lampApply) lampApply.classList.remove('lit');
+        if (typeof currentMasconNotch !== 'undefined' && currentMasconNotch === 'EB') {
+          updateGaugeUI(4.0);
+          if (lampApply) lampApply.classList.add('lit');
+        } else {
+          if (lampApply) lampApply.classList.remove('lit');
+          if (typeof setMasconNotch === 'function' && typeof currentMasconNotch !== 'undefined') {
+            setMasconNotch(currentMasconNotch, true);
+          }
+        }
         showTemporaryHudFeedback('⚪ [비상제동체결] 복귀 (시계방향 30° 회전 해제)', false);
       } else {
         sound.playClick();
@@ -5854,36 +5862,14 @@ function setMasconNotch(notch, silent = false) {
     tractionReleaseTimer = null;
   }
 
-  // 1) EB 노치: 비상제동체결 버튼과 100% 동일하게 비상제동 체결
+  // 1) EB 노치: BC 압력 4.0 bar 및 제동체결 표시등 점등 (OP3 비상제동 버튼은 건드리지 않음)
   if (notch === 'EB') {
-    if (emgComp && emgComp.state !== 'LATCHED') {
-      emgComp.state = 'LATCHED';
-      if (elEstop) {
-        elEstop.classList.add('latched');
-        elEstop.classList.remove('unlatching');
-      }
-      const lampCut = document.getElementById('lamp-emg-cut');
-      if (lampCut) lampCut.classList.remove('lit');
-    }
     updateGaugeUI(4.0); // 비상제동 4.0 bar
     if (lampApply) lampApply.classList.add('lit');
   } else {
-    // EB에서 다른 위치로 이동 시: 비상제동 체결 해제(복귀)
-    if (prevNotch === 'EB' && emgComp && emgComp.state === 'LATCHED') {
-      emgComp.state = 'RELEASED';
-      if (elEstop) {
-        elEstop.classList.remove('latched');
-        const prevRot = emgStopRotation;
-        emgStopRotation = (emgStopRotation + 30) % 360;
-        elEstop.style.setProperty('--estop-prev-rot', `${prevRot}deg`);
-        elEstop.style.setProperty('--estop-rot', `${emgStopRotation}deg`);
-        elEstop.classList.remove('unlatching');
-        void elEstop.offsetWidth;
-        elEstop.classList.add('unlatching');
-        setTimeout(() => {
-          elEstop.classList.remove('unlatching');
-        }, 360);
-      }
+    // EB 위치에서 벗어나면 제동체결 라이트 소등 (단, OP3 비상제동체결 버튼이 독립적으로 눌려있지 않은 경우)
+    if (lampApply && (!emgComp || emgComp.state !== 'LATCHED')) {
+      lampApply.classList.remove('lit');
     }
 
     // 2) 제동 (B1 ~ B7): B4~B7은 4.0 bar 동일, B3은 3.0 bar, B1(2.3) / B2(2.7)
@@ -5895,12 +5881,10 @@ function setMasconNotch(notch, silent = false) {
       else if (notch === 'B4' || notch === 'B5' || notch === 'B6' || notch === 'B7') bcVal = 4.0;
 
       updateGaugeUI(bcVal);
-      if (lampApply) lampApply.classList.add('lit');
     }
     // 3) 중립 (N): 정차제동 기본값 (2.0 bar)
     else if (notch === 'N') {
       updateGaugeUI(BC_DEFAULT_BAR); // 2.0 bar
-      if (lampApply) lampApply.classList.remove('lit');
     }
     // 4) 역행 (P1 ~ P4): 움직이게 되면 0.5초 후에 정차제동이 해제되면서 BC값이 0이 됨
     else if (notch.startsWith('P')) {
@@ -5908,14 +5892,12 @@ function setMasconNotch(notch, silent = false) {
       if (wasInP && currentGaugeBC === 0.0) {
         // 이미 역행 구간에서 완해 완료된 상태면 0.0 유지
         updateGaugeUI(0.0);
-        if (lampApply) lampApply.classList.remove('lit');
       } else {
         // N이나 제동 위치에서 P로 진입 시: 정차제동(2.0 bar) 유지 후 0.5초 뒤 완해
         updateGaugeUI(BC_DEFAULT_BAR);
         tractionReleaseTimer = setTimeout(() => {
           tractionReleaseTimer = null;
           updateGaugeUI(0.0);
-          if (lampApply) lampApply.classList.remove('lit');
           sound.playAirExhaust(0.5, 1300, 0.45);
           showTemporaryHudFeedback("💨 [정차제동 완해] 0.5초 경과, 제동 완해 (BC: 0.0 bar)", false);
         }, 500);
