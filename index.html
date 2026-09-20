@@ -2101,13 +2101,646 @@
       margin: 8px 0;
     }
 
-    /* 모바일 스크롤바 미세조정 */
-    ::-webkit-scrollbar {
-      width: 4px;
+    /* ========================================================
+       OP1 운전실 주 제어반 (주간제어기, COB 방송장치, 출입문, 축전지)
+    ======================================================== */
+    .op1-container {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      align-items: stretch;
+      padding: 10px 6px;
+      flex-wrap: wrap;
+      width: 100%;
+      box-sizing: border-box;
     }
-    ::-webkit-scrollbar-thumb {
-      background: #30363d;
+
+    .op1-left-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1 1 310px;
+      max-width: 350px;
+    }
+
+    .op1-right-col {
+      display: flex;
+      flex-direction: column;
+      flex: 1.2 1 380px;
+      max-width: 460px;
+    }
+
+    /* [1] COB 방송 및 통화용 마이크 패널 */
+    .cob-panel {
+      background: #181c22;
+      border: 2px solid #363d47;
+      border-radius: 8px;
+      padding: 10px 12px;
+      position: relative;
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.06), 0 4px 12px rgba(0,0,0,0.6);
+    }
+    .cob-title-bar {
+      text-align: center;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #e2e8f0;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .cob-tag-label {
+      position: absolute;
+      top: 6px;
+      left: 10px;
+      background: #fff;
+      color: #0f172a;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 2px;
+      border: 1px solid #64748b;
+    }
+    .cob-sub-label {
+      text-align: right;
+      font-size: 8.5px;
+      color: #64748b;
+      margin-top: 4px;
+      font-weight: 700;
+    }
+
+    .cob-body {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* COB 볼륨 다이얼 */
+    .cob-volume-col {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      width: 68px;
+    }
+    .cob-vol-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    .cob-vol-dial {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #333a44 0%, #15181e 100%);
+      border: 2px solid #545d6b;
+      position: relative;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.7);
+      transition: transform 0.15s ease-out;
+    }
+    .cob-vol-pointer {
+      position: absolute;
+      top: 2px;
+      left: 50%;
+      margin-left: -1px;
+      width: 2px;
+      height: 10px;
+      background: #fff;
+      border-radius: 1px;
+    }
+    .cob-vol-label {
+      font-size: 8.5px;
+      font-weight: 800;
+      color: #cbd5e1;
+      margin-top: 3px;
+      white-space: nowrap;
+    }
+    .cob-connector {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+      cursor: pointer;
+    }
+    .cob-connector-jack {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #94a3b8, #475569);
+      border: 2px solid #cbd5e1;
+      box-shadow: inset 0 0 4px #000;
+    }
+    .cob-connector-label {
+      font-size: 8px;
+      color: #64748b;
+      font-weight: 700;
+    }
+
+    /* COB 핸드 마이크 */
+    .cob-mic-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      cursor: pointer;
+    }
+    .cob-mic-body {
+      width: 76px;
+      height: 108px;
+      background: linear-gradient(145deg, #282d35 0%, #13161a 100%);
+      border-radius: 12px 12px 16px 16px;
+      border: 2px solid #4a5360;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.8), inset 0 2px 3px rgba(255,255,255,0.15);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px 4px;
+      box-sizing: border-box;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .cob-mic-body:active, .cob-mic-body.transmitting {
+      transform: scale(0.96);
+      border-color: #38bdf8;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 12px rgba(56, 189, 248, 0.4);
+    }
+    .cob-mic-model {
+      font-size: 8px;
+      font-weight: 800;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
+    }
+    .cob-mic-grille {
+      width: 82%;
+      height: 52px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      background: #0f1216;
+      border-radius: 6px;
+      padding: 3px 6px;
+      box-sizing: border-box;
+      border: 1px solid #333a44;
+    }
+    .cob-grille-line {
+      height: 3px;
+      background: #252b33;
+      border-radius: 2px;
+      box-shadow: inset 0 1px 1px #000;
+    }
+    .cob-mic-cord {
+      width: 10px;
+      height: 34px;
+      margin-top: -4px;
+      background: repeating-linear-gradient(
+        to bottom,
+        #111 0px,
+        #111 3px,
+        #2a2a2a 3px,
+        #2a2a2a 6px
+      );
       border-radius: 4px;
+    }
+
+    /* COB 우측 2x2 푸시버튼 */
+    .cob-btn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px 10px;
+      justify-items: center;
+    }
+    .cob-btn-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .cob-push-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #1e2229;
+      border: 2px solid #555d6c;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .cob-btn-inner {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      transition: all 0.12s;
+    }
+    .cob-btn-inner.red {
+      background: radial-gradient(circle at 35% 35%, #ff4d4d, #b30000 70%, #660000 100%);
+      box-shadow: inset 0 2px 3px rgba(255,255,255,0.4);
+    }
+    .cob-btn-inner.green {
+      background: radial-gradient(circle at 35% 35%, #22c55e, #15803d 70%, #14532d 100%);
+      box-shadow: inset 0 2px 3px rgba(255,255,255,0.4);
+    }
+    .cob-push-btn:active .cob-btn-inner {
+      transform: scale(0.9);
+      filter: brightness(1.2);
+    }
+    .cob-btn-lbl {
+      font-size: 8.5px;
+      font-weight: 800;
+      color: #e2e8f0;
+      white-space: nowrap;
+    }
+
+    /* [2] 출입문 스위치 패널 */
+    .op1-door-plate {
+      background: #181c22;
+      border: 2px solid #363d47;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.06), 0 4px 12px rgba(0,0,0,0.6);
+    }
+    .op1-door-btn-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      position: relative;
+    }
+    .door-metal-bezel {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #555e6c 0%, #2b3038 100%);
+      border: 2px solid #7d8898;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+      cursor: pointer;
+    }
+    .door-btn-inner {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      transition: all 0.12s;
+    }
+    .door-btn-inner.green {
+      background: radial-gradient(circle at 35% 35%, #22c55e, #15803d 75%, #14532d 100%);
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.5);
+    }
+    .door-btn-inner.red {
+      background: radial-gradient(circle at 35% 35%, #ef4444, #b91c1c 75%, #7f1d1d 100%);
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.5);
+    }
+    .door-metal-bezel:active .door-btn-inner {
+      transform: scale(0.9);
+      filter: brightness(1.2);
+    }
+    .op1-door-lbl {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #f1f5f9;
+      letter-spacing: -0.2px;
+    }
+
+    /* 좌측열림 보호커버 */
+    .door-flip-cover {
+      position: absolute;
+      top: -3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 48px;
+      height: 52px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(200,230,255,0.1) 60%, rgba(255,255,255,0.2) 100%);
+      border: 2px solid rgba(255, 255, 255, 0.65);
+      border-radius: 6px;
+      transform-origin: top center;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 20;
+      cursor: pointer;
+    }
+    .door-flip-cover.open {
+      transform: translateX(-50%) perspective(250px) rotateX(-120deg) translateY(-6px);
+      background: rgba(255,255,255,0.06);
+    }
+    .door-cover-hinge {
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 4px;
+      background: #7a828e;
+      border-radius: 2px;
+    }
+
+    /* [3] 주간제어기 (Master Controller) 메인 프레임 */
+    .mascon-frame {
+      background: #181c22;
+      border: 2px solid #525a66;
+      border-radius: 10px;
+      padding: 12px 14px;
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.08), 0 6px 18px rgba(0,0,0,0.7);
+      position: relative;
+    }
+    .mascon-inner-border {
+      border: 1.5px solid rgba(255, 255, 255, 0.5);
+      border-radius: 7px;
+      padding: 12px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* 제어키 (Master Key) */
+    .mascon-top-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding-right: 80px;
+      margin-bottom: 2px;
+    }
+    .mascon-key-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      cursor: pointer;
+    }
+    .key-cylinder {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #e2e8f0 0%, #94a3b8 50%, #475569 100%);
+      border: 2px solid #cbd5e1;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+    .key-blade-handle {
+      width: 32px;
+      height: 10px;
+      background: linear-gradient(to right, #94a3b8, #f8fafc 50%, #94a3b8);
+      border-radius: 2px;
+      border: 1px solid #475569;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+      transform: rotate(0deg);
+    }
+    .key-blade-handle.on {
+      transform: rotate(90deg);
+    }
+    .key-lbl-off {
+      position: absolute;
+      left: -26px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 9px;
+      font-weight: 900;
+      color: #f1f5f9;
+      background: #000;
+      padding: 1px 4px;
+      border-radius: 2px;
+      border: 1px solid #475569;
+      pointer-events: none;
+    }
+    .key-lbl-on {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      font-weight: 900;
+      color: #f1f5f9;
+      background: #000;
+      padding: 1px 4px;
+      border-radius: 2px;
+      border: 1px solid #475569;
+      pointer-events: none;
+    }
+
+    /* 슬롯 및 트랙 레이아웃 */
+    .mascon-tracks-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    /* T바 마스콘 제동/역행 슬롯 */
+    .tbar-slot-unit {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+    }
+    .tbar-scale-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 220px;
+      font-size: 9px;
+      font-weight: 900;
+      color: #94a3b8;
+      text-align: center;
+      user-select: none;
+    }
+    .tbar-scale-item {
+      cursor: pointer;
+      padding: 1px 3px;
+      border-radius: 2px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .tbar-scale-item:hover, .tbar-scale-item.active {
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+    }
+    .tbar-scale-item.eb {
+      color: #ef4444;
+      font-weight: 900;
+    }
+    .tbar-scale-item.n {
+      color: #22c55e;
+      font-weight: 900;
+    }
+    .tbar-slot-track {
+      width: 22px;
+      height: 220px;
+      background: #0a0d11;
+      border: 2px solid #fff;
+      border-radius: 11px;
+      position: relative;
+      box-shadow: inset 0 2px 6px #000;
+      overflow: visible;
+    }
+    .slot-brush {
+      position: absolute;
+      top: 6px;
+      left: 5px;
+      right: 5px;
+      bottom: 6px;
+      background: repeating-linear-gradient(
+        to bottom,
+        #111 0px,
+        #111 2px,
+        #222 2px,
+        #222 4px
+      );
+      border-radius: 4px;
+    }
+    /* T자 핸들 */
+    .tbar-handle {
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 140px;
+      height: 24px;
+      background: linear-gradient(to bottom, #525a66 0%, #2b3038 45%, #181b20 100%);
+      border-radius: 6px;
+      border: 1px solid #7d8898;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.8), inset 0 2px 3px rgba(255,255,255,0.3);
+      cursor: grab;
+      z-index: 25;
+      transition: top 0.15s ease-out;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .tbar-handle:active {
+      cursor: grabbing;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.9);
+    }
+    .tbar-grip-line {
+      width: 90%;
+      height: 2px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 1px;
+    }
+
+    /* 역전기 (Reverser) 슬롯 */
+    .reverser-slot-unit {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      margin-top: 15px;
+    }
+    .reverser-scale-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 120px;
+      font-size: 10px;
+      font-weight: 900;
+      color: #94a3b8;
+      text-align: center;
+      user-select: none;
+    }
+    .reverser-scale-item {
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 2px;
+    }
+    .reverser-scale-item:hover, .reverser-scale-item.active {
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+    }
+    .reverser-scale-item.n {
+      color: #22c55e;
+    }
+    .reverser-slot-track {
+      width: 20px;
+      height: 120px;
+      background: #0a0d11;
+      border: 2px solid #fff;
+      border-radius: 10px;
+      position: relative;
+      box-shadow: inset 0 2px 6px #000;
+    }
+    .reverser-ball-knob {
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #525a66, #22262c 60%, #0a0c0e 100%);
+      border: 2px solid #7d8898;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.8), inset 0 2px 3px rgba(255,255,255,0.4);
+      cursor: grab;
+      z-index: 25;
+      transition: top 0.15s ease-out;
+    }
+    .reverser-ball-knob:active {
+      cursor: grabbing;
+    }
+
+    /* [4] 축전지 조작부 (Battery) */
+    .mascon-battery-plate {
+      border: 1.5px solid #fff;
+      border-radius: 6px;
+      padding: 6px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      background: rgba(0,0,0,0.3);
+      align-self: flex-end;
+      margin-top: 4px;
+    }
+    .battery-plate-title {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: 1px;
+    }
+    .battery-btns-row {
+      display: flex;
+      gap: 12px;
+    }
+    .batt-btn-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .batt-btn-bezel {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #555e6c, #2b3038);
+      border: 2px solid #cbd5e1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.7);
+    }
+    .batt-btn-inner {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #22c55e, #15803d 75%, #14532d 100%);
+      box-shadow: inset 0 2px 3px rgba(255,255,255,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 7.5px;
+      font-weight: 900;
+      color: #fff;
+    }
+    .batt-btn-bezel:active .batt-btn-inner {
+      transform: scale(0.9);
+      filter: brightness(1.2);
     }
   </style>
 </head>
@@ -2228,10 +2861,237 @@
     <!-- 패널 저장소 풀 (미표시 패널 대기 영역) -->
     <div id="panel-storage-pool" style="display:none;" aria-hidden="true">
 
-    <!-- [패널 1] OP1 : 예비 빈 패널 -->
+    <!-- [패널 1] OP1 : 운전실 주 제어반 (주간제어기, COB 방송장치, 출입문스위치, 축전지) -->
     <section id="panel-op1" class="train-metal-panel" style="display:none; min-height:480px;">
       <div class="screw tl"></div><div class="screw tr"></div>
       <div class="screw bl"></div><div class="screw br"></div>
+
+      <div class="op1-container">
+        
+        <!-- [좌측 열] COB 방송장치 + 출입문 스위치 -->
+        <div class="op1-left-col">
+          
+          <!-- (1) COB / 방송 및 통화용 마이크 -->
+          <div class="cob-panel" id="wrap-COB_PANEL">
+            <span class="cob-tag-label">2 12040</span>
+            <div class="cob-title-bar">방송 및 통화용 마이크</div>
+
+            <div class="cob-body">
+              <!-- 좌측: 볼륨 2종 & 마이크 커넥터 -->
+              <div class="cob-volume-col">
+                <div class="cob-vol-unit" id="wrap-VOL_MIC" onclick="rotateCobVolume('VOL_MIC')">
+                  <div class="cob-vol-dial" id="comp-VOL_MIC">
+                    <div class="cob-vol-pointer"></div>
+                  </div>
+                  <span class="cob-vol-label">마이크 음량</span>
+                </div>
+
+                <div class="cob-vol-unit" id="wrap-VOL_CAB" onclick="rotateCobVolume('VOL_CAB')">
+                  <div class="cob-vol-dial" id="comp-VOL_CAB">
+                    <div class="cob-vol-pointer"></div>
+                  </div>
+                  <span class="cob-vol-label">운전실 음량</span>
+                </div>
+
+                <div class="cob-connector" onclick="handleComponentTouch('SW_COB_MIC')">
+                  <div class="cob-connector-jack"></div>
+                  <span class="cob-connector-label">마이크 커넥터</span>
+                </div>
+              </div>
+
+              <!-- 중앙: DM-60 핸드 마이크 본체 -->
+              <div class="cob-mic-wrapper" id="wrap-SW_COB_MIC" onclick="handleComponentTouch('SW_COB_MIC')" title="핸드 마이크 (클릭 시 PTT 무전 송신)">
+                <div id="comp-SW_COB_MIC" class="cob-mic-body">
+                  <span class="cob-mic-model">DM-60</span>
+                  <div class="cob-mic-grille">
+                    <div class="cob-grille-line"></div>
+                    <div class="cob-grille-line"></div>
+                    <div class="cob-grille-line"></div>
+                    <div class="cob-grille-line"></div>
+                    <div class="cob-grille-line"></div>
+                    <div class="cob-grille-line"></div>
+                  </div>
+                </div>
+                <div class="cob-mic-cord"></div>
+              </div>
+
+              <!-- 우측: 2x2 기능 푸시버튼 (비상응답, 운전실통화, 실내방송, 실외방송) -->
+              <div class="cob-btn-grid">
+                <div class="cob-btn-unit" id="wrap-SW_COB_EMG_RESP" onclick="handleComponentTouch('SW_COB_EMG_RESP')">
+                  <div class="cob-push-btn">
+                    <div id="comp-SW_COB_EMG_RESP" class="cob-btn-inner red"></div>
+                  </div>
+                  <span class="cob-btn-lbl" style="color:#f87171;">비상응답</span>
+                </div>
+
+                <div class="cob-btn-unit" id="wrap-SW_COB_CAB_CALL" onclick="handleComponentTouch('SW_COB_CAB_CALL')">
+                  <div class="cob-push-btn">
+                    <div id="comp-SW_COB_CAB_CALL" class="cob-btn-inner green"></div>
+                  </div>
+                  <span class="cob-btn-lbl">운전실통화</span>
+                </div>
+
+                <div class="cob-btn-unit" id="wrap-SW_COB_PA_IN" onclick="handleComponentTouch('SW_COB_PA_IN')">
+                  <div class="cob-push-btn">
+                    <div id="comp-SW_COB_PA_IN" class="cob-btn-inner green"></div>
+                  </div>
+                  <span class="cob-btn-lbl">실내방송</span>
+                </div>
+
+                <div class="cob-btn-unit" id="wrap-SW_COB_PA_OUT" onclick="handleComponentTouch('SW_COB_PA_OUT')">
+                  <div class="cob-push-btn">
+                    <div id="comp-SW_COB_PA_OUT" class="cob-btn-inner green"></div>
+                  </div>
+                  <span class="cob-btn-lbl">실외방송</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cob-sub-label">중앙제어장치</div>
+          </div>
+
+          <!-- (2) 출입문스위치 (좌측열림 / 닫힘 / 우측열림) -->
+          <div class="op1-door-plate">
+            <!-- 좌측열림 (투명 아크릴 안전 플립커버) -->
+            <div class="op1-door-btn-unit" id="wrap-SW_DOOR_OPEN_L">
+              <div id="comp-SW_DOOR_OPEN_L_COVER" class="door-flip-cover" onclick="toggleFlipCover('SW_DOOR_OPEN_L_COVER', event)">
+                <div class="door-cover-hinge"></div>
+              </div>
+              <div class="door-metal-bezel" onclick="handleComponentTouch('SW_DOOR_OPEN_L')">
+                <div id="comp-SW_DOOR_OPEN_L" class="door-btn-inner green"></div>
+              </div>
+              <span class="op1-door-lbl">좌측열림</span>
+            </div>
+
+            <!-- 닫힘 (적색 메탈 버튼) -->
+            <div class="op1-door-btn-unit" id="wrap-SW_DOOR_CLOSE" onclick="handleComponentTouch('SW_DOOR_CLOSE')">
+              <div class="door-metal-bezel">
+                <div id="comp-SW_DOOR_CLOSE" class="door-btn-inner red"></div>
+              </div>
+              <span class="op1-door-lbl">닫힘</span>
+            </div>
+
+            <!-- 우측열림 (녹색 메탈 버튼) -->
+            <div class="op1-door-btn-unit" id="wrap-SW_DOOR_OPEN_R" onclick="handleComponentTouch('SW_DOOR_OPEN_R')">
+              <div class="door-metal-bezel">
+                <div id="comp-SW_DOOR_OPEN_R" class="door-btn-inner green"></div>
+              </div>
+              <span class="op1-door-lbl">우측열림</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- [우측 열] 주간제어기 (Master Controller) -->
+        <div class="op1-right-col">
+          <div class="mascon-frame">
+            <div class="mascon-inner-border">
+
+              <!-- 상단 제어키 (Master Key) -->
+              <div class="mascon-top-row">
+                <div class="mascon-key-unit" id="wrap-SW_MASTER_KEY" onclick="handleComponentTouch('SW_MASTER_KEY')" title="제어키 (클릭하여 OFF/ON 절체)">
+                  <div class="key-labels">
+                    <span class="key-lbl-off interactive-tick" onclick="setMasterKeyPosition('OFF', event)">OFF</span>
+                    <span class="key-lbl-on interactive-tick" onclick="setMasterKeyPosition('ON', event)">ON</span>
+                  </div>
+                  <div class="key-cylinder">
+                    <div id="comp-SW_MASTER_KEY" class="key-blade-handle"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 중간 메인 슬롯 트랙들: 마스콘 T바 (좌) + 역전기 (우) -->
+              <div class="mascon-tracks-row">
+                
+                <!-- 마스콘 T바 (EB ~ P4) -->
+                <div class="tbar-slot-unit" id="wrap-SW_MASCON">
+                  <!-- 좌측 스케일 -->
+                  <div class="tbar-scale-col">
+                    <span class="tbar-scale-item eb" onclick="setMasconNotch('EB')">EB</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('B7')">B7</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('B6')">B6</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('B5')">B5</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('B4')">B4</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('B3')">B3</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('B2')">B2</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('B1')">B1</span>
+                    <span class="tbar-scale-item n" onclick="setMasconNotch('N')">N</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('P1')">P1</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('P2')">P2</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('P3')">P3</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('P4')">P4</span>
+                  </div>
+
+                  <!-- 중앙 브러시 트랙 & T자 핸들 -->
+                  <div class="tbar-slot-track" id="tbar-track" onclick="handleMasconTrackClick(event)">
+                    <div class="slot-brush"></div>
+                    <div id="comp-SW_MASCON" class="tbar-handle" style="top: 68%;">
+                      <div class="tbar-grip-line"></div>
+                    </div>
+                  </div>
+
+                  <!-- 우측 스케일 -->
+                  <div class="tbar-scale-col">
+                    <span class="tbar-scale-item eb" onclick="setMasconNotch('EB')">EB</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('B7')">B7</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('B6')">B6</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('B5')">B5</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('B4')">B4</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('B3')">B3</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('B2')">B2</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('B1')">B1</span>
+                    <span class="tbar-scale-item n" onclick="setMasconNotch('N')">N</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('P1')">P1</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('P2')">P2</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('P3')">P3</span>
+                    <span class="tbar-scale-item" onclick="setMasconNotch('P4')">P4</span>
+                  </div>
+                </div>
+
+                <!-- 역전기 (F / N / R) -->
+                <div class="reverser-slot-unit" id="wrap-SW_REVERSER">
+                  <div class="reverser-scale-col">
+                    <span class="reverser-scale-item" onclick="setReverserPosition('F')">F</span>
+                    <span class="reverser-scale-item n" onclick="setReverserPosition('N')">N</span>
+                    <span class="reverser-scale-item" onclick="setReverserPosition('R')">R</span>
+                  </div>
+
+                  <div class="reverser-slot-track" id="reverser-track" onclick="handleReverserTrackClick(event)">
+                    <div class="slot-brush"></div>
+                    <div id="comp-SW_REVERSER" class="reverser-ball-knob" style="top: 50%;"></div>
+                  </div>
+
+                  <div class="reverser-scale-col">
+                    <span class="reverser-scale-item" onclick="setReverserPosition('F')">F</span>
+                    <span class="reverser-scale-item n" onclick="setReverserPosition('N')">N</span>
+                    <span class="reverser-scale-item" onclick="setReverserPosition('R')">R</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- 하단 우측: 축전지 (ON / OFF) -->
+              <div class="mascon-battery-plate">
+                <span class="battery-plate-title">축전지</span>
+                <div class="battery-btns-row">
+                  <div class="batt-btn-wrap" id="wrap-SW_BATT_ON" onclick="handleComponentTouch('SW_BATT_ON')">
+                    <div class="batt-btn-bezel">
+                      <div id="comp-SW_BATT_ON" class="batt-btn-inner">ON</div>
+                    </div>
+                  </div>
+                  <div class="batt-btn-wrap" id="wrap-SW_BATT_OFF" onclick="handleComponentTouch('SW_BATT_OFF')">
+                    <div class="batt-btn-bezel">
+                      <div id="comp-SW_BATT_OFF" class="batt-btn-inner">OFF</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
     </section>
 
     <!-- [패널 2] OP2 : 상부 표시등 및 조작반 (실물 사진 100% 반영) -->
@@ -3135,6 +3995,46 @@ class SoundEngine {
       osc.stop(now + duration);
     });
   }
+
+  // 무전기 PTT 비프음 (핸드마이크 전송음)
+  playRadioMic() {
+    if (this.isMuted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1050, now);
+    osc.frequency.setValueAtTime(850, now + 0.05);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.13);
+  }
+
+  // 방송/호출 2음 차임벨
+  playChime() {
+    if (this.isMuted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    [587.33, 880].forEach((freq, i) => { // D5 -> A5 2음 딩동
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.14);
+      gain.gain.setValueAtTime(0, now + i * 0.14);
+      gain.gain.linearRampToValueAtTime(0.3, now + i * 0.14 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.005, now + i * 0.14 + 0.45);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now + i * 0.14);
+      osc.stop(now + i * 0.14 + 0.5);
+    });
+  }
 }
 
 const sound = new SoundEngine();
@@ -3222,6 +4122,24 @@ function toggleMuteSound() {
  * 부품 상태 관리자
  */
 const COMPONENT_REGISTRY = {
+  // [OP1] 운전실 주 제어반 (주간제어기, COB 방송장치, 출입문, 축전지)
+  SW_MASTER_KEY: { name: '제어키', type: 'ROTARY_2', state: 'OFF', panel: 'OP1' },
+  SW_MASCON: { name: '마스콘 핸들', type: 'STEPPER', state: 'N', notch: 'N', panel: 'OP1' },
+  SW_REVERSER: { name: '역전기', type: 'STEPPER', state: 'N', notch: 'N', panel: 'OP1' },
+  SW_DOOR_OPEN_L_COVER: { name: '좌측열림 보호커버', type: 'COVER', state: 'CLOSED', panel: 'OP1' },
+  SW_DOOR_OPEN_L: { name: '좌측열림', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1', requiresCover: 'SW_DOOR_OPEN_L_COVER' },
+  SW_DOOR_CLOSE: { name: '출입문 닫힘', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
+  SW_DOOR_OPEN_R: { name: '우측열림', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
+  SW_BATT_ON: { name: '축전지 ON', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
+  SW_BATT_OFF: { name: '축전지 OFF', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
+  SW_COB_EMG_RESP: { name: '비상응답', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
+  SW_COB_CAB_CALL: { name: '운전실통화', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
+  SW_COB_PA_IN: { name: '실내방송', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
+  SW_COB_PA_OUT: { name: '실외방송', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
+  SW_COB_MIC: { name: '방송 마이크 (DM-60)', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
+  VOL_MIC: { name: '마이크 음량', type: 'ROTARY_POT', state: '5', level: 5, panel: 'OP1' },
+  VOL_CAB: { name: '운전실 음량', type: 'ROTARY_POT', state: '5', level: 5, panel: 'OP1' },
+
   // [OP2] 상부 표시등 및 조작반 부품군 (실물 사진 100% 반영)
   SW_WINDOW_HEATER: { name: '전면창 히터', type: 'ROTARY_2', state: 'AUTO', panel: 'OP2' },
   SW_HEADLIGHT: { name: '전조등', type: 'ROTARY_5', state: 'OFF', panel: 'OP2' },
@@ -3529,7 +4447,7 @@ function renderDualPanels() {
 
 function getPanelDisplayName(panelId) {
   switch (panelId) {
-    case 'OP1': return 'OP1 (예비 빈 패널)';
+    case 'OP1': return 'OP1 (주 제어반 & 마스콘)';
     case 'OP2': return 'OP2 (상부 표시등 & 조작반)';
     case 'OP3': return 'OP3 (긴급 제동 조작반)';
     case 'OP4': return 'OP4 (메인 계기 & 바이패스)';
@@ -3570,6 +4488,8 @@ window.addEventListener('DOMContentLoaded', () => {
   applyScenario(currentScenario);
   updateGaugeUI(BC_DEFAULT_BAR, 9.0);
   updateLeadCarLamp(COMPONENT_REGISTRY.SW_DRIVE_MODE.state);
+  setMasconNotch('N', true);
+  setReverserPosition('N', true);
 });
 
 // 모드 드롭다운 토글 및 조작 함수
@@ -4129,6 +5049,46 @@ function handleComponentTouch(compId) {
       sound.playTrainHorn(0.38);
       triggerHaptic([35, 25, 60]);
       showTemporaryHudFeedback("📢 [전기혼] 빵! (열차 경적 취명)", false);
+    } else if (compId === 'SW_DOOR_OPEN_L' || compId === 'SW_DOOR_OPEN_R') {
+      sound.playAirExhaust(0.8, 1200, 0.6);
+      triggerHaptic([30, 40]);
+      const lampDoor = document.getElementById('lamp-door');
+      if (lampDoor) lampDoor.classList.remove('lit'); // 출입문 개방 시 표시등 소등
+      showTemporaryHudFeedback(`🚪 [출입문 열림] ${compId === 'SW_DOOR_OPEN_L' ? '좌측' : '우측'} 출입문 개방`, false);
+    } else if (compId === 'SW_DOOR_CLOSE') {
+      sound.playAirExhaust(1.0, 900, 0.7);
+      triggerHaptic([30, 40]);
+      const lampDoor = document.getElementById('lamp-door');
+      if (lampDoor) lampDoor.classList.add('lit'); // 출입문 닫힘 체결 시 표시등 점등
+      showTemporaryHudFeedback(`🚪 [출입문 닫힘] 전체 출입문 닫힘 체결`, false);
+    } else if (compId === 'SW_BATT_ON') {
+      sound.playHeavyLatch();
+      triggerHaptic([40, 50]);
+      showTemporaryHudFeedback(`⚡ [축전지 ON] 축전지 투입 (전원 기동)`, false);
+    } else if (compId === 'SW_BATT_OFF') {
+      sound.playClick();
+      triggerHaptic(25);
+      showTemporaryHudFeedback(`⚡ [축전지 OFF] 축전지 차단`, false);
+    } else if (compId === 'SW_COB_EMG_RESP') {
+      sound.playChime();
+      triggerHaptic([30, 30]);
+      showTemporaryHudFeedback(`🚨 [비상응답] 승객 비상통화 연결`, false);
+    } else if (compId === 'SW_COB_CAB_CALL') {
+      sound.playChime();
+      triggerHaptic([30, 30]);
+      showTemporaryHudFeedback(`📞 [운전실통화] 차장/후부 운전실 통화 연결`, false);
+    } else if (compId === 'SW_COB_PA_IN') {
+      sound.playChime();
+      triggerHaptic([30, 30]);
+      showTemporaryHudFeedback(`📢 [실내방송] 객실 안내방송 송출 시작`, false);
+    } else if (compId === 'SW_COB_PA_OUT') {
+      sound.playChime();
+      triggerHaptic([30, 30]);
+      showTemporaryHudFeedback(`📢 [실외방송] 승강장 외부방송 송출 시작`, false);
+    } else if (compId === 'SW_COB_MIC') {
+      sound.playRadioMic();
+      triggerHaptic([20, 20]);
+      showTemporaryHudFeedback(`🎙️ [DM-60 마이크] PTT 송신 상태`, false);
     } else {
       sound.playClick();
       triggerHaptic(25);
@@ -4157,7 +5117,7 @@ function handleComponentTouch(compId) {
       comp.state = 'IDLE';
     }, 220);
   } else if (comp.type === 'ROTARY_2' && compId !== 'SW_WINDOW_HEATER') {
-    // 2단 로터리 스위치 (ATP후진, 저속도, 바이패스류 등 움직일 때 기계식 딱! 소리)
+    // 2단 로터리 스위치 (ATP후진, 저속도, 제어키, 바이패스류 등 움직일 때 기계식 딱! 소리)
     const el = document.getElementById(`comp-${compId}`);
     sound.playRotarySnap();
     triggerHaptic(30);
@@ -4165,6 +5125,10 @@ function handleComponentTouch(compId) {
     if (compId === 'SW_ATP_REV') {
       newState = (comp.state === 'OFF') ? 'ON' : 'OFF';
       el.style.transform = (newState === 'ON') ? 'rotate(90deg)' : 'rotate(0deg)';
+    } else if (compId === 'SW_MASTER_KEY') {
+      newState = (comp.state === 'OFF') ? 'ON' : 'OFF';
+      el.style.transform = (newState === 'ON') ? 'rotate(90deg)' : 'rotate(0deg)';
+      showTemporaryHudFeedback(`🔑 [제어키] ${newState === 'ON' ? 'ON (전원 투입)' : 'OFF (전원 차단)'}`, false);
     } else if (compId === 'SW_INSUL_SECT') {
       newState = (comp.state === 'NORMAL') ? 'INSUL' : 'NORMAL';
       el.style.transform = (newState === 'INSUL') ? 'rotate(45deg)' : 'rotate(-45deg)';
@@ -4635,6 +5599,210 @@ function setAtpRevPosition(targetState, evt) {
   }
 }
 
+// [OP1] 제어키 2단 각 위치 직접 선택 함수 (OFF, ON 터치 시)
+function setMasterKeyPosition(targetState, evt) {
+  if (evt) evt.stopPropagation();
+  hideVobcGuide();
+  const comp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
+  if (!comp) return;
+
+  comp.state = targetState;
+  const el = document.getElementById('comp-SW_MASTER_KEY');
+  if (el) el.style.transform = (targetState === 'ON') ? 'rotate(90deg)' : 'rotate(0deg)';
+
+  sound.playRotarySnap();
+  triggerHaptic(30);
+  showTemporaryHudFeedback(`🔑 [제어키] ${targetState === 'ON' ? 'ON (전원 투입)' : 'OFF (전원 차단)'}`, false);
+
+  if (currentMode === 'REC') {
+    promptRecordStep('SW_MASTER_KEY', comp.name, targetState);
+  } else {
+    evaluateStepAction('SW_MASTER_KEY', targetState);
+  }
+}
+
+// [OP1] 마스콘 T바 핸들 노치 절체 함수 (EB, B7~B1, N, P1~P4)
+const MASCON_POS_MAP = {
+  'EB': 5,
+  'B7': 15,
+  'B6': 22,
+  'B5': 30,
+  'B4': 38,
+  'B3': 45,
+  'B2': 53,
+  'B1': 60,
+  'N': 68,
+  'P1': 76,
+  'P2': 84,
+  'P3': 92,
+  'P4': 98
+};
+
+function setMasconNotch(notch, silent = false) {
+  const comp = COMPONENT_REGISTRY['SW_MASCON'];
+  if (!comp) return;
+
+  const topPos = MASCON_POS_MAP[notch];
+  if (topPos === undefined) return;
+
+  comp.state = notch;
+  comp.notch = notch;
+
+  const handle = document.getElementById('comp-SW_MASCON');
+  if (handle) {
+    handle.style.top = `${topPos}%`;
+  }
+
+  // 좌우 스케일 라벨 활성화 표시 동기화
+  document.querySelectorAll('.tbar-scale-item').forEach(item => {
+    item.classList.toggle('active', item.innerText.trim() === notch);
+  });
+
+  // 노치별 제동통 압력(BC) 및 제동체결 표시등 연동
+  const lampApply = document.getElementById('lamp-brake-apply');
+  if (notch === 'EB') {
+    updateGaugeUI(4.0); // 비상제동 4.0 bar
+    if (lampApply) lampApply.classList.add('lit');
+  } else if (notch.startsWith('B')) {
+    const bNum = parseInt(notch.substring(1), 10);
+    const bcVal = +(1.0 + (bNum - 1) * 0.4).toFixed(1); // B1(1.0) ~ B7(3.4)
+    updateGaugeUI(bcVal);
+    if (lampApply) lampApply.classList.add('lit');
+  } else if (notch === 'N') {
+    updateGaugeUI(BC_DEFAULT_BAR); // 정차 상태 기본값 (2.0 bar)
+    if (lampApply) lampApply.classList.remove('lit');
+  } else if (notch.startsWith('P')) {
+    updateGaugeUI(0.0); // 역행 가속 시 상용제동 완전 완해 (0.0 bar)
+    if (lampApply) lampApply.classList.remove('lit');
+  }
+
+  if (!silent) {
+    sound.playRotarySnap();
+    triggerHaptic(25);
+    showTemporaryHudFeedback(`🕹️ [마스콘 핸들] ${notch}단`, false);
+    if (currentMode === 'REC') {
+      promptRecordStep('SW_MASCON', comp.name, notch);
+    } else {
+      evaluateStepAction('SW_MASCON', notch);
+    }
+  }
+}
+
+// 마스콘 트랙 클릭/터치 위치로 가장 가까운 노치 이동
+function handleMasconTrackClick(event) {
+  if (event) event.stopPropagation();
+  const track = document.getElementById('tbar-track');
+  if (!track) return;
+  const rect = track.getBoundingClientRect();
+  const clickY = event.clientY - rect.top;
+  const yPercent = (clickY / rect.height) * 100;
+
+  let closestNotch = 'N';
+  let minDiff = 9999;
+  for (const [notch, pos] of Object.entries(MASCON_POS_MAP)) {
+    const diff = Math.abs(pos - yPercent);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closestNotch = notch;
+    }
+  }
+  setMasconNotch(closestNotch);
+}
+
+// [OP1] 역전기 (F / N / R) 절체 함수
+const REVERSER_POS_MAP = {
+  'F': 15,
+  'N': 50,
+  'R': 85
+};
+
+function setReverserPosition(pos, silent = false) {
+  const comp = COMPONENT_REGISTRY['SW_REVERSER'];
+  if (!comp) return;
+
+  const topPos = REVERSER_POS_MAP[pos];
+  if (topPos === undefined) return;
+
+  comp.state = pos;
+  comp.notch = pos;
+
+  const knob = document.getElementById('comp-SW_REVERSER');
+  if (knob) {
+    knob.style.top = `${topPos}%`;
+  }
+
+  // 좌우 스케일 라벨 활성화 표시 동기화
+  document.querySelectorAll('.reverser-scale-item').forEach(item => {
+    item.classList.toggle('active', item.innerText.trim() === pos);
+  });
+
+  if (!silent) {
+    sound.playRotarySnap();
+    triggerHaptic(30);
+    const label = (pos === 'F') ? 'F (전진 / Forward)' : ((pos === 'R') ? 'R (후진 / Reverse)' : 'N (중립 / Neutral)');
+    showTemporaryHudFeedback(`🎚️ [역전기] ${label}`, false);
+    if (currentMode === 'REC') {
+      promptRecordStep('SW_REVERSER', comp.name, pos);
+    } else {
+      evaluateStepAction('SW_REVERSER', pos);
+    }
+  }
+}
+
+// 역전기 트랙 클릭/터치 위치로 이동
+function handleReverserTrackClick(event) {
+  if (event) event.stopPropagation();
+  const track = document.getElementById('reverser-track');
+  if (!track) return;
+  const rect = track.getBoundingClientRect();
+  const clickY = event.clientY - rect.top;
+  const yRatio = clickY / rect.height;
+
+  let pos = 'N';
+  if (yRatio < 0.33) pos = 'F';
+  else if (yRatio > 0.66) pos = 'R';
+  else pos = 'N';
+
+  setReverserPosition(pos);
+}
+
+// [OP1] 방송장치(COB) 볼륨 노브 회전 함수 (0, 2, 4, 6, 8, 10 순환)
+function rotateCobVolume(volId) {
+  const comp = COMPONENT_REGISTRY[volId];
+  if (!comp) return;
+
+  const levels = [0, 2, 4, 6, 8, 10];
+  let currIdx = levels.indexOf(comp.level);
+  if (currIdx === -1) currIdx = 2; // 기본 5면 4 근처
+  const nextIdx = (currIdx + 1) % levels.length;
+  const nextLevel = levels[nextIdx];
+
+  comp.level = nextLevel;
+  comp.state = String(nextLevel);
+
+  // 노브 각도 매핑: 0 -> -135deg, 5 -> 0deg, 10 -> +135deg
+  const angle = -135 + (nextLevel * 27);
+  const knob = document.getElementById(`comp-${volId}`);
+  if (knob) {
+    knob.style.transform = `rotate(${angle}deg)`;
+  }
+
+  const valEl = document.getElementById(`val-${volId}`);
+  if (valEl) {
+    valEl.innerText = nextLevel;
+  }
+
+  sound.playClick();
+  triggerHaptic(20);
+  showTemporaryHudFeedback(`🔊 [${comp.name}] 볼륨 ${nextLevel}`, false);
+
+  if (currentMode === 'REC') {
+    promptRecordStep(volId, comp.name, String(nextLevel));
+  } else {
+    evaluateStepAction(volId, String(nextLevel));
+  }
+}
+
 /**
  * 실습 & 평가 모드 판정 엔진
  */
@@ -4836,7 +6004,7 @@ function resetCurrentScenario() {
       if (el) el.classList.remove('open');
     } else if (comp.type === 'ROTARY_2' || comp.type === 'ROTARY_3' || comp.type === 'ROTARY_4' || comp.type === 'ROTARY_5') {
       const el = document.getElementById(`comp-${id}`);
-      if (id === 'SW_ATP_REV') {
+      if (id === 'SW_ATP_REV' || id === 'SW_MASTER_KEY') {
         comp.state = 'OFF';
       } else if (id === 'SW_ROOM_LIGHT') {
         comp.state = 'AUTO';
@@ -4867,7 +6035,7 @@ function resetCurrentScenario() {
       }
 
       if (el) {
-        if (id === 'SW_ATP_REV' || id === 'SW_WIPER' || id === 'SW_DRIVE_MODE' || id === 'SW_HEADLIGHT') {
+        if (id === 'SW_ATP_REV' || id === 'SW_MASTER_KEY' || id === 'SW_WIPER' || id === 'SW_DRIVE_MODE' || id === 'SW_HEADLIGHT') {
           el.style.transform = 'rotate(0deg)'; // 12시 OFF
         } else if (id === 'SW_WINDOW_HEATER' || id === 'SW_LOW_SPEED' || id === 'SW_RESERVE_ROTARY' ||
             id === 'SW_OBSTACLE_BYPASS' || id === 'SW_DOOR_BYPASS' || id === 'SW_AIR_CLEAN' ||
@@ -4877,6 +6045,19 @@ function resetCurrentScenario() {
           el.style.transform = 'rotate(0deg)';
         }
       }
+    } else if (comp.type === 'STEPPER') {
+      if (id === 'SW_MASCON') {
+        setMasconNotch('N', true);
+      } else if (id === 'SW_REVERSER') {
+        setReverserPosition('N', true);
+      }
+    } else if (comp.type === 'ROTARY_POT') {
+      comp.state = '5';
+      comp.level = 5;
+      const el = document.getElementById(`comp-${id}`);
+      if (el) el.style.transform = 'rotate(0deg)';
+      const valEl = document.getElementById(`val-${id}`);
+      if (valEl) valEl.innerText = '5';
     } else if (comp.type === 'MOMENTARY') {
       comp.state = 'IDLE';
       const el = document.getElementById(`comp-${id}`);
