@@ -667,8 +667,9 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       position: relative;
+      transform: rotate(var(--estop-rot, 0deg)) scale(1);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s, background 0.2s, border-color 0.2s;
     }
 
     .btn-estop svg {
@@ -681,10 +682,34 @@
 
     /* 체결 상태 (LATCHED) */
     .btn-estop.latched {
-      transform: scale(0.86);
+      transform: rotate(var(--estop-rot, 0deg)) scale(0.86);
       box-shadow: 0 1px 3px rgba(0,0,0,0.9), inset 0 4px 8px rgba(0,0,0,0.8);
       border-color: #990000;
       background: radial-gradient(circle at 45% 45%, #990000, #4d0000 85%);
+    }
+
+    /* 복귀 시 회전 잠금해제 모션 (Turn-to-Reset: 시계방향 30도 회전하며 팝업) */
+    @keyframes estop-unlatch-twist {
+      0% {
+        transform: rotate(var(--estop-prev-rot, 0deg)) scale(0.86);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.9), inset 0 4px 8px rgba(0,0,0,0.8);
+      }
+      35% {
+        transform: rotate(var(--estop-rot, 30deg)) scale(0.88);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.8), inset 0 3px 6px rgba(0,0,0,0.6);
+      }
+      75% {
+        transform: rotate(var(--estop-rot, 30deg)) scale(1.06);
+        box-shadow: 0 7px 14px rgba(0,0,0,0.5), inset 0 3px 5px rgba(255,255,255,0.5);
+      }
+      100% {
+        transform: rotate(var(--estop-rot, 30deg)) scale(1);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.6), inset 0 3px 5px rgba(255,255,255,0.5);
+      }
+    }
+
+    .btn-estop.unlatching {
+      animation: estop-unlatch-twist 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
 
     /* [B] 투명 안전 플립 커버 (Flip Cover) */
@@ -2589,12 +2614,12 @@
               </text>
             </svg>
             <div id="needle-mr" class="gauge-needle needle-mr" style="height:54px; transform: rotate(67.5deg);"></div>
-            <div id="needle-bc" class="gauge-needle needle-bc" style="height:52px; transform: rotate(-135deg);"></div>
+            <div id="needle-bc" class="gauge-needle needle-bc" style="height:52px; transform: rotate(-90deg);"></div>
             <div class="gauge-center-cap"></div>
           </div>
           <div class="gauge-readout-legend" style="font-size:9.5px; margin-top:4px;">
             <span class="readout-mr">MR: <strong id="val-mr">9.0</strong> bar</span>
-            <span class="readout-bc">BC: <strong id="val-bc">0.0</strong> bar</span>
+            <span class="readout-bc">BC: <strong id="val-bc">2.0</strong> bar</span>
           </div>
           <div class="component-label" style="margin-top:4px; font-size:9.5px;">공기 압력계(MR, BC)</div>
         </div>
@@ -2845,7 +2870,7 @@
           <textarea id="rec-input-instruction" class="form-control" rows="3" placeholder="예: 비상제동 완해 커버를 여십시오."></textarea>
         </div>
         <div class="form-group">
-          <label>연동 BC 압력 (선택: 0.0 ~ 4.5 bar)</label>
+          <label>연동 BC 압력 (선택: 0.0 ~ 4.0 bar)</label>
           <input type="number" step="0.5" id="rec-input-bc-gauge" class="form-control" placeholder="비워두면 이전 압력 유지" />
         </div>
       </div>
@@ -3288,7 +3313,7 @@ const DEFAULT_SCENARIOS = [
         targetName: "비상제동체결",
         expectedState: "LATCHED",
         instruction: "비상 상황입니다! 빨간색 [비상제동체결] 버섯형 버튼을 누르십시오.",
-        gaugeEffect: { bc: 4.5 }
+        gaugeEffect: { bc: 4.0 }
       },
       {
         step: 2,
@@ -3303,7 +3328,7 @@ const DEFAULT_SCENARIOS = [
         targetName: "비상제동완해",
         expectedState: "LATCHED",
         instruction: "보호커버 내부의 빨간색 [비상제동완해] 버튼을 눌러 체결하십시오.",
-        gaugeEffect: { bc: 0.0 }
+        gaugeEffect: { bc: 2.0 }
       },
       {
         step: 4,
@@ -3393,9 +3418,12 @@ let currentStepIndex = 0;
 let mistakeCount = 0;
 let examStartTime = 0;
 
-// 게이지 상태
-let currentGaugeBC = 0.0;
+// 게이지 상태 및 기본값 상수
+const BC_DEFAULT_BAR = 2.0; // 정차 상태 기본 제동통 압력 (2.0 bar)
+const BC_EMG_BAR = 4.0;     // 비상제동 체결 시 제동통 압력 (4.0 bar)
+let currentGaugeBC = BC_DEFAULT_BAR;
 let currentGaugeMR = 9.0;
+let emgStopRotation = 0; // 비상제동체결 버튼 회전 각도 (0~360도)
 
 // 녹화 버퍼
 let recordedSteps = [];
@@ -3542,7 +3570,7 @@ window.addEventListener('DOMContentLoaded', () => {
   renderDualPanels();
   loadScenarioListUI();
   applyScenario(currentScenario);
-  updateGaugeUI(0.0, 9.0);
+  updateGaugeUI(BC_DEFAULT_BAR, 9.0);
 });
 
 // 모드 드롭다운 토글 및 조작 함수
@@ -4029,13 +4057,14 @@ function handleComponentTouch(compId) {
       sound.playHeavyLatch();
       triggerHaptic(50);
       if (compId === 'SW_EMG_STOP') {
-        updateGaugeUI(4.5); // 비상제동체결 시에만 BC 압력 상승
+        el.classList.remove('unlatching');
+        updateGaugeUI(BC_EMG_BAR); // 비상제동체결 시 BC 압력 4.0 bar로 상승
         const lampApply = document.getElementById('lamp-brake-apply');
         if (lampApply) lampApply.classList.add('lit');
         const lampCut = document.getElementById('lamp-emg-cut');
         if (lampCut) lampCut.classList.remove('lit');
       } else if (compId === 'SW_EMG_RELEASE') {
-        updateGaugeUI(0.0); // 비상제동완해 시 BC 압력 감압
+        updateGaugeUI(BC_DEFAULT_BAR); // 비상제동완해 시 BC 압력을 기본값(2.0 bar)으로 복귀
         const lampCut = document.getElementById('lamp-emg-cut');
         if (lampCut) lampCut.classList.add('lit'); // 비상제동차단 라이트 점등
         const lampApply = document.getElementById('lamp-brake-apply');
@@ -4046,12 +4075,28 @@ function handleComponentTouch(compId) {
       }
     } else {
       el.classList.remove('latched');
-      sound.playClick();
-      triggerHaptic(20);
       if (compId === 'SW_EMG_STOP') {
+        // 비상제동체결 복귀: 30도 시계방향 회전하며 툭 튀어나오는 회전 복귀 모션 (Turn-to-Reset)
+        const prevRot = emgStopRotation;
+        emgStopRotation = (emgStopRotation + 30) % 360;
+        el.style.setProperty('--estop-prev-rot', `${prevRot}deg`);
+        el.style.setProperty('--estop-rot', `${emgStopRotation}deg`);
+        el.classList.remove('unlatching');
+        void el.offsetWidth;
+        el.classList.add('unlatching');
+        sound.playRotarySnap();
+        triggerHaptic([30, 40]);
+        setTimeout(() => {
+          el.classList.remove('unlatching');
+        }, 360);
         const lampApply = document.getElementById('lamp-brake-apply');
         if (lampApply) lampApply.classList.remove('lit');
-      } else if (compId === 'SW_EMG_RELEASE') {
+        showTemporaryHudFeedback('⚪ [비상제동체결] 복귀 (시계방향 30° 회전 해제)', false);
+      } else {
+        sound.playClick();
+        triggerHaptic(20);
+      }
+      if (compId === 'SW_EMG_RELEASE') {
         const lampCut = document.getElementById('lamp-emg-cut');
         if (lampCut) lampCut.classList.remove('lit'); // 복귀 시 비상제동차단 라이트 소등
         showTemporaryHudFeedback(`⚪ [비상제동완해] 복귀 (비상제동차단 소등)`, false);
@@ -4728,7 +4773,15 @@ function resetCurrentScenario() {
     if (comp.type === 'LATCH') {
       comp.state = 'RELEASED';
       const el = document.getElementById(`comp-${id}`);
-      if (el) el.classList.remove('latched');
+      if (el) {
+        el.classList.remove('latched');
+        if (id === 'SW_EMG_STOP') {
+          emgStopRotation = 0;
+          el.style.setProperty('--estop-rot', '0deg');
+          el.style.setProperty('--estop-prev-rot', '0deg');
+          el.classList.remove('unlatching');
+        }
+      }
     } else if (comp.type === 'LATCH_LIT') {
       comp.state = 'RELEASED';
       const el = document.getElementById(`comp-${id}`);
@@ -4806,7 +4859,7 @@ function resetCurrentScenario() {
   const lampCoupling = document.getElementById('lamp-coupling');
   if (lampCoupling) lampCoupling.classList.remove('lit');
 
-  updateGaugeUI(0.0, 9.0);
+  updateGaugeUI(BC_DEFAULT_BAR, 9.0);
   renderStepHUD();
   hideVobcGuide();
 }
