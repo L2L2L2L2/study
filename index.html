@@ -1144,7 +1144,13 @@
     }
 
     .vobc-overlay-card.shake {
-      /* 흔들림 비활성화 */
+      animation: cardShake 0.4s ease;
+    }
+
+    @keyframes cardShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
     }
 
     .vobc-card-header {
@@ -3751,7 +3757,7 @@
       <div class="op3-panel-grid">
 
         <!-- 1행 1열: VOBC리셋 (원형 녹색 푸시버튼, 2~3초 / 5~7초 롱프레스 연동) -->
-        <div class="component-cell" id="wrap-SW_VOBC_RESET">
+        <div class="component-cell" id="wrap-SW_VOBC_RESET" onclick="handleComponentTouch('SW_VOBC_RESET')">
           <div class="metal-bezel-btn" style="width:48px; height:48px;">
             <div class="hold-progress-wrap"
                  onpointerdown="startVobcResetPress(event)"
@@ -3845,44 +3851,48 @@
         </div>
 
       </div>
+
+      <!-- [OP5 하단] 버튼 박스 아래 남는 공간의 VOBC 리셋 안내 오버레이 박스 -->
+      <div id="vobc-overlay-card" class="vobc-overlay-card" style="display:none;">
+        <div class="vobc-card-header">
+          <div class="vobc-card-title-wrap">
+            <span>⚠️</span>
+            <span style="color:#fde047;">VOBC 리셋 버튼 오취급시 타임아웃 발생!</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span id="vobc-card-badge" class="vobc-card-badge">대기 중</span>
+            <button type="button" class="vobc-card-close" onclick="hideVobcGuide()" style="background:none; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:0 2px;" title="닫기">✕</button>
+          </div>
+        </div>
+
+        <div class="vobc-guide-list">
+          <div id="vobc-guide-step1" class="vobc-guide-item">
+            - 2~3초 누름 : 해당차 재설정
+          </div>
+          <div id="vobc-guide-step2" class="vobc-guide-item">
+            - 5~7초 누름 : 전·후부 VOBC 모두 리셋
+          </div>
+        </div>
+
+        <!-- 실시간 게이지 및 타이머 -->
+        <div class="vobc-meter-wrap">
+          <div class="vobc-meter-track">
+            <div id="vobc-meter-fill" class="vobc-meter-fill"></div>
+          </div>
+          <div class="vobc-meter-zones">
+            <span style="left: 0%;">0s</span>
+            <span style="left: 28.5%; color: #00e676;">2s</span>
+            <span style="left: 42.8%; color: #00e676;">3s</span>
+            <span style="left: 71.4%; color: #00e5ff;">5s</span>
+            <span style="left: 100%; color: #00e5ff;">7s</span>
+          </div>
+          <div class="vobc-meter-info">
+            <span id="vobc-live-timer">⏱️ 0.0초</span>
+            <span id="vobc-live-status">버튼을 길게 누르면 측정됩니다</span>
+          </div>
+        </div>
+      </div>
     </section>
-
-    <!-- [OP5 하단] 버튼 박스 아래 남는 공간의 VOBC 리셋 안내 오버레이 박스 -->
-    <div id="vobc-overlay-card" class="vobc-overlay-card" style="display:none;">
-      <div class="vobc-card-header">
-        <div class="vobc-card-title-wrap">
-          <span>⚠️</span>
-          <span style="color:#fde047;">VOBC 리셋 버튼 오취급시 타임아웃 발생!</span>
-        </div>
-        <span id="vobc-card-badge" class="vobc-card-badge">대기 중</span>
-      </div>
-
-      <div class="vobc-guide-list">
-        <div id="vobc-guide-step1" class="vobc-guide-item">
-          - 2~3초 누름 : 해당차 재설정
-        </div>
-        <div id="vobc-guide-step2" class="vobc-guide-item">
-          - 5~7초 누름 : 전·후부 VOBC 모두 리셋
-        </div>
-      </div>
-
-      <!-- 실시간 게이지 및 타이머 -->
-      <div class="vobc-meter-wrap">
-        <div class="vobc-meter-track">
-          <div id="vobc-meter-fill" class="vobc-meter-fill"></div>
-        </div>
-        <div class="vobc-meter-zones">
-          <span style="left: 0%;">0s</span>
-          <span style="left: 28.5%; color: #00e676;">2s</span>
-          <span style="left: 42.8%; color: #00e676;">3s</span>
-          <span style="left: 71.4%; color: #00e5ff;">5s</span>
-          <span style="left: 100%; color: #00e5ff;">7s</span>
-        </div>
-        <div class="vobc-meter-info">
-          <span id="vobc-live-timer">⏱️ 0.0초</span>
-          <span id="vobc-live-status">버튼을 길게 누르면 측정됩니다</span>
-        </div>
-      </div>
     </div>
     <!-- /panel-storage-pool -->
 
@@ -4585,7 +4595,9 @@ function selectSlotPanel(slot, panelId) {
 
   renderDualPanels();
   triggerHaptic(25);
-  hideVobcGuide();
+  if (activeLeftPanel !== 'OP5' && activeRightPanel !== 'OP5') {
+    hideVobcGuide();
+  }
 }
 
 function renderDualPanels() {
