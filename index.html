@@ -2444,44 +2444,171 @@
       border-radius: 2px;
     }
 
-    /* [3] 주간제어기 (Master Controller) 메인 프레임 */
+    /* [3] 주간제어기 (Master Controller) 메인 프레임 - 실물 사진 완벽 반영 */
     .mascon-frame {
-      background: #181c22;
-      border: 2px solid #525a66;
+      background: #121418;
+      border: 2px solid #363d47;
       border-radius: 8px;
-      padding: 8px 10px;
-      box-shadow: inset 0 2px 4px rgba(255,255,255,0.08), 0 6px 18px rgba(0,0,0,0.7);
+      padding: 8px 8px;
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.06), 0 8px 20px rgba(0,0,0,0.7);
       position: relative;
+      clip-path: polygon(0 0, calc(100% - 38px) 0, 100% 38px, 100% 100%, 0 100%);
+      min-height: 236px;
+      overflow: visible;
     }
+
+    /* 실물 5개 볼트 위치 */
+    .mascon-screw-tl { top: 7px; left: 7px; }
+    .mascon-screw-tc { top: 7px; right: 46px; }
+    .mascon-screw-tr { top: 25px; right: 8px; }
+    .mascon-screw-br { bottom: 7px; right: 7px; }
+    .mascon-screw-bl { bottom: 7px; left: 7px; }
+
     .mascon-inner-border {
-      border: 1.5px solid rgba(255, 255, 255, 0.5);
+      position: relative;
+      width: 100%;
+      height: 220px;
+      box-sizing: border-box;
+    }
+
+    .mascon-pinstripe-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* (1) 마스콘 T바 슬롯 서브플레이트 */
+    .mascon-subplate {
+      position: absolute;
+      left: 78px;
+      top: 10px;
+      bottom: 10px;
+      width: 88px;
+      background: #0d0f12;
+      border: 1.5px solid #272c34;
       border-radius: 6px;
-      padding: 8px 10px;
-      position: relative;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.8), 0 1px 2px rgba(255,255,255,0.05);
       display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    /* 우측 주간제어기 세로 정렬 컬럼 (제어키 + 역전기) */
-    .mascon-reverser-col {
-      display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      gap: 8px;
+      padding: 4px;
+      box-sizing: border-box;
+      z-index: 2;
+    }
+    .tbar-slot-unit {
+      display: flex;
+      align-items: center;
+      gap: 4px;
       position: relative;
-      margin-top: 2px;
+      width: 100%;
+      justify-content: center;
+    }
+    .tbar-scale-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 180px;
+      font-size: 7.5px;
+      font-weight: 800;
+      color: #f8fafc;
+      text-align: center;
+      user-select: none;
+    }
+    .tbar-scale-item {
+      cursor: pointer;
+      padding: 1px 2px;
+      border-radius: 2px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .tbar-scale-item:hover, .tbar-scale-item.active {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.25);
+    }
+    .tbar-scale-item.eb {
+      color: #ef4444;
+      font-weight: 900;
+    }
+    .tbar-scale-item.n {
+      color: #22c55e;
+      font-weight: 900;
+    }
+    .tbar-slot-track {
+      width: 20px;
+      height: 180px;
+      background: #080a0d;
+      border: 2px solid #525a66;
+      border-radius: 10px;
+      position: relative;
+      box-shadow: inset 0 2px 6px #000;
+      overflow: visible;
+      touch-action: none;
+      cursor: pointer;
+    }
+    .slot-brush {
+      position: absolute;
+      top: 5px;
+      left: 4px;
+      right: 4px;
+      bottom: 5px;
+      background: repeating-linear-gradient(
+        to bottom,
+        #111 0px,
+        #111 2px,
+        #222 2px,
+        #222 4px
+      );
+      border-radius: 3px;
+      pointer-events: none;
+    }
+    /* T자 핸들: 실물 사진처럼 좌측으로 길게 뻗어 오버행하는 형태 */
+    .tbar-handle {
+      position: absolute;
+      left: calc(50% - 24px);
+      transform: translate(-50%, -50%);
+      width: 164px;
+      height: 25px;
+      background: linear-gradient(180deg, #4b5360 0%, #22262d 38%, #111316 100%);
+      border-radius: 6px;
+      border: 1px solid #5b6574;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.9), inset 0 2px 3px rgba(255,255,255,0.3);
+      cursor: grab;
+      z-index: 25;
+      transition: top 0.15s ease-out;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      touch-action: none;
+      user-select: none;
+    }
+    .tbar-handle:active, .tbar-handle.dragging {
+      cursor: grabbing;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.9);
+      transition: none !important;
+    }
+    .tbar-grip-line {
+      width: 92%;
+      height: 2px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 1px;
+      pointer-events: none;
     }
 
-    /* 제어키 (Master Key) - 역전기 트랙 바로 위에 위치 */
+    /* (2) 제어키 (Master Key) - 마스콘과 역전기 사이 상단 중앙 */
     .mascon-key-unit {
+      position: absolute;
+      left: 54%;
+      top: 14px;
+      transform: translateX(-50%);
       display: flex;
       flex-direction: column;
       align-items: center;
-      position: relative;
       cursor: pointer;
       user-select: none;
-      margin-bottom: 2px;
+      z-index: 10;
     }
     .key-cylinder {
       width: 32px;
@@ -2489,11 +2616,20 @@
       border-radius: 50%;
       background: radial-gradient(circle, #e2e8f0 0%, #94a3b8 45%, #334155 100%);
       border: 2px solid #cbd5e1;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.4);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.4);
       display: flex;
       justify-content: center;
       align-items: center;
       position: relative;
+    }
+    .key-brass-core {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #e5c07b 0%, #b8860b 55%, #4a3608 100%);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+      pointer-events: none;
     }
     .key-blade-handle {
       width: 8px;
@@ -2501,10 +2637,11 @@
       background: linear-gradient(to right, #64748b 0%, #f8fafc 45%, #e2e8f0 55%, #64748b 100%);
       border-radius: 2.5px;
       border: 1px solid #475569;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.7);
       transition: transform 0.22s cubic-bezier(0.25, 1, 0.5, 1);
-      transform: rotate(-90deg); /* 기본 OFF: 왼쪽 9시 방향 */
+      transform: rotate(-90deg); /* 기본 OFF: 왼쪽 9시 */
       position: relative;
+      z-index: 2;
     }
     .key-blade-handle::after {
       content: '';
@@ -2517,35 +2654,35 @@
       border-radius: 1px;
     }
     .key-blade-handle.on {
-      transform: rotate(0deg); /* ON: 위쪽 12시 방향 */
+      transform: rotate(0deg); /* ON: 위쪽 12시 */
     }
     .key-lbl-off {
       position: absolute;
-      left: -28px;
+      left: -32px;
       top: 50%;
       transform: translateY(-50%);
       font-size: 8px;
       font-weight: 900;
       color: #fff;
       background: #000;
-      padding: 1px 3px;
+      padding: 1px 4px;
       border-radius: 2px;
-      border: 1px solid #64748b;
+      border: 1.5px solid #94a3b8;
       cursor: pointer;
       user-select: none;
     }
     .key-lbl-on {
       position: absolute;
-      top: -16px;
+      top: -17px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 8px;
       font-weight: 900;
       color: #fff;
       background: #000;
-      padding: 1px 3px;
+      padding: 1px 4px;
       border-radius: 2px;
-      border: 1px solid #64748b;
+      border: 1.5px solid #94a3b8;
       cursor: pointer;
       user-select: none;
     }
@@ -2554,7 +2691,7 @@
     .key-warning-toast {
       position: absolute;
       top: -30px;
-      left: 50%;
+      left: 54%;
       transform: translateX(-50%);
       background: rgba(15, 23, 42, 0.85);
       backdrop-filter: blur(10px);
@@ -2579,126 +2716,33 @@
       100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
     }
 
-    /* 슬롯 및 트랙 레이아웃 */
-    .mascon-tracks-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    /* T바 마스콘 제동/역행 슬롯 */
-    .tbar-slot-unit {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      position: relative;
-    }
-    .tbar-scale-col {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      height: 190px;
-      font-size: 8px;
-      font-weight: 900;
-      color: #38bdf8;
-      text-align: center;
-      user-select: none;
-    }
-    .tbar-scale-item {
-      cursor: pointer;
-      padding: 1px 2px;
-      border-radius: 2px;
-      transition: color 0.15s, background 0.15s;
-    }
-    .tbar-scale-item:hover, .tbar-scale-item.active {
-      color: #ffffff;
-      background: rgba(56, 189, 248, 0.25);
-    }
-    .tbar-scale-item.eb {
-      color: #ef4444;
-      font-weight: 900;
-    }
-    .tbar-scale-item.n {
-      color: #22c55e;
-      font-weight: 900;
-    }
-    .tbar-slot-track {
-      width: 20px;
-      height: 190px;
-      background: #0a0d11;
-      border: 2px solid #fff;
-      border-radius: 10px;
-      position: relative;
-      box-shadow: inset 0 2px 6px #000;
-      overflow: visible;
-      touch-action: none;
-      cursor: pointer;
-    }
-    .slot-brush {
+    /* (3) 역전기 (전후진제어기) 우측 독립 서브플레이트 */
+    .reverser-subplate {
       position: absolute;
-      top: 5px;
-      left: 4px;
-      right: 4px;
-      bottom: 5px;
-      background: repeating-linear-gradient(
-        to bottom,
-        #111 0px,
-        #111 2px,
-        #222 2px,
-        #222 4px
-      );
-      border-radius: 3px;
-      pointer-events: none;
-    }
-    /* T자 핸들 */
-    .tbar-handle {
-      position: absolute;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 125px;
-      height: 21px;
-      background: linear-gradient(to bottom, #525a66 0%, #2b3038 45%, #181b20 100%);
-      border-radius: 5px;
-      border: 1px solid #7d8898;
-      box-shadow: 0 5px 10px rgba(0,0,0,0.8), inset 0 2px 3px rgba(255,255,255,0.3);
-      cursor: grab;
-      z-index: 25;
-      transition: top 0.15s ease-out;
+      right: 14px;
+      top: 14px;
+      width: 84px;
+      height: 116px;
+      background: #0d0f12;
+      border: 1.5px solid #f1f5f9;
+      border-radius: 6px;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.7), 0 2px 6px rgba(0,0,0,0.5);
       display: flex;
       justify-content: center;
       align-items: center;
-      touch-action: none;
-      user-select: none;
-    }
-    .tbar-handle:active, .tbar-handle.dragging {
-      cursor: grabbing;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.9);
-      transition: none !important;
-    }
-    .tbar-grip-line {
-      width: 90%;
-      height: 2px;
-      background: rgba(255,255,255,0.18);
-      border-radius: 1px;
-      pointer-events: none;
-    }
-
-    /* 역전기 (Reverser) 슬롯 */
-    .reverser-slot-unit {
-      display: flex;
-      align-items: center;
       gap: 5px;
-      position: relative;
+      padding: 4px;
+      box-sizing: border-box;
+      z-index: 2;
     }
     .reverser-scale-col {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      height: 100px;
-      font-size: 9px;
+      height: 96px;
+      font-size: 8.5px;
       font-weight: 900;
-      color: #38bdf8;
+      color: #f8fafc;
       text-align: center;
       user-select: none;
     }
@@ -2709,34 +2753,35 @@
     }
     .reverser-scale-item:hover, .reverser-scale-item.active {
       color: #ffffff;
-      background: rgba(56, 189, 248, 0.25);
+      background: rgba(255, 255, 255, 0.25);
     }
     .reverser-scale-item.n {
       color: #22c55e;
-      background: rgba(34, 197, 94, 0.12);
+      background: rgba(34, 197, 94, 0.15);
       border-radius: 2px;
     }
     .reverser-slot-track {
       width: 18px;
-      height: 100px;
-      background: #0a0d11;
-      border: 2px solid #fff;
+      height: 96px;
+      background: #080a0d;
+      border: 2px solid #525a66;
       border-radius: 9px;
       position: relative;
       box-shadow: inset 0 2px 6px #000;
       touch-action: none;
       cursor: pointer;
     }
+    /* 대형 구형 볼 노브 (실물과 동일한 유광 블랙 스피어) */
     .reverser-ball-knob {
       position: absolute;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #525a66, #22262c 60%, #0a0c0e 100%);
-      border: 2px solid #7d8898;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.8), inset 0 2px 3px rgba(255,255,255,0.4);
+      background: radial-gradient(circle at 35% 28%, #8a96a8 0%, #20242b 40%, #050608 100%);
+      border: 1.5px solid #6b7280;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.85), inset 0 2px 4px rgba(255,255,255,0.4);
       cursor: grab;
       z-index: 25;
       transition: top 0.15s ease-out;
@@ -2748,41 +2793,48 @@
       transition: none !important;
     }
 
-    /* [4] 축전지 조작부 (Battery) */
+    /* (4) 축전지 조작부 (Battery) 우측 하단 독립 서브플레이트 */
     .mascon-battery-plate {
-      border: 1.5px solid #fff;
-      border-radius: 5px;
-      padding: 4px 8px;
+      position: absolute;
+      right: 14px;
+      bottom: 12px;
+      width: 84px;
+      height: 60px;
+      background: #0d0f12;
+      border: 1.5px solid #f1f5f9;
+      border-radius: 6px;
+      padding: 3px 4px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 3px;
-      background: rgba(0,0,0,0.3);
-      align-self: flex-end;
-      margin-top: 2px;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.7), 0 2px 6px rgba(0,0,0,0.5);
+      box-sizing: border-box;
+      z-index: 2;
     }
     .battery-plate-title {
       font-size: 8.5px;
       font-weight: 800;
       color: #f8fafc;
       letter-spacing: 0.8px;
+      text-align: center;
     }
     .battery-btns-row {
       display: flex;
-      gap: 8px;
+      gap: 6px;
+      justify-content: center;
     }
     .batt-btn-wrap {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 2px;
     }
     .batt-btn-bezel {
-      width: 28px;
-      height: 28px;
+      width: 29px;
+      height: 29px;
       border-radius: 50%;
-      background: radial-gradient(circle, #555e6c, #2b3038);
-      border: 2px solid #cbd5e1;
+      background: radial-gradient(circle, #e2e8f0 15%, #94a3b8 55%, #475569 100%);
+      border: 1.5px solid #cbd5e1;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -2790,15 +2842,15 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.7);
     }
     .batt-btn-inner {
-      width: 19px;
-      height: 19px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
       background: radial-gradient(circle at 35% 35%, #22c55e, #15803d 75%, #14532d 100%);
       box-shadow: inset 0 2px 3px rgba(255,255,255,0.5);
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 7px;
+      font-size: 7.5px;
       font-weight: 900;
       color: #fff;
     }
@@ -3048,14 +3100,26 @@
 
         <!-- [우측 열] 주간제어기 (Master Controller) -->
         <div class="op1-right-col">
-          <div class="mascon-frame">
-            <div class="mascon-inner-border">
+          <div class="mascon-frame" id="mascon-panel-frame">
+            <!-- 실물 볼트 5개 (좌상, 상부중앙, 챔퍼대각, 우하, 좌하) -->
+            <div class="screw mascon-screw-tl"></div>
+            <div class="screw mascon-screw-tc"></div>
+            <div class="screw mascon-screw-tr"></div>
+            <div class="screw mascon-screw-br"></div>
+            <div class="screw mascon-screw-bl"></div>
 
-              <!-- 메인 슬롯 트랙들: 마스콘 T바 (좌) + [제어키 + 역전기] (우) -->
-              <div class="mascon-tracks-row">
-                
-                <!-- 마스콘 T바 (EB ~ P4) -->
-                <div class="tbar-slot-unit" id="wrap-SW_MASCON">
+            <div class="mascon-inner-border">
+              <!-- 우상단 챔퍼(대각 컷)를 따라 렌더링되는 실버 더블 핀스트라이프 -->
+              <svg class="mascon-pinstripe-svg" viewBox="0 0 440 220" preserveAspectRatio="none">
+                <path d="M 6,3 L 388,3 L 437,52 L 437,214 A 4 4 0 0 1 433,217 L 7,217 A 4 4 0 0 1 3,214 L 3,7 A 4 4 0 0 1 7,3 Z" 
+                      fill="none" stroke="#f1f5f9" stroke-width="1.8" />
+                <path d="M 9,6 L 385,6 L 434,55 L 434,211 A 2 2 0 0 1 432,214 L 10,214 A 2 2 0 0 1 6,211 L 6,10 A 2 2 0 0 1 10,6 Z" 
+                      fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.9" />
+              </svg>
+
+              <!-- 1. 마스콘 T바 슬롯 (서브플레이트) -->
+              <div class="mascon-subplate" id="wrap-SW_MASCON">
+                <div class="tbar-slot-unit">
                   <!-- 좌측 스케일 -->
                   <div class="tbar-scale-col">
                     <span class="tbar-scale-item eb" onclick="setMasconNotch('EB')">EB</span>
@@ -3073,7 +3137,7 @@
                     <span class="tbar-scale-item" onclick="setMasconNotch('P4')">P4</span>
                   </div>
 
-                  <!-- 중앙 브러시 트랙 & T자 핸들 -->
+                  <!-- 중앙 브러시 트랙 & 좌측으로 길게 뻗은 실물형 T자 핸들 -->
                   <div class="tbar-slot-track" id="tbar-track" onclick="handleMasconTrackClick(event)">
                     <div class="slot-brush"></div>
                     <div id="comp-SW_MASCON" class="tbar-handle" style="top: 68%;">
@@ -3098,49 +3162,46 @@
                     <span class="tbar-scale-item" onclick="setMasconNotch('P4')">P4</span>
                   </div>
                 </div>
-
-                <!-- 우측 세로 컬럼: 제어키 (상단) + 역전기 (하단) -->
-                <div class="mascon-reverser-col">
-                  <!-- 제어키 (Master Key) -->
-                  <div class="mascon-key-unit" id="wrap-SW_MASTER_KEY" onclick="handleComponentTouch('SW_MASTER_KEY')" title="제어키 (클릭하여 OFF/ON 절체)">
-                    <div class="key-labels">
-                      <span class="key-lbl-off interactive-tick" onclick="setMasterKeyPosition('OFF', event)">OFF</span>
-                      <span class="key-lbl-on interactive-tick" onclick="setMasterKeyPosition('ON', event)">ON</span>
-                    </div>
-                    <div class="key-cylinder">
-                      <div id="comp-SW_MASTER_KEY" class="key-blade-handle"></div>
-                    </div>
-                  </div>
-
-                  <!-- 역전기 (F / N / R) -->
-                  <div class="reverser-slot-unit" id="wrap-SW_REVERSER">
-                    <!-- 글래스모피즘 키 OFF 경고 팝업 -->
-                    <div id="reverser-key-warning" class="key-warning-toast" style="display:none;">
-                      <span>⚠️ 키를 ON 위치로 놓으세요</span>
-                    </div>
-
-                    <div class="reverser-scale-col">
-                      <span class="reverser-scale-item" onclick="setReverserPosition('F')">F</span>
-                      <span class="reverser-scale-item n" onclick="setReverserPosition('N')">N</span>
-                      <span class="reverser-scale-item" onclick="setReverserPosition('R')">R</span>
-                    </div>
-
-                    <div class="reverser-slot-track" id="reverser-track" onclick="handleReverserTrackClick(event)">
-                      <div class="slot-brush"></div>
-                      <div id="comp-SW_REVERSER" class="reverser-ball-knob" style="top: 50%;"></div>
-                    </div>
-
-                    <div class="reverser-scale-col">
-                      <span class="reverser-scale-item" onclick="setReverserPosition('F')">F</span>
-                      <span class="reverser-scale-item n" onclick="setReverserPosition('N')">N</span>
-                      <span class="reverser-scale-item" onclick="setReverserPosition('R')">R</span>
-                    </div>
-                  </div>
-                </div>
-
               </div>
 
-              <!-- 하단 우측: 축전지 (ON / OFF) -->
+              <!-- 2. 제어키 (Master Key) - 마스콘과 역전기 사이 상단 중앙 -->
+              <div class="mascon-key-unit" id="wrap-SW_MASTER_KEY" onclick="handleComponentTouch('SW_MASTER_KEY')" title="제어키 (클릭하여 OFF/ON 절체)">
+                <div class="key-labels">
+                  <span class="key-lbl-off interactive-tick" onclick="setMasterKeyPosition('OFF', event)">OFF</span>
+                  <span class="key-lbl-on interactive-tick" onclick="setMasterKeyPosition('ON', event)">ON</span>
+                </div>
+                <div class="key-cylinder">
+                  <div class="key-brass-core"></div>
+                  <div id="comp-SW_MASTER_KEY" class="key-blade-handle"></div>
+                </div>
+              </div>
+
+              <!-- 글래스모피즘 인터록 경고 팝업 -->
+              <div id="reverser-key-warning" class="key-warning-toast" style="display:none;">
+                <span>⚠️ 키를 ON 위치로 놓으세요</span>
+              </div>
+
+              <!-- 3. 역전기 (전후진제어기 F / N / R) - 우측 독립 서브플레이트 -->
+              <div class="reverser-subplate" id="wrap-SW_REVERSER">
+                <div class="reverser-scale-col">
+                  <span class="reverser-scale-item" onclick="setReverserPosition('F')">F</span>
+                  <span class="reverser-scale-item n" onclick="setReverserPosition('N')">N</span>
+                  <span class="reverser-scale-item" onclick="setReverserPosition('R')">R</span>
+                </div>
+
+                <div class="reverser-slot-track" id="reverser-track" onclick="handleReverserTrackClick(event)">
+                  <div class="slot-brush"></div>
+                  <div id="comp-SW_REVERSER" class="reverser-ball-knob" style="top: 50%;"></div>
+                </div>
+
+                <div class="reverser-scale-col">
+                  <span class="reverser-scale-item" onclick="setReverserPosition('F')">F</span>
+                  <span class="reverser-scale-item n" onclick="setReverserPosition('N')">N</span>
+                  <span class="reverser-scale-item" onclick="setReverserPosition('R')">R</span>
+                </div>
+              </div>
+
+              <!-- 4. 축전지 조작부 (ON / OFF) - 우측 하단 독립 서브플레이트 -->
               <div class="mascon-battery-plate">
                 <span class="battery-plate-title">축전지</span>
                 <div class="battery-btns-row">
