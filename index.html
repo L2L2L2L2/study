@@ -4253,8 +4253,8 @@ function handleComponentTouch(compId) {
 
     const bounce = ROTARY3_BOUNCE.SW_DRIVE_MODE;
     const labels = {
-      'FM': 'FM (전진 수동 운전)',
-      'RM': 'RM (후진 수동 운전)',
+      'FM': 'FM (Full Manual / 완전 수동)',
+      'RM': 'RM (Restricted Manual / 제한 수동)',
       'OFF': 'OFF (운전 모드 정지)',
       'ATPM': 'ATPM (차상 신호 수동 운전)'
     };
@@ -4494,8 +4494,8 @@ function setDriveModePosition(targetState, evt) {
   if (!comp) return;
 
   const modeSteps = {
-    'FM':   { angle: -90, label: 'FM (전진 수동 운전)' },
-    'RM':   { angle: -45, label: 'RM (후진 수동 운전)' },
+    'FM':   { angle: -90, label: 'FM (Full Manual / 완전 수동)' },
+    'RM':   { angle: -45, label: 'RM (Restricted Manual / 제한 수동)' },
     'OFF':  { angle: 0,   label: 'OFF (운전 모드 정지)' },
     'ATPM': { angle: 45,  label: 'ATPM (차상 신호 수동 운전)' }
   };
