@@ -2459,73 +2459,120 @@
       gap: 10px;
     }
 
-    /* 제어키 (Master Key) */
-    .mascon-top-row {
+    /* 우측 주간제어기 세로 정렬 컬럼 (제어키 + 역전기) */
+    .mascon-reverser-col {
       display: flex;
-      justify-content: flex-end;
+      flex-direction: column;
       align-items: center;
-      padding-right: 80px;
-      margin-bottom: 2px;
+      gap: 14px;
+      position: relative;
+      margin-top: 6px;
     }
+
+    /* 제어키 (Master Key) - 역전기 트랙 바로 위에 위치 */
     .mascon-key-unit {
       display: flex;
       flex-direction: column;
       align-items: center;
       position: relative;
       cursor: pointer;
+      user-select: none;
+      margin-bottom: 4px;
     }
     .key-cylinder {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      background: radial-gradient(circle, #e2e8f0 0%, #94a3b8 50%, #475569 100%);
+      background: radial-gradient(circle, #e2e8f0 0%, #94a3b8 45%, #334155 100%);
       border: 2px solid #cbd5e1;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.7);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.4);
       display: flex;
       justify-content: center;
       align-items: center;
       position: relative;
     }
     .key-blade-handle {
-      width: 32px;
-      height: 10px;
-      background: linear-gradient(to right, #94a3b8, #f8fafc 50%, #94a3b8);
-      border-radius: 2px;
+      width: 9px;
+      height: 26px;
+      background: linear-gradient(to right, #64748b 0%, #f8fafc 45%, #e2e8f0 55%, #64748b 100%);
+      border-radius: 3px;
       border: 1px solid #475569;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-      transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-      transform: rotate(0deg);
+      box-shadow: 0 3px 5px rgba(0,0,0,0.6);
+      transition: transform 0.22s cubic-bezier(0.25, 1, 0.5, 1);
+      transform: rotate(-90deg); /* 기본 OFF: 왼쪽 9시 방향 */
+      position: relative;
+    }
+    .key-blade-handle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      bottom: 3px;
+      left: 3px;
+      right: 3px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 1px;
     }
     .key-blade-handle.on {
-      transform: rotate(90deg);
+      transform: rotate(0deg); /* ON: 위쪽 12시 방향 */
     }
     .key-lbl-off {
       position: absolute;
-      left: -26px;
+      left: -32px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 9px;
+      font-size: 8.5px;
       font-weight: 900;
-      color: #f1f5f9;
+      color: #fff;
       background: #000;
       padding: 1px 4px;
       border-radius: 2px;
-      border: 1px solid #475569;
-      pointer-events: none;
+      border: 1px solid #64748b;
+      cursor: pointer;
+      user-select: none;
     }
     .key-lbl-on {
       position: absolute;
       top: -18px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 9px;
+      font-size: 8.5px;
       font-weight: 900;
-      color: #f1f5f9;
+      color: #fff;
       background: #000;
       padding: 1px 4px;
       border-radius: 2px;
-      border: 1px solid #475569;
+      border: 1px solid #64748b;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* 글래스모피즘 키 OFF 경고 팝업 */
+    .key-warning-toast {
+      position: absolute;
+      top: -32px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1.5px solid rgba(239, 68, 68, 0.8);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 16px rgba(239, 68, 68, 0.5);
+      color: #fecaca;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      animation: keyToastPop 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
       pointer-events: none;
+    }
+    @keyframes keyToastPop {
+      0% { opacity: 0; transform: translateX(-50%) translateY(6px) scale(0.92); }
+      100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
     }
 
     /* 슬롯 및 트랙 레이아웃 */
@@ -2550,7 +2597,7 @@
       height: 220px;
       font-size: 9px;
       font-weight: 900;
-      color: #94a3b8;
+      color: #38bdf8;
       text-align: center;
       user-select: none;
     }
@@ -2561,8 +2608,8 @@
       transition: color 0.15s, background 0.15s;
     }
     .tbar-scale-item:hover, .tbar-scale-item.active {
-      color: #38bdf8;
-      background: rgba(56, 189, 248, 0.15);
+      color: #ffffff;
+      background: rgba(56, 189, 248, 0.25);
     }
     .tbar-scale-item.eb {
       color: #ef4444;
@@ -2581,6 +2628,8 @@
       position: relative;
       box-shadow: inset 0 2px 6px #000;
       overflow: visible;
+      touch-action: none;
+      cursor: pointer;
     }
     .slot-brush {
       position: absolute;
@@ -2596,6 +2645,7 @@
         #222 4px
       );
       border-radius: 4px;
+      pointer-events: none;
     }
     /* T자 핸들 */
     .tbar-handle {
@@ -2614,16 +2664,20 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      touch-action: none;
+      user-select: none;
     }
-    .tbar-handle:active {
+    .tbar-handle:active, .tbar-handle.dragging {
       cursor: grabbing;
       box-shadow: 0 3px 8px rgba(0,0,0,0.9);
+      transition: none !important;
     }
     .tbar-grip-line {
       width: 90%;
       height: 2px;
       background: rgba(255,255,255,0.18);
       border-radius: 1px;
+      pointer-events: none;
     }
 
     /* 역전기 (Reverser) 슬롯 */
@@ -2632,7 +2686,6 @@
       align-items: center;
       gap: 6px;
       position: relative;
-      margin-top: 15px;
     }
     .reverser-scale-col {
       display: flex;
@@ -2641,7 +2694,7 @@
       height: 120px;
       font-size: 10px;
       font-weight: 900;
-      color: #94a3b8;
+      color: #38bdf8;
       text-align: center;
       user-select: none;
     }
@@ -2651,11 +2704,13 @@
       border-radius: 2px;
     }
     .reverser-scale-item:hover, .reverser-scale-item.active {
-      color: #38bdf8;
-      background: rgba(56, 189, 248, 0.15);
+      color: #ffffff;
+      background: rgba(56, 189, 248, 0.25);
     }
     .reverser-scale-item.n {
       color: #22c55e;
+      background: rgba(34, 197, 94, 0.12);
+      border-radius: 2px;
     }
     .reverser-slot-track {
       width: 20px;
@@ -2665,6 +2720,8 @@
       border-radius: 10px;
       position: relative;
       box-shadow: inset 0 2px 6px #000;
+      touch-action: none;
+      cursor: pointer;
     }
     .reverser-ball-knob {
       position: absolute;
@@ -2679,9 +2736,12 @@
       cursor: grab;
       z-index: 25;
       transition: top 0.15s ease-out;
+      touch-action: none;
+      user-select: none;
     }
-    .reverser-ball-knob:active {
+    .reverser-ball-knob:active, .reverser-ball-knob.dragging {
       cursor: grabbing;
+      transition: none !important;
     }
 
     /* [4] 축전지 조작부 (Battery) */
@@ -2987,20 +3047,7 @@
           <div class="mascon-frame">
             <div class="mascon-inner-border">
 
-              <!-- 상단 제어키 (Master Key) -->
-              <div class="mascon-top-row">
-                <div class="mascon-key-unit" id="wrap-SW_MASTER_KEY" onclick="handleComponentTouch('SW_MASTER_KEY')" title="제어키 (클릭하여 OFF/ON 절체)">
-                  <div class="key-labels">
-                    <span class="key-lbl-off interactive-tick" onclick="setMasterKeyPosition('OFF', event)">OFF</span>
-                    <span class="key-lbl-on interactive-tick" onclick="setMasterKeyPosition('ON', event)">ON</span>
-                  </div>
-                  <div class="key-cylinder">
-                    <div id="comp-SW_MASTER_KEY" class="key-blade-handle"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 중간 메인 슬롯 트랙들: 마스콘 T바 (좌) + 역전기 (우) -->
+              <!-- 메인 슬롯 트랙들: 마스콘 T바 (좌) + [제어키 + 역전기] (우) -->
               <div class="mascon-tracks-row">
                 
                 <!-- 마스콘 T바 (EB ~ P4) -->
@@ -3048,23 +3095,42 @@
                   </div>
                 </div>
 
-                <!-- 역전기 (F / N / R) -->
-                <div class="reverser-slot-unit" id="wrap-SW_REVERSER">
-                  <div class="reverser-scale-col">
-                    <span class="reverser-scale-item" onclick="setReverserPosition('F')">F</span>
-                    <span class="reverser-scale-item n" onclick="setReverserPosition('N')">N</span>
-                    <span class="reverser-scale-item" onclick="setReverserPosition('R')">R</span>
+                <!-- 우측 세로 컬럼: 제어키 (상단) + 역전기 (하단) -->
+                <div class="mascon-reverser-col">
+                  <!-- 제어키 (Master Key) -->
+                  <div class="mascon-key-unit" id="wrap-SW_MASTER_KEY" onclick="handleComponentTouch('SW_MASTER_KEY')" title="제어키 (클릭하여 OFF/ON 절체)">
+                    <div class="key-labels">
+                      <span class="key-lbl-off interactive-tick" onclick="setMasterKeyPosition('OFF', event)">OFF</span>
+                      <span class="key-lbl-on interactive-tick" onclick="setMasterKeyPosition('ON', event)">ON</span>
+                    </div>
+                    <div class="key-cylinder">
+                      <div id="comp-SW_MASTER_KEY" class="key-blade-handle"></div>
+                    </div>
                   </div>
 
-                  <div class="reverser-slot-track" id="reverser-track" onclick="handleReverserTrackClick(event)">
-                    <div class="slot-brush"></div>
-                    <div id="comp-SW_REVERSER" class="reverser-ball-knob" style="top: 50%;"></div>
-                  </div>
+                  <!-- 역전기 (F / N / R) -->
+                  <div class="reverser-slot-unit" id="wrap-SW_REVERSER">
+                    <!-- 글래스모피즘 키 OFF 경고 팝업 -->
+                    <div id="reverser-key-warning" class="key-warning-toast" style="display:none;">
+                      <span>⚠️ 키를 ON 위치로 놓으세요</span>
+                    </div>
 
-                  <div class="reverser-scale-col">
-                    <span class="reverser-scale-item" onclick="setReverserPosition('F')">F</span>
-                    <span class="reverser-scale-item n" onclick="setReverserPosition('N')">N</span>
-                    <span class="reverser-scale-item" onclick="setReverserPosition('R')">R</span>
+                    <div class="reverser-scale-col">
+                      <span class="reverser-scale-item" onclick="setReverserPosition('F')">F</span>
+                      <span class="reverser-scale-item n" onclick="setReverserPosition('N')">N</span>
+                      <span class="reverser-scale-item" onclick="setReverserPosition('R')">R</span>
+                    </div>
+
+                    <div class="reverser-slot-track" id="reverser-track" onclick="handleReverserTrackClick(event)">
+                      <div class="slot-brush"></div>
+                      <div id="comp-SW_REVERSER" class="reverser-ball-knob" style="top: 50%;"></div>
+                    </div>
+
+                    <div class="reverser-scale-col">
+                      <span class="reverser-scale-item" onclick="setReverserPosition('F')">F</span>
+                      <span class="reverser-scale-item n" onclick="setReverserPosition('N')">N</span>
+                      <span class="reverser-scale-item" onclick="setReverserPosition('R')">R</span>
+                    </div>
                   </div>
                 </div>
 
@@ -3458,21 +3524,87 @@
           <div class="screw br" style="bottom:4px; right:4px;"></div>
           <div class="gauge-body" style="width:136px; height:136px;">
             <svg class="gauge-face" viewBox="0 0 160 160">
-              <circle cx="80" cy="80" r="74" fill="none" stroke="#cbd5e1" stroke-width="2"/>
-              <path d="M 30 130 A 70 70 0 1 1 130 130" fill="none" stroke="#334155" stroke-width="4" stroke-dasharray="2, 6"/>
-              <text x="32" y="125" font-size="9" font-weight="900" fill="#1e293b">0</text>
-              <text x="25" y="85" font-size="9" font-weight="900" fill="#1e293b">2</text>
-              <text x="44" y="48" font-size="9" font-weight="900" fill="#1e293b">4</text>
-              <text x="76" y="32" font-size="10" font-weight="900" fill="#1e293b">6</text>
-              <text x="110" y="48" font-size="9" font-weight="900" fill="#1e293b">8</text>
-              <text x="126" y="85" font-size="9" font-weight="900" fill="#1e293b">10</text>
-              <text x="118" y="125" font-size="9" font-weight="900" fill="#1e293b">12</text>
-              <text x="80" y="68" font-size="8" font-weight="800" text-anchor="middle" fill="#64748b">PRESSURE GAUGE</text>
-              <text x="80" y="78" font-size="6.8" font-weight="800" text-anchor="middle">
-                <tspan fill="#ef4444">MR(RED)</tspan>
+              <!-- 다이얼 배경 및 베젤 -->
+              <circle cx="80" cy="80" r="76" fill="#ffffff"/>
+              <circle cx="80" cy="80" r="74" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+
+              <!-- 바깥/안쪽 눈금 트랙 레일 아크 (0 ~ 12 bar, 총 270도) -->
+              <path d="M 34.75 125.25 A 64 64 0 1 1 125.25 125.25" fill="none" stroke="#334155" stroke-width="1.2"/>
+              <path d="M 41.82 118.18 A 54 54 0 1 1 118.18 118.18" fill="none" stroke="#334155" stroke-width="1.2"/>
+
+              <!-- [핵심] 8 ~ 10 bar 적색 경고 대역 (MR 정상 운전 압력 범위 8.0 ~ 10.0 bar) -->
+              <g class="gauge-red-zone">
+                <!-- 적색 채움 아크 -->
+                <path d="M 125.25 34.75 A 64 64 0 0 1 144 80 L 134 80 A 54 54 0 0 0 118.18 41.82 Z" fill="#ef4444" stroke="#dc2626" stroke-width="0.5"/>
+
+                <!-- 8~10 구간 세부 분할선 (0.2 bar 단위 흰색 격자선: 실물 동일 사각 적색 블록 분할) -->
+                <line x1="125.25" y1="34.75" x2="118.18" y2="41.82" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="128.67" y1="38.44" x2="121.06" y2="44.93" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="131.78" y1="42.38" x2="123.69" y2="48.26" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="134.57" y1="46.56" x2="126.04" y2="51.79" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="137.02" y1="50.94" x2="128.11" y2="55.48" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="139.13" y1="55.51" x2="129.89" y2="59.34" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="140.87" y1="60.22" x2="131.36" y2="63.31" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="142.23" y1="65.06" x2="132.51" y2="67.40" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="143.21" y1="70.00" x2="133.34" y2="71.55" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="143.80" y1="74.98" x2="133.83" y2="75.76" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="144.00" y1="80.00" x2="134.00" y2="80.00" stroke="#ffffff" stroke-width="1.2"/>
+
+                <!-- 적색 구역 외곽/내곽 테두리 강조 -->
+                <path d="M 125.25 34.75 A 64 64 0 0 1 144 80" fill="none" stroke="#1e293b" stroke-width="1.2"/>
+                <path d="M 118.18 41.82 A 54 54 0 0 1 134 80" fill="none" stroke="#1e293b" stroke-width="1.2"/>
+              </g>
+
+              <!-- 주요 눈금선 (Major Ticks) -->
+              <line x1="34.75" y1="125.25" x2="43.23" y2="116.77" stroke="#0f172a" stroke-width="2"/> <!-- 0 bar -->
+              <line x1="20.87" y1="104.49" x2="30.11" y2="100.67" stroke="#334155" stroke-width="1.2"/> <!-- 1 bar -->
+              <line x1="16.00" y1="80.00" x2="28.00" y2="80.00" stroke="#0f172a" stroke-width="2"/> <!-- 2 bar -->
+              <line x1="20.87" y1="55.51" x2="30.11" y2="59.33" stroke="#334155" stroke-width="1.2"/> <!-- 3 bar -->
+              <line x1="34.75" y1="34.75" x2="43.23" y2="43.23" stroke="#0f172a" stroke-width="2"/> <!-- 4 bar -->
+              <line x1="55.51" y1="20.87" x2="59.33" y2="30.11" stroke="#334155" stroke-width="1.2"/> <!-- 5 bar -->
+              <line x1="80.00" y1="16.00" x2="80.00" y2="28.00" stroke="#0f172a" stroke-width="2"/> <!-- 6 bar -->
+              <line x1="104.49" y1="20.87" x2="100.67" y2="30.11" stroke="#334155" stroke-width="1.2"/> <!-- 7 bar -->
+              <line x1="125.25" y1="34.75" x2="116.77" y2="43.23" stroke="#0f172a" stroke-width="2"/> <!-- 8 bar -->
+              <line x1="144.00" y1="80.00" x2="132.00" y2="80.00" stroke="#0f172a" stroke-width="2"/> <!-- 10 bar -->
+              <line x1="139.13" y1="104.49" x2="129.89" y2="100.67" stroke="#334155" stroke-width="1.2"/> <!-- 11 bar -->
+              <line x1="125.25" y1="125.25" x2="116.77" y2="116.77" stroke="#0f172a" stroke-width="2"/> <!-- 12 bar -->
+
+              <!-- 0~8 구간 및 10~12 구간 소눈금 점선 -->
+              <path d="M 34.75 125.25 A 64 64 0 0 1 125.25 34.75" fill="none" stroke="#64748b" stroke-width="3" stroke-dasharray="1.5, 4.5"/>
+              <path d="M 144 80 A 64 64 0 0 1 125.25 125.25" fill="none" stroke="#64748b" stroke-width="3" stroke-dasharray="1.5, 4.5"/>
+
+              <!-- 바늘 정지 핀 (0 bar 하단) -->
+              <circle cx="38" cy="115" r="1.5" fill="#94a3b8" stroke="#475569" stroke-width="0.5"/>
+
+              <!-- 다이얼 고정 나사 2개 -->
+              <circle cx="44" cy="76" r="2.2" fill="#e2e8f0" stroke="#64748b" stroke-width="0.6"/>
+              <line x1="42.5" y1="76" x2="45.5" y2="76" stroke="#475569" stroke-width="0.6"/>
+              <circle cx="116" cy="76" r="2.2" fill="#e2e8f0" stroke="#64748b" stroke-width="0.6"/>
+              <line x1="114.5" y1="76" x2="117.5" y2="76" stroke="#475569" stroke-width="0.6"/>
+
+              <!-- 수치 라벨 -->
+              <text x="44" y="112" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">0</text>
+              <text x="32" y="84" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">2</text>
+              <text x="46" y="52" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">4</text>
+              <text x="80" y="38" font-size="11" font-weight="900" fill="#0f172a" text-anchor="middle">6</text>
+              <text x="114" y="52" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">8</text>
+              <text x="127" y="84" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">10</text>
+              <text x="115" y="112" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">12</text>
+
+              <!-- 중앙 텍스트 (실물 NAGANO NKS 게이지 100% 동일) -->
+              <text x="80" y="60" font-size="7.5" font-weight="900" text-anchor="middle" fill="#0f172a" letter-spacing="0.4">PRESSURE GAUGE</text>
+              <text x="80" y="70" font-size="6.2" font-weight="900" text-anchor="middle">
+                <tspan fill="#dc2626">MR (RED)</tspan>
                 <tspan fill="#64748b"> / </tspan>
-                <tspan fill="#1e293b">BC(BLACK)</tspan>
+                <tspan fill="#0f172a">BC (BLACK)</tspan>
               </text>
+              <text x="80" y="103" font-size="8.5" font-weight="900" text-anchor="middle" fill="#0f172a">bar</text>
+
+              <!-- NKS 및 KOREA NAGANO 로고 -->
+              <circle cx="80" cy="116" r="6" fill="none" stroke="#0f172a" stroke-width="0.8"/>
+              <text x="80" y="118.5" font-size="4.8" font-weight="900" text-anchor="middle" fill="#0f172a">NKS</text>
+              <text x="80" y="127" font-size="4.5" font-weight="700" text-anchor="middle" fill="#334155" letter-spacing="0.8">KI 101765</text>
+              <text x="80" y="133" font-size="4.2" font-weight="800" text-anchor="middle" fill="#334155" letter-spacing="0.4">KOREA NAGANO</text>
             </svg>
             <div id="needle-mr" class="gauge-needle needle-mr" style="height:54px; transform: rotate(67.5deg);"></div>
             <div id="needle-bc" class="gauge-needle needle-bc" style="height:52px; transform: rotate(-90deg);"></div>
@@ -4490,6 +4622,13 @@ window.addEventListener('DOMContentLoaded', () => {
   updateLeadCarLamp(COMPONENT_REGISTRY.SW_DRIVE_MODE.state);
   setMasconNotch('N', true);
   setReverserPosition('N', true);
+  initMasconDraggable();
+  initReverserDraggable();
+  const keyEl = document.getElementById('comp-SW_MASTER_KEY');
+  if (keyEl) {
+    keyEl.style.transform = 'rotate(-90deg)';
+    keyEl.classList.remove('on');
+  }
 });
 
 // 모드 드롭다운 토글 및 조작 함수
@@ -5127,8 +5266,16 @@ function handleComponentTouch(compId) {
       el.style.transform = (newState === 'ON') ? 'rotate(90deg)' : 'rotate(0deg)';
     } else if (compId === 'SW_MASTER_KEY') {
       newState = (comp.state === 'OFF') ? 'ON' : 'OFF';
-      el.style.transform = (newState === 'ON') ? 'rotate(90deg)' : 'rotate(0deg)';
-      showTemporaryHudFeedback(`🔑 [제어키] ${newState === 'ON' ? 'ON (전원 투입)' : 'OFF (전원 차단)'}`, false);
+      if (newState === 'ON') {
+        el.style.transform = 'rotate(0deg)';
+        el.classList.add('on');
+        const toast = document.getElementById('reverser-key-warning');
+        if (toast) toast.style.display = 'none';
+      } else {
+        el.style.transform = 'rotate(-90deg)';
+        el.classList.remove('on');
+      }
+      showTemporaryHudFeedback(`🔑 [제어키] ${newState === 'ON' ? 'ON (역전기 조작 가능)' : 'OFF (역전기 잠금)'}`, false);
     } else if (compId === 'SW_INSUL_SECT') {
       newState = (comp.state === 'NORMAL') ? 'INSUL' : 'NORMAL';
       el.style.transform = (newState === 'INSUL') ? 'rotate(45deg)' : 'rotate(-45deg)';
@@ -5599,7 +5746,35 @@ function setAtpRevPosition(targetState, evt) {
   }
 }
 
-// [OP1] 제어키 2단 각 위치 직접 선택 함수 (OFF, ON 터치 시)
+// [OP1] 제어키 & 역전기 연동 및 경고 상태 관리
+let keyWarningTimeout = null;
+let tractionReleaseTimer = null;
+
+// 글래스모피즘 "키를 ON 위치로 놓으세요" 경고 팝업
+function showKeyOffWarning() {
+  const toast = document.getElementById('reverser-key-warning');
+  if (toast) {
+    toast.style.display = 'flex';
+    clearTimeout(keyWarningTimeout);
+    keyWarningTimeout = setTimeout(() => {
+      toast.style.display = 'none';
+    }, 2200);
+  }
+  sound.playError();
+  triggerHaptic([45, 45, 60]);
+  showTemporaryHudFeedback("⚠️ [역전기] 키를 ON 위치로 놓으세요!", true);
+}
+
+function checkMasterKeyForReverser() {
+  const keyComp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
+  if (!keyComp || keyComp.state !== 'ON') {
+    showKeyOffWarning();
+    return false;
+  }
+  return true;
+}
+
+// [OP1] 제어키 2단 각 위치 직접 선택 함수 (OFF: -90도 9시, ON: 0도 12시)
 function setMasterKeyPosition(targetState, evt) {
   if (evt) evt.stopPropagation();
   hideVobcGuide();
@@ -5608,11 +5783,21 @@ function setMasterKeyPosition(targetState, evt) {
 
   comp.state = targetState;
   const el = document.getElementById('comp-SW_MASTER_KEY');
-  if (el) el.style.transform = (targetState === 'ON') ? 'rotate(90deg)' : 'rotate(0deg)';
+  if (el) {
+    if (targetState === 'ON') {
+      el.style.transform = 'rotate(0deg)';
+      el.classList.add('on');
+      const toast = document.getElementById('reverser-key-warning');
+      if (toast) toast.style.display = 'none';
+    } else {
+      el.style.transform = 'rotate(-90deg)';
+      el.classList.remove('on');
+    }
+  }
 
   sound.playRotarySnap();
   triggerHaptic(30);
-  showTemporaryHudFeedback(`🔑 [제어키] ${targetState === 'ON' ? 'ON (전원 투입)' : 'OFF (전원 차단)'}`, false);
+  showTemporaryHudFeedback(`🔑 [제어키] ${targetState === 'ON' ? 'ON (역전기 조작 가능)' : 'OFF (역전기 잠금)'}`, false);
 
   if (currentMode === 'REC') {
     promptRecordStep('SW_MASTER_KEY', comp.name, targetState);
@@ -5645,11 +5830,12 @@ function setMasconNotch(notch, silent = false) {
   const topPos = MASCON_POS_MAP[notch];
   if (topPos === undefined) return;
 
+  const prevNotch = comp.notch || comp.state;
   comp.state = notch;
   comp.notch = notch;
 
   const handle = document.getElementById('comp-SW_MASCON');
-  if (handle) {
+  if (handle && !handle.classList.contains('dragging')) {
     handle.style.top = `${topPos}%`;
   }
 
@@ -5658,28 +5844,95 @@ function setMasconNotch(notch, silent = false) {
     item.classList.toggle('active', item.innerText.trim() === notch);
   });
 
-  // 노치별 제동통 압력(BC) 및 제동체결 표시등 연동
   const lampApply = document.getElementById('lamp-brake-apply');
+  const emgComp = COMPONENT_REGISTRY['SW_EMG_STOP'];
+  const elEstop = document.getElementById('comp-SW_EMG_STOP');
+
+  // 진행 중이던 역행 완해 지연 타이머 초기화
+  if (tractionReleaseTimer) {
+    clearTimeout(tractionReleaseTimer);
+    tractionReleaseTimer = null;
+  }
+
+  // 1) EB 노치: 비상제동체결 버튼과 100% 동일하게 비상제동 체결
   if (notch === 'EB') {
+    if (emgComp && emgComp.state !== 'LATCHED') {
+      emgComp.state = 'LATCHED';
+      if (elEstop) {
+        elEstop.classList.add('latched');
+        elEstop.classList.remove('unlatching');
+      }
+      const lampCut = document.getElementById('lamp-emg-cut');
+      if (lampCut) lampCut.classList.remove('lit');
+    }
     updateGaugeUI(4.0); // 비상제동 4.0 bar
     if (lampApply) lampApply.classList.add('lit');
-  } else if (notch.startsWith('B')) {
-    const bNum = parseInt(notch.substring(1), 10);
-    const bcVal = +(1.0 + (bNum - 1) * 0.4).toFixed(1); // B1(1.0) ~ B7(3.4)
-    updateGaugeUI(bcVal);
-    if (lampApply) lampApply.classList.add('lit');
-  } else if (notch === 'N') {
-    updateGaugeUI(BC_DEFAULT_BAR); // 정차 상태 기본값 (2.0 bar)
-    if (lampApply) lampApply.classList.remove('lit');
-  } else if (notch.startsWith('P')) {
-    updateGaugeUI(0.0); // 역행 가속 시 상용제동 완전 완해 (0.0 bar)
-    if (lampApply) lampApply.classList.remove('lit');
+  } else {
+    // EB에서 다른 위치로 이동 시: 비상제동 체결 해제(복귀)
+    if (prevNotch === 'EB' && emgComp && emgComp.state === 'LATCHED') {
+      emgComp.state = 'RELEASED';
+      if (elEstop) {
+        elEstop.classList.remove('latched');
+        const prevRot = emgStopRotation;
+        emgStopRotation = (emgStopRotation + 30) % 360;
+        elEstop.style.setProperty('--estop-prev-rot', `${prevRot}deg`);
+        elEstop.style.setProperty('--estop-rot', `${emgStopRotation}deg`);
+        elEstop.classList.remove('unlatching');
+        void elEstop.offsetWidth;
+        elEstop.classList.add('unlatching');
+        setTimeout(() => {
+          elEstop.classList.remove('unlatching');
+        }, 360);
+      }
+    }
+
+    // 2) 제동 (B1 ~ B7): B4~B7은 4.0 bar 동일, B3은 3.0 bar, B1(2.3) / B2(2.7)
+    if (notch.startsWith('B')) {
+      let bcVal = 4.0;
+      if (notch === 'B1') bcVal = 2.3;
+      else if (notch === 'B2') bcVal = 2.7;
+      else if (notch === 'B3') bcVal = 3.0;
+      else if (notch === 'B4' || notch === 'B5' || notch === 'B6' || notch === 'B7') bcVal = 4.0;
+
+      updateGaugeUI(bcVal);
+      if (lampApply) lampApply.classList.add('lit');
+    }
+    // 3) 중립 (N): 정차제동 기본값 (2.0 bar)
+    else if (notch === 'N') {
+      updateGaugeUI(BC_DEFAULT_BAR); // 2.0 bar
+      if (lampApply) lampApply.classList.remove('lit');
+    }
+    // 4) 역행 (P1 ~ P4): 움직이게 되면 0.5초 후에 정차제동이 해제되면서 BC값이 0이 됨
+    else if (notch.startsWith('P')) {
+      const wasInP = prevNotch && prevNotch.startsWith('P');
+      if (wasInP && currentGaugeBC === 0.0) {
+        // 이미 역행 구간에서 완해 완료된 상태면 0.0 유지
+        updateGaugeUI(0.0);
+        if (lampApply) lampApply.classList.remove('lit');
+      } else {
+        // N이나 제동 위치에서 P로 진입 시: 정차제동(2.0 bar) 유지 후 0.5초 뒤 완해
+        updateGaugeUI(BC_DEFAULT_BAR);
+        tractionReleaseTimer = setTimeout(() => {
+          tractionReleaseTimer = null;
+          updateGaugeUI(0.0);
+          if (lampApply) lampApply.classList.remove('lit');
+          sound.playAirExhaust(0.5, 1300, 0.45);
+          showTemporaryHudFeedback("💨 [정차제동 완해] 0.5초 경과, 제동 완해 (BC: 0.0 bar)", false);
+        }, 500);
+      }
+    }
   }
 
   if (!silent) {
     sound.playRotarySnap();
     triggerHaptic(25);
-    showTemporaryHudFeedback(`🕹️ [마스콘 핸들] ${notch}단`, false);
+    let desc = `🕹️ [마스콘] ${notch}단`;
+    if (notch === 'EB') desc = `🚨 [마스콘] EB (비상제동 체결, BC: 4.0 bar)`;
+    else if (notch.startsWith('B')) desc = `🛑 [마스콘 제동] ${notch}단 (BC: ${currentGaugeBC.toFixed(1)} bar)`;
+    else if (notch === 'N') desc = `⚪ [마스콘] N (중립, BC: 2.0 bar)`;
+    else if (notch.startsWith('P')) desc = `⚡ [마스콘 역행] ${notch}단 (0.5초 후 완해)`;
+    showTemporaryHudFeedback(desc, false);
+
     if (currentMode === 'REC') {
       promptRecordStep('SW_MASCON', comp.name, notch);
     } else {
@@ -5688,7 +5941,7 @@ function setMasconNotch(notch, silent = false) {
   }
 }
 
-// 마스콘 트랙 클릭/터치 위치로 가장 가까운 노치 이동
+// 마스콘 트랙 클릭 위치로 이동
 function handleMasconTrackClick(event) {
   if (event) event.stopPropagation();
   const track = document.getElementById('tbar-track');
@@ -5717,6 +5970,11 @@ const REVERSER_POS_MAP = {
 };
 
 function setReverserPosition(pos, silent = false) {
+  // 키가 ON 위치가 아니면 조작 불가
+  if (!silent && !checkMasterKeyForReverser()) {
+    return;
+  }
+
   const comp = COMPONENT_REGISTRY['SW_REVERSER'];
   if (!comp) return;
 
@@ -5727,7 +5985,7 @@ function setReverserPosition(pos, silent = false) {
   comp.notch = pos;
 
   const knob = document.getElementById('comp-SW_REVERSER');
-  if (knob) {
+  if (knob && !knob.classList.contains('dragging')) {
     knob.style.top = `${topPos}%`;
   }
 
@@ -5752,6 +6010,10 @@ function setReverserPosition(pos, silent = false) {
 // 역전기 트랙 클릭/터치 위치로 이동
 function handleReverserTrackClick(event) {
   if (event) event.stopPropagation();
+  if (!checkMasterKeyForReverser()) {
+    return;
+  }
+
   const track = document.getElementById('reverser-track');
   if (!track) return;
   const rect = track.getBoundingClientRect();
@@ -5764,6 +6026,170 @@ function handleReverserTrackClick(event) {
   else pos = 'N';
 
   setReverserPosition(pos);
+}
+
+// [OP1] 슬라이더 드래그 인터랙션 엔진 (마스콘 T바 핸들 & 역전기 노브)
+let isMasconDragging = false;
+let masconDragPointerId = null;
+
+function initMasconDraggable() {
+  const handle = document.getElementById('comp-SW_MASCON');
+  const track = document.getElementById('tbar-track');
+  if (!handle || !track) return;
+
+  function onPointerDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    isMasconDragging = true;
+    masconDragPointerId = e.pointerId;
+    try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+    handle.classList.add('dragging');
+    updateMasconDrag(e);
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  function onPointerMove(e) {
+    if (!isMasconDragging || e.pointerId !== masconDragPointerId) return;
+    updateMasconDrag(e);
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  function onPointerUp(e) {
+    if (!isMasconDragging || e.pointerId !== masconDragPointerId) return;
+    isMasconDragging = false;
+    masconDragPointerId = null;
+    try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
+    handle.classList.remove('dragging');
+    const comp = COMPONENT_REGISTRY['SW_MASCON'];
+    if (comp && comp.notch) {
+      setMasconNotch(comp.notch);
+    }
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  handle.addEventListener('pointerdown', onPointerDown);
+  handle.addEventListener('pointermove', onPointerMove);
+  handle.addEventListener('pointerup', onPointerUp);
+  handle.addEventListener('pointercancel', onPointerUp);
+
+  track.addEventListener('pointerdown', (e) => {
+    if (e.target === handle || handle.contains(e.target)) return;
+    onPointerDown(e);
+  });
+  track.addEventListener('pointermove', onPointerMove);
+  track.addEventListener('pointerup', onPointerUp);
+  track.addEventListener('pointercancel', onPointerUp);
+}
+
+function updateMasconDrag(e) {
+  const track = document.getElementById('tbar-track');
+  const handle = document.getElementById('comp-SW_MASCON');
+  if (!track || !handle) return;
+
+  const rect = track.getBoundingClientRect();
+  const rawY = e.clientY - rect.top;
+  const yPercent = Math.max(5, Math.min(98, (rawY / rect.height) * 100));
+
+  handle.style.top = `${yPercent}%`;
+
+  let closestNotch = 'N';
+  let minDiff = 9999;
+  for (const [notch, pos] of Object.entries(MASCON_POS_MAP)) {
+    const diff = Math.abs(pos - yPercent);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closestNotch = notch;
+    }
+  }
+
+  const comp = COMPONENT_REGISTRY['SW_MASCON'];
+  if (comp && comp.notch !== closestNotch) {
+    setMasconNotch(closestNotch);
+  }
+}
+
+// 역전기 슬라이더 드래그
+let isReverserDragging = false;
+let reverserDragPointerId = null;
+
+function initReverserDraggable() {
+  const knob = document.getElementById('comp-SW_REVERSER');
+  const track = document.getElementById('reverser-track');
+  if (!knob || !track) return;
+
+  function onPointerDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    if (!checkMasterKeyForReverser()) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    isReverserDragging = true;
+    reverserDragPointerId = e.pointerId;
+    try { knob.setPointerCapture(e.pointerId); } catch (_) {}
+    knob.classList.add('dragging');
+    updateReverserDrag(e);
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  function onPointerMove(e) {
+    if (!isReverserDragging || e.pointerId !== reverserDragPointerId) return;
+    updateReverserDrag(e);
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  function onPointerUp(e) {
+    if (!isReverserDragging || e.pointerId !== reverserDragPointerId) return;
+    isReverserDragging = false;
+    reverserDragPointerId = null;
+    try { knob.releasePointerCapture(e.pointerId); } catch (_) {}
+    knob.classList.remove('dragging');
+    const comp = COMPONENT_REGISTRY['SW_REVERSER'];
+    if (comp && comp.notch) {
+      setReverserPosition(comp.notch);
+    }
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  knob.addEventListener('pointerdown', onPointerDown);
+  knob.addEventListener('pointermove', onPointerMove);
+  knob.addEventListener('pointerup', onPointerUp);
+  knob.addEventListener('pointercancel', onPointerUp);
+
+  track.addEventListener('pointerdown', (e) => {
+    if (e.target === knob || knob.contains(e.target)) return;
+    onPointerDown(e);
+  });
+  track.addEventListener('pointermove', onPointerMove);
+  track.addEventListener('pointerup', onPointerUp);
+  track.addEventListener('pointercancel', onPointerUp);
+}
+
+function updateReverserDrag(e) {
+  const track = document.getElementById('reverser-track');
+  const knob = document.getElementById('comp-SW_REVERSER');
+  if (!track || !knob) return;
+
+  const rect = track.getBoundingClientRect();
+  const rawY = e.clientY - rect.top;
+  const yRatio = Math.max(0, Math.min(1, rawY / rect.height));
+
+  knob.style.top = `${yRatio * 100}%`;
+
+  let pos = 'N';
+  if (yRatio < 0.33) pos = 'F';
+  else if (yRatio > 0.66) pos = 'R';
+  else pos = 'N';
+
+  const comp = COMPONENT_REGISTRY['SW_REVERSER'];
+  if (comp && comp.notch !== pos) {
+    setReverserPosition(pos);
+  }
 }
 
 // [OP1] 방송장치(COB) 볼륨 노브 회전 함수 (0, 2, 4, 6, 8, 10 순환)
@@ -6004,7 +6430,13 @@ function resetCurrentScenario() {
       if (el) el.classList.remove('open');
     } else if (comp.type === 'ROTARY_2' || comp.type === 'ROTARY_3' || comp.type === 'ROTARY_4' || comp.type === 'ROTARY_5') {
       const el = document.getElementById(`comp-${id}`);
-      if (id === 'SW_ATP_REV' || id === 'SW_MASTER_KEY') {
+      if (id === 'SW_MASTER_KEY') {
+        comp.state = 'OFF';
+        if (el) {
+          el.style.transform = 'rotate(-90deg)';
+          el.classList.remove('on');
+        }
+      } else if (id === 'SW_ATP_REV') {
         comp.state = 'OFF';
       } else if (id === 'SW_ROOM_LIGHT') {
         comp.state = 'AUTO';
@@ -6035,7 +6467,9 @@ function resetCurrentScenario() {
       }
 
       if (el) {
-        if (id === 'SW_ATP_REV' || id === 'SW_MASTER_KEY' || id === 'SW_WIPER' || id === 'SW_DRIVE_MODE' || id === 'SW_HEADLIGHT') {
+        if (id === 'SW_MASTER_KEY') {
+          el.style.transform = 'rotate(-90deg)';
+        } else if (id === 'SW_ATP_REV' || id === 'SW_WIPER' || id === 'SW_DRIVE_MODE' || id === 'SW_HEADLIGHT') {
           el.style.transform = 'rotate(0deg)'; // 12시 OFF
         } else if (id === 'SW_WINDOW_HEATER' || id === 'SW_LOW_SPEED' || id === 'SW_RESERVE_ROTARY' ||
             id === 'SW_OBSTACLE_BYPASS' || id === 'SW_DOOR_BYPASS' || id === 'SW_AIR_CLEAN' ||
@@ -6081,7 +6515,12 @@ function resetCurrentScenario() {
   const lampEmgCut = document.getElementById('lamp-emg-cut');
   if (lampEmgCut) lampEmgCut.classList.remove('lit');
   const lampCoupling = document.getElementById('lamp-coupling');
-  if (lampCoupling) lampCoupling.classList.remove('lit');
+  if (tractionReleaseTimer) {
+    clearTimeout(tractionReleaseTimer);
+    tractionReleaseTimer = null;
+  }
+  const keyWarn = document.getElementById('reverser-key-warning');
+  if (keyWarn) keyWarn.style.display = 'none';
 
   updateGaugeUI(BC_DEFAULT_BAR, 9.0);
   renderStepHUD();
