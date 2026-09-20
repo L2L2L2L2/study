@@ -1489,19 +1489,6 @@
       align-items: center;
     }
 
-    /* 좌측 상단 기호 Φ */
-    .dm-symbol-phi {
-      position: absolute;
-      top: 6px;
-      left: 10px;
-      font-size: 15px;
-      font-weight: 900;
-      color: #0f172a;
-      font-family: serif, "Pretendard", sans-serif;
-      pointer-events: none;
-      line-height: 1;
-    }
-
     /* 4개 위치 텍스트 라벨 (직접 터치 가능) */
     .dm-lbl {
       position: absolute;
@@ -2655,9 +2642,6 @@
 
         <div class="component-cell" id="wrap-SW_DRIVE_MODE" style="margin: 0 auto; min-height: 124px;">
           <div class="drive-mode-plate" onclick="handleComponentTouch('SW_DRIVE_MODE')">
-            <!-- 좌측 상단 기호 Φ -->
-            <span class="dm-symbol-phi">Φ</span>
-
             <!-- 4개 위치 텍스트 라벨 (직접 터치 시 해당 위치 즉시 회전) -->
             <span class="dm-lbl dm-lbl-off interactive-tick" onclick="setDriveModePosition('OFF', event)">OFF</span>
             <span class="dm-lbl dm-lbl-rm interactive-tick" onclick="setDriveModePosition('RM', event)">RM</span>
