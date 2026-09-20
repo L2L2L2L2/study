@@ -257,6 +257,39 @@
       box-shadow: 0 1px 4px rgba(31, 111, 235, 0.4);
     }
 
+    /* 상단 오른쪽 소리 끄기/켜기 토글 버튼 */
+    .sound-toggle-btn {
+      background: #21262d;
+      border: 1px solid #38414e;
+      color: #e6edf3;
+      width: 32px;
+      height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+    }
+    .sound-toggle-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+      transform: scale(1.05);
+    }
+    .sound-toggle-btn:active {
+      transform: scale(0.95);
+    }
+    .sound-toggle-btn.muted {
+      background: rgba(218, 54, 51, 0.22);
+      border-color: #f85149;
+      color: #f85149;
+    }
+
     /* OP3~OP5 빈 패널 안내 영역 */
     .empty-panel-placeholder {
       display: flex;
@@ -749,10 +782,16 @@
       background: radial-gradient(circle at 35% 35%, #34c759, #1b5e20 90%);
     }
 
-    .push-btn-inner:active, .push-btn-inner.pressed, .push-btn-inner.latched {
+    .push-btn-inner:active, .push-btn-inner.pressed {
       transform: scale(0.92);
       box-shadow: 0 1px 2px rgba(0,0,0,0.8), inset 0 3px 6px rgba(0,0,0,0.7);
       filter: brightness(0.85);
+    }
+
+    .push-btn-inner.latched {
+      transform: scale(0.86) translateY(2px);
+      box-shadow: 0 0 2px rgba(0,0,0,0.9), inset 0 5px 9px rgba(0,0,0,0.85);
+      filter: brightness(0.75);
     }
 
     /* 무인모드 3초 인가 완료 시 환한 에메랄드 LED 점등 (실물 사진 1, 3 반영) */
@@ -880,6 +919,26 @@
     .tick-3-left  { top: 22px; left: 14px; }
     .tick-3-mid   { top: 3px;  left: 50%; }
     .tick-3-right { top: 22px; left: 82px; }
+
+    /* 3단 이상 스위치 클릭/터치 가능한 틱 라벨 (와이퍼 스위치처럼 직접 선택 지원) */
+    .tick-label.interactive-tick {
+      pointer-events: auto;
+      cursor: pointer;
+      padding: 5px 7px;
+      border-radius: 4px;
+      z-index: 15;
+      touch-action: manipulation;
+      transition: color 0.15s, transform 0.1s, background-color 0.15s;
+      -webkit-tap-highlight-color: rgba(56, 189, 248, 0.3);
+    }
+    .tick-label.interactive-tick:hover {
+      color: #38bdf8;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .tick-label.interactive-tick:active {
+      color: #38bdf8;
+      transform: translate(-50%, -50%) scale(1.15);
+    }
 
     /* ATP후진 커버형 전용 명판 틱 라벨 (실물 사진 100% 일치: 12시/0시 상단 OFF, 3시/90° 우측 ON 완벽 시인성 확보) */
     .atp-cover-ticks {
@@ -1355,6 +1414,411 @@
       line-height: 1;
     }
 
+    /* [F] 실물 사진 100% 반영: 운전 모드(SW_DRIVE_MODE) 단독 박스 유닛 */
+    .drive-mode-recess-box {
+      margin-top: 14px;
+      padding: 12px 14px 14px 14px;
+      background: linear-gradient(180deg, #181c22 0%, #20252e 100%);
+      border: 2px solid #3b424d;
+      border-radius: 8px;
+      position: relative;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .drive-mode-box-title {
+      font-size: 12.5px;
+      font-weight: 900;
+      color: #f1f5f9;
+      letter-spacing: 2px;
+      text-align: center;
+      margin-bottom: 8px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+    }
+
+    /* 은색 사각 메탈 명판 플레이트 */
+    .drive-mode-plate {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(145deg, #f1f5f9 0%, #cbd5e1 50%, #94a3b8 100%);
+      border: 2px solid #475569;
+      border-radius: 8px;
+      position: relative;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.65), inset 0 1px 2px #ffffff;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* 좌측 상단 기호 Φ */
+    .dm-symbol-phi {
+      position: absolute;
+      top: 6px;
+      left: 10px;
+      font-size: 15px;
+      font-weight: 900;
+      color: #0f172a;
+      font-family: serif, "Pretendard", sans-serif;
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    /* 4개 위치 텍스트 라벨 (직접 터치 가능) */
+    .dm-lbl {
+      position: absolute;
+      font-size: 10.5px;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: -0.2px;
+      cursor: pointer;
+      z-index: 15;
+      padding: 4px 6px;
+      border-radius: 4px;
+      touch-action: manipulation;
+      transition: color 0.15s, transform 0.1s, background-color 0.15s;
+      -webkit-tap-highlight-color: rgba(56, 189, 248, 0.3);
+    }
+    .dm-lbl:hover {
+      color: #0284c7;
+      background: rgba(0,0,0,0.06);
+    }
+    .dm-lbl:active {
+      color: #0284c7;
+      transform: scale(1.15);
+    }
+
+    /* OFF: 12시 방향 */
+    .dm-lbl-off {
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    /* RM: 10시 반 방향 (약 -45도) */
+    .dm-lbl-rm {
+      top: 22px;
+      left: 16px;
+    }
+    /* FM: 9시 방향 (약 -90도) */
+    .dm-lbl-fm {
+      top: 56px;
+      left: 10px;
+    }
+    /* ATPM: 1시 반 방향 (약 +45도) */
+    .dm-lbl-atpm {
+      top: 22px;
+      right: 12px;
+    }
+
+    /* 중앙 검은색 원형 베이스 링 */
+    .dm-dial-base {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 56px;
+      height: 56px;
+      background: radial-gradient(circle, #2a2f38 60%, #15181e 100%);
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.2);
+      border: 1px solid #333a46;
+      pointer-events: none;
+    }
+
+    /* 긴 레버 노브 */
+    .dm-lever-knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 19px;
+      height: 68px;
+      margin-top: -34px;
+      margin-left: -9.5px;
+      background: linear-gradient(90deg, #2b303a 0%, #475161 40%, #363d4a 70%, #1e2229 100%);
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.25);
+      border: 1px solid #1a1e26;
+      transform-origin: center center;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 3px 0;
+      pointer-events: none;
+    }
+
+    /* 상단 흰색 사각 인디케이터 점 */
+    .dm-indicator-dot {
+      width: 5.5px;
+      height: 4px;
+      background: #ffffff;
+      border-radius: 1px;
+      box-shadow: 0 0 2px rgba(255,255,255,0.8);
+    }
+
+    /* 중심 십자 나사 홈 */
+    .dm-knob-screw {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 9px;
+      height: 9px;
+      background: radial-gradient(circle, #64748b 30%, #1e293b 90%);
+      border-radius: 50%;
+      border: 1px solid #0f172a;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.3);
+    }
+    .dm-knob-screw::before {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 1.5px;
+      width: 6px;
+      height: 1px;
+      background: #0f172a;
+    }
+    .dm-knob-screw::after {
+      content: '';
+      position: absolute;
+      top: 1.5px;
+      left: 4px;
+      width: 1px;
+      height: 6px;
+      background: #0f172a;
+    }
+
+    /* ========================================================
+       OP2 패널 전용 스타일 (상단 5종 표시등 + 하단 3종 조작반)
+    ======================================================== */
+    .op2-panel-body {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .op2-indicator-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 4px;
+      padding: 10px 6px 14px 6px;
+      border-bottom: 2px solid #333a46;
+      background: rgba(0,0,0,0.18);
+      border-radius: 6px;
+    }
+
+    .op2-ind-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      text-align: center;
+      cursor: default;
+    }
+
+    .op2-ind-label {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #f1f5f9;
+      letter-spacing: -0.4px;
+      white-space: nowrap;
+      text-shadow: 0 1px 2px #000;
+      line-height: 1.1;
+      min-height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .op2-ind-lamp {
+      width: 32px;
+      height: 32px;
+      background: radial-gradient(circle, #2d333b 40%, #15181e 100%);
+      border: 2px solid #475160;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.25);
+      position: relative;
+    }
+
+    .op2-ind-lens {
+      width: 19px;
+      height: 19px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.6);
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.7);
+    }
+
+    /* 렌즈 소등(OFF) 기본 상태 */
+    .op2-ind-lens.lens-green  { background: radial-gradient(circle at 35% 35%, #1b4332 0%, #081c15 90%); }
+    .op2-ind-lens.lens-yellow { background: radial-gradient(circle at 35% 35%, #603808 0%, #291501 90%); }
+    .op2-ind-lens.lens-red    { background: radial-gradient(circle at 35% 35%, #590d22 0%, #20050c 90%); }
+
+    /* 렌즈 점등(LIT/ON) 상태 - 실물과 동일한 밝은 전면 발광 글로우 */
+    .op2-ind-lamp.lit .lens-green {
+      background: radial-gradient(circle at 35% 35%, #a7f3d0 0%, #10b981 50%, #047857 100%) !important;
+      box-shadow: 0 0 14px #10b981, 0 0 24px rgba(16, 185, 129, 0.85), inset 0 1px 2px #ffffff !important;
+      border-color: #6ee7b7 !important;
+    }
+    .op2-ind-lamp.lit .lens-yellow {
+      background: radial-gradient(circle at 35% 35%, #fef08a 0%, #eab308 50%, #a16207 100%) !important;
+      box-shadow: 0 0 14px #eab308, 0 0 24px rgba(234, 179, 8, 0.88), inset 0 1px 2px #ffffff !important;
+      border-color: #fde047 !important;
+    }
+    .op2-ind-lamp.lit .lens-red {
+      background: radial-gradient(circle at 35% 35%, #fecaca 0%, #ef4444 50%, #991b1b 100%) !important;
+      box-shadow: 0 0 14px #ef4444, 0 0 24px rgba(239, 68, 68, 0.88), inset 0 1px 2px #ffffff !important;
+      border-color: #fca5a5 !important;
+    }
+
+    /* 하단 조작반 그리드 (3열: 전면창히터 | 전조등 | 전기혼) */
+    .op2-controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.32fr 1fr;
+      gap: 12px 6px;
+      align-items: start;
+      justify-items: center;
+      padding: 10px 4px 18px 4px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .op2-ctrl-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .op2-ctrl-header {
+      min-height: 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .op2-ctrl-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.3px;
+      text-shadow: 0 1px 3px #000;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .op2-ctrl-sub {
+      font-size: 8.5px;
+      font-weight: 700;
+      color: #94a3b8;
+      line-height: 1.1;
+      margin-top: 1px;
+      white-space: nowrap;
+    }
+
+    /* 전면창 히터 로터리 유닛 */
+    .window-heater-unit {
+      width: 104px;
+      height: 96px;
+      position: relative;
+      cursor: pointer;
+    }
+    .window-heater-unit .rotary-dial-plate {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      margin: 0;
+      width: 50px;
+      height: 50px;
+      bottom: auto;
+    }
+    .window-heater-unit .rotary-knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin: -14px 0 0 -14px;
+      width: 28px;
+      height: 28px;
+      bottom: auto;
+    }
+
+    /* 전조등 5단계 로터리 유닛 */
+    .headlight-unit {
+      width: 136px;
+      height: 96px;
+      position: relative;
+      cursor: pointer;
+    }
+    .headlight-unit .rotary-dial-plate {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      margin: 0;
+      width: 50px;
+      height: 50px;
+      bottom: auto;
+    }
+    .headlight-unit .rotary-knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin: -14px 0 0 -14px;
+      width: 28px;
+      height: 28px;
+      bottom: auto;
+    }
+
+    /* 대형 전기혼 노란색 푸시 버튼 */
+    .btn-horn-wrapper {
+      width: 74px;
+      height: 74px;
+      background: radial-gradient(circle, #3a3f47 0%, #1a1c22 100%);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.7), inset 0 2px 3px rgba(255,255,255,0.2);
+      border: 2px solid #545b68;
+      cursor: pointer;
+    }
+
+    .btn-horn {
+      width: 60px;
+      height: 60px;
+      background: radial-gradient(circle at 35% 35%, #fde047 0%, #eab308 55%, #854d0e 100%);
+      border-radius: 50%;
+      border: 2px solid #fef08a;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.6), inset 0 3px 5px rgba(255,255,255,0.7);
+      transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer;
+    }
+
+    .btn-horn:active, .btn-horn.pressed {
+      transform: scale(0.91);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.9), inset 0 3px 6px rgba(0,0,0,0.7);
+      background: radial-gradient(circle at 45% 45%, #ca8a04 0%, #713f12 85%);
+      filter: brightness(0.92);
+    }
+
     /* [E] 아날로그 공기 압력계 (Dual Gauge: MR / BC) - 실물 검은색 사각 베젤 프레임 */
     .gauge-square-frame {
       grid-column: span 2;
@@ -1404,14 +1868,20 @@
     }
 
     .needle-mr {
-      background: #1e293b; /* 검은 바늘 MR */
-      transform: rotate(115deg); /* 기본 9.0 bar */
+      background: #ef4444; /* MR 빨간 바늘 */
+      width: 2.5px;
+      height: 54px;
+      transform: rotate(67.5deg); /* 기본 9.0 bar (-135 + 9.0 * 22.5) */
+      box-shadow: 0 0 4px rgba(239, 68, 68, 0.85);
+      z-index: 12;
     }
     .needle-bc {
-      background: #ef4444; /* 붉은 바늘 BC */
-      width: 2px;
-      transform: rotate(-135deg); /* 기본 0.0 bar */
-      box-shadow: 0 0 3px rgba(239, 68, 68, 0.8);
+      background: #1e293b; /* BC 검은 바늘 */
+      width: 3px;
+      height: 52px;
+      transform: rotate(-135deg); /* 기본 0.0 bar (-135 + 0.0 * 22.5) */
+      box-shadow: 0 1px 2px rgba(0,0,0,0.6);
+      z-index: 11;
     }
 
     .gauge-center-cap {
@@ -1433,8 +1903,8 @@
       font-size: 11px;
       font-weight: 700;
     }
-    .readout-mr { color: #cbd5e1; }
-    .readout-bc { color: #f87171; }
+    .readout-mr { color: #f87171; } /* MR 빨간색 */
+    .readout-bc { color: #cbd5e1; } /* BC 검은색/밝은 회색 */
 
     /* ========================================================
        4. 하단 플로팅 툴바
@@ -1653,6 +2123,11 @@
 
       <!-- 대화면(폴드/패드/PC) 듀얼 뷰포트 배지 -->
       <div class="dual-view-badge">🖥️ 2분할 듀얼 뷰포트</div>
+
+      <!-- 상단 오른쪽 위 소리 끄기/켜기 토글 버튼 -->
+      <button id="btn-sound-toggle" class="sound-toggle-btn" onclick="toggleMuteSound()" title="소리 끄기/켜기 (음소거 토글)">
+        <span id="sound-toggle-icon">🔊</span>
+      </button>
     </div>
 
     <!-- 상태 알림창 -->
@@ -1721,10 +2196,110 @@
       <div class="screw bl"></div><div class="screw br"></div>
     </section>
 
-    <!-- [패널 2] OP2 : 예비 빈 패널 -->
-    <section id="panel-op2" class="train-metal-panel" style="display:none; min-height:480px;">
+    <!-- [패널 2] OP2 : 상부 표시등 및 조작반 (실물 사진 100% 반영) -->
+    <section id="panel-op2" class="train-metal-panel" style="display:none;">
       <div class="screw tl"></div><div class="screw tr"></div>
       <div class="screw bl"></div><div class="screw br"></div>
+
+      <div class="op2-panel-body">
+        
+        <!-- 1행: 5개 인디케이터 라이트 (출입문 / 제동체결 / 선두차지정 / 비상제동차단 / 커플링) -->
+        <div class="op2-indicator-bar">
+          <!-- 1. 출입문 (녹색) -->
+          <div class="op2-ind-unit" id="wrap-ind-door" title="출입문 표시등">
+            <span class="op2-ind-label">출입문</span>
+            <div class="op2-ind-lamp lit" id="lamp-door">
+              <div class="op2-ind-lens lens-green"></div>
+            </div>
+          </div>
+
+          <!-- 2. 제동체결 (적색 - OP3 비상제동체결 연동) -->
+          <div class="op2-ind-unit" id="wrap-ind-brake-apply" title="제동체결 표시등 (OP3 비상제동체결 시 적색 점등)">
+            <span class="op2-ind-label">제동체결</span>
+            <div class="op2-ind-lamp" id="lamp-brake-apply">
+              <div class="op2-ind-lens lens-red"></div>
+            </div>
+          </div>
+
+          <!-- 3. 선두차지정 (황색) -->
+          <div class="op2-ind-unit" id="wrap-ind-lead-car" title="선두차지정 표시등">
+            <span class="op2-ind-label">선두차지정</span>
+            <div class="op2-ind-lamp lit" id="lamp-lead-car">
+              <div class="op2-ind-lens lens-yellow"></div>
+            </div>
+          </div>
+
+          <!-- 4. 비상제동차단 (적색 - 비상제동완해 연동) -->
+          <div class="op2-ind-unit" id="wrap-ind-emg-cut" title="비상제동차단 표시등 (비상제동완해 시 점등)">
+            <span class="op2-ind-label">비상제동차단</span>
+            <div class="op2-ind-lamp" id="lamp-emg-cut">
+              <div class="op2-ind-lens lens-red"></div>
+            </div>
+          </div>
+
+          <!-- 5. 커플링 (녹색) -->
+          <div class="op2-ind-unit" id="wrap-ind-coupling" title="커플링 표시등">
+            <span class="op2-ind-label">커플링</span>
+            <div class="op2-ind-lamp" id="lamp-coupling">
+              <div class="op2-ind-lens lens-green"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2행: 3종 조작반 (전면창 히터 | 전조등 | 전기혼) - 실물 사진과 동일하게 상단 타이틀 배치 -->
+        <div class="op2-controls-grid">
+
+          <!-- 1열: 전면창 히터 (타이머) 로터리 스위치 -->
+          <div class="component-cell op2-ctrl-cell" id="wrap-SW_WINDOW_HEATER">
+            <div class="op2-ctrl-header">
+              <span class="op2-ctrl-title">전면창 히터</span>
+              <span class="op2-ctrl-sub">타이머</span>
+            </div>
+            <div class="rotary-unit window-heater-unit" onclick="handleComponentTouch('SW_WINDOW_HEATER')">
+              <div class="rotary-dial-plate"></div>
+              <div id="comp-SW_WINDOW_HEATER" class="rotary-knob" style="transform: rotate(-45deg);">
+                <div class="rotary-pointer"></div>
+              </div>
+              <div class="rotary-ticks">
+                <span class="tick-label interactive-tick" style="top: 24px; left: calc(50% - 28px); font-size: 9px;" onclick="setWindowHeaterPosition('AUTO', event)">자동</span>
+                <span class="tick-label interactive-tick" style="top: 24px; left: calc(50% + 28px); font-size: 9px;" onclick="setWindowHeaterPosition('MANUAL', event)">수동</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2열: 전조등 5단계 로터리 스위치 (원격 / 자동 / OFF / 수동상향 / 수동하향) -->
+          <div class="component-cell op2-ctrl-cell" id="wrap-SW_HEADLIGHT">
+            <div class="op2-ctrl-header">
+              <span class="op2-ctrl-title">전조등</span>
+            </div>
+            <div class="rotary-unit headlight-unit" onclick="handleComponentTouch('SW_HEADLIGHT')">
+              <div class="rotary-dial-plate"></div>
+              <div id="comp-SW_HEADLIGHT" class="rotary-knob" style="transform: rotate(0deg);">
+                <div class="rotary-pointer"></div>
+              </div>
+              <div class="rotary-ticks">
+                <span class="tick-label interactive-tick" style="top: 13px; left: 50%; font-size: 9.5px;" onclick="setHeadlightPosition('OFF', event)">OFF</span>
+                <span class="tick-label interactive-tick" style="top: 25px; left: calc(50% - 30px); font-size: 8.5px;" onclick="setHeadlightPosition('AUTO', event)">자동</span>
+                <span class="tick-label interactive-tick" style="top: 50px; left: calc(50% - 40px); font-size: 8.5px;" onclick="setHeadlightPosition('REMOTE', event)">원격</span>
+                <span class="tick-label interactive-tick" style="top: 25px; left: calc(50% + 36px); font-size: 8.5px;" onclick="setHeadlightPosition('HIGH', event)">수동상향</span>
+                <span class="tick-label interactive-tick" style="top: 50px; left: calc(50% + 42px); font-size: 8.5px;" onclick="setHeadlightPosition('LOW', event)">수동하향</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3열: 전기혼 (대형 옐로우 푸시 버튼) -->
+          <div class="component-cell op2-ctrl-cell" id="wrap-SW_ELEC_HORN">
+            <div class="op2-ctrl-header">
+              <span class="op2-ctrl-title">전기혼</span>
+            </div>
+            <div class="btn-horn-wrapper" onclick="handleComponentTouch('SW_ELEC_HORN')">
+              <div id="comp-SW_ELEC_HORN" class="btn-horn"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
     </section>
 
     <!-- [패널 3] OP3 : A필러 긴급 제동 조작반 -->
@@ -1868,9 +2443,9 @@
               <div class="rotary-pointer"></div>
             </div>
             <div class="rotary-ticks">
-              <span class="tick-label tick-3-left">수동</span>
-              <span class="tick-label tick-3-mid">자동</span>
-              <span class="tick-label tick-3-right">비상등</span>
+              <span class="tick-label tick-3-left interactive-tick" onclick="setRotary3Position('SW_ROOM_LIGHT', 'MANUAL', event)">수동</span>
+              <span class="tick-label tick-3-mid interactive-tick" onclick="setRotary3Position('SW_ROOM_LIGHT', 'AUTO', event)">자동</span>
+              <span class="tick-label tick-3-right interactive-tick" onclick="setRotary3Position('SW_ROOM_LIGHT', 'EMERGENCY', event)">비상등</span>
             </div>
           </div>
           <div class="component-label">실내등</div>
@@ -1884,9 +2459,9 @@
               <div class="rotary-pointer"></div>
             </div>
             <div class="rotary-ticks">
-              <span class="tick-label tick-3-left">구원</span>
-              <span class="tick-label tick-3-mid">정상</span>
-              <span class="tick-label tick-3-right">비상</span>
+              <span class="tick-label tick-3-left interactive-tick" onclick="setRotary3Position('SW_RESCUE_DRIVE', 'RESCUE', event)">구원</span>
+              <span class="tick-label tick-3-mid interactive-tick" onclick="setRotary3Position('SW_RESCUE_DRIVE', 'NORMAL', event)">정상</span>
+              <span class="tick-label tick-3-right interactive-tick" onclick="setRotary3Position('SW_RESCUE_DRIVE', 'EMERGENCY', event)">비상</span>
             </div>
           </div>
           <div class="component-label">구원운전</div>
@@ -1995,10 +2570,14 @@
               <text x="126" y="85" font-size="9" font-weight="900" fill="#1e293b">10</text>
               <text x="118" y="125" font-size="9" font-weight="900" fill="#1e293b">12</text>
               <text x="80" y="68" font-size="8" font-weight="800" text-anchor="middle" fill="#64748b">PRESSURE GAUGE</text>
-              <text x="80" y="78" font-size="7" font-weight="700" text-anchor="middle" fill="#dc2626">MR(RED) / BC(BLACK)</text>
+              <text x="80" y="78" font-size="6.8" font-weight="800" text-anchor="middle">
+                <tspan fill="#ef4444">MR(RED)</tspan>
+                <tspan fill="#64748b"> / </tspan>
+                <tspan fill="#1e293b">BC(BLACK)</tspan>
+              </text>
             </svg>
-            <div id="needle-mr" class="gauge-needle needle-mr" style="height:52px;"></div>
-            <div id="needle-bc" class="gauge-needle needle-bc" style="height:52px;"></div>
+            <div id="needle-mr" class="gauge-needle needle-mr" style="height:54px; transform: rotate(67.5deg);"></div>
+            <div id="needle-bc" class="gauge-needle needle-bc" style="height:52px; transform: rotate(-135deg);"></div>
             <div class="gauge-center-cap"></div>
           </div>
           <div class="gauge-readout-legend" style="font-size:9.5px; margin-top:4px;">
@@ -2017,15 +2596,48 @@
                 <div class="rotary-pointer" style="height:17px; width:6px; left:10px; top:-5px;"></div>
               </div>
               <div class="rotary-ticks">
-                <span class="tick-label" style="top:15px; left:14px; font-size:8px; line-height:1.05;">AUTO<br><span style="font-size:6.5px; color:#475569;">(미세먼지)</span></span>
-                <span class="tick-label" style="top:4px; left:50%; font-size:9px;">OFF</span>
-                <span class="tick-label" style="top:15px; left:62px; font-size:9px;">ON</span>
+                <span class="tick-label interactive-tick" style="top:15px; left:14px; font-size:8px; line-height:1.05;" onclick="setRotary3Position('SW_AIR_CLEAN', 'AUTO', event)">AUTO<br><span style="font-size:6.5px; color:#475569;">(미세먼지)</span></span>
+                <span class="tick-label interactive-tick" style="top:4px; left:50%; font-size:9px;" onclick="setRotary3Position('SW_AIR_CLEAN', 'OFF', event)">OFF</span>
+                <span class="tick-label interactive-tick" style="top:15px; left:62px; font-size:9px;" onclick="setRotary3Position('SW_AIR_CLEAN', 'ON', event)">ON</span>
               </div>
             </div>
           </div>
           <div class="component-label" style="font-size:9px; margin-top:4px;">공기질개선장치 작동스위치</div>
         </div>
 
+      </div>
+
+      <!-- OP4 하단 독립 박스: 운전 모드 단독 스위치 유닛 (FM / RM / OFF / ATPM) -->
+      <div class="drive-mode-recess-box">
+        <div class="screw tl" style="top:5px; left:5px;"></div>
+        <div class="screw tr" style="top:5px; right:5px;"></div>
+        <div class="screw bl" style="bottom:5px; left:5px;"></div>
+        <div class="screw br" style="bottom:5px; right:5px;"></div>
+
+        <div class="drive-mode-box-title">운전 모드</div>
+
+        <div class="component-cell" id="wrap-SW_DRIVE_MODE" style="margin: 0 auto; min-height: 124px;">
+          <div class="drive-mode-plate" onclick="handleComponentTouch('SW_DRIVE_MODE')">
+            <!-- 좌측 상단 기호 Φ -->
+            <span class="dm-symbol-phi">Φ</span>
+
+            <!-- 4개 위치 텍스트 라벨 (직접 터치 시 해당 위치 즉시 회전) -->
+            <span class="dm-lbl dm-lbl-off interactive-tick" onclick="setDriveModePosition('OFF', event)">OFF</span>
+            <span class="dm-lbl dm-lbl-rm interactive-tick" onclick="setDriveModePosition('RM', event)">RM</span>
+            <span class="dm-lbl dm-lbl-fm interactive-tick" onclick="setDriveModePosition('FM', event)">FM</span>
+            <span class="dm-lbl dm-lbl-atpm interactive-tick" onclick="setDriveModePosition('ATPM', event)">ATPM</span>
+
+            <!-- 중앙 원형 베이스 링 -->
+            <div class="dm-dial-base"></div>
+
+            <!-- 레버 노브 -->
+            <div id="comp-SW_DRIVE_MODE" class="dm-lever-knob" style="transform: rotate(0deg);">
+              <div class="dm-indicator-dot"></div>
+              <div class="dm-knob-screw"></div>
+            </div>
+          </div>
+          <div class="component-label" style="margin-top: 6px;">운전 모드 (MODE)</div>
+        </div>
       </div>
     </section>
  
@@ -2302,19 +2914,23 @@
 class SoundEngine {
   constructor() {
     this.ctx = null;
+    this.isMuted = false;
   }
   init() {
+    if (this.isMuted) return;
     if (!this.ctx) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       this.ctx = new AudioContext();
     }
-    if (this.ctx.state === 'suspended') {
+    if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume();
     }
   }
   // 딸깍 스위치 클릭음
   playClick() {
+    if (this.isMuted) return;
     this.init();
+    if (!this.ctx) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'triangle';
@@ -2329,7 +2945,9 @@ class SoundEngine {
   }
   // 묵직한 래치 버튼 체결음
   playHeavyLatch() {
+    if (this.isMuted) return;
     this.init();
+    if (!this.ctx) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sawtooth';
@@ -2344,7 +2962,9 @@ class SoundEngine {
   }
   // 공압 에어 릴리즈 및 배기 (칙~ / 슉~) 사운드 (1초 배기)
   playAirExhaust(duration = 1.0, filterFreq = 1100, volume = 0.7) {
+    if (this.isMuted) return;
     this.init();
+    if (!this.ctx) return;
     const bufferSize = Math.floor(this.ctx.sampleRate * duration);
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -2371,7 +2991,9 @@ class SoundEngine {
   }
   // 성공 통과 비프음
   playSuccess() {
+    if (this.isMuted) return;
     this.init();
+    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -2387,7 +3009,9 @@ class SoundEngine {
   }
   // 오조작 경고 버저
   playError() {
+    if (this.isMuted) return;
     this.init();
+    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -2402,7 +3026,9 @@ class SoundEngine {
   }
   // 로터리 스위치 묵직한 기계식 "딱!" (Rotary Snap) 사운드
   playRotarySnap() {
+    if (this.isMuted) return;
     this.init();
+    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     
     // 1. 단단한 타격 펄스 ("딱!" 어택)
@@ -2437,6 +3063,42 @@ class SoundEngine {
     filter.connect(noiseGain);
     noiseGain.connect(this.ctx.destination);
     noise.start(now);
+  }
+
+  // 열차 전기혼 (Electric Horn: 짧고 명쾌한 경적 기적 소리 빵!)
+  playTrainHorn(duration = 0.38) {
+    if (this.isMuted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+
+    // 실제 철도차량 전기혼 듀얼 톤 (F#4 370Hz + A4 440Hz 복합 화음)
+    const freqs = [370, 440];
+    freqs.forEach(freq => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.linearRampToValueAtTime(freq * 0.994, now + duration);
+
+      // 날카로운 고음 완화 및 단단한 톤 형성
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1800, now);
+
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.36, now + 0.025);
+      gain.gain.setValueAtTime(0.33, now + duration * 0.65);
+      gain.gain.exponentialRampToValueAtTime(0.005, now + duration);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + duration);
+    });
   }
 }
 
@@ -2474,9 +3136,10 @@ function triggerHaptic(pattern) {
   }
 
   // 3. 초저주파 서브베이스 햅틱 펄스 (손끝 물리 진동 체감 보완)
-  if (sound) {
+  if (sound && !sound.isMuted) {
     try {
       sound.init();
+      if (!sound.ctx) return;
       const now = sound.ctx.currentTime;
       const osc = sound.ctx.createOscillator();
       const gain = sound.ctx.createGain();
@@ -2494,15 +3157,46 @@ function triggerHaptic(pattern) {
   }
 }
 
+// 상단 우측 소리 끄기/켜기(음소거) 토글 핸들러
+function toggleMuteSound() {
+  if (!sound) return;
+  sound.isMuted = !sound.isMuted;
+  const btn = document.getElementById('btn-sound-toggle');
+  const icon = document.getElementById('sound-toggle-icon');
+
+  if (sound.isMuted) {
+    if (btn) {
+      btn.classList.add('muted');
+      btn.setAttribute('title', '소리 켜기 (현재 음소거 상태)');
+    }
+    if (icon) icon.innerText = '🔇';
+    showTemporaryHudFeedback("🔇 효과음이 꺼졌습니다 (MUTE)", false);
+  } else {
+    if (btn) {
+      btn.classList.remove('muted');
+      btn.setAttribute('title', '소리 끄기 (현재 소리 켜짐)');
+    }
+    if (icon) icon.innerText = '🔊';
+    sound.init();
+    sound.playClick();
+    showTemporaryHudFeedback("🔊 효과음이 켜졌습니다 (UNMUTE)", false);
+  }
+}
+
 /**
  * 부품 상태 관리자
  */
 const COMPONENT_REGISTRY = {
+  // [OP2] 상부 표시등 및 조작반 부품군 (실물 사진 100% 반영)
+  SW_WINDOW_HEATER: { name: '전면창 히터', type: 'ROTARY_2', state: 'AUTO', panel: 'OP2' },
+  SW_HEADLIGHT: { name: '전조등', type: 'ROTARY_5', state: 'OFF', panel: 'OP2' },
+  SW_ELEC_HORN: { name: '전기혼', type: 'MOMENTARY', state: 'IDLE', panel: 'OP2' },
+
   // [OP3] A필러 부품군 (비상제동완해, ATP후진, 무인모드 투명커버 보호)
   SW_EMG_STOP: { name: '비상제동체결', type: 'LATCH', state: 'RELEASED', panel: 'OP3' },
   SW_FORCE_REL: { name: '강제완해', type: 'MOMENTARY', state: 'IDLE', panel: 'OP3' },
   SW_EMG_COVER: { name: '비상완해 보호커버', type: 'COVER', state: 'CLOSED', panel: 'OP3' },
-  SW_EMG_RELEASE: { name: '비상제동완해', type: 'MOMENTARY', state: 'IDLE', panel: 'OP3', requiresCover: 'SW_EMG_COVER' },
+  SW_EMG_RELEASE: { name: '비상제동완해', type: 'LATCH', state: 'RELEASED', panel: 'OP3', requiresCover: 'SW_EMG_COVER' },
   SW_ATP_COVER: { name: 'ATP후진 보호커버', type: 'COVER', state: 'CLOSED', panel: 'OP3' },
   SW_ATP_REV: { name: 'ATP후진', type: 'ROTARY_2', state: 'OFF', panel: 'OP3', requiresCover: 'SW_ATP_COVER' },
   SW_LOW_SPEED: { name: '저속도', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP3' },
@@ -2521,6 +3215,7 @@ const COMPONENT_REGISTRY = {
   SW_DOOR_BYPASS: { name: '출입문', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP4' },
   SW_DOOR_HEATER: { name: '출입문 히터', type: 'LATCH', state: 'RELEASED', panel: 'OP4' },
   SW_AIR_CLEAN: { name: '공기질개선장치', type: 'ROTARY_3', state: 'AUTO', panel: 'OP4' },
+  SW_DRIVE_MODE: { name: '운전 모드', type: 'ROTARY_4', state: 'OFF', panel: 'OP4' },
 
   // [OP5] 보조 조작반 부품군 (실물 사진 100% 반영 2행 4열)
   SW_VOBC_RESET: { name: 'VOBC리셋', type: 'MOMENTARY', state: 'IDLE', panel: 'OP5' },
@@ -2547,6 +3242,21 @@ const ROTARY3_BOUNCE = {
   SW_RESCUE_DRIVE: {
     states: ['RESCUE', 'NORMAL', 'EMERGENCY'],
     angles: [-45, 0, 45],
+    dir: 1
+  },
+  SW_DRIVE_MODE: {
+    states: ['FM', 'RM', 'OFF', 'ATPM'],
+    angles: [-90, -45, 0, 45],
+    dir: 1 // 1: FM -> RM -> OFF -> ATPM, -1: 반대 방향
+  },
+  SW_WINDOW_HEATER: {
+    states: ['AUTO', 'MANUAL'],
+    angles: [-45, 45],
+    dir: 1
+  },
+  SW_HEADLIGHT: {
+    states: ['REMOTE', 'AUTO', 'OFF', 'HIGH', 'LOW'],
+    angles: [-90, -45, 0, 45, 90],
     dir: 1
   }
 };
@@ -2579,8 +3289,8 @@ const DEFAULT_SCENARIOS = [
         step: 3,
         target: "SW_EMG_RELEASE",
         targetName: "비상제동완해",
-        expectedState: "PRESSED",
-        instruction: "보호커버 내부의 빨간색 [비상제동완해] 푸시버튼을 누르십시오.",
+        expectedState: "LATCHED",
+        instruction: "보호커버 내부의 빨간색 [비상제동완해] 버튼을 눌러 체결하십시오.",
         gaugeEffect: { bc: 0.0 }
       },
       {
@@ -2782,7 +3492,7 @@ function renderDualPanels() {
 function getPanelDisplayName(panelId) {
   switch (panelId) {
     case 'OP1': return 'OP1 (예비 빈 패널)';
-    case 'OP2': return 'OP2 (예비 빈 패널)';
+    case 'OP2': return 'OP2 (상부 표시등 & 조작반)';
     case 'OP3': return 'OP3 (긴급 제동 조작반)';
     case 'OP4': return 'OP4 (메인 계기 & 바이패스)';
     case 'OP5': return 'OP5 (하부 바이패스 & 차상)';
@@ -2820,7 +3530,7 @@ window.addEventListener('DOMContentLoaded', () => {
   renderDualPanels();
   loadScenarioListUI();
   applyScenario(currentScenario);
-  updateGaugeUI(0.0);
+  updateGaugeUI(0.0, 9.0);
 });
 
 // 모드 드롭다운 토글 및 조작 함수
@@ -3298,7 +4008,7 @@ function handleComponentTouch(compId) {
   let newState = comp.state;
 
   if (comp.type === 'LATCH') {
-    // 버섯형 래치 버튼 (토글)
+    // 래치 버튼 (토글: 누르면 들어가고 다시 누르면 복귀)
     newState = (comp.state === 'RELEASED') ? 'LATCHED' : 'RELEASED';
     comp.state = newState;
     const el = document.getElementById(`comp-${compId}`);
@@ -3306,11 +4016,36 @@ function handleComponentTouch(compId) {
       el.classList.add('latched');
       sound.playHeavyLatch();
       triggerHaptic(50);
-      updateGaugeUI(4.5); // 비상제동 시 BC 압력 상승
+      if (compId === 'SW_EMG_STOP') {
+        updateGaugeUI(4.5); // 비상제동체결 시에만 BC 압력 상승
+        const lampApply = document.getElementById('lamp-brake-apply');
+        if (lampApply) lampApply.classList.add('lit');
+        const lampCut = document.getElementById('lamp-emg-cut');
+        if (lampCut) lampCut.classList.remove('lit');
+      } else if (compId === 'SW_EMG_RELEASE') {
+        updateGaugeUI(0.0); // 비상제동완해 시 BC 압력 감압
+        const lampCut = document.getElementById('lamp-emg-cut');
+        if (lampCut) lampCut.classList.add('lit'); // 비상제동차단 라이트 점등
+        const lampApply = document.getElementById('lamp-brake-apply');
+        if (lampApply) lampApply.classList.remove('lit');
+        showTemporaryHudFeedback(`🔴 [비상제동완해] 체결 (비상제동차단 점등)`, false);
+      } else if (compId === 'SW_DOOR_HEATER') {
+        showTemporaryHudFeedback(`🟢 [출입문 히터] 켜짐 (ON)`, false);
+      }
     } else {
       el.classList.remove('latched');
       sound.playClick();
       triggerHaptic(20);
+      if (compId === 'SW_EMG_STOP') {
+        const lampApply = document.getElementById('lamp-brake-apply');
+        if (lampApply) lampApply.classList.remove('lit');
+      } else if (compId === 'SW_EMG_RELEASE') {
+        const lampCut = document.getElementById('lamp-emg-cut');
+        if (lampCut) lampCut.classList.remove('lit'); // 복귀 시 비상제동차단 라이트 소등
+        showTemporaryHudFeedback(`⚪ [비상제동완해] 복귀 (비상제동차단 소등)`, false);
+      } else if (compId === 'SW_DOOR_HEATER') {
+        showTemporaryHudFeedback(`⚪ [출입문 히터] 꺼짐 (OFF)`, false);
+      }
     }
   } else if (comp.type === 'LATCH_LIT') {
     // 얼터네이트 래치 조명 버튼 (언커플링, 고속도차단기동작, PWM차단: 누르면 쑥 들어가며 점등 유지, 다시 누르면 복귀)
@@ -3333,8 +4068,15 @@ function handleComponentTouch(compId) {
     newState = 'PRESSED';
     const el = document.getElementById(`comp-${compId}`);
     el.classList.add('pressed');
-    sound.playClick();
-    triggerHaptic(25);
+
+    if (compId === 'SW_ELEC_HORN') {
+      sound.playTrainHorn(0.38);
+      triggerHaptic([35, 25, 60]);
+      showTemporaryHudFeedback("📢 [전기혼] 빵! (열차 경적 취명)", false);
+    } else {
+      sound.playClick();
+      triggerHaptic(25);
+    }
 
     // 공압 배기음은 오직 주차제동체결 / 주차제동완해에만 들림 (1.0초)
     if (compId === 'SW_PARK_SET') {
@@ -3345,9 +4087,6 @@ function handleComponentTouch(compId) {
       // 주차제동완해: 1초간 시원하게 뿜어져 나오는 에어 릴리즈 (치이이익-슉)
       sound.playAirExhaust(1.0, 1400, 0.7);
       triggerHaptic([30, 40]);
-    } else if (compId === 'SW_EMG_RELEASE') {
-      // 비상제동완해: 일반 딸깍 소리만 나고, 제동통 공기압만 0으로 감압
-      updateGaugeUI(0.0);
     } else if (compId === 'SW_VOBC_RESET') {
       const cardEl = document.getElementById('vobc-overlay-card');
       if (cardEl) {
@@ -3361,7 +4100,7 @@ function handleComponentTouch(compId) {
       el.classList.remove('pressed');
       comp.state = 'IDLE';
     }, 220);
-  } else if (comp.type === 'ROTARY_2') {
+  } else if (comp.type === 'ROTARY_2' && compId !== 'SW_WINDOW_HEATER') {
     // 2단 로터리 스위치 (ATP후진, 저속도, 바이패스류 등 움직일 때 기계식 딱! 소리)
     const el = document.getElementById(`comp-${compId}`);
     sound.playRotarySnap();
@@ -3428,7 +4167,7 @@ function handleComponentTouch(compId) {
       el.style.transform = `rotate(${rot}deg)`;
     }
     comp.state = newState;
-  } else if (comp.type === 'ROTARY_5' || compId === 'SW_WIPER') {
+  } else if (compId === 'SW_WIPER') {
     // 와이퍼 실물 5단계 로터리 스위치 (AUTO: -65도, OFF: 0도, INT: 55도, SLOW: 115도, FAST: 180도)
     const el = document.getElementById(`comp-${compId}`);
     sound.playRotarySnap();
@@ -3450,6 +4189,116 @@ function handleComponentTouch(compId) {
     el.style.transform = `rotate(${nextStep.angle}deg)`;
     updateWiperActiveLabel(newState);
     showTemporaryHudFeedback(`🌧️ [와이퍼] ${nextStep.label}`, false);
+  } else if (comp.type === 'ROTARY_4' || compId === 'SW_DRIVE_MODE') {
+    // 운전 모드 4단계 왕복 로터리 스위치 (FM → RM → OFF → ATPM → OFF → RM → FM)
+    const el = document.getElementById(`comp-${compId}`);
+    sound.playRotarySnap();
+    triggerHaptic(30);
+
+    const bounce = ROTARY3_BOUNCE.SW_DRIVE_MODE;
+    const labels = {
+      'FM': 'FM (전진 수동 운전)',
+      'RM': 'RM (후진 수동 운전)',
+      'OFF': 'OFF (운전 모드 정지)',
+      'ATPM': 'ATPM (차상 신호 수동 운전)'
+    };
+
+    let currIdx = bounce.states.indexOf(comp.state);
+    if (currIdx === -1) currIdx = 2; // 기본 OFF
+
+    // 양쪽 끝(FM, ATPM) 도달 시 반대 방향으로 반전
+    if (currIdx >= bounce.states.length - 1) {
+      bounce.dir = -1; // ATPM 도달 시 왼쪽(OFF 방향)으로 반전
+    } else if (currIdx <= 0) {
+      bounce.dir = 1;  // FM 도달 시 오른쪽(RM 방향)으로 반전
+    }
+
+    let nextIdx = currIdx + bounce.dir;
+    // 안전 경계 처리 및 다음 회전 방향 준비
+    if (nextIdx >= bounce.states.length - 1) {
+      nextIdx = bounce.states.length - 1;
+      bounce.dir = -1;
+    } else if (nextIdx <= 0) {
+      nextIdx = 0;
+      bounce.dir = 1;
+    }
+
+    newState = bounce.states[nextIdx];
+    const rot = bounce.angles[nextIdx];
+    comp.state = newState;
+    if (el) el.style.transform = `rotate(${rot}deg)`;
+    showTemporaryHudFeedback(`🎛️ [운전 모드] ${labels[newState]}`, false);
+  } else if (compId === 'SW_WINDOW_HEATER') {
+    // 전면창 히터 왕복 2단 로터리 스위치 (자동 ↔ 수동)
+    const el = document.getElementById(`comp-${compId}`);
+    sound.playRotarySnap();
+    triggerHaptic(30);
+
+    const bounce = ROTARY3_BOUNCE.SW_WINDOW_HEATER;
+    const labels = {
+      'AUTO': '자동 (AUTO)',
+      'MANUAL': '수동 (MANUAL)'
+    };
+    let currIdx = bounce.states.indexOf(comp.state);
+    if (currIdx === -1) currIdx = 0;
+
+    if (currIdx >= bounce.states.length - 1) {
+      bounce.dir = -1;
+    } else if (currIdx <= 0) {
+      bounce.dir = 1;
+    }
+
+    let nextIdx = currIdx + bounce.dir;
+    if (nextIdx >= bounce.states.length - 1) {
+      nextIdx = bounce.states.length - 1;
+      bounce.dir = -1;
+    } else if (nextIdx <= 0) {
+      nextIdx = 0;
+      bounce.dir = 1;
+    }
+
+    newState = bounce.states[nextIdx];
+    const rot = bounce.angles[nextIdx];
+    comp.state = newState;
+    if (el) el.style.transform = `rotate(${rot}deg)`;
+    showTemporaryHudFeedback(`🪟 [전면창 히터] ${labels[newState]}`, false);
+  } else if (compId === 'SW_HEADLIGHT') {
+    // 전조등 5단계 왕복 로터리 스위치 (원격 ↔ 자동 ↔ OFF ↔ 수동상향 ↔ 수동하향)
+    const el = document.getElementById(`comp-${compId}`);
+    sound.playRotarySnap();
+    triggerHaptic(30);
+
+    const bounce = ROTARY3_BOUNCE.SW_HEADLIGHT;
+    const labels = {
+      'REMOTE': '원격 (REMOTE)',
+      'AUTO': '자동 (AUTO)',
+      'OFF': 'OFF (소등)',
+      'HIGH': '수동상향 (HIGH)',
+      'LOW': '수동하향 (LOW)'
+    };
+    let currIdx = bounce.states.indexOf(comp.state);
+    if (currIdx === -1) currIdx = 2; // 기본 OFF
+
+    if (currIdx >= bounce.states.length - 1) {
+      bounce.dir = -1;
+    } else if (currIdx <= 0) {
+      bounce.dir = 1;
+    }
+
+    let nextIdx = currIdx + bounce.dir;
+    if (nextIdx >= bounce.states.length - 1) {
+      nextIdx = bounce.states.length - 1;
+      bounce.dir = -1;
+    } else if (nextIdx <= 0) {
+      nextIdx = 0;
+      bounce.dir = 1;
+    }
+
+    newState = bounce.states[nextIdx];
+    const rot = bounce.angles[nextIdx];
+    comp.state = newState;
+    if (el) el.style.transform = `rotate(${rot}deg)`;
+    showTemporaryHudFeedback(`💡 [전조등] ${labels[newState]}`, false);
   }
 
   // 모드별 비즈니스 로직 처리
@@ -3527,6 +4376,176 @@ function updateWiperActiveLabel(state) {
   // 설정 위치 하늘색 표시 제거 완료
 }
 
+// 3단 스위치 각 위치 직접 선택 함수 (실내등, 구원운전, 공기질개선장치 라벨 터치 시 직접 해당 위치로 전환)
+function setRotary3Position(compId, targetState, evt) {
+  if (evt) evt.stopPropagation();
+  hideVobcGuide();
+  const comp = COMPONENT_REGISTRY[compId];
+  if (!comp) return;
+
+  const configs = {
+    'SW_ROOM_LIGHT': {
+      'MANUAL': { angle: -45, label: '수동 (MANUAL)' },
+      'AUTO': { angle: 0, label: '자동 (AUTO)' },
+      'EMERGENCY': { angle: 45, label: '비상등 (EMERGENCY)' }
+    },
+    'SW_RESCUE_DRIVE': {
+      'RESCUE': { angle: -45, label: '구원 (RESCUE)' },
+      'NORMAL': { angle: 0, label: '정상 (NORMAL)' },
+      'EMERGENCY': { angle: 45, label: '비상 (EMERGENCY)' }
+    },
+    'SW_AIR_CLEAN': {
+      'AUTO': { angle: -45, label: 'AUTO (자동/미세먼지)' },
+      'OFF': { angle: 0, label: 'OFF (정지)' },
+      'ON': { angle: 45, label: 'ON (강제 가동)' }
+    }
+  };
+
+  const compConfig = configs[compId];
+  if (!compConfig) return;
+  const step = compConfig[targetState];
+  if (!step) return;
+
+  comp.state = targetState;
+  const el = document.getElementById(`comp-${compId}`);
+  if (el) el.style.transform = `rotate(${step.angle}deg)`;
+
+  // ROTARY3_BOUNCE 상태도 동기화 (이후 스위치 본체 클릭 시 자연스럽게 이어지도록)
+  if (typeof ROTARY3_BOUNCE !== 'undefined' && ROTARY3_BOUNCE[compId]) {
+    const b = ROTARY3_BOUNCE[compId];
+    const idx = b.states.indexOf(targetState);
+    if (idx === 0) b.dir = 1;
+    else if (idx === b.states.length - 1) b.dir = -1;
+  }
+
+  sound.playRotarySnap();
+  triggerHaptic(30);
+  showTemporaryHudFeedback(`🔄 [${comp.name}] ${step.label}`, false);
+
+  if (currentMode === 'REC') {
+    promptRecordStep(compId, comp.name, targetState);
+  } else {
+    evaluateStepAction(compId, targetState);
+  }
+}
+
+// 운전 모드 4단계 각 위치 직접 선택 함수 (FM, RM, OFF, ATPM 터치 시)
+function setDriveModePosition(targetState, evt) {
+  if (evt) evt.stopPropagation();
+  hideVobcGuide();
+  const comp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+  if (!comp) return;
+
+  const modeSteps = {
+    'FM':   { angle: -90, label: 'FM (전진 수동 운전)' },
+    'RM':   { angle: -45, label: 'RM (후진 수동 운전)' },
+    'OFF':  { angle: 0,   label: 'OFF (운전 모드 정지)' },
+    'ATPM': { angle: 45,  label: 'ATPM (차상 신호 수동 운전)' }
+  };
+
+  const step = modeSteps[targetState];
+  if (!step) return;
+
+  comp.state = targetState;
+  const el = document.getElementById('comp-SW_DRIVE_MODE');
+  if (el) el.style.transform = `rotate(${step.angle}deg)`;
+
+  // ROTARY3_BOUNCE 상태 동기화 (이후 본체 클릭 시 왕복 방향 유지)
+  if (typeof ROTARY3_BOUNCE !== 'undefined' && ROTARY3_BOUNCE.SW_DRIVE_MODE) {
+    const b = ROTARY3_BOUNCE.SW_DRIVE_MODE;
+    const idx = b.states.indexOf(targetState);
+    if (idx === 0) b.dir = 1; // FM이면 다음은 RM 방향
+    else if (idx === b.states.length - 1) b.dir = -1; // ATPM이면 다음은 OFF 방향
+  }
+
+  sound.playRotarySnap();
+  triggerHaptic(30);
+  showTemporaryHudFeedback(`🎛️ [운전 모드] ${step.label}`, false);
+
+  if (currentMode === 'REC') {
+    promptRecordStep('SW_DRIVE_MODE', comp.name, targetState);
+  } else {
+    evaluateStepAction('SW_DRIVE_MODE', targetState);
+  }
+}
+
+// 전면창 히터 각 위치 직접 선택 함수 (자동, 수동 터치 시)
+function setWindowHeaterPosition(targetState, evt) {
+  if (evt) evt.stopPropagation();
+  hideVobcGuide();
+  const comp = COMPONENT_REGISTRY['SW_WINDOW_HEATER'];
+  if (!comp) return;
+
+  const steps = {
+    'AUTO':   { angle: -45, label: '자동 (AUTO)' },
+    'MANUAL': { angle: 45,  label: '수동 (MANUAL)' }
+  };
+
+  const step = steps[targetState];
+  if (!step) return;
+
+  comp.state = targetState;
+  const el = document.getElementById('comp-SW_WINDOW_HEATER');
+  if (el) el.style.transform = `rotate(${step.angle}deg)`;
+
+  if (typeof ROTARY3_BOUNCE !== 'undefined' && ROTARY3_BOUNCE.SW_WINDOW_HEATER) {
+    const b = ROTARY3_BOUNCE.SW_WINDOW_HEATER;
+    const idx = b.states.indexOf(targetState);
+    if (idx === 0) b.dir = 1;
+    else if (idx === b.states.length - 1) b.dir = -1;
+  }
+
+  sound.playRotarySnap();
+  triggerHaptic(30);
+  showTemporaryHudFeedback(`🪟 [전면창 히터] ${step.label}`, false);
+
+  if (currentMode === 'REC') {
+    promptRecordStep('SW_WINDOW_HEATER', comp.name, targetState);
+  } else {
+    evaluateStepAction('SW_WINDOW_HEATER', targetState);
+  }
+}
+
+// 전조등 5단계 각 위치 직접 선택 함수 (원격, 자동, OFF, 수동상향, 수동하향 터치 시)
+function setHeadlightPosition(targetState, evt) {
+  if (evt) evt.stopPropagation();
+  hideVobcGuide();
+  const comp = COMPONENT_REGISTRY['SW_HEADLIGHT'];
+  if (!comp) return;
+
+  const steps = {
+    'REMOTE': { angle: -90, label: '원격 (REMOTE)' },
+    'AUTO':   { angle: -45, label: '자동 (AUTO)' },
+    'OFF':    { angle: 0,   label: 'OFF (소등)' },
+    'HIGH':   { angle: 45,  label: '수동상향 (HIGH)' },
+    'LOW':    { angle: 90,  label: '수동하향 (LOW)' }
+  };
+
+  const step = steps[targetState];
+  if (!step) return;
+
+  comp.state = targetState;
+  const el = document.getElementById('comp-SW_HEADLIGHT');
+  if (el) el.style.transform = `rotate(${step.angle}deg)`;
+
+  if (typeof ROTARY3_BOUNCE !== 'undefined' && ROTARY3_BOUNCE.SW_HEADLIGHT) {
+    const b = ROTARY3_BOUNCE.SW_HEADLIGHT;
+    const idx = b.states.indexOf(targetState);
+    if (idx === 0) b.dir = 1;
+    else if (idx === b.states.length - 1) b.dir = -1;
+  }
+
+  sound.playRotarySnap();
+  triggerHaptic(30);
+  showTemporaryHudFeedback(`💡 [전조등] ${step.label}`, false);
+
+  if (currentMode === 'REC') {
+    promptRecordStep('SW_HEADLIGHT', comp.name, targetState);
+  } else {
+    evaluateStepAction('SW_HEADLIGHT', targetState);
+  }
+}
+
 /**
  * 실습 & 평가 모드 판정 엔진
  */
@@ -3535,7 +4554,11 @@ function evaluateStepAction(compId, state) {
   const targetStep = currentScenario.steps[currentStepIndex];
 
   // 정답 조작 판정
-  if (targetStep.target === compId && targetStep.expectedState === state) {
+  const isMatch = (targetStep.target === compId) &&
+    (targetStep.expectedState === state ||
+     (targetStep.target === 'SW_EMG_RELEASE' && (targetStep.expectedState === 'PRESSED' && state === 'LATCHED')));
+
+  if (isMatch) {
     sound.playSuccess();
     triggerHaptic(40);
     clearHints();
@@ -3629,15 +4652,30 @@ function triggerShakeScreen() {
   /* 사용자 요청으로 화면 흔들림 완전 비활성화 */
 }
 
-// 아날로그 공기 압력계 바늘 회전 업데이트
-function updateGaugeUI(bcBar) {
-  currentGaugeBC = bcBar;
-  document.getElementById('val-bc').innerText = bcBar.toFixed(1);
-
-  // 0 bar = -135deg, 12 bar = 135deg (총 270도 각도 범위)
+// 아날로그 공기 압력계 바늘 회전 업데이트 (MR 빨간 바늘, BC 검은 바늘)
+function updateGaugeUI(bcBar, mrBar = currentGaugeMR) {
+  // 0 bar = -135deg, 12 bar = 135deg (총 270도 각도 범위, 1 bar당 22.5도)
   const anglePerBar = 270 / 12;
-  const bcAngle = -135 + (bcBar * anglePerBar);
-  document.getElementById('needle-bc').style.transform = `rotate(${bcAngle}deg)`;
+
+  // 1) BC 제동통 압력 (검은 바늘, 기본 0.0 bar = -135도)
+  if (bcBar !== undefined && bcBar !== null) {
+    currentGaugeBC = bcBar;
+    const elValBc = document.getElementById('val-bc');
+    if (elValBc) elValBc.innerText = bcBar.toFixed(1);
+    const bcAngle = -135 + (bcBar * anglePerBar);
+    const elNeedleBc = document.getElementById('needle-bc');
+    if (elNeedleBc) elNeedleBc.style.transform = `rotate(${bcAngle}deg)`;
+  }
+
+  // 2) MR 주공기통 압력 (빨간 바늘, 기본 9.0 bar = 67.5도: 8과 10 사이)
+  if (mrBar !== undefined && mrBar !== null) {
+    currentGaugeMR = mrBar;
+    const elValMr = document.getElementById('val-mr');
+    if (elValMr) elValMr.innerText = mrBar.toFixed(1);
+    const mrAngle = -135 + (mrBar * anglePerBar);
+    const elNeedleMr = document.getElementById('needle-mr');
+    if (elNeedleMr) elNeedleMr.style.transform = `rotate(${mrAngle}deg)`;
+  }
 }
 
 // 훈련 완료 처리
@@ -3687,7 +4725,7 @@ function resetCurrentScenario() {
       comp.state = 'CLOSED';
       const el = document.getElementById(`comp-${id}`);
       if (el) el.classList.remove('open');
-    } else if (comp.type === 'ROTARY_2' || comp.type === 'ROTARY_3' || comp.type === 'ROTARY_5') {
+    } else if (comp.type === 'ROTARY_2' || comp.type === 'ROTARY_3' || comp.type === 'ROTARY_4' || comp.type === 'ROTARY_5') {
       const el = document.getElementById(`comp-${id}`);
       if (id === 'SW_ATP_REV') {
         comp.state = 'OFF';
@@ -3702,14 +4740,27 @@ function resetCurrentScenario() {
       } else if (id === 'SW_WIPER') {
         comp.state = 'OFF';
         updateWiperActiveLabel('OFF');
+      } else if (id === 'SW_DRIVE_MODE') {
+        comp.state = 'OFF';
+        ROTARY3_BOUNCE.SW_DRIVE_MODE.dir = 1;
+      } else if (id === 'SW_WINDOW_HEATER') {
+        comp.state = 'AUTO';
+        if (typeof ROTARY3_BOUNCE !== 'undefined' && ROTARY3_BOUNCE.SW_WINDOW_HEATER) {
+          ROTARY3_BOUNCE.SW_WINDOW_HEATER.dir = 1;
+        }
+      } else if (id === 'SW_HEADLIGHT') {
+        comp.state = 'OFF';
+        if (typeof ROTARY3_BOUNCE !== 'undefined' && ROTARY3_BOUNCE.SW_HEADLIGHT) {
+          ROTARY3_BOUNCE.SW_HEADLIGHT.dir = 1;
+        }
       } else {
         comp.state = 'NORMAL';
       }
 
       if (el) {
-        if (id === 'SW_ATP_REV' || id === 'SW_WIPER') {
+        if (id === 'SW_ATP_REV' || id === 'SW_WIPER' || id === 'SW_DRIVE_MODE' || id === 'SW_HEADLIGHT') {
           el.style.transform = 'rotate(0deg)'; // 12시 OFF
-        } else if (id === 'SW_LOW_SPEED' || id === 'SW_RESERVE_ROTARY' ||
+        } else if (id === 'SW_WINDOW_HEATER' || id === 'SW_LOW_SPEED' || id === 'SW_RESERVE_ROTARY' ||
             id === 'SW_OBSTACLE_BYPASS' || id === 'SW_DOOR_BYPASS' || id === 'SW_AIR_CLEAN' ||
             id === 'SW_MR_BP' || id === 'SW_INSUL_SECT' || id === 'SW_PARK_BP') {
           el.style.transform = 'rotate(-45deg)';
@@ -3731,7 +4782,19 @@ function resetCurrentScenario() {
     }
   });
 
-  updateGaugeUI(0.0);
+  // OP2 상부 표시등 초기화 (출입문/선두차지정 점등, 제동체결/비상제동차단/커플링 소등)
+  const lampDoor = document.getElementById('lamp-door');
+  if (lampDoor) lampDoor.classList.add('lit');
+  const lampBrakeApply = document.getElementById('lamp-brake-apply');
+  if (lampBrakeApply) lampBrakeApply.classList.remove('lit');
+  const lampLeadCar = document.getElementById('lamp-lead-car');
+  if (lampLeadCar) lampLeadCar.classList.add('lit');
+  const lampEmgCut = document.getElementById('lamp-emg-cut');
+  if (lampEmgCut) lampEmgCut.classList.remove('lit');
+  const lampCoupling = document.getElementById('lamp-coupling');
+  if (lampCoupling) lampCoupling.classList.remove('lit');
+
+  updateGaugeUI(0.0, 9.0);
   renderStepHUD();
   hideVobcGuide();
 }
