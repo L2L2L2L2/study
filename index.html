@@ -5273,17 +5273,14 @@ function handleComponentTouch(compId) {
       newState = (comp.state === 'OFF') ? 'ON' : 'OFF';
       el.style.transform = (newState === 'ON') ? 'rotate(90deg)' : 'rotate(0deg)';
     } else if (compId === 'SW_MASTER_KEY') {
-      newState = (comp.state === 'OFF') ? 'ON' : 'OFF';
-      if (newState === 'ON') {
-        el.style.transform = 'rotate(0deg)';
-        el.classList.add('on');
-        const toast = document.getElementById('reverser-key-warning');
-        if (toast) toast.style.display = 'none';
-      } else {
-        el.style.transform = 'rotate(-90deg)';
-        el.classList.remove('on');
+      const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
+      if (revComp && (revComp.state === 'F' || revComp.state === 'R')) {
+        showReverserNotNeutralWarning();
+        return;
       }
-      showTemporaryHudFeedback(`🔑 [제어키] ${newState === 'ON' ? 'ON (역전기 조작 가능)' : 'OFF (역전기 잠금)'}`, false);
+      newState = (comp.state === 'OFF') ? 'ON' : 'OFF';
+      setMasterKeyPosition(newState);
+      return;
     } else if (compId === 'SW_INSUL_SECT') {
       newState = (comp.state === 'NORMAL') ? 'INSUL' : 'NORMAL';
       el.style.transform = (newState === 'INSUL') ? 'rotate(45deg)' : 'rotate(-45deg)';
@@ -5758,10 +5755,12 @@ function setAtpRevPosition(targetState, evt) {
 let keyWarningTimeout = null;
 let tractionReleaseTimer = null;
 
-// 글래스모피즘 "키를 ON 위치로 놓으세요" 경고 팝업
-function showKeyOffWarning() {
+// 글래스모피즘 인터록 경고 팝업 표시 함수
+function showGlassToast(toastText, hudText) {
   const toast = document.getElementById('reverser-key-warning');
   if (toast) {
+    const span = toast.querySelector('span') || toast;
+    span.innerText = toastText;
     toast.style.display = 'flex';
     clearTimeout(keyWarningTimeout);
     keyWarningTimeout = setTimeout(() => {
@@ -5770,7 +5769,15 @@ function showKeyOffWarning() {
   }
   sound.playError();
   triggerHaptic([45, 45, 60]);
-  showTemporaryHudFeedback("⚠️ [역전기] 키를 ON 위치로 놓으세요!", true);
+  showTemporaryHudFeedback(hudText || toastText, true);
+}
+
+function showKeyOffWarning() {
+  showGlassToast('⚠️ 키를 ON 위치로 놓으세요', '⚠️ [전후진제어기] 키를 ON 위치로 놓으세요!');
+}
+
+function showReverserNotNeutralWarning() {
+  showGlassToast('⚠️ 전후진제어기를 N(중립)으로 놓으세요', '⚠️ [제어키] 전후진제어기를 N(중립) 위치로 놓으세요!');
 }
 
 function checkMasterKeyForReverser() {
@@ -5789,6 +5796,13 @@ function setMasterKeyPosition(targetState, evt) {
   const comp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
   if (!comp) return;
 
+  // 전후진제어기가 F 또는 R 위치면 키를 ON이나 OFF로 조작 불가 (N 위치여야만 가능)
+  const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
+  if (revComp && (revComp.state === 'F' || revComp.state === 'R')) {
+    showReverserNotNeutralWarning();
+    return;
+  }
+
   comp.state = targetState;
   const el = document.getElementById('comp-SW_MASTER_KEY');
   if (el) {
@@ -5803,9 +5817,12 @@ function setMasterKeyPosition(targetState, evt) {
     }
   }
 
+  // 선두차지정 라이트 점등 상태 갱신 (키 상태 변경 반영)
+  updateLeadCarLamp();
+
   sound.playRotarySnap();
   triggerHaptic(30);
-  showTemporaryHudFeedback(`🔑 [제어키] ${targetState === 'ON' ? 'ON (역전기 조작 가능)' : 'OFF (역전기 잠금)'}`, false);
+  showTemporaryHudFeedback(`🔑 [제어키] ${targetState === 'ON' ? 'ON (전후진제어기 조작 가능)' : 'OFF (전후진제어기 잠금)'}`, false);
 
   if (currentMode === 'REC') {
     promptRecordStep('SW_MASTER_KEY', comp.name, targetState);
@@ -5976,11 +5993,17 @@ function setReverserPosition(pos, silent = false) {
     item.classList.toggle('active', item.innerText.trim() === pos);
   });
 
+  const toast = document.getElementById('reverser-key-warning');
+  if (toast && pos === 'N') toast.style.display = 'none';
+
+  // 선두차지정 라이트 점등 상태 갱신 (전후진제어기 F/N/R 변경 반영)
+  updateLeadCarLamp();
+
   if (!silent) {
     sound.playRotarySnap();
     triggerHaptic(30);
     const label = (pos === 'F') ? 'F (전진 / Forward)' : ((pos === 'R') ? 'R (후진 / Reverse)' : 'N (중립 / Neutral)');
-    showTemporaryHudFeedback(`🎚️ [역전기] ${label}`, false);
+    showTemporaryHudFeedback(`🎚️ [전후진제어기] ${label}`, false);
     if (currentMode === 'REC') {
       promptRecordStep('SW_REVERSER', comp.name, pos);
     } else {
@@ -6343,12 +6366,25 @@ function updateGaugeUI(bcBar, mrBar = currentGaugeMR) {
   }
 }
 
-// OP2 선두차지정 표시등 상태 갱신 (운전모드 RM, FM에서만 점등)
+// OP2 선두차지정 표시등 상태 갱신
+// 점등 조건: 운전모드(RM 또는 FM) AND 제어키(ON) AND 전후진제어기(F 또는 R)
 function updateLeadCarLamp(modeState) {
   const lampLeadCar = document.getElementById('lamp-lead-car');
   if (!lampLeadCar) return;
-  // 운전모드가 RM, FM일 때만 선두차지정 점등 (OFF, ATPM 등에서는 소등)
-  if (modeState === 'RM' || modeState === 'FM') {
+
+  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+  const driveMode = (modeState !== undefined) ? modeState : (modeComp ? modeComp.state : 'OFF');
+
+  const keyComp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
+  const isKeyOn = keyComp && (keyComp.state === 'ON');
+
+  const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
+  const isReverserEngaged = revComp && (revComp.state === 'F' || revComp.state === 'R');
+
+  const isModeEligible = (driveMode === 'RM' || driveMode === 'FM');
+
+  // 3가지 조건(운전모드 RM/FM, 키 ON, 전후진제어기 F/R)이 모두 만족될 때만 점등
+  if (isModeEligible && isKeyOn && isReverserEngaged) {
     lampLeadCar.classList.add('lit');
   } else {
     lampLeadCar.classList.remove('lit');
@@ -6451,6 +6487,7 @@ function resetCurrentScenario() {
       if (el) {
         if (id === 'SW_MASTER_KEY') {
           el.style.transform = 'rotate(-90deg)';
+          el.classList.remove('on');
         } else if (id === 'SW_ATP_REV' || id === 'SW_WIPER' || id === 'SW_DRIVE_MODE' || id === 'SW_HEADLIGHT') {
           el.style.transform = 'rotate(0deg)'; // 12시 OFF
         } else if (id === 'SW_WINDOW_HEATER' || id === 'SW_LOW_SPEED' || id === 'SW_RESERVE_ROTARY' ||
