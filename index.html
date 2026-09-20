@@ -2259,10 +2259,10 @@
             </div>
           </div>
 
-          <!-- 3. 선두차지정 (황색) -->
-          <div class="op2-ind-unit" id="wrap-ind-lead-car" title="선두차지정 표시등">
+          <!-- 3. 선두차지정 (황색 - 운전모드 RM, FM 시 점등) -->
+          <div class="op2-ind-unit" id="wrap-ind-lead-car" title="선두차지정 표시등 (운전모드 RM/FM 시 점등)">
             <span class="op2-ind-label">선두차지정</span>
-            <div class="op2-ind-lamp lit" id="lamp-lead-car">
+            <div class="op2-ind-lamp" id="lamp-lead-car">
               <div class="op2-ind-lens lens-yellow"></div>
             </div>
           </div>
@@ -3569,6 +3569,7 @@ window.addEventListener('DOMContentLoaded', () => {
   loadScenarioListUI();
   applyScenario(currentScenario);
   updateGaugeUI(BC_DEFAULT_BAR, 9.0);
+  updateLeadCarLamp(COMPONENT_REGISTRY.SW_DRIVE_MODE.state);
 });
 
 // 모드 드롭다운 토글 및 조작 함수
@@ -4282,6 +4283,7 @@ function handleComponentTouch(compId) {
     const rot = bounce.angles[nextIdx];
     comp.state = newState;
     if (el) el.style.transform = `rotate(${rot}deg)`;
+    updateLeadCarLamp(newState);
     showTemporaryHudFeedback(`🎛️ [운전 모드] ${labels[newState]}`, false);
   } else if (compId === 'SW_WINDOW_HEATER') {
     // 전면창 히터 왕복 2단 로터리 스위치 (자동 ↔ 수동)
@@ -4504,6 +4506,7 @@ function setDriveModePosition(targetState, evt) {
   comp.state = targetState;
   const el = document.getElementById('comp-SW_DRIVE_MODE');
   if (el) el.style.transform = `rotate(${step.angle}deg)`;
+  updateLeadCarLamp(targetState);
 
   // ROTARY3_BOUNCE 상태 동기화 (이후 본체 클릭 시 왕복 방향 유지)
   if (typeof ROTARY3_BOUNCE !== 'undefined' && ROTARY3_BOUNCE.SW_DRIVE_MODE) {
@@ -4764,6 +4767,18 @@ function updateGaugeUI(bcBar, mrBar = currentGaugeMR) {
   }
 }
 
+// OP2 선두차지정 표시등 상태 갱신 (운전모드 RM, FM에서만 점등)
+function updateLeadCarLamp(modeState) {
+  const lampLeadCar = document.getElementById('lamp-lead-car');
+  if (!lampLeadCar) return;
+  // 운전모드가 RM, FM일 때만 선두차지정 점등 (OFF, ATPM 등에서는 소등)
+  if (modeState === 'RM' || modeState === 'FM') {
+    lampLeadCar.classList.add('lit');
+  } else {
+    lampLeadCar.classList.remove('lit');
+  }
+}
+
 // 훈련 완료 처리
 function finishScenarioSuccess() {
   const elapsedSec = Math.round((Date.now() - examStartTime) / 1000);
@@ -4876,13 +4891,12 @@ function resetCurrentScenario() {
     }
   });
 
-  // OP2 상부 표시등 초기화 (출입문/선두차지정 점등, 제동체결/비상제동차단/커플링 소등)
+  // OP2 상부 표시등 초기화 (출입문 점등, 선두차지정은 운전모드 OFF이므로 소등, 제동체결/비상제동차단/커플링 소등)
   const lampDoor = document.getElementById('lamp-door');
   if (lampDoor) lampDoor.classList.add('lit');
   const lampBrakeApply = document.getElementById('lamp-brake-apply');
   if (lampBrakeApply) lampBrakeApply.classList.remove('lit');
-  const lampLeadCar = document.getElementById('lamp-lead-car');
-  if (lampLeadCar) lampLeadCar.classList.add('lit');
+  updateLeadCarLamp('OFF');
   const lampEmgCut = document.getElementById('lamp-emg-cut');
   if (lampEmgCut) lampEmgCut.classList.remove('lit');
   const lampCoupling = document.getElementById('lamp-coupling');
