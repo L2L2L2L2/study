@@ -5330,30 +5330,46 @@ function drawCabViewLoop() {
 
     ctx.clearRect(0, 0, W, H);
 
-    // 카메라 흔들림 (레일 주행 진동 & 가감속 피칭)
+    // 카메라 물리: 레일 고주파 진동, 가감속 피칭, 이음매 충격(Click-Clack), 곡선 캔트 롤링(Cant Tilt)
     let swayX = 0;
     let swayY = 0;
     let pitchY = 0;
+    let cantRoll = 0;
 
     if (trainSpeed > 0.5) {
+      // 1. 레일 롤링 진동
       const rumble = Date.now() * 0.009 * Math.max(3, trainSpeed * 0.12);
-      swayX = Math.sin(rumble) * Math.min(3.0, trainSpeed * 0.045);
-      swayY = Math.cos(rumble * 1.5) * Math.min(2.0, trainSpeed * 0.025);
+      swayX = Math.sin(rumble) * Math.min(2.8, trainSpeed * 0.04);
+      swayY = Math.cos(rumble * 1.5) * Math.min(1.8, trainSpeed * 0.025);
       pitchY = (trainAccelRate > 0 ? -1.8 : (trainAccelRate < 0 ? 1.8 : 0)) * Math.min(2.5, Math.abs(trainAccelRate) * 0.4);
+
+      // 2. 레일 이음매(25m 주기) 통과 덜컹거림 펄스
+      const jointDist = trainDistance % 25;
+      if (jointDist < 1.4) {
+        const jProgress = jointDist / 1.4;
+        const jBump = Math.sin(jProgress * Math.PI * 2) * Math.min(2.2, trainSpeed * 0.035);
+        pitchY += jBump;
+      }
+
+      // 3. 곡선 선로 진입에 따른 원심력 캔트 롤링 (좌측 곡선이므로 좌측으로 살짝 기울어짐)
+      cantRoll = - (trainSpeed / 80) * 0.012; // 약 -0.7도 기울기
     }
 
     ctx.save();
-    ctx.translate(swayX, swayY + pitchY);
+    // 캔트 롤링 중심점 (화면 중앙 하단 대차 피벗)
+    ctx.translate(W * 0.5, H * 0.7);
+    ctx.rotate(cantRoll);
+    ctx.translate(-W * 0.5 + swayX, -H * 0.7 + swayY + pitchY);
 
-    // 1. 실물 운전실 전면 뷰 이미지 렌더링 (진동 여백 커버)
+    // 1. 실물 운전실 전면 뷰 이미지 렌더링 (진동/롤링 여백 커버)
     if (cabImgLoaded) {
-      ctx.drawImage(cabImg, -8, -6, W + 16, H + 12);
+      ctx.drawImage(cabImg, -10, -8, W + 20, H + 16);
     } else {
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, 0, W, H);
     }
 
-    // 2. 주행 모션: 곡선 선로 궤도 유동 모션 (속도 연동)
+    // 2. 주행 모션: 곡선 선로 궤도 유동 모션 (실물 곡선 궤적 & 각도 100% 매칭)
     if (trainSpeed > 0.5) {
       ctx.save();
       // 전면 대형 유리창 영역 정밀 클리핑
@@ -5361,25 +5377,44 @@ function drawCabViewLoop() {
       ctx.rect(130, 42, 770, 376);
       ctx.clip();
 
-      // 곡선 궤도 침목 및 자갈 흐름 (선로 곡선 궤적: (420, 420) -> (315, 280))
+      // 사진 속 실제 선로 곡선 방정식:
+      // y: 270 (원거리 소실점) ~ 420 (하단 운전대 앞)
+      // 곡선 궤적 및 궤도 법선(침목 수직 회전각): 19° ~ 54°
       const numTies = 10;
       for (let i = 0; i < numTies; i++) {
         const prog = (trackTiePhase + i / numTies) % 1.0;
-        const p = Math.pow(prog, 2.2);
-        const y = 280 + (420 - 280) * p;
-        const cx = 315 + (420 - 315) * Math.pow(p, 1.4);
-        const w = 18 + 95 * p;
-        const h = Math.max(1.5, 3.5 * p);
-        const alpha = Math.min(0.35, p * 0.45);
+        const p = Math.pow(prog, 2.0); // 원근감 비선형 보간
+        const t = p;
+        const cy = 270 + 150 * t;
+        const cx = 315 + 130 * (0.4 * t + 0.6 * t * t);
+        const w = 28 + 72 * t;
+        const h = Math.max(1.5, 3.6 * t);
+        const alpha = Math.min(0.35, t * 0.5);
 
-        // 부드러운 자갈/침목 잔상 오버레이
-        ctx.fillStyle = `rgba(40, 45, 55, ${alpha})`;
-        ctx.fillRect(cx - w * 0.5, y - h * 0.5, w, h);
+        // 선로 접선(dx, dy) 및 침목 수직 회전각
+        const dx = 130 * (0.4 + 1.2 * t);
+        const dy = 150;
+        const sleeperAngle = -Math.atan2(dx, dy);
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(sleeperAngle);
+
+        // 곡선 궤도 침목 본체
+        ctx.fillStyle = `rgba(35, 40, 50, ${alpha * 0.8})`;
+        ctx.fillRect(-w * 0.5, -h * 0.5, w, h);
+
+        // 좌/우 레일 체결구/패스너 포인트 (선로 위치에 정확히 매칭)
+        ctx.fillStyle = `rgba(180, 190, 205, ${alpha * 0.55})`;
+        ctx.fillRect(-w * 0.44, -h * 0.5, 2.2, h);
+        ctx.fillRect(w * 0.44 - 2.2, -h * 0.5, 2.2, h);
+
+        ctx.restore();
       }
 
-      // 고속 주행 시 전면 주변부 속도감 비네팅
-      if (trainSpeed > 40) {
-        const motionAlpha = Math.min(0.22, (trainSpeed - 40) * 0.005);
+      // 고속 주행 시 전면 주변부 속도감 비네팅 (가장자리 모션 블러 느낌)
+      if (trainSpeed > 35) {
+        const motionAlpha = Math.min(0.20, (trainSpeed - 35) * 0.005);
         const grad = ctx.createRadialGradient(480, 240, 180, 480, 240, 420);
         grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
         grad.addColorStop(1, `rgba(15, 23, 42, ${motionAlpha})`);
