@@ -2416,18 +2416,6 @@
       letter-spacing: 1px;
       margin-bottom: 4px;
     }
-    .cob-tag-label {
-      position: absolute;
-      top: 5px;
-      left: 8px;
-      background: #fff;
-      color: #0f172a;
-      font-size: 8px;
-      font-weight: 800;
-      padding: 1px 4px;
-      border-radius: 2px;
-      border: 1px solid #64748b;
-    }
     .cob-sub-label {
       text-align: right;
       font-size: 7.5px;
@@ -3316,7 +3304,6 @@
 
           <!-- (1) COB / 방송 및 통화용 마이크 -->
           <div class="cob-panel" id="wrap-COB_PANEL">
-            <span class="cob-tag-label">2 12040</span>
             <div class="cob-title-bar">방송 및 통화용 마이크</div>
 
             <div class="cob-body">
@@ -4527,8 +4514,8 @@ class SoundEngine {
     });
   }
 
-  // 무전기 PTT 비프음 (핸드마이크 전송음)
-  playRadioMic() {
+  // COB 기능 선택 비프음 (비상응답, 운전실통화, 실내방송, 실외방송)
+  playCobBeep() {
     if (this.isMuted) return;
     this.init();
     if (!this.ctx) return;
@@ -4538,12 +4525,78 @@ class SoundEngine {
     osc.type = 'sine';
     osc.frequency.setValueAtTime(1050, now);
     osc.frequency.setValueAtTime(850, now + 0.05);
-    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.setValueAtTime(0.28, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
     osc.start(now);
     osc.stop(now + 0.13);
+  }
+
+  // 무전기 PTT 송신 치지직 스퀠치 노이즈음 (핸드마이크 전송음)
+  playRadioStatic() {
+    if (this.isMuted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+
+    const duration = 0.32;
+    const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    // 무전기 특유의 거친 RF 스퀠치 노이즈 변조 (치지직-)
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / this.ctx.sampleRate;
+      const crackle = (Math.random() * 2 - 1);
+      const mod = 0.65 + 0.35 * Math.sin(2 * Math.PI * 65 * t) * (Math.random() > 0.25 ? 1 : 0.4);
+      data[i] = crackle * mod;
+    }
+
+    const noiseSource = this.ctx.createBufferSource();
+    noiseSource.buffer = buffer;
+
+    // 무전 음성 대역통과 필터 (1200Hz ~ 3600Hz)
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2200, now);
+    filter.Q.setValueAtTime(1.8, now);
+
+    // 고역 통과 필터로 둔탁함 제거
+    const hp = this.ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.setValueAtTime(650, now);
+
+    // 게인 엔벨로프 (빠른 어택 -> 치지직 버스트 -> 스퀠치 컷)
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.38, now + 0.015);
+    gain.gain.setValueAtTime(0.35, now + 0.15);
+    gain.gain.linearRampToValueAtTime(0.22, now + 0.26);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    // PTT 스위치 기계식 클릭 (미세 팝음)
+    const popOsc = this.ctx.createOscillator();
+    const popGain = this.ctx.createGain();
+    popOsc.type = 'triangle';
+    popOsc.frequency.setValueAtTime(420, now);
+    popOsc.frequency.exponentialRampToValueAtTime(90, now + 0.025);
+    popGain.gain.setValueAtTime(0.20, now);
+    popGain.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
+
+    popOsc.connect(popGain);
+    popGain.connect(this.ctx.destination);
+
+    noiseSource.connect(filter);
+    filter.connect(hp);
+    hp.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    popOsc.start(now);
+    popOsc.stop(now + 0.03);
+
+    noiseSource.start(now);
+    noiseSource.stop(now + duration);
   }
 
   // 방송/호출 2음 차임벨
@@ -6036,25 +6089,25 @@ function handleComponentTouch(compId) {
       triggerHaptic(25);
       showTemporaryHudFeedback(`⚡ [축전지 OFF] 축전지 차단`, false);
     } else if (compId === 'SW_COB_EMG_RESP') {
-      sound.playChime();
+      sound.playCobBeep();
       triggerHaptic([30, 30]);
       showTemporaryHudFeedback(`🚨 [비상응답] 승객 비상통화 연결`, false);
     } else if (compId === 'SW_COB_CAB_CALL') {
-      sound.playChime();
+      sound.playCobBeep();
       triggerHaptic([30, 30]);
       showTemporaryHudFeedback(`📞 [운전실통화] 차장/후부 운전실 통화 연결`, false);
     } else if (compId === 'SW_COB_PA_IN') {
-      sound.playChime();
+      sound.playCobBeep();
       triggerHaptic([30, 30]);
       showTemporaryHudFeedback(`📢 [실내방송] 객실 안내방송 송출 시작`, false);
     } else if (compId === 'SW_COB_PA_OUT') {
-      sound.playChime();
+      sound.playCobBeep();
       triggerHaptic([30, 30]);
       showTemporaryHudFeedback(`📢 [실외방송] 승강장 외부방송 송출 시작`, false);
     } else if (compId === 'SW_COB_MIC') {
-      sound.playRadioMic();
-      triggerHaptic([20, 20]);
-      showTemporaryHudFeedback(`🎙️ [DM-60 마이크] PTT 송신 상태`, false);
+      sound.playRadioStatic();
+      triggerHaptic([25, 35]);
+      showTemporaryHudFeedback(`🎙️ [DM-60 마이크] PTT 무전 송신 (치지직-)`, false);
     } else if (compId === 'SW_FORCE_REL') {
       // 강제완해: 상용제동 고착/불완해 발생 시 제동통 공기를 강제로 배기하여 완해 (BC: 0.0 bar)
       updateGaugeUI(0.0);
