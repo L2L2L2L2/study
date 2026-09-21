@@ -2953,14 +2953,14 @@
       </div>
     </div>
 
-    <!-- 상태 알림창 -->
+    <!-- 상태 알림창 (초기: 시나리오 없는 자유 시스템 테스트 모드) -->
     <div id="hud-status" class="hud-status-display">
       <div class="hud-status-meta">
-        <span id="hud-mode-title">시나리오: 비상제동 체결 및 완해</span>
-        <span id="hud-step-count" class="hud-step-badge">STEP 1 / 4</span>
+        <span id="hud-mode-title">자유 탐색 및 시스템 테스트 모드</span>
+        <span id="hud-step-count" class="hud-step-badge" style="background:#238636;">FREE</span>
       </div>
       <div id="hud-instruction" class="hud-instruction-text">
-        비상 상황 발생! 빨간색 비상제동체결 버튼을 누르십시오.
+        스위치와 레버를 자유롭게 조작하며 인터록, 계기 및 사운드 반응을 테스트해보세요. (시나리오 실습은 하단 '시나리오 선택' 클릭)
       </div>
     </div>
 
@@ -3998,9 +3998,12 @@
           </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="toolbar-btn" onclick="closeModal('modal-scenario-list')">닫기</button>
-        <button class="toolbar-btn primary" onclick="loadSelectedScenario()">시나리오 시작</button>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; gap:6px;">
+        <button class="toolbar-btn" onclick="applyScenario(null); closeModal('modal-scenario-list');" title="시나리오 없이 자유롭게 테스트">🛠️ 자유 모드로 전환</button>
+        <div style="display:flex; gap:6px;">
+          <button class="toolbar-btn" onclick="closeModal('modal-scenario-list')">닫기</button>
+          <button class="toolbar-btn primary" onclick="loadSelectedScenario()">시나리오 시작</button>
+        </div>
       </div>
     </div>
   </div>
@@ -4567,7 +4570,7 @@ const DEFAULT_SCENARIOS = [
 
 // 전역 시뮬레이터 상태
 let currentMode = 'PLAY'; // PLAY, EXAM, REC
-let currentScenario = DEFAULT_SCENARIOS[0];
+let currentScenario = null; // 초기 기본값: 시나리오 없는 자유 시스템 테스트 모드
 let currentStepIndex = 0;
 let mistakeCount = 0;
 let examStartTime = 0;
@@ -6402,13 +6405,29 @@ function evaluateStepAction(compId, state) {
 
 // HUD 스텝 안내 업데이트
 function renderStepHUD() {
-  if (!currentScenario) return;
+  const titleEl = document.getElementById('hud-mode-title');
+  const badgeEl = document.getElementById('hud-step-count');
+  const instEl = document.getElementById('hud-instruction');
+
+  // 시나리오가 선택되지 않은 자유 조작 & 시스템 테스트 모드
+  if (!currentScenario || !currentScenario.steps || currentScenario.steps.length === 0) {
+    if (titleEl) titleEl.innerText = "자유 탐색 및 시스템 테스트 모드";
+    if (badgeEl) {
+      badgeEl.innerText = "FREE";
+      badgeEl.style.background = "#238636";
+    }
+    if (instEl) instEl.innerText = "스위치와 레버를 자유롭게 조작하며 인터록, 계기 및 사운드 반응을 테스트해보세요. (시나리오 실습은 하단 '시나리오 선택' 클릭)";
+    clearHints();
+    return;
+  }
+
+  if (badgeEl) badgeEl.style.background = "#1f6feb";
   const targetStep = currentScenario.steps[currentStepIndex];
   if (!targetStep) return;
 
-  document.getElementById('hud-mode-title').innerText = `${currentScenario.title}`;
-  document.getElementById('hud-step-count').innerText = `STEP ${currentStepIndex + 1} / ${currentScenario.steps.length}`;
-  document.getElementById('hud-instruction').innerText = targetStep.instruction;
+  if (titleEl) titleEl.innerText = `${currentScenario.title}`;
+  if (badgeEl) badgeEl.innerText = `STEP ${currentStepIndex + 1} / ${currentScenario.steps.length}`;
+  if (instEl) instEl.innerText = targetStep.instruction;
 
   // 필요 시 타겟 부품이 있는 패널로 자동 시야 유도
   const targetComp = COMPONENT_REGISTRY[targetStep.target];
@@ -6420,18 +6439,23 @@ function renderStepHUD() {
   }
 }
 
-// 오조작 시 임시 피드백 안내
+// 오조작 및 피드백 시 임시 안내
 function showTemporaryHudFeedback(text, isError) {
   const hudText = document.getElementById('hud-instruction');
   const hudStatus = document.getElementById('hud-status');
-  const original = currentScenario.steps[currentStepIndex] ? currentScenario.steps[currentStepIndex].instruction : '';
+  let original = '';
+  if (currentScenario && currentScenario.steps && currentScenario.steps[currentStepIndex]) {
+    original = currentScenario.steps[currentStepIndex].instruction;
+  } else {
+    original = "스위치와 레버를 자유롭게 조작하며 인터록, 계기 및 사운드 반응을 테스트해보세요. (시나리오 실습은 하단 '시나리오 선택' 클릭)";
+  }
 
-  hudText.innerText = text;
-  hudStatus.style.borderLeftColor = isError ? 'var(--accent-red)' : 'var(--accent-green)';
+  if (hudText) hudText.innerText = text;
+  if (hudStatus) hudStatus.style.borderLeftColor = isError ? 'var(--accent-red)' : 'var(--accent-green)';
 
   setTimeout(() => {
-    hudText.innerText = original;
-    hudStatus.style.borderLeftColor = 'var(--accent-cyan)';
+    if (hudText) hudText.innerText = original;
+    if (hudStatus) hudStatus.style.borderLeftColor = 'var(--accent-cyan)';
   }, 1800);
 }
 
@@ -6442,7 +6466,10 @@ function triggerHint() {
     return;
   }
   clearHints();
-  if (!currentScenario || !currentScenario.steps[currentStepIndex]) return;
+  if (!currentScenario || !currentScenario.steps || !currentScenario.steps[currentStepIndex]) {
+    showTemporaryHudFeedback("💡 현재 자유 테스트 모드입니다. 하단 [시나리오 선택]을 눌러 시나리오 훈련을 시작할 수 있습니다.", false);
+    return;
+  }
   const targetStep = currentScenario.steps[currentStepIndex];
   const targetComp = COMPONENT_REGISTRY[targetStep.target];
 
@@ -6755,15 +6782,23 @@ function loadScenarioListUI() {
   const sel = document.getElementById('scenario-selector');
   sel.innerHTML = '';
 
-  // 기본 시나리오
+  // 1. 자유 테스트 모드 옵션 (기본 선택 가능)
+  const freeOpt = document.createElement('option');
+  freeOpt.value = '__FREE_MODE__';
+  freeOpt.innerText = `🛠️ [자유 모드] 시나리오 없이 자유 조작 & 시스템 테스트`;
+  if (!currentScenario) freeOpt.selected = true;
+  sel.appendChild(freeOpt);
+
+  // 2. 기본 시나리오
   DEFAULT_SCENARIOS.forEach(sc => {
     const opt = document.createElement('option');
     opt.value = sc.id;
     opt.innerText = `[기본] ${sc.title}`;
+    if (currentScenario && currentScenario.id === sc.id) opt.selected = true;
     sel.appendChild(opt);
   });
 
-  // 로컬 저장 커스텀 시나리오
+  // 3. 로컬 저장 커스텀 시나리오
   try {
     const raw = localStorage.getItem('TRAIN_CUSTOM_SCENARIOS');
     if (raw) {
@@ -6772,21 +6807,33 @@ function loadScenarioListUI() {
         const opt = document.createElement('option');
         opt.value = sc.id;
         opt.innerText = `[커스텀] ${sc.title}`;
+        if (currentScenario && currentScenario.id === sc.id) opt.selected = true;
         sel.appendChild(opt);
       });
     }
   } catch(e) {}
 
-  if (sel.options.length > 0) {
-    sel.selectedIndex = 0;
-    previewScenarioInfo();
-  }
+  previewScenarioInfo();
 }
 
 function previewScenarioInfo() {
-  const sc = getScenarioById(document.getElementById('scenario-selector').value);
+  const sel = document.getElementById('scenario-selector');
+  if (!sel || !sel.value) return;
+  const val = sel.value;
+  const descEl = document.getElementById('scenario-preview-desc');
+  if (!descEl) return;
+
+  if (val === '__FREE_MODE__') {
+    descEl.innerHTML = `
+      <b>설명:</b> 특정 시나리오 절차 없이 모든 조작반의 스위치, 레버, 키, 게이지를 자유롭게 조작하며 인터록 논리와 물리 반응을 점검하는 자유 테스트 모드입니다.<br>
+      <b>오조작 감점:</b> 없음 (완전 자유 조작)
+    `;
+    return;
+  }
+
+  const sc = getScenarioById(val);
   if (sc) {
-    document.getElementById('scenario-preview-desc').innerHTML = `
+    descEl.innerHTML = `
       <b>설명:</b> ${sc.description || '설명 없음'}<br>
       <b>총 단계:</b> ${sc.steps.length}단계 구성
     `;
@@ -6794,6 +6841,7 @@ function previewScenarioInfo() {
 }
 
 function getScenarioById(id) {
+  if (id === '__FREE_MODE__') return null;
   const def = DEFAULT_SCENARIOS.find(s => s.id === id);
   if (def) return def;
   try {
@@ -6807,7 +6855,15 @@ function getScenarioById(id) {
 }
 
 function loadSelectedScenario() {
-  const sc = getScenarioById(document.getElementById('scenario-selector').value);
+  const sel = document.getElementById('scenario-selector');
+  if (!sel) return;
+  const val = sel.value;
+  if (val === '__FREE_MODE__') {
+    applyScenario(null);
+    closeModal('modal-scenario-list');
+    return;
+  }
+  const sc = getScenarioById(val);
   if (sc) {
     applyScenario(sc);
     closeModal('modal-scenario-list');
