@@ -470,6 +470,10 @@
       background: #1f6feb;
       color: #ffffff;
     }
+    .slot-center-ind {
+      background: #8957e5;
+      color: #ffffff;
+    }
     .slot-right-ind {
       background: #238636;
       color: #ffffff;
@@ -501,6 +505,12 @@
       color: #ffffff;
       box-shadow: 0 1px 4px rgba(31, 111, 235, 0.4);
     }
+    .slot-header#slot-header-center .slot-switch-btn.active {
+      background: #8957e5;
+      border-color: #a371f7;
+      color: #ffffff;
+      box-shadow: 0 1px 4px rgba(137, 87, 229, 0.4);
+    }
     .slot-header#slot-header-right .slot-switch-btn.active {
       background: #238636;
       border-color: #2ea043;
@@ -512,29 +522,86 @@
       width: 100%;
     }
 
-    /* 대화면 듀얼 뷰포트 배지 */
+    /* 대화면 뷰포트 분할 스위처 배지 */
     .dual-view-badge {
       display: none;
+      align-items: center;
+      gap: 6px;
       font-size: 11px;
       font-weight: 800;
-      color: #8b949e;
+      color: #c9d1d9;
       background: #21262d;
-      padding: 4px 10px;
+      padding: 3px 6px 3px 8px;
       border-radius: 6px;
       border: 1px solid #30363d;
       letter-spacing: 0.3px;
       white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    .dual-view-badge:hover {
+      background: #2d333b;
+      border-color: #58a6ff;
+      color: #ffffff;
+    }
+    .dual-view-badge.mode-3 {
+      border-color: #8957e5;
+    }
+    .split-badge-icon {
+      font-size: 12px;
+    }
+    .split-mode-label {
+      font-weight: 800;
+      color: #f0f6fc;
+    }
+    .split-selector-chips {
+      display: inline-flex;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 1px;
+      gap: 2px;
+    }
+    .split-chip {
+      background: transparent;
+      border: none;
+      color: #8b949e;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .split-chip:hover {
+      color: #ffffff;
+      background: #30363d;
+    }
+    .split-chip.active {
+      background: #1f6feb;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(31, 111, 235, 0.4);
+    }
+    .dual-view-badge.mode-3 .split-chip.active {
+      background: #8957e5;
+      box-shadow: 0 1px 3px rgba(137, 87, 229, 0.4);
     }
 
-    /* 모바일 기본: 우측 슬롯 숨김 */
-    #slot-right {
+    /* 모바일 기본: 우측/중앙 슬롯 숨김 */
+    #slot-right, #slot-center {
       display: none;
     }
 
-    /* 대화면 (태블릿, 폴드 펼침, PC 데스크톱: >= 768px) 반응형 듀얼 확장 */
+    /* 대화면 (태블릿, 폴드 펼침, PC 데스크톱: >= 768px) 반응형 확장 */
     @media (min-width: 768px) {
       #app-container {
         max-width: 1180px;
+      }
+      #app-container.triple-split {
+        max-width: 1720px;
       }
       .panel-view-switcher {
         display: none !important; /* 상단 단일 탭 대신 슬롯별 독립 탭 활성화 */
@@ -549,7 +616,14 @@
         align-items: start;
         padding: 12px 14px 16px 14px;
       }
+      #panel-viewport.triple-split {
+        grid-template-columns: repeat(3, minmax(320px, 1fr)) !important;
+        overflow-x: auto;
+      }
       #slot-right {
+        display: flex !important;
+      }
+      #slot-center.active-triple {
         display: flex !important;
       }
       .slot-header {
@@ -2941,10 +3015,17 @@
         <button id="view-op5" class="panel-toggle-btn" onclick="switchPanelView('OP5')">OP5</button>
       </div>
 
-      <!-- 상단 우측 컨트롤 그룹 (듀얼 뷰포트 배지 + 음소거 버튼 묶음) -->
+      <!-- 상단 우측 컨트롤 그룹 (뷰포트 분할 스위처 + 음소거 버튼 묶음) -->
       <div class="hud-top-right-group">
-        <!-- 대화면(폴드/패드/PC) 듀얼 뷰포트 배지 (음소거 좌측 배치) -->
-        <div class="dual-view-badge">🖥️ 2분할 듀얼 뷰포트</div>
+        <!-- 대화면(폴드/패드/PC) 뷰포트 분할 스위처 (2분할 / 3분할 선택 가능) -->
+        <div class="dual-view-badge" id="split-mode-badge" onclick="toggleSplitMode()" title="클릭하여 2분할 / 3분할 뷰포트 전환">
+          <span class="split-badge-icon">🖥️</span>
+          <span class="split-mode-label" id="split-mode-text">2분할</span>
+          <div class="split-selector-chips" onclick="event.stopPropagation()">
+            <button type="button" class="split-chip active" id="chip-split-2" onclick="setSplitMode(2, event)" title="2분할 듀얼 뷰포트">2분할</button>
+            <button type="button" class="split-chip" id="chip-split-3" onclick="setSplitMode(3, event)" title="3분할 트리플 뷰포트">3분할</button>
+          </div>
+        </div>
 
         <!-- 상단 오른쪽 위 소리 끄기/켜기 토글 버튼 -->
         <button id="btn-sound-toggle" class="sound-toggle-btn" onclick="toggleMuteSound()" title="소리 끄기/켜기 (음소거 토글)">
@@ -2971,7 +3052,7 @@
     </div>
   </header>
 
-  <!-- 2. 중앙 패널 인터랙션 뷰포트 (모바일 1분할 / 폴드·태블릿·PC 2분할 듀얼 뷰) -->
+  <!-- 2. 중앙 패널 인터랙션 뷰포트 (모바일 1분할 / 폴드·태블릿·PC 2분할 듀얼 / 3분할 트리플) -->
   <main id="panel-viewport">
 
     <!-- 좌측 슬롯 (모바일 단일 뷰 / 대화면 좌측 뷰) -->
@@ -2992,7 +3073,25 @@
       <div id="slot-left-content" class="slot-content"></div>
     </div>
 
-    <!-- 우측 슬롯 (대화면 듀얼 전용 뷰) -->
+    <!-- 중앙 슬롯 (대화면 3분할 전용 뷰) -->
+    <div id="slot-center" class="viewport-slot" style="display:none;">
+      <div class="slot-header" id="slot-header-center">
+        <div class="slot-title">
+          <span class="slot-indicator slot-center-ind">MID</span>
+          <span id="slot-center-label">OP1 (주 제어반 & 마스콘)</span>
+        </div>
+        <div class="slot-panel-switcher">
+          <button id="slot-c-op1" class="slot-switch-btn active" onclick="selectSlotPanel('center', 'OP1')">OP1</button>
+          <button id="slot-c-op2" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP2')">OP2</button>
+          <button id="slot-c-op3" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP3')">OP3</button>
+          <button id="slot-c-op4" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP4')">OP4</button>
+          <button id="slot-c-op5" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP5')">OP5</button>
+        </div>
+      </div>
+      <div id="slot-center-content" class="slot-content"></div>
+    </div>
+
+    <!-- 우측 슬롯 (대화면 듀얼/트리플 전용 뷰) -->
     <div id="slot-right" class="viewport-slot">
       <div class="slot-header" id="slot-header-right">
         <div class="slot-title">
@@ -4599,31 +4698,112 @@ let recordedSteps = [];
 let pendingRecordedStep = null;
 
 // ========================================================
-// 듀얼 뷰포트 시스템 (모바일 1분할 / 폴드·태블릿·PC 2분할)
+// 반응형 멀티 뷰포트 시스템 (모바일 1분할 / 2분할 듀얼 / 3분할 트리플)
 // ========================================================
 const ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5'];
-let activeLeftPanel = 'OP3';   // 기본 좌측 패널 OP3
-let activeRightPanel = 'OP4';  // 기본 우측 패널 OP4 (대화면 전용)
+let currentSplitMode = 2;       // 대화면 기본: 2분할 (2 또는 3)
+let activeLeftPanel = 'OP3';    // 좌측 슬롯 (기본 OP3)
+let activeCenterPanel = 'OP1';  // 중앙 슬롯 (3분할 전용 기본 OP1)
+let activeRightPanel = 'OP4';   // 우측 슬롯 (기본 OP4)
 
 function checkIsDualMode() {
   return window.innerWidth >= 768;
+}
+
+function setSplitMode(mode, event) {
+  if (event) event.stopPropagation();
+  currentSplitMode = (mode === 3) ? 3 : 2;
+
+  // 3분할 진입 시 패널 중복 방지
+  if (currentSplitMode === 3) {
+    const used = [activeLeftPanel, activeRightPanel];
+    if (used.includes(activeCenterPanel)) {
+      const available = ALL_PANELS.filter(p => !used.includes(p));
+      activeCenterPanel = available[0] || 'OP1';
+    }
+  }
+
+  updateSplitModeUI();
+  renderDualPanels();
+  triggerHaptic(30);
+}
+
+function toggleSplitMode() {
+  setSplitMode(currentSplitMode === 2 ? 3 : 2);
+}
+
+function updateSplitModeUI() {
+  const badge = document.getElementById('split-mode-badge');
+  const text = document.getElementById('split-mode-text');
+  const chip2 = document.getElementById('chip-split-2');
+  const chip3 = document.getElementById('chip-split-3');
+  const appContainer = document.getElementById('app-container');
+  const viewport = document.getElementById('panel-viewport');
+  const slotCenter = document.getElementById('slot-center');
+
+  if (chip2 && chip3) {
+    chip2.classList.toggle('active', currentSplitMode === 2);
+    chip3.classList.toggle('active', currentSplitMode === 3);
+  }
+
+  if (badge) {
+    badge.classList.toggle('mode-3', currentSplitMode === 3);
+  }
+
+  if (text) {
+    text.innerText = (currentSplitMode === 3) ? '3분할' : '2분할';
+  }
+
+  const isWide = checkIsDualMode();
+  if (isWide && currentSplitMode === 3) {
+    if (appContainer) appContainer.classList.add('triple-split');
+    if (viewport) viewport.classList.add('triple-split');
+    if (slotCenter) {
+      slotCenter.classList.add('active-triple');
+      slotCenter.style.display = 'flex';
+    }
+  } else {
+    if (appContainer) appContainer.classList.remove('triple-split');
+    if (viewport) viewport.classList.remove('triple-split');
+    if (slotCenter) {
+      slotCenter.classList.remove('active-triple');
+      slotCenter.style.display = 'none';
+    }
+  }
 }
 
 function selectSlotPanel(slot, panelId) {
   panelId = panelId.toUpperCase();
   if (!ALL_PANELS.includes(panelId)) return;
 
-  const isDual = checkIsDualMode();
+  const isWide = checkIsDualMode();
 
   if (slot === 'left') {
-    // 만약 대화면 듀얼 모드에서 이미 우측에 띄워져 있다면 스마트 스왑(자리 맞바꿈)
-    if (isDual && panelId === activeRightPanel) {
+    if (isWide && currentSplitMode === 3) {
+      if (panelId === activeCenterPanel) {
+        activeCenterPanel = activeLeftPanel;
+      } else if (panelId === activeRightPanel) {
+        activeRightPanel = activeLeftPanel;
+      }
+    } else if (isWide && panelId === activeRightPanel) {
       activeRightPanel = activeLeftPanel;
     }
     activeLeftPanel = panelId;
-  } else if (slot === 'right') {
-    // 만약 이미 좌측에 띄워져 있다면 스마트 스왑
+  } else if (slot === 'center') {
     if (panelId === activeLeftPanel) {
+      activeLeftPanel = activeCenterPanel;
+    } else if (panelId === activeRightPanel) {
+      activeRightPanel = activeCenterPanel;
+    }
+    activeCenterPanel = panelId;
+  } else if (slot === 'right') {
+    if (isWide && currentSplitMode === 3) {
+      if (panelId === activeCenterPanel) {
+        activeCenterPanel = activeRightPanel;
+      } else if (panelId === activeLeftPanel) {
+        activeLeftPanel = activeRightPanel;
+      }
+    } else if (panelId === activeLeftPanel) {
       activeLeftPanel = activeRightPanel;
     }
     activeRightPanel = panelId;
@@ -4631,18 +4811,23 @@ function selectSlotPanel(slot, panelId) {
 
   renderDualPanels();
   triggerHaptic(25);
-  if (activeLeftPanel !== 'OP5' && activeRightPanel !== 'OP5') {
+  if (activeLeftPanel !== 'OP5' && activeRightPanel !== 'OP5' && (currentSplitMode !== 3 || activeCenterPanel !== 'OP5')) {
     hideVobcGuide();
   }
 }
 
 function renderDualPanels() {
-  const isDual = checkIsDualMode();
+  const isWide = checkIsDualMode();
+  updateSplitModeUI();
+
   const leftContent = document.getElementById('slot-left-content');
+  const centerContent = document.getElementById('slot-center-content');
   const rightContent = document.getElementById('slot-right-content');
   const pool = document.getElementById('panel-storage-pool');
 
   if (!leftContent || !rightContent || !pool) return;
+
+  const isTriple = isWide && (currentSplitMode === 3) && centerContent;
 
   // 1. 패널 DOM 마운트 및 표시 제어
   ALL_PANELS.forEach(p => {
@@ -4654,7 +4839,12 @@ function renderDualPanels() {
       if (el.parentElement !== leftContent) {
         leftContent.appendChild(el);
       }
-    } else if (isDual && p === activeRightPanel) {
+    } else if (isTriple && p === activeCenterPanel) {
+      el.style.display = 'block';
+      if (el.parentElement !== centerContent) {
+        centerContent.appendChild(el);
+      }
+    } else if (isWide && p === activeRightPanel) {
       el.style.display = 'block';
       if (el.parentElement !== rightContent) {
         rightContent.appendChild(el);
@@ -4673,29 +4863,28 @@ function renderDualPanels() {
 
     // 좌측 슬롯 스위처 버튼
     const lBtn = document.getElementById(`slot-l-${pLower}`);
-    if (lBtn) {
-      if (p === activeLeftPanel) lBtn.classList.add('active');
-      else lBtn.classList.remove('active');
-    }
+    if (lBtn) lBtn.classList.toggle('active', p === activeLeftPanel);
+
+    // 중앙 슬롯 스위처 버튼
+    const cBtn = document.getElementById(`slot-c-${pLower}`);
+    if (cBtn) cBtn.classList.toggle('active', isTriple && p === activeCenterPanel);
 
     // 우측 슬롯 스위처 버튼
     const rBtn = document.getElementById(`slot-r-${pLower}`);
-    if (rBtn) {
-      if (p === activeRightPanel) rBtn.classList.add('active');
-      else rBtn.classList.remove('active');
-    }
+    if (rBtn) rBtn.classList.toggle('active', p === activeRightPanel);
 
     // 상단 모바일 HUD 버튼
     const hudBtn = document.getElementById(`view-${pLower}`);
-    if (hudBtn) {
-      if (p === activeLeftPanel) hudBtn.classList.add('active');
-      else hudBtn.classList.remove('active');
-    }
+    if (hudBtn) hudBtn.classList.toggle('active', p === activeLeftPanel);
   });
 
   // 3. 슬롯 제목 라벨 갱신
   const lLabel = document.getElementById('slot-left-label');
   if (lLabel) lLabel.innerText = getPanelDisplayName(activeLeftPanel);
+
+  const cLabel = document.getElementById('slot-center-label');
+  if (cLabel) cLabel.innerText = getPanelDisplayName(activeCenterPanel);
+
   const rLabel = document.getElementById('slot-right-label');
   if (rLabel) rLabel.innerText = getPanelDisplayName(activeRightPanel);
 }
@@ -4718,15 +4907,24 @@ function switchPanelView(view) {
   view = view.toUpperCase();
   if (!ALL_PANELS.includes(view)) return;
 
-  if (checkIsDualMode()) {
-    // 듀얼 모드일 때: 이미 좌측 또는 우측에 열려 있다면 유지
-    if (view === activeLeftPanel || view === activeRightPanel) {
-      return;
+  const isWide = checkIsDualMode();
+
+  if (isWide) {
+    if (currentSplitMode === 3) {
+      // 3분할 모드: 이미 좌, 중, 우 중 하나에 열려 있다면 유지
+      if (view === activeLeftPanel || view === activeCenterPanel || view === activeRightPanel) {
+        return;
+      }
+      selectSlotPanel('right', view);
+    } else {
+      // 2분할 모드: 이미 좌측 또는 우측에 열려 있다면 유지
+      if (view === activeLeftPanel || view === activeRightPanel) {
+        return;
+      }
+      selectSlotPanel('right', view);
     }
-    // 둘 다 없으면 우측 슬롯에 열어줌
-    selectSlotPanel('right', view);
   } else {
-    // 모바일 모드: 좌측(단일) 슬롯에 열어줌
+    // 모바일 단일 모드: 좌측 슬롯에 열어줌
     selectSlotPanel('left', view);
   }
 }
