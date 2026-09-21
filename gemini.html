@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>열차 운전실 좌측 패널 모바일 훈련 시뮬레이터 (원격 교육 관제 통합판)</title>
-  <!-- Supabase 공식 JS SDK v2 CDN -->
+  <title>열차 운전실 좌측 패널 모바일 훈련 시뮬레이터 (원격 관제 통합판)</title>
+  <!-- Supabase 공식 JS SDK v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
@@ -31,7 +31,7 @@
       touch-action: manipulation;
     }
 
-    html {
+    html, body {
       width: 100%;
       height: 100%;
       height: 100vh;
@@ -39,27 +39,14 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
-    }
-
-    body {
       background-color: #0b0d10;
       color: #e0e6ed;
       font-family: var(--font-family);
-      width: 100%;
-      width: 100vw;
-      height: 100%;
-      height: 100vh;
-      height: 100dvh;
-      height: var(--app-height, 100vh);
-      overflow: hidden;
       display: flex;
       justify-content: center;
       align-items: center;
-      margin: 0;
-      padding: 0;
     }
 
-    /* 모바일 프레임 컨테이너 (대화면 시 반응형 확장) */
     #app-container {
       width: 100%;
       max-width: 480px;
@@ -76,14 +63,11 @@
       transition: max-width 0.25s ease;
     }
 
-    /* 교육자 관제 모드 시 시야 확장 */
     #app-container.instructor-mode-active {
       max-width: 1620px !important;
     }
 
-    /* ========================================================
-       1. 상단 HUD 헤더 영역
-    ======================================================== */
+    /* 1. 상단 HUD */
     header.hud-header {
       background: var(--hud-bg);
       border-bottom: 2px solid #2d333b;
@@ -102,7 +86,6 @@
       gap: 5px;
     }
 
-    /* 역할 토글 (🧑‍🎓 훈련생 ↔ 👨‍🏫 교육자) */
     .role-badge-btn {
       background: #1c2128;
       border: 1.5px solid #30363d;
@@ -117,7 +100,6 @@
       gap: 5px;
       white-space: nowrap;
       transition: all 0.2s ease;
-      -webkit-tap-highlight-color: transparent;
     }
     .role-badge-btn.student {
       border-color: #2ea043;
@@ -131,7 +113,6 @@
       box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
     }
 
-    /* 원격 세션 상태 뱃지 */
     .remote-status-pill {
       font-size: 10px;
       font-weight: 800;
@@ -145,11 +126,6 @@
       align-items: center;
       gap: 4px;
       white-space: nowrap;
-      transition: all 0.2s ease;
-    }
-    .remote-status-pill:hover {
-      border-color: #58a6ff;
-      color: #fff;
     }
     .remote-status-pill.connected {
       border-color: #238636;
@@ -163,13 +139,7 @@
       animation: pulse-red 1.2s infinite;
     }
 
-    /* 모드 드롭다운 메뉴 */
-    .mode-dropdown-wrap {
-      position: relative;
-      display: inline-flex;
-      z-index: 150;
-    }
-
+    .mode-dropdown-wrap { position: relative; display: inline-flex; z-index: 150; }
     .mode-trigger-btn {
       background: #1c2128;
       border: 1px solid #30363d;
@@ -182,46 +152,11 @@
       display: flex;
       align-items: center;
       gap: 5px;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      user-select: none;
       white-space: nowrap;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-      -webkit-tap-highlight-color: transparent;
     }
-    .mode-trigger-btn.mode-play {
-      background: #238636;
-      border-color: #2ea043;
-      color: #ffffff;
-    }
-    .mode-trigger-btn.mode-exam {
-      background: #1f6feb;
-      border-color: #388bfd;
-      color: #ffffff;
-    }
-    .mode-trigger-btn.mode-rec {
-      background: #da3633;
-      border-color: #f85149;
-      color: #ffffff;
-      animation: pulse-red 1.5s infinite;
-    }
-
-    .mode-trigger-icon {
-      font-size: 13px;
-      line-height: 1;
-    }
-    .mode-trigger-text {
-      font-size: 11px;
-      letter-spacing: -0.2px;
-    }
-    .mode-dropdown-arrow {
-      font-size: 8px;
-      opacity: 0.75;
-      transition: transform 0.2s ease;
-      margin-left: 2px;
-    }
-    .mode-dropdown-wrap.open .mode-dropdown-arrow {
-      transform: rotate(180deg);
-    }
+    .mode-trigger-btn.mode-play { background: #238636; border-color: #2ea043; }
+    .mode-trigger-btn.mode-exam { background: #1f6feb; border-color: #388bfd; }
+    .mode-trigger-btn.mode-rec  { background: #da3633; border-color: #f85149; }
 
     .mode-dropdown-menu {
       display: none;
@@ -231,245 +166,67 @@
       background: #161b22;
       border: 1px solid #30363d;
       border-radius: 8px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255,255,255,0.05);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75);
       padding: 5px;
       min-width: 135px;
       flex-direction: column;
       gap: 3px;
       z-index: 9999;
-      animation: menuSlideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .mode-dropdown-wrap.open .mode-dropdown-menu {
-      display: flex;
-    }
-
-    @keyframes menuSlideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-6px) scale(0.97);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    .mode-dropdown-title {
-      font-size: 10px;
-      color: #8b949e;
-      font-weight: 700;
-      padding: 3px 8px 2px;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid #21262d;
-      margin-bottom: 2px;
-    }
-
+    .mode-dropdown-wrap.open .mode-dropdown-menu { display: flex; }
+    .mode-dropdown-title { font-size: 10px; color: #8b949e; font-weight: 700; padding: 3px 8px 2px; }
     .mode-dropdown-item {
-      background: transparent;
-      border: 1px solid transparent;
-      color: #c9d1d9;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 7px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      transition: all 0.15s ease;
-      text-align: left;
-      white-space: nowrap;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
+      background: transparent; border: 1px solid transparent; color: #c9d1d9;
+      font-size: 12px; font-weight: 700; padding: 7px 10px; border-radius: 6px; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
     }
-    .mode-dropdown-item .item-text { flex: 1; }
-    .mode-dropdown-item .item-check { font-size: 11px; opacity: 0; font-weight: 900; }
-    .mode-dropdown-item:active, .mode-dropdown-item:hover { background: #21262d; color: #fff; }
-    .mode-dropdown-item.active { background: rgba(35, 134, 54, 0.22); border-color: #238636; color: #3fb950; }
-    .mode-dropdown-item.active.exam-active { background: rgba(31, 111, 235, 0.22); border-color: #1f6feb; color: #58a6ff; }
-    .mode-dropdown-item.active.rec-active { background: rgba(218, 54, 51, 0.22); border-color: #da3633; color: #f85149; }
-    .mode-dropdown-item.active .item-check { opacity: 1; }
+    .mode-dropdown-item.active { background: rgba(35, 134, 54, 0.22); color: #3fb950; }
 
-    @keyframes pulse-red {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.75; }
-    }
-
-    .panel-view-switcher {
-      display: flex;
-      gap: 4px;
-      overflow-x: auto;
-      flex-shrink: 0;
-    }
-
+    .panel-view-switcher { display: flex; gap: 4px; overflow-x: auto; flex-shrink: 0; }
     .panel-toggle-btn {
-      background: #21262d;
-      border: 1px solid #30363d;
-      color: #c9d1d9;
-      font-size: 11px;
-      font-weight: 800;
-      padding: 4px 7px;
-      border-radius: 4px;
-      cursor: pointer;
-      letter-spacing: 0.3px;
-      white-space: nowrap;
-      transition: all 0.15s ease;
+      background: #21262d; border: 1px solid #30363d; color: #c9d1d9;
+      font-size: 11px; font-weight: 800; padding: 4px 7px; border-radius: 4px; cursor: pointer;
     }
-    .panel-toggle-btn.active {
-      background: #1f6feb;
-      border-color: #388bfd;
-      color: #fff;
-      box-shadow: 0 1px 4px rgba(31, 111, 235, 0.4);
-    }
+    .panel-toggle-btn.active { background: #1f6feb; border-color: #388bfd; color: #fff; }
 
     .sound-toggle-btn {
-      background: #21262d;
-      border: 1px solid #38414e;
-      color: #e6edf3;
-      width: 32px;
-      height: 28px;
-      border-radius: 6px;
-      cursor: pointer;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 14px;
-      flex-shrink: 0;
-      transition: all 0.15s ease;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+      background: #21262d; border: 1px solid #38414e; color: #e6edf3;
+      width: 32px; height: 28px; border-radius: 6px; cursor: pointer;
+      display: inline-flex; justify-content: center; align-items: center; font-size: 14px;
     }
-    .sound-toggle-btn:hover {
-      background: #30363d;
-      border-color: #8b949e;
-      transform: scale(1.05);
-    }
-    .sound-toggle-btn.muted {
-      background: rgba(218, 54, 51, 0.22);
-      border-color: #f85149;
-      color: #f85149;
-    }
+    .sound-toggle-btn.muted { background: rgba(218, 54, 51, 0.22); border-color: #f85149; color: #f85149; }
 
-    .hud-top-right-group {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-left: auto;
-      flex-shrink: 0;
-    }
+    .hud-top-right-group { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
 
     .hud-status-display {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-left: 4px solid var(--accent-cyan);
-      border-radius: 4px;
-      padding: 6px 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-height: 48px;
-      transition: border-color 0.3s;
+      background: #0d1117; border: 1px solid #30363d; border-left: 4px solid var(--accent-cyan);
+      border-radius: 4px; padding: 6px 10px; display: flex; flex-direction: column; gap: 2px; min-height: 48px;
     }
-    .hud-status-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 10px;
-      font-weight: 700;
-      color: #8b949e;
-      letter-spacing: 0.5px;
-    }
-    .hud-step-badge {
-      background: #1f6feb;
-      color: #fff;
-      padding: 1px 6px;
-      border-radius: 10px;
-      font-size: 10px;
-    }
-    .hud-instruction-text {
-      font-size: 13px;
-      font-weight: 600;
-      color: #f0f6fc;
-      line-height: 1.35;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .hud-status-meta { display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 700; color: #8b949e; }
+    .hud-step-badge { background: #1f6feb; color: #fff; padding: 1px 6px; border-radius: 10px; font-size: 10px; }
+    .hud-instruction-text { font-size: 13px; font-weight: 600; color: #f0f6fc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .hud-rec-bar {
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      color: #f85149;
-      font-size: 12px;
-      font-weight: 700;
-    }
-    .rec-dot {
-      width: 10px; height: 10px; background: #f85149; border-radius: 50%; display: inline-block; animation: blink 0.8s infinite;
-    }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+    @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.75; } }
 
-    /* ========================================================
-       2. 중앙 시뮬레이션 작업영역 & 교육자 관제 독
-    ======================================================== */
+    /* 2. 중앙 작업공간 */
     #sim-workspace-frame {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: row;
-      position: relative;
-      overflow: hidden;
+      flex: 1; min-height: 0; display: flex; flex-direction: row; position: relative; overflow: hidden;
     }
 
     #panel-viewport {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      overflow-x: hidden;
-      position: relative;
+      flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; position: relative;
       background: #181c22 url('data:image/svg+xml;utf8,<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" fill="%231a1e24"/><path d="M0 0h40v40H0z" fill="none" stroke="%23222730" stroke-width="1"/></svg>');
-      padding: 10px 8px 16px 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      -webkit-overflow-scrolling: touch;
+      padding: 10px 8px 16px 8px; display: flex; flex-direction: column; gap: 12px;
     }
 
-    .viewport-slot {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      width: 100%;
-    }
+    .viewport-slot { display: flex; flex-direction: column; gap: 8px; width: 100%; }
 
     .slot-header {
-      display: none;
-      justify-content: space-between;
-      align-items: center;
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      padding: 5px 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-      user-select: none;
+      display: none; justify-content: space-between; align-items: center;
+      background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 5px 10px;
     }
-    .slot-title {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 800;
-      color: #c9d1d9;
-    }
-    .slot-indicator {
-      font-size: 9px;
-      font-weight: 900;
-      padding: 2px 6px;
-      border-radius: 4px;
-      letter-spacing: 0.5px;
-    }
+    .slot-title { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #c9d1d9; }
+    .slot-indicator { font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 4px; }
     .slot-left-ind { background: #1f6feb; color: #ffffff; }
     .slot-center-ind { background: #8957e5; color: #ffffff; }
     .slot-right-ind { background: #238636; color: #ffffff; }
@@ -479,28 +236,14 @@
       background: #21262d; border: 1px solid #30363d; color: #8b949e;
       font-size: 11px; font-weight: 800; padding: 3px 7px; border-radius: 4px; cursor: pointer;
     }
-    .slot-header#slot-header-left .slot-switch-btn.active { background: #1f6feb; border-color: #388bfd; color: #fff; }
-    .slot-header#slot-header-center .slot-switch-btn.active { background: #8957e5; border-color: #a371f7; color: #fff; }
-    .slot-header#slot-header-right .slot-switch-btn.active { background: #238636; border-color: #2ea043; color: #fff; }
-
-    .slot-content { width: 100%; }
+    .slot-header#slot-header-left .slot-switch-btn.active { background: #1f6feb; color: #fff; }
+    .slot-header#slot-header-center .slot-switch-btn.active { background: #8957e5; color: #fff; }
+    .slot-header#slot-header-right .slot-switch-btn.active { background: #238636; color: #fff; }
 
     .dual-view-badge {
-      display: none;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 800;
-      color: #c9d1d9;
-      background: #21262d;
-      padding: 3px 6px 3px 8px;
-      border-radius: 6px;
-      border: 1px solid #30363d;
-      white-space: nowrap;
-      cursor: pointer;
+      display: none; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #c9d1d9;
+      background: #21262d; padding: 3px 6px 3px 8px; border-radius: 6px; border: 1px solid #30363d; cursor: pointer;
     }
-    .split-badge-icon { font-size: 12px; }
-    .split-mode-label { font-weight: 800; color: #f0f6fc; }
     .split-selector-chips { display: inline-flex; background: #161b22; border: 1px solid #30363d; border-radius: 4px; padding: 1px; gap: 2px; }
     .split-chip { background: transparent; border: none; color: #8b949e; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 3px; cursor: pointer; }
     .split-chip.active { background: #1f6feb; color: #ffffff; }
@@ -513,155 +256,250 @@
       .panel-view-switcher { display: none !important; }
       .dual-view-badge { display: inline-flex !important; }
       #panel-viewport {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        align-items: start;
-        padding: 12px 14px 16px 14px;
+        display: grid !important; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; padding: 12px 14px 16px 14px;
       }
-      #panel-viewport.triple-split {
-        grid-template-columns: repeat(3, minmax(320px, 1fr)) !important;
-        overflow-x: auto;
-      }
+      #panel-viewport.triple-split { grid-template-columns: repeat(3, minmax(320px, 1fr)) !important; overflow-x: auto; }
       #slot-right { display: flex !important; }
       #slot-center.active-triple { display: flex !important; }
       .slot-header { display: flex !important; }
     }
 
-    /* 교육자 전용 사이드바 관제 독 (Instructor Command Dock) */
+    /* 교육자 전용 독 */
     #instructor-dock {
-      display: none;
-      width: 380px;
-      background: #13171f;
-      border-left: 2px solid #3b424d;
-      padding: 12px 14px;
-      flex-direction: column;
-      gap: 12px;
-      overflow-y: auto;
-      z-index: 90;
-      box-shadow: -6px 0 24px rgba(0,0,0,0.7);
+      display: none; width: 380px; background: #13171f; border-left: 2px solid #3b424d;
+      padding: 12px 14px; flex-direction: column; gap: 12px; overflow-y: auto; z-index: 90; box-shadow: -6px 0 24px rgba(0,0,0,0.7);
     }
-    #app-container.instructor-mode-active #instructor-dock {
-      display: flex !important;
-    }
+    #app-container.instructor-mode-active #instructor-dock { display: flex !important; }
 
     .inst-section-title {
-      font-size: 11.5px;
-      font-weight: 900;
-      color: #f1f5f9;
-      letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid #334155;
-      padding-bottom: 4px;
+      font-size: 11.5px; font-weight: 900; color: #f1f5f9; display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 4px;
     }
     .inst-card {
-      background: #090d12;
-      border: 1px solid #1e293b;
-      border-radius: 7px;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+      background: #090d12; border: 1px solid #1e293b; border-radius: 7px; padding: 10px; display: flex; flex-direction: column; gap: 6px;
     }
-    .inst-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      font-family: monospace;
-    }
+    .inst-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-family: monospace; }
     .inst-val { font-weight: 900; color: #38bdf8; font-size: 12px; }
 
-    .interlock-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 5px;
-      font-size: 10.5px;
-    }
-    .chk-pill {
-      padding: 4px 6px;
-      border-radius: 4px;
-      background: #1e293b;
-      color: #94a3b8;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .chk-pill.ok {
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      font-weight: 800;
-      border: 1px solid #10b981;
-    }
+    .interlock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 10.5px; }
+    .chk-pill { padding: 4px 6px; border-radius: 4px; background: #1e293b; color: #94a3b8; display: flex; align-items: center; gap: 4px; }
+    .chk-pill.ok { background: rgba(16, 185, 129, 0.2); color: #34d399; font-weight: 800; border: 1px solid #10b981; }
 
-    .fault-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
+    .fault-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .btn-fault {
-      background: #27272a;
-      border: 1px solid #3f3f46;
-      color: #e4e4e7;
-      font-size: 11px;
-      font-weight: 800;
-      padding: 8px 6px;
-      border-radius: 6px;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.15s;
+      background: #27272a; border: 1px solid #3f3f46; color: #e4e4e7; font-size: 11px; font-weight: 800; padding: 8px 6px; border-radius: 6px; cursor: pointer; text-align: center;
     }
-    .btn-fault.active {
-      background: #dc2626 !important;
-      border-color: #ef4444 !important;
-      color: #fff !important;
-      box-shadow: 0 0 12px rgba(239, 68, 68, 0.7);
-    }
+    .btn-fault.active { background: #dc2626 !important; border-color: #ef4444 !important; color: #fff !important; }
 
     .audit-log-view {
-      background: #090d12;
-      border: 1px solid #1e293b;
-      border-radius: 6px;
-      padding: 8px;
-      max-height: 160px;
-      overflow-y: auto;
-      font-size: 10.5px;
-      font-family: monospace;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+      background: #090d12; border: 1px solid #1e293b; border-radius: 6px; padding: 8px; max-height: 160px; overflow-y: auto; font-size: 10.5px; font-family: monospace; display: flex; flex-direction: column; gap: 4px;
     }
-    .log-row {
-      color: #94a3b8;
-      border-bottom: 1px dashed rgba(255,255,255,0.06);
-      padding-bottom: 2px;
+    .log-row { color: #94a3b8; border-bottom: 1px dashed rgba(255,255,255,0.06); padding-bottom: 2px; }
+
+    /* 3. 메탈 패널 공통 스타일 */
+    .train-metal-panel {
+      background: linear-gradient(145deg, #2a2f38 0%, #1f232a 100%);
+      border: 2px solid #3b424d; box-shadow: inset 1px 1px 3px rgba(255,255,255,0.08), 0 8px 18px rgba(0,0,0,0.5);
+      border-radius: 8px; position: relative; padding: 16px 12px;
     }
+    .screw {
+      position: absolute; width: 8px; height: 8px;
+      background: radial-gradient(circle, #8a94a6 30%, #444b57 90%); border-radius: 50%;
+    }
+    .screw.tl { top: 6px; left: 6px; }
+    .screw.tr { top: 6px; right: 6px; }
+    .screw.bl { bottom: 6px; left: 6px; }
+    .screw.br { bottom: 6px; right: 6px; }
+
+    .panel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 10px; justify-items: center; align-items: center; }
+    .main-panel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 6px; justify-items: center; align-items: center; }
+    .op3-panel-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px 4px; justify-items: center; align-items: center; }
+
+    .component-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 90px; position: relative; }
+    .component-label {
+      margin-top: 6px; font-size: 11px; font-weight: 700; color: #cbd5e1; text-align: center;
+      background: rgba(15, 20, 26, 0.6); padding: 2px 6px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.06);
+    }
+    .target-hint-pulse { position: relative; }
+    .target-hint-pulse::after {
+      content: ''; position: absolute; top: -6px; left: -6px; right: -6px; bottom: -6px;
+      border: 3.5px dashed var(--accent-yellow); border-radius: 12px; pointer-events: none;
+      animation: hint-border-pulse 0.9s infinite; z-index: 50; box-shadow: 0 0 15px rgba(255, 214, 0, 0.6);
+    }
+    @keyframes hint-border-pulse { 0%, 100% { opacity: 0.3; transform: scale(0.97); } 50% { opacity: 1; transform: scale(1.04); } }
+
+    /* 4. 부품별 세부 스타일 (버튼, 커버, 게이지, 와이퍼 등) */
+    .btn-estop-wrapper {
+      width: 68px; height: 68px; background: radial-gradient(circle, #3a3f47 0%, #1a1c22 100%);
+      border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 2px solid #545b68; cursor: pointer;
+    }
+    .btn-estop {
+      width: 54px; height: 54px; background: radial-gradient(circle at 35% 35%, #ff4d4d, #b30000 70%, #660000 100%);
+      border-radius: 50%; border: 2px solid #ff8080; display: flex; justify-content: center; align-items: center;
+      transform: rotate(var(--estop-rot, 0deg)); transition: transform 0.25s;
+    }
+    .btn-estop.latched { transform: rotate(var(--estop-rot, 0deg)) scale(0.86); background: #990000; }
+
+    .cover-guard-unit { width: 60px; height: 74px; position: relative; display: flex; justify-content: center; align-items: center; }
+    .acrylic-cover {
+      position: absolute; top: 0; left: 3px; width: 54px; height: 72px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.38), rgba(200,230,255,0.12));
+      border: 2px solid rgba(255, 255, 255, 0.65); border-radius: 6px; transform-origin: top center; transition: transform 0.35s; z-index: 20; cursor: pointer;
+    }
+    .acrylic-cover.open { transform: perspective(300px) rotateX(-125deg) translateY(-8px); background: rgba(255,255,255,0.08); }
+
+    .metal-bezel-btn {
+      width: 54px; height: 54px; background: radial-gradient(circle, #bcc5d3 20%, #687383 90%);
+      border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 2px solid #444b55; cursor: pointer;
+    }
+    .push-btn-inner { width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 3px 5px rgba(0,0,0,0.5); }
+    .push-btn-inner.red { background: radial-gradient(circle at 35% 35%, #ff3b30, #b71c1c 90%); }
+    .push-btn-inner.green { background: radial-gradient(circle at 35% 35%, #34c759, #1b5e20 90%); }
+    .push-btn-inner:active, .push-btn-inner.pressed { transform: scale(0.92); }
+    .push-btn-inner.latched { transform: scale(0.86); filter: brightness(0.75); }
+    .push-btn-inner.green.lit { box-shadow: 0 0 18px #10b981 !important; }
+    .push-btn-inner.red.latched-lit { box-shadow: 0 0 16px rgba(239, 68, 68, 0.95), inset 0 0 10px #ffffff !important; transform: scale(0.91); }
+
+    .rotary-unit { width: 96px; height: 90px; position: relative; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+    .rotary-dial-plate { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 50px; height: 50px; border-radius: 50%; border: 2px solid #8e99a8; background: #181b20; }
+    .rotary-knob { position: absolute; bottom: 14px; left: 50%; margin-left: -15px; width: 30px; height: 30px; border-radius: 50%; background: #2a2f38; border: 1px solid #636d7d; transition: transform 0.2s; }
+    .rotary-pointer { position: absolute; top: -6px; left: 11px; width: 8px; height: 21px; background: #cbd5e1; border-radius: 3px; }
+    .rotary-ticks { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; font-size: 10.5px; font-weight: 800; color: #f8fafc; }
+    .tick-label { position: absolute; white-space: nowrap; transform: translate(-50%, -50%); }
+    .tick-2-left  { top: 14px; left: 18px; }
+    .tick-2-right { top: 14px; left: 78px; }
+    .tick-3-left  { top: 22px; left: 14px; }
+    .tick-3-mid   { top: 3px;  left: 50%; }
+    .tick-3-right { top: 22px; left: 82px; }
+    .interactive-tick { pointer-events: auto; cursor: pointer; }
+
+    .rotary-unit.op3-compact { width: 68px; height: 66px; }
+    .rotary-unit.op3-compact .rotary-dial-plate { width: 42px; height: 42px; bottom: 2px; }
+    .rotary-unit.op3-compact .rotary-knob { width: 24px; height: 24px; bottom: 11px; margin-left: -12px; }
+    .rotary-unit.op3-compact .rotary-pointer { height: 16px; width: 5px; top: -4px; left: 9.5px; }
+
+    .rotary-unit.main-compact { width: 74px; height: 72px; }
+    .rotary-unit.main-compact .rotary-dial-plate { width: 44px; height: 44px; bottom: 2px; }
+    .rotary-unit.main-compact .rotary-knob { width: 26px; height: 26px; bottom: 11px; margin-left: -13px; }
+    .rotary-unit.main-compact .rotary-pointer { height: 17px; width: 6px; top: -5px; left: 10px; }
+
+    /* 모니터 및 뷰포트 */
+    .cab-view-monitor { background: #14171d; border: 2px solid #363d47; border-radius: 8px; padding: 5px; position: relative; }
+    .cab-monitor-header { display: flex; justify-content: space-between; align-items: center; padding: 2px 4px; font-size: 10px; font-weight: 800; color: #94a3b8; }
+    .cab-screen-viewport { position: relative; width: 100%; aspect-ratio: 1024 / 473; background: #090d12; border-radius: 4px; overflow: hidden; }
+    #cab-view-canvas { width: 100%; height: 100%; display: block; object-fit: cover; }
+    .cab-osd-overlay { position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: flex-end; padding: 5px 7px; font-family: monospace; color: #fff; }
+    .cab-osd-notch-tag { background: rgba(0, 0, 0, 0.78); border: 1px solid rgba(255, 255, 255, 0.22); padding: 2px 7px; border-radius: 3px; font-size: 9.5px; font-weight: 700; width: fit-content; }
+    .cab-badge { font-size: 8.5px; font-weight: 900; padding: 1px 5px; border-radius: 3px; }
+    .cab-badge.stopped { background: #334155; color: #94a3b8; }
+    .cab-badge.driving { background: #15803d; color: #dcfce7; }
+    .cab-badge.braking { background: #b91c1c; color: #fee2e2; }
+
+    /* 마스콘 및 조작반 */
+    .op1-container { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; width: 100%; }
+    .op1-left-col, .op1-right-col { display: flex; flex-direction: column; gap: 6px; flex: 1 1 340px; }
+    .cob-panel { background: #181c22; border: 2px solid #363d47; border-radius: 8px; padding: 6px 10px; }
+    .cob-mic-body { width: 68px; height: 90px; background: #282d35; border-radius: 10px; border: 2px solid #4a5360; cursor: pointer; display: flex; flex-direction: column; align-items: center; padding: 4px; }
+    .cob-mic-grille { width: 82%; height: 42px; display: flex; flex-direction: column; justify-content: space-evenly; background: #0f1216; border-radius: 5px; }
+    .cob-grille-line { height: 2.5px; background: #252b33; }
+
+    .op1-door-plate { background: #181c22; border: 2px solid #363d47; border-radius: 8px; padding: 6px 12px; display: flex; justify-content: space-around; align-items: center; }
+    .door-metal-bezel { width: 38px; height: 38px; border-radius: 50%; background: #555e6c; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+    .door-btn-inner { width: 24px; height: 24px; border-radius: 50%; }
+    .door-btn-inner.green { background: #22c55e; }
+    .door-btn-inner.red { background: #ef4444; }
+
+    .mascon-frame { background: #121418; border: 2px solid #363d47; border-radius: 8px; padding: 8px; min-height: 236px; position: relative; }
+    .mascon-inner-border { position: relative; width: 100%; height: 220px; }
+    .mascon-pinstripe-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .mascon-subplate { position: absolute; left: 78px; top: 10px; bottom: 10px; width: 88px; background: #0d0f12; border: 1.5px solid #272c34; border-radius: 6px; display: flex; justify-content: center; align-items: center; }
+    .tbar-slot-track { width: 20px; height: 180px; background: #080a0d; border: 2px solid #525a66; border-radius: 10px; position: relative; cursor: pointer; }
+    .tbar-handle { position: absolute; left: calc(50% - 24px); transform: translate(-50%, -50%); width: 164px; height: 25px; background: #4b5360; border-radius: 6px; cursor: grab; z-index: 25; }
+
+    .mascon-key-unit { position: absolute; left: 58%; top: 26px; transform: translateX(-50%); cursor: pointer; z-index: 10; }
+    .key-cylinder { width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; border: 2px solid #cbd5e1; display: flex; justify-content: center; align-items: center; }
+    .key-blade-handle { width: 8px; height: 22px; background: #64748b; border-radius: 2px; transform: rotate(-90deg); transition: transform 0.22s; }
+    .key-blade-handle.on { transform: rotate(0deg); }
+
+    .reverser-subplate { position: absolute; right: 25px; top: 14px; width: 84px; height: 116px; background: #0d0f12; border: 1.5px solid #f1f5f9; border-radius: 6px; display: flex; justify-content: center; align-items: center; }
+    .reverser-ball-knob { position: absolute; left: 50%; transform: translate(-50%, -50%); width: 32px; height: 32px; border-radius: 50%; background: #050608; border: 1.5px solid #6b7280; cursor: grab; z-index: 25; }
+
+    .mascon-battery-plate { position: absolute; right: 25px; bottom: 12px; background: #0d0f12; border: 1.5px solid #f1f5f9; border-radius: 6px; padding: 3px 6px; display: flex; gap: 6px; }
+
+    /* OP2 인디케이터 */
+    .op2-indicator-bar { display: flex; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 8px 4px; border-radius: 6px; }
+    .op2-ind-lamp { width: 28px; height: 28px; border-radius: 50%; background: #2d333b; display: flex; justify-content: center; align-items: center; }
+    .op2-ind-lens { width: 18px; height: 18px; border-radius: 50%; }
+    .op2-ind-lamp.lit { box-shadow: 0 0 14px currentColor; }
+
+    /* OP4 압력계 & 와이퍼 */
+    .gauge-square-frame { grid-column: span 2; width: 100%; max-width: 205px; background: #181b22; border: 3px solid #3d4450; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; align-items: center; }
+    .gauge-body { width: 136px; height: 136px; background: #f8fafc; border-radius: 50%; border: 7px solid #232730; position: relative; overflow: hidden; }
+    .gauge-needle { position: absolute; bottom: 50%; left: 50%; transform-origin: bottom center; transition: transform 0.5s; }
+    .needle-mr { background: #ef4444; width: 2.5px; height: 54px; transform: rotate(67.5deg); }
+    .needle-bc { background: #1e293b; width: 3px; height: 52px; transform: rotate(-135deg); }
+
+    .wiper-unit-box { width: 90px; height: 96px; background: #191c22; border: 2px solid #333a46; border-radius: 6px; position: relative; cursor: pointer; }
+    .wiper-lbl { position: absolute; font-weight: 900; color: #e2e8f0; font-size: 8.5px; }
+    .wiper-bar-knob { position: absolute; top: 50px; left: 50%; width: 17px; height: 40px; margin-top: -20px; margin-left: -8.5px; background: #3e4756; border-radius: 5px; transition: transform 0.22s; }
+
+    .drive-mode-recess-box { margin-top: 14px; padding: 12px; background: #181c22; border: 2px solid #3b424d; border-radius: 8px; display: flex; flex-direction: column; align-items: center; }
+    .drive-mode-plate { width: 120px; height: 120px; background: #cbd5e1; border-radius: 8px; position: relative; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+    .dm-lbl { position: absolute; font-size: 10.5px; font-weight: 900; color: #0f172a; }
+    .dm-lever-knob { position: absolute; top: 50%; left: 50%; width: 19px; height: 68px; margin-top: -34px; margin-left: -9.5px; background: #2b303a; border-radius: 5px; transition: transform 0.25s; }
+
+    .vobc-overlay-card { margin: 18px 4px; background: #161a21; border: 1.5px solid #3b424d; border-radius: 10px; padding: 12px; }
+    .vobc-meter-track { height: 8px; background: #1e2530; border-radius: 4px; overflow: hidden; }
+    .vobc-meter-fill { height: 100%; width: 0%; background: #00e676; transition: width 0.04s; }
+
+    /* 5. 하단 툴바 */
+    footer.floating-toolbar {
+      flex-shrink: 0; background: rgba(18, 21, 26, 0.98); border-top: 1px solid #30363d;
+      padding: 8px 12px; display: flex; gap: 8px; z-index: 100;
+    }
+    .toolbar-btn {
+      flex: 1; background: #21262d; border: 1px solid #363d47; color: #c9d1d9;
+      font-size: 12px; font-weight: 700; padding: 10px 4px; border-radius: 6px; cursor: pointer; text-align: center;
+    }
+    .toolbar-btn.primary { background: #1f6feb; border-color: #388bfd; color: #ffffff; }
+
+    /* 6. 모달 대화상자 (화면에 글자가 튀어나오지 않도록 display: none 설정 필수) */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78);
+      z-index: 1000; display: none; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(4px);
+    }
+    .modal-window {
+      background: #1c2128; border: 1px solid #3b424d; border-radius: 10px; width: 100%; max-width: 420px; overflow: hidden;
+    }
+    .modal-header { background: #24292f; padding: 12px 16px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; }
+    .modal-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; max-height: 65vh; overflow-y: auto; }
+    .modal-footer { padding: 12px 16px; border-top: 1px solid #30363d; background: #161b22; display: flex; justify-content: flex-end; gap: 8px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-control { background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 8px 10px; border-radius: 5px; font-size: 12px; width: 100%; }
+    .report-card { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px; text-align: center; }
+    .grade-stamp { font-size: 36px; font-weight: 900; color: var(--accent-green); margin: 6px 0; }
   </style>
 </head>
 <body>
 
 <div id="app-container">
-  <!-- iOS Safari 17.4+ Taptic Engine 네이티브 햅틱 유도용 스위치 -->
   <input type="checkbox" switch id="ios-haptic-switch" style="position:fixed; opacity:0; pointer-events:none; top:-9999px; left:-9999px;" aria-hidden="true" tabindex="-1" />
 
-  <!-- 1. 상단 HUD 영역 -->
+  <!-- 1. 상단 HUD -->
   <header class="hud-header">
     <div class="hud-top-bar">
-      <!-- 역할 토글 (🧑‍🎓 훈련생 ↔ 👨‍🏫 교육자) -->
-      <button id="btn-role-toggle" class="role-badge-btn student" onclick="toggleUserRole()" title="클릭하여 훈련생/교육자 관제 전환">
+      <!-- 역할 전환 뱃지 -->
+      <button id="btn-role-toggle" class="role-badge-btn student" onclick="toggleUserRole()" title="클릭하여 훈련생/교육자 전환">
         <span id="role-icon">🧑‍🎓</span>
         <span id="role-text">훈련생</span>
       </button>
 
-      <!-- Supabase 실시간 연동 뱃지 -->
+      <!-- Supabase 연동 뱃지 -->
       <div id="remote-status-pill" class="remote-status-pill" onclick="openRemoteModal()" title="클릭하여 Supabase 원격 세션 설정">
         <span id="remote-dot">⚪</span>
         <span id="remote-status-text">원격 오프라인</span>
       </div>
 
-      <!-- 모드 선택 드롭다운 (실습, 시험, 녹화) -->
+      <!-- 모드 선택 드롭다운 -->
       <div class="mode-dropdown-wrap" id="mode-dropdown-wrap">
         <button id="mode-trigger-btn" class="mode-trigger-btn mode-play" onclick="toggleModeDropdown(event)">
           <span id="mode-trigger-icon">🕹️</span>
@@ -670,19 +508,13 @@
         </button>
         <div id="mode-dropdown-menu" class="mode-dropdown-menu">
           <div class="mode-dropdown-title">MODE SELECT</div>
-          <button id="tab-play" class="mode-dropdown-item active" onclick="selectModeFromDropdown('PLAY')">
-            <span class="item-icon">🕹️</span><span class="item-text">실습 훈련</span><span class="item-check">✓</span>
-          </button>
-          <button id="tab-exam" class="mode-dropdown-item" onclick="selectModeFromDropdown('EXAM')">
-            <span class="item-icon">⏱️</span><span class="item-text">실전 평가</span><span class="item-check">✓</span>
-          </button>
-          <button id="tab-rec" class="mode-dropdown-item" onclick="selectModeFromDropdown('REC')">
-            <span class="item-icon">🔴</span><span class="item-text">동작 녹화</span><span class="item-check">✓</span>
-          </button>
+          <button class="mode-dropdown-item active" onclick="selectModeFromDropdown('PLAY')"><span>🕹️ 실습 훈련</span></button>
+          <button class="mode-dropdown-item" onclick="selectModeFromDropdown('EXAM')"><span>⏱️ 실전 평가</span></button>
+          <button class="mode-dropdown-item" onclick="selectModeFromDropdown('REC')"><span>🔴 동작 녹화</span></button>
         </div>
       </div>
 
-      <!-- 패널 전환 뷰 스위처 (OP1 ~ OP5) -->
+      <!-- 패널 전환 탭 -->
       <div class="panel-view-switcher">
         <button id="view-op1" class="panel-toggle-btn active" onclick="switchPanelView('OP1')">OP1</button>
         <button id="view-op2" class="panel-toggle-btn" onclick="switchPanelView('OP2')">OP2</button>
@@ -691,45 +523,32 @@
         <button id="view-op5" class="panel-toggle-btn" onclick="switchPanelView('OP5')">OP5</button>
       </div>
 
-      <!-- 상단 우측 컨트롤 그룹 -->
       <div class="hud-top-right-group">
-        <div class="dual-view-badge" id="split-mode-badge" onclick="toggleSplitMode()" title="클릭하여 2분할/3분할 전환">
-          <span class="split-badge-icon">🖥️</span>
-          <span class="split-mode-label" id="split-mode-text">2분할</span>
-          <div class="split-selector-chips" onclick="event.stopPropagation()">
-            <button type="button" class="split-chip active" id="chip-split-2" onclick="setSplitMode(2, event)">2분할</button>
-            <button type="button" class="split-chip" id="chip-split-3" onclick="setSplitMode(3, event)">3분할</button>
-          </div>
-        </div>
-
         <button id="btn-sound-toggle" class="sound-toggle-btn" onclick="toggleMuteSound()" title="소리 끄기/켜기">
           <span id="sound-toggle-icon">🔊</span>
         </button>
       </div>
     </div>
 
-    <!-- 상태 알림창 -->
+    <!-- HUD 상태 안내 -->
     <div id="hud-status" class="hud-status-display">
       <div class="hud-status-meta">
         <span id="hud-mode-title">자유 탐색 및 시스템 테스트 모드</span>
         <span id="hud-step-count" class="hud-step-badge" style="background:#238636;">FREE</span>
       </div>
       <div id="hud-instruction" class="hud-instruction-text">
-        스위치와 레버를 자유롭게 조작하며 인터록, 계기 및 3D 궤도 주행 반응을 테스트해보세요.
+        스위치와 마스콘을 조작하세요. 교육자 관제 모드에서 학생 조작 미러링 및 고장 인가가 가능합니다.
       </div>
     </div>
   </header>
 
-  <!-- 2. 중앙 작업공간 (패널 뷰포트 + 교육자 관제 독) -->
+  <!-- 2. 작업공간 (패널 뷰포트 + 교육자 관제 독) -->
   <div id="sim-workspace-frame">
     <main id="panel-viewport">
       <!-- 좌측 슬롯 -->
       <div id="slot-left" class="viewport-slot">
         <div class="slot-header" id="slot-header-left">
-          <div class="slot-title">
-            <span class="slot-indicator slot-left-ind">LEFT</span>
-            <span id="slot-left-label">OP1 (주 제어반 & 마스콘)</span>
-          </div>
+          <div class="slot-title"><span class="slot-indicator slot-left-ind">LEFT</span><span id="slot-left-label">OP1</span></div>
           <div class="slot-panel-switcher">
             <button id="slot-l-op1" class="slot-switch-btn active" onclick="selectSlotPanel('left', 'OP1')">OP1</button>
             <button id="slot-l-op2" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP2')">OP2</button>
@@ -741,31 +560,10 @@
         <div id="slot-left-content" class="slot-content"></div>
       </div>
 
-      <!-- 중앙 슬롯 (대화면 3분할) -->
-      <div id="slot-center" class="viewport-slot" style="display:none;">
-        <div class="slot-header" id="slot-header-center">
-          <div class="slot-title">
-            <span class="slot-indicator slot-center-ind">MID</span>
-            <span id="slot-center-label">OP3 (긴급 제동 조작반)</span>
-          </div>
-          <div class="slot-panel-switcher">
-            <button id="slot-c-op1" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP1')">OP1</button>
-            <button id="slot-c-op2" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP2')">OP2</button>
-            <button id="slot-c-op3" class="slot-switch-btn active" onclick="selectSlotPanel('center', 'OP3')">OP3</button>
-            <button id="slot-c-op4" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP4')">OP4</button>
-            <button id="slot-c-op5" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP5')">OP5</button>
-          </div>
-        </div>
-        <div id="slot-center-content" class="slot-content"></div>
-      </div>
-
-      <!-- 우측 슬롯 (대화면 듀얼) -->
+      <!-- 우측 슬롯 -->
       <div id="slot-right" class="viewport-slot">
         <div class="slot-header" id="slot-header-right">
-          <div class="slot-title">
-            <span class="slot-indicator slot-right-ind">RIGHT</span>
-            <span id="slot-right-label">OP4 (메인 계기 & 바이패스)</span>
-          </div>
+          <div class="slot-title"><span class="slot-indicator slot-right-ind">RIGHT</span><span id="slot-right-label">OP4</span></div>
           <div class="slot-panel-switcher">
             <button id="slot-r-op1" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP1')">OP1</button>
             <button id="slot-r-op2" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP2')">OP2</button>
@@ -777,217 +575,97 @@
         <div id="slot-right-content" class="slot-content"></div>
       </div>
 
-      <!-- 패널 저장소 풀 (DOM 보존 대기 구역) -->
+      <!-- 패널 저장소 풀 (DOM 원본 보관) -->
       <div id="panel-storage-pool" style="display:none;" aria-hidden="true">
 
-        <!-- [패널 1] OP1 : 운전실 주 제어반 (주간제어기, COB, 출입문, 축전지) -->
-        <section id="panel-op1" class="train-metal-panel" style="display:none;">
+        <!-- [패널 1] OP1 : 운전실 주 제어반 -->
+        <section id="panel-op1" class="train-metal-panel">
           <div class="screw tl"></div><div class="screw tr"></div>
           <div class="screw bl"></div><div class="screw br"></div>
 
           <div class="op1-container">
-            <!-- 좌측 열: 3D 궤도 주행 뷰 + COB + 출입문 -->
             <div class="op1-left-col">
+              <!-- 3D 궤도 주행 뷰 모니터 -->
               <div class="cab-view-monitor" id="wrap-CAB_VIEW">
                 <div class="cab-monitor-header">
-                  <div class="cab-header-left">
-                    <span class="cab-cam-dot" id="cab-cam-dot"></span>
-                    <span class="cab-monitor-title">전면 운전실 뷰 (3D RAIL VIEW)</span>
-                  </div>
-                  <div class="cab-header-right">
-                    <span id="cab-status-badge" class="cab-badge stopped">정차중</span>
-                    <button type="button" class="cab-expand-btn" onclick="toggleCabZoom(event)">🔍</button>
-                  </div>
+                  <span>전면 운전실 뷰 (3D RAIL VIEW)</span>
+                  <span id="cab-status-badge" class="cab-badge stopped">정차중</span>
                 </div>
-
-                <div class="cab-screen-viewport" id="cab-screen-viewport">
+                <div class="cab-screen-viewport">
                   <canvas id="cab-view-canvas" width="1024" height="473"></canvas>
                   <div class="cab-osd-overlay">
-                    <div class="cab-osd-notch-tag" id="cab-osd-notch-bar">
-                      <span id="cab-osd-notch">F N</span>
-                      <span class="osd-sep"></span>
-                      <span class="osd-current"><strong id="cab-osd-speed">0</strong> km/h</span>
+                    <div class="cab-osd-notch-tag">
+                      <span id="cab-osd-notch">F N</span> | <strong id="cab-osd-speed">0</strong> km/h
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- COB 방송 마이크 패널 -->
-              <div class="cob-panel" id="wrap-COB_PANEL">
-                <div class="cob-title-bar">방송 및 통화용 마이크</div>
-                <div class="cob-body">
-                  <div class="cob-volume-col">
-                    <div class="cob-vol-unit" id="wrap-VOL_MIC" onclick="rotateCobVolume('VOL_MIC')">
-                      <div class="cob-vol-dial" id="comp-VOL_MIC"><div class="cob-vol-pointer"></div></div>
-                      <span class="cob-vol-label">마이크 음량</span>
-                    </div>
-                    <div class="cob-vol-unit" id="wrap-VOL_CAB" onclick="rotateCobVolume('VOL_CAB')">
-                      <div class="cob-vol-dial" id="comp-VOL_CAB"><div class="cob-vol-pointer"></div></div>
-                      <span class="cob-vol-label">운전실 음량</span>
-                    </div>
-                    <div class="cob-connector" onclick="handleComponentTouch('SW_COB_MIC')">
-                      <div class="cob-connector-jack"></div>
-                      <span class="cob-connector-label">마이크 커넥터</span>
-                    </div>
+              <!-- COB 마이크 -->
+              <div class="cob-panel">
+                <div style="font-size:11px; font-weight:800; text-align:center; margin-bottom:4px;">방송 및 통화용 마이크</div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div class="cob-mic-body" onclick="handleComponentTouch('SW_COB_MIC')" title="클릭 시 무전 송신">
+                    <span style="font-size:8px; color:#94a3b8; font-weight:800;">DM-60</span>
+                    <div class="cob-mic-grille"><div class="cob-grille-line"></div><div class="cob-grille-line"></div></div>
                   </div>
-
-                  <div class="cob-mic-wrapper" id="wrap-SW_COB_MIC" onclick="handleComponentTouch('SW_COB_MIC')" title="핸드 마이크 (클릭 시 PTT 무전 송신)">
-                    <div id="comp-SW_COB_MIC" class="cob-mic-body">
-                      <span class="cob-mic-model">DM-60</span>
-                      <div class="cob-mic-grille">
-                        <div class="cob-grille-line"></div><div class="cob-grille-line"></div>
-                        <div class="cob-grille-line"></div><div class="cob-grille-line"></div>
-                        <div class="cob-grille-line"></div><div class="cob-grille-line"></div>
-                      </div>
-                    </div>
-                    <div class="cob-mic-cord"></div>
-                  </div>
-
-                  <div class="cob-btn-grid">
-                    <div class="cob-btn-unit" id="wrap-SW_COB_EMG_RESP" onclick="handleComponentTouch('SW_COB_EMG_RESP')">
-                      <div class="cob-push-btn"><div id="comp-SW_COB_EMG_RESP" class="cob-btn-inner red"></div></div>
-                      <span class="cob-btn-lbl" style="color:#f87171;">비상응답</span>
-                    </div>
-                    <div class="cob-btn-unit" id="wrap-SW_COB_CAB_CALL" onclick="handleComponentTouch('SW_COB_CAB_CALL')">
-                      <div class="cob-push-btn"><div id="comp-SW_COB_CAB_CALL" class="cob-btn-inner green"></div></div>
-                      <span class="cob-btn-lbl">운전실통화</span>
-                    </div>
-                    <div class="cob-btn-unit" id="wrap-SW_COB_PA_IN" onclick="handleComponentTouch('SW_COB_PA_IN')">
-                      <div class="cob-push-btn"><div id="comp-SW_COB_PA_IN" class="cob-btn-inner green"></div></div>
-                      <span class="cob-btn-lbl">실내방송</span>
-                    </div>
-                    <div class="cob-btn-unit" id="wrap-SW_COB_PA_OUT" onclick="handleComponentTouch('SW_COB_PA_OUT')">
-                      <div class="cob-push-btn"><div id="comp-SW_COB_PA_OUT" class="cob-btn-inner green"></div></div>
-                      <span class="cob-btn-lbl">실외방송</span>
-                    </div>
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                    <div class="metal-bezel-btn" style="width:34px; height:34px;" onclick="handleComponentTouch('SW_COB_EMG_RESP')"><div class="push-btn-inner red" style="width:22px; height:22px;"></div></div>
+                    <div class="metal-bezel-btn" style="width:34px; height:34px;" onclick="handleComponentTouch('SW_COB_CAB_CALL')"><div class="push-btn-inner green" style="width:22px; height:22px;"></div></div>
                   </div>
                 </div>
-                <div class="cob-sub-label">중앙제어장치</div>
               </div>
 
               <!-- 출입문 스위치 -->
               <div class="op1-door-plate">
-                <div class="op1-door-btn-unit" id="wrap-SW_DOOR_OPEN_L">
-                  <div id="comp-SW_DOOR_OPEN_L_COVER" class="door-flip-cover" onclick="toggleFlipCover('SW_DOOR_OPEN_L_COVER', event)">
-                    <div class="door-cover-hinge"></div>
-                  </div>
-                  <div class="door-metal-bezel" onclick="handleComponentTouch('SW_DOOR_OPEN_L')">
-                    <div id="comp-SW_DOOR_OPEN_L" class="door-btn-inner green"></div>
-                  </div>
-                  <span class="op1-door-lbl">좌측열림</span>
+                <div class="component-cell" style="min-height:auto;" onclick="handleComponentTouch('SW_DOOR_OPEN_L')">
+                  <div class="door-metal-bezel"><div id="comp-SW_DOOR_OPEN_L" class="door-btn-inner green"></div></div>
+                  <span class="component-label" style="font-size:8.5px;">좌측열림</span>
                 </div>
-                <div class="op1-door-btn-unit" id="wrap-SW_DOOR_CLOSE" onclick="handleComponentTouch('SW_DOOR_CLOSE')">
-                  <div class="door-metal-bezel">
-                    <div id="comp-SW_DOOR_CLOSE" class="door-btn-inner red"></div>
-                  </div>
-                  <span class="op1-door-lbl">닫힘</span>
+                <div class="component-cell" style="min-height:auto;" onclick="handleComponentTouch('SW_DOOR_CLOSE')">
+                  <div class="door-metal-bezel"><div id="comp-SW_DOOR_CLOSE" class="door-btn-inner red"></div></div>
+                  <span class="component-label" style="font-size:8.5px;">닫힘</span>
                 </div>
-                <div class="op1-door-btn-unit" id="wrap-SW_DOOR_OPEN_R" onclick="handleComponentTouch('SW_DOOR_OPEN_R')">
-                  <div class="door-metal-bezel">
-                    <div id="comp-SW_DOOR_OPEN_R" class="door-btn-inner green"></div>
-                  </div>
-                  <span class="op1-door-lbl">우측열림</span>
+                <div class="component-cell" style="min-height:auto;" onclick="handleComponentTouch('SW_DOOR_OPEN_R')">
+                  <div class="door-metal-bezel"><div id="comp-SW_DOOR_OPEN_R" class="door-btn-inner green"></div></div>
+                  <span class="component-label" style="font-size:8.5px;">우측열림</span>
                 </div>
               </div>
             </div>
 
-            <!-- 우측 열: 주간제어기 (마스콘, 키, 역전기, 축전지) -->
+            <!-- 우측 열: 마스콘 & 제어키 & 역전기 -->
             <div class="op1-right-col">
-              <div class="mascon-frame" id="mascon-panel-frame">
-                <div class="screw mascon-screw-tl"></div>
-                <div class="screw mascon-screw-tc"></div>
-                <div class="screw mascon-screw-tr"></div>
-                <div class="screw mascon-screw-br"></div>
-                <div class="screw mascon-screw-bl"></div>
-
+              <div class="mascon-frame">
+                <div class="screw mascon-screw-tl"></div><div class="screw mascon-screw-tr"></div>
                 <div class="mascon-inner-border">
                   <svg class="mascon-pinstripe-svg" viewBox="0 0 440 220" preserveAspectRatio="none">
-                    <path d="M 6,3 L 388,3 L 437,52 L 437,214 A 4 4 0 0 1 433,217 L 7,217 A 4 4 0 0 1 3,214 L 3,7 A 4 4 0 0 1 7,3 Z" fill="none" stroke="#f1f5f9" stroke-width="1.8" />
-                    <path d="M 9,6 L 385,6 L 434,55 L 434,211 A 2 2 0 0 1 432,214 L 10,214 A 2 2 0 0 1 6,211 L 6,10 A 2 2 0 0 1 10,6 Z" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.9" />
+                    <path d="M 6,3 L 388,3 L 437,52 L 437,214 A 4 4 0 0 1 433,217 L 7,217 A 4 4 0 0 1 3,214 L 3,7 A 4 4 0 0 1 7,3 Z" fill="none" stroke="#f1f5f9" stroke-width="1.8"/>
                   </svg>
 
-                  <!-- 마스콘 T바 슬롯 -->
-                  <div class="mascon-subplate" id="wrap-SW_MASCON">
-                    <div class="tbar-slot-unit">
-                      <div class="tbar-scale-col">
-                        <span class="tbar-scale-item eb" onclick="setMasconNotch('EB')">EB</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('B7')">B7</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('B6')">B6</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('B5')">B5</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('B4')">B4</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('B3')">B3</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('B2')">B2</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('B1')">B1</span>
-                        <span class="tbar-scale-item n" onclick="setMasconNotch('N')">N</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('P1')">P1</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('P2')">P2</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('P3')">P3</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('P4')">P4</span>
-                      </div>
-                      <div class="tbar-slot-track" id="tbar-track" onclick="handleMasconTrackClick(event)">
-                        <div class="slot-brush"></div>
-                        <div id="comp-SW_MASCON" class="tbar-handle" style="top: 68%;"><div class="tbar-grip-line"></div></div>
-                      </div>
-                      <div class="tbar-scale-col">
-                        <span class="tbar-scale-item eb" onclick="setMasconNotch('EB')">EB</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('B7')">B7</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('B6')">B6</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('B5')">B5</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('B4')">B4</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('B3')">B3</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('B2')">B2</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('B1')">B1</span>
-                        <span class="tbar-scale-item n" onclick="setMasconNotch('N')">N</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('P1')">P1</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('P2')">P2</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('P3')">P3</span>
-                        <span class="tbar-scale-item" onclick="setMasconNotch('P4')">P4</span>
-                      </div>
+                  <!-- 마스콘 핸들 -->
+                  <div class="mascon-subplate">
+                    <div class="tbar-slot-track" id="tbar-track" onclick="handleMasconTrackClick(event)">
+                      <div id="comp-SW_MASCON" class="tbar-handle" style="top:68%;"></div>
                     </div>
                   </div>
 
                   <!-- 제어키 -->
-                  <div class="mascon-key-unit" id="wrap-SW_MASTER_KEY" onclick="handleComponentTouch('SW_MASTER_KEY')" title="제어키 (OFF/ON)">
-                    <div class="key-labels">
-                      <span class="key-lbl-off interactive-tick" onclick="setMasterKeyPosition('OFF', event)">OFF</span>
-                      <span class="key-lbl-on interactive-tick" onclick="setMasterKeyPosition('ON', event)">ON</span>
-                    </div>
-                    <div class="key-cylinder">
-                      <div class="key-brass-core"></div>
-                      <div id="comp-SW_MASTER_KEY" class="key-blade-handle"></div>
-                    </div>
+                  <div class="mascon-key-unit" onclick="handleComponentTouch('SW_MASTER_KEY')">
+                    <div class="key-cylinder"><div id="comp-SW_MASTER_KEY" class="key-blade-handle"></div></div>
+                    <span style="font-size:8px; font-weight:800; color:#fff; background:#000; padding:1px 3px; margin-top:2px;">KEY</span>
                   </div>
-                  <div id="reverser-key-warning" class="key-warning-toast" style="display:none;"><span>⚠️ 키를 ON 위치로 놓으세요</span></div>
 
                   <!-- 역전기 -->
-                  <div class="reverser-subplate" id="wrap-SW_REVERSER">
-                    <div class="reverser-scale-col">
-                      <span class="reverser-scale-item" onclick="setReverserPosition('F')">F</span>
-                      <span class="reverser-scale-item n" onclick="setReverserPosition('N')">N</span>
-                      <span class="reverser-scale-item" onclick="setReverserPosition('R')">R</span>
-                    </div>
-                    <div class="reverser-slot-track" id="reverser-track" onclick="handleReverserTrackClick(event)">
-                      <div class="slot-brush"></div>
-                      <div id="comp-SW_REVERSER" class="reverser-ball-knob" style="top: 50%;"></div>
-                    </div>
-                    <div class="reverser-scale-col">
-                      <span class="reverser-scale-item" onclick="setReverserPosition('F')">F</span>
-                      <span class="reverser-scale-item n" onclick="setReverserPosition('N')">N</span>
-                      <span class="reverser-scale-item" onclick="setReverserPosition('R')">R</span>
+                  <div class="reverser-subplate">
+                    <div class="tbar-slot-track" id="reverser-track" style="height:90px;" onclick="handleReverserTrackClick(event)">
+                      <div id="comp-SW_REVERSER" class="reverser-ball-knob" style="top:50%;"></div>
                     </div>
                   </div>
 
                   <!-- 축전지 -->
                   <div class="mascon-battery-plate">
-                    <span class="battery-plate-title">축전지</span>
-                    <div class="battery-btns-row">
-                      <div class="batt-btn-wrap" id="wrap-SW_BATT_ON" onclick="handleComponentTouch('SW_BATT_ON')">
-                        <div class="batt-btn-bezel"><div id="comp-SW_BATT_ON" class="batt-btn-inner">ON</div></div>
-                      </div>
-                      <div class="batt-btn-wrap" id="wrap-SW_BATT_OFF" onclick="handleComponentTouch('SW_BATT_OFF')">
-                        <div class="batt-btn-bezel"><div id="comp-SW_BATT_OFF" class="batt-btn-inner">OFF</div></div>
-                      </div>
-                    </div>
+                    <div class="metal-bezel-btn" style="width:24px; height:24px;" onclick="handleComponentTouch('SW_BATT_ON')"><div class="push-btn-inner green" style="width:14px; height:14px; font-size:6px; color:#fff;">ON</div></div>
+                    <div class="metal-bezel-btn" style="width:24px; height:24px;" onclick="handleComponentTouch('SW_BATT_OFF')"><div class="push-btn-inner" style="width:14px; height:14px; background:#475569; font-size:6px; color:#fff;">OFF</div></div>
                   </div>
                 </div>
               </div>
@@ -995,396 +673,128 @@
           </div>
         </section>
 
-        <!-- [패널 2] OP2 : 상부 표시등 및 조작반 -->
-        <section id="panel-op2" class="train-metal-panel" style="display:none;">
+        <!-- [패널 2] OP2 : 상부 표시등 -->
+        <section id="panel-op2" class="train-metal-panel">
           <div class="screw tl"></div><div class="screw tr"></div>
           <div class="screw bl"></div><div class="screw br"></div>
-
-          <div class="op2-panel-body">
-            <div class="op2-indicator-bar">
-              <div class="op2-ind-unit">
-                <span class="op2-ind-label">출입문</span>
-                <div class="op2-ind-lamp lit" id="lamp-door"><div class="op2-ind-lens lens-green"></div></div>
-              </div>
-              <div class="op2-ind-unit">
-                <span class="op2-ind-label">제동체결</span>
-                <div class="op2-ind-lamp" id="lamp-brake-apply"><div class="op2-ind-lens lens-red"></div></div>
-              </div>
-              <div class="op2-ind-unit">
-                <span class="op2-ind-label">선두차지정</span>
-                <div class="op2-ind-lamp" id="lamp-lead-car"><div class="op2-ind-lens lens-yellow"></div></div>
-              </div>
-              <div class="op2-ind-unit">
-                <span class="op2-ind-label">비상제동차단</span>
-                <div class="op2-ind-lamp" id="lamp-emg-cut"><div class="op2-ind-lens lens-red"></div></div>
-              </div>
-              <div class="op2-ind-unit">
-                <span class="op2-ind-label">커플링</span>
-                <div class="op2-ind-lamp" id="lamp-coupling"><div class="op2-ind-lens lens-green"></div></div>
-              </div>
+          <div class="op2-indicator-bar">
+            <div style="text-align:center;"><span style="font-size:9px; font-weight:800;">출입문</span><div id="lamp-door" class="op2-ind-lamp lit"><div class="op2-ind-lens" style="background:#10b981;"></div></div></div>
+            <div style="text-align:center;"><span style="font-size:9px; font-weight:800;">제동체결</span><div id="lamp-brake-apply" class="op2-ind-lamp"><div class="op2-ind-lens" style="background:#ef4444;"></div></div></div>
+            <div style="text-align:center;"><span style="font-size:9px; font-weight:800;">선두차</span><div id="lamp-lead-car" class="op2-ind-lamp"><div class="op2-ind-lens" style="background:#eab308;"></div></div></div>
+          </div>
+          <div class="panel-grid" style="margin-top:10px;">
+            <div class="component-cell" onclick="handleComponentTouch('SW_HEADLIGHT')">
+              <div class="rotary-unit"><div class="rotary-dial-plate"></div><div id="comp-SW_HEADLIGHT" class="rotary-knob"><div class="rotary-pointer"></div></div></div>
+              <span class="component-label">전조등</span>
             </div>
-
-            <div class="op2-controls-grid">
-              <div class="component-cell op2-ctrl-cell" id="wrap-SW_WINDOW_HEATER">
-                <div class="op2-ctrl-header"><span class="op2-ctrl-title">전면창 히터</span><span class="op2-ctrl-sub">타이머</span></div>
-                <div class="rotary-unit window-heater-unit" onclick="handleComponentTouch('SW_WINDOW_HEATER')">
-                  <div class="rotary-dial-plate"></div>
-                  <div id="comp-SW_WINDOW_HEATER" class="rotary-knob" style="transform: rotate(-45deg);"><div class="rotary-pointer"></div></div>
-                  <div class="rotary-ticks">
-                    <span class="tick-label interactive-tick" style="top: 24px; left: calc(50% - 28px); font-size: 9px;" onclick="setWindowHeaterPosition('AUTO', event)">자동</span>
-                    <span class="tick-label interactive-tick" style="top: 24px; left: calc(50% + 28px); font-size: 9px;" onclick="setWindowHeaterPosition('MANUAL', event)">수동</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="component-cell op2-ctrl-cell" id="wrap-SW_HEADLIGHT">
-                <div class="op2-ctrl-header"><span class="op2-ctrl-title">전조등</span></div>
-                <div class="rotary-unit headlight-unit" onclick="handleComponentTouch('SW_HEADLIGHT')">
-                  <div class="rotary-dial-plate"></div>
-                  <div id="comp-SW_HEADLIGHT" class="rotary-knob" style="transform: rotate(0deg);"><div class="rotary-pointer"></div></div>
-                  <div class="rotary-ticks">
-                    <span class="tick-label interactive-tick" style="top: 13px; left: 50%; font-size: 9.5px;" onclick="setHeadlightPosition('OFF', event)">OFF</span>
-                    <span class="tick-label interactive-tick" style="top: 25px; left: calc(50% - 30px); font-size: 8.5px;" onclick="setHeadlightPosition('AUTO', event)">자동</span>
-                    <span class="tick-label interactive-tick" style="top: 25px; left: calc(50% + 36px); font-size: 8.5px;" onclick="setHeadlightPosition('HIGH', event)">상향</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="component-cell op2-ctrl-cell" id="wrap-SW_ELEC_HORN">
-                <div class="op2-ctrl-header"><span class="op2-ctrl-title">전기혼</span></div>
-                <div class="btn-horn-wrapper" onclick="handleComponentTouch('SW_ELEC_HORN')">
-                  <div id="comp-SW_ELEC_HORN" class="btn-horn"></div>
-                </div>
-              </div>
+            <div class="component-cell" onclick="handleComponentTouch('SW_ELEC_HORN')">
+              <div class="btn-horn-wrapper"><div id="comp-SW_ELEC_HORN" class="btn-horn"></div></div>
+              <span class="component-label">전기혼</span>
             </div>
           </div>
         </section>
 
-        <!-- [패널 3] OP3 : A필러 긴급 제동 조작반 -->
+        <!-- [패널 3] OP3 : 긴급 제동 조작반 -->
         <section id="panel-op3" class="train-metal-panel">
           <div class="screw tl"></div><div class="screw tr"></div>
           <div class="screw bl"></div><div class="screw br"></div>
-
           <div class="panel-grid">
-            <div class="component-cell" id="wrap-SW_EMG_STOP">
-              <div class="btn-estop-wrapper" onclick="handleComponentTouch('SW_EMG_STOP')">
-                <div id="comp-SW_EMG_STOP" class="btn-estop">
-                  <svg viewBox="0 0 100 100" style="width:38px; height:38px; pointer-events:none;">
-                    <g transform="translate(50,50)">
-                      <path d="M 0 -35 A 35 35 0 0 1 30.3 -17.5" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" />
-                      <polygon points="32,-26 38,-10 23,-13" fill="#ffffff" />
-                    </g>
-                  </svg>
-                </div>
-              </div>
+            <div class="component-cell" id="wrap-SW_EMG_STOP" onclick="handleComponentTouch('SW_EMG_STOP')">
+              <div class="btn-estop-wrapper"><div id="comp-SW_EMG_STOP" class="btn-estop"><span style="font-size:8px; font-weight:900; color:#fff;">E-STOP</span></div></div>
               <div class="component-label">비상제동체결</div>
             </div>
-
-            <div class="component-cell" id="wrap-SW_FORCE_REL">
-              <div class="metal-bezel-btn" onclick="handleComponentTouch('SW_FORCE_REL')">
-                <div id="comp-SW_FORCE_REL" class="push-btn-inner red"></div>
-              </div>
+            <div class="component-cell" id="wrap-SW_FORCE_REL" onclick="handleComponentTouch('SW_FORCE_REL')">
+              <div class="metal-bezel-btn"><div id="comp-SW_FORCE_REL" class="push-btn-inner red"></div></div>
               <div class="component-label">강제완해</div>
             </div>
-
             <div class="component-cell" id="wrap-SW_EMG_RELEASE">
               <div class="cover-guard-unit">
-                <div id="comp-SW_EMG_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_EMG_COVER', event)"><div class="cover-hinge"></div></div>
-                <div class="cover-close-hint" onclick="toggleFlipCover('SW_EMG_COVER', event)">닫기 ✕</div>
+                <div id="comp-SW_EMG_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_EMG_COVER', event)"></div>
                 <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_EMG_RELEASE')">
                   <div id="comp-SW_EMG_RELEASE" class="push-btn-inner red" style="width:34px; height:34px;"></div>
                 </div>
               </div>
               <div class="component-label">비상제동완해</div>
             </div>
-
-            <div class="component-cell" id="wrap-SW_ATP_REV">
-              <div class="cover-guard-unit">
-                <div class="atp-cover-ticks">
-                  <span class="atp-tick-off interactive-tick" onclick="setAtpRevPosition('OFF', event)">OFF</span>
-                  <span class="atp-tick-on interactive-tick" onclick="setAtpRevPosition('ON', event)">ON</span>
-                </div>
-                <div id="comp-SW_ATP_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_ATP_COVER', event)"><div class="cover-hinge"></div></div>
-                <div class="rotary-unit" style="width:58px; height:58px;" onclick="handleComponentTouch('SW_ATP_REV')">
-                  <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px;"></div>
-                  <div id="comp-SW_ATP_REV" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px; transform: rotate(0deg);"><div class="rotary-pointer" style="height:18px;"></div></div>
-                </div>
-              </div>
-              <div class="component-label">ATP후진</div>
-            </div>
-
-            <div class="component-cell" id="wrap-SW_LOW_SPEED">
-              <div class="rotary-unit" onclick="handleComponentTouch('SW_LOW_SPEED')">
-                <div class="rotary-dial-plate"></div>
-                <div id="comp-SW_LOW_SPEED" class="rotary-knob" style="transform: rotate(-45deg);"><div class="rotary-pointer"></div></div>
-                <div class="rotary-ticks"><span class="tick-label tick-2-left">정상</span><span class="tick-label tick-2-right">바이패스</span></div>
-              </div>
-              <div class="component-label">저속도</div>
-            </div>
-
-            <div class="component-cell" id="wrap-SW_PARK_SET">
-              <div class="metal-bezel-btn" onclick="handleComponentTouch('SW_PARK_SET')">
-                <div id="comp-SW_PARK_SET" class="push-btn-inner green"></div>
-              </div>
-              <div class="component-label">주차제동체결</div>
-            </div>
-
             <div class="component-cell" id="wrap-SW_WIRELESS_MODE">
               <div class="cover-guard-unit">
-                <div id="comp-SW_WIRELESS_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_WIRELESS_COVER', event)"><div class="cover-hinge"></div></div>
+                <div id="comp-SW_WIRELESS_COVER" class="acrylic-cover" onclick="toggleFlipCover('SW_WIRELESS_COVER', event)"></div>
                 <div class="metal-bezel-btn" style="width:48px; height:48px;">
-                  <div class="hold-progress-wrap" onpointerdown="startUnmannedPress(event)" onpointerup="endUnmannedPress(event)" onpointerleave="endUnmannedPress(event)">
-                    <div id="comp-SW_WIRELESS_MODE" class="push-btn-inner green" style="width:34px; height:34px;"></div>
-                    <svg class="hold-progress-svg" id="unmanned-progress-svg" viewBox="0 0 40 40"><circle class="hold-progress-circle" cx="20" cy="20" r="18" fill="none" stroke="#34d399" stroke-width="3.5"/></svg>
-                  </div>
+                  <div id="comp-SW_WIRELESS_MODE" class="push-btn-inner green" style="width:34px; height:34px;"
+                       onpointerdown="startUnmannedPress(event)" onpointerup="endUnmannedPress(event)" onpointerleave="endUnmannedPress(event)"></div>
                 </div>
               </div>
-              <div class="component-label">무인모드</div>
-            </div>
-
-            <div class="component-cell" id="wrap-SW_PARK_REL">
-              <div class="metal-bezel-btn" onclick="handleComponentTouch('SW_PARK_REL')">
-                <div id="comp-SW_PARK_REL" class="push-btn-inner red"></div>
-              </div>
-              <div class="component-label">주차제동완해</div>
-            </div>
-
-            <div class="component-cell" id="wrap-SW_ROOM_LIGHT">
-              <div class="rotary-unit" onclick="handleComponentTouch('SW_ROOM_LIGHT')">
-                <div class="rotary-dial-plate"></div>
-                <div id="comp-SW_ROOM_LIGHT" class="rotary-knob"><div class="rotary-pointer"></div></div>
-                <div class="rotary-ticks">
-                  <span class="tick-label tick-3-left interactive-tick" onclick="setRotary3Position('SW_ROOM_LIGHT', 'MANUAL', event)">수동</span>
-                  <span class="tick-label tick-3-mid interactive-tick" onclick="setRotary3Position('SW_ROOM_LIGHT', 'AUTO', event)">자동</span>
-                  <span class="tick-label tick-3-right interactive-tick" onclick="setRotary3Position('SW_ROOM_LIGHT', 'EMERGENCY', event)">비상등</span>
-                </div>
-              </div>
-              <div class="component-label">실내등</div>
-            </div>
-
-            <div class="component-cell" id="wrap-SW_RESCUE_DRIVE">
-              <div class="rotary-unit" onclick="handleComponentTouch('SW_RESCUE_DRIVE')">
-                <div class="rotary-dial-plate"></div>
-                <div id="comp-SW_RESCUE_DRIVE" class="rotary-knob"><div class="rotary-pointer"></div></div>
-                <div class="rotary-ticks">
-                  <span class="tick-label tick-3-left interactive-tick" onclick="setRotary3Position('SW_RESCUE_DRIVE', 'RESCUE', event)">구원</span>
-                  <span class="tick-label tick-3-mid interactive-tick" onclick="setRotary3Position('SW_RESCUE_DRIVE', 'NORMAL', event)">정상</span>
-                  <span class="tick-label tick-3-right interactive-tick" onclick="setRotary3Position('SW_RESCUE_DRIVE', 'EMERGENCY', event)">비상</span>
-                </div>
-              </div>
-              <div class="component-label">구원운전</div>
+              <div class="component-label">무인모드 (3초)</div>
             </div>
           </div>
         </section>
 
-        <!-- [패널 4] OP4 : 메인 계기 및 바이패스 조작반 -->
-        <section id="panel-op4" class="train-metal-panel" style="display:none;">
+        <!-- [패널 4] OP4 : 메인 계기 및 바이패스 -->
+        <section id="panel-op4" class="train-metal-panel">
           <div class="screw tl"></div><div class="screw tr"></div>
           <div class="screw bl"></div><div class="screw br"></div>
-
           <div class="main-panel-grid">
-            <div class="component-cell" id="wrap-SW_RESERVE_ROTARY">
-              <div class="rotary-unit main-compact" onclick="handleComponentTouch('SW_RESERVE_ROTARY')">
-                <div class="rotary-dial-plate"></div>
-                <div id="comp-SW_RESERVE_ROTARY" class="rotary-knob" style="transform: rotate(-45deg);"><div class="rotary-pointer"></div></div>
-              </div>
-              <div class="component-label">예비</div>
-            </div>
-
-            <!-- 와이퍼 5단계 사각 유닛 -->
-            <div class="component-cell" id="wrap-SW_WIPER">
-              <div class="wiper-unit-box" onclick="handleComponentTouch('SW_WIPER')">
-                <span class="wiper-lbl wiper-lbl-off" onclick="setWiperPosition('OFF', event)">OFF</span>
-                <span class="wiper-lbl wiper-lbl-auto" onclick="setWiperPosition('AUTO', event)">AUTO</span>
-                <span class="wiper-lbl wiper-lbl-int" onclick="setWiperPosition('INT', event)">INT</span>
-                <span class="wiper-lbl wiper-lbl-slow" onclick="setWiperPosition('SLOW', event)">SLOW</span>
-                <span class="wiper-lbl wiper-lbl-fast" onclick="setWiperPosition('FAST', event)">FAST</span>
-                <div class="wiper-dial-plate"></div>
-                <div id="comp-SW_WIPER" class="wiper-bar-knob" style="transform: rotate(0deg);"><div class="wiper-knob-indicator"></div><div class="wiper-screw-hole"></div></div>
+            <div class="component-cell" id="wrap-SW_WIPER" onclick="handleComponentTouch('SW_WIPER')">
+              <div class="wiper-unit-box">
+                <span class="wiper-lbl" style="top:6px; left:50%; transform:translateX(-50%);">OFF</span>
+                <div class="wiper-bar-knob" id="comp-SW_WIPER"></div>
               </div>
               <div class="component-label">와이퍼</div>
             </div>
 
-            <div class="component-cell" id="wrap-SW_RESERVE_BTN">
-              <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_RESERVE_BTN')">
-                <div id="comp-SW_RESERVE_BTN" class="push-btn-inner green" style="width:34px; height:34px;"></div>
-              </div>
-              <div class="component-label">예비</div>
-            </div>
-
-            <div class="component-cell" id="wrap-SW_OBSTACLE_BYPASS">
-              <div class="rotary-unit main-compact" onclick="handleComponentTouch('SW_OBSTACLE_BYPASS')">
-                <div class="rotary-dial-plate"></div>
-                <div id="comp-SW_OBSTACLE_BYPASS" class="rotary-knob" style="transform: rotate(-45deg);"><div class="rotary-pointer"></div></div>
-                <div class="rotary-ticks"><span class="tick-label tick-2-left">정상</span><span class="tick-label tick-2-right">바이패스</span></div>
-              </div>
-              <div class="component-label">장애물 감지</div>
-            </div>
-
-            <div class="component-cell" id="wrap-SW_DOOR_BYPASS">
-              <div class="rotary-unit main-compact" onclick="handleComponentTouch('SW_DOOR_BYPASS')">
-                <div class="rotary-dial-plate"></div>
-                <div id="comp-SW_DOOR_BYPASS" class="rotary-knob" style="transform: rotate(-45deg);"><div class="rotary-pointer"></div></div>
-                <div class="rotary-ticks"><span class="tick-label tick-2-left">정상</span><span class="tick-label tick-2-right">바이패스</span></div>
-              </div>
-              <div class="component-label">출입문</div>
-            </div>
-
-            <div class="component-cell" id="wrap-SW_DOOR_HEATER">
-              <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_DOOR_HEATER')">
-                <div id="comp-SW_DOOR_HEATER" class="push-btn-inner green" style="width:34px; height:34px;"></div>
-              </div>
-              <div class="component-label">출입문 히터</div>
-            </div>
-
-            <!-- NAGANO NKS 정밀 아날로그 듀얼 압력계 -->
+            <!-- NAGANO NKS 정밀 아날로그 압력계 -->
             <div class="gauge-square-frame">
-              <div class="screw tl" style="top:4px; left:4px;"></div><div class="screw tr" style="top:4px; right:4px;"></div>
-              <div class="screw bl" style="bottom:4px; left:4px;"></div><div class="screw br" style="bottom:4px; right:4px;"></div>
-              <div class="gauge-body" style="width:136px; height:136px;">
-                <svg class="gauge-face" viewBox="0 0 160 160">
+              <div class="gauge-body">
+                <svg viewBox="0 0 160 160" style="width:100%; height:100%;">
                   <circle cx="80" cy="80" r="76" fill="#ffffff"/>
                   <path d="M 34.75 125.25 A 64 64 0 1 1 125.25 125.25" fill="none" stroke="#334155" stroke-width="1.2"/>
-                  <!-- 8~10 bar 적색 경고 대역 -->
                   <path d="M 125.25 34.75 A 64 64 0 0 1 144 80 L 134 80 A 54 54 0 0 0 118.18 41.82 Z" fill="#ef4444"/>
                   <text x="80" y="60" font-size="7.5" font-weight="900" text-anchor="middle" fill="#0f172a">PRESSURE GAUGE</text>
-                  <text x="80" y="70" font-size="6.2" font-weight="900" text-anchor="middle"><tspan fill="#dc2626">MR</tspan> / <tspan fill="#0f172a">BC</tspan></text>
                   <text x="80" y="103" font-size="8.5" font-weight="900" text-anchor="middle" fill="#0f172a">bar</text>
-                  <text x="44" y="112" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">0</text>
-                  <text x="80" y="38" font-size="11" font-weight="900" fill="#0f172a" text-anchor="middle">6</text>
-                  <text x="127" y="84" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">10</text>
                 </svg>
-                <div id="needle-mr" class="gauge-needle needle-mr" style="height:54px; transform: rotate(67.5deg);"></div>
-                <div id="needle-bc" class="gauge-needle needle-bc" style="height:52px; transform: rotate(-135deg);"></div>
-                <div class="gauge-center-cap"></div>
+                <div id="needle-mr" class="gauge-needle needle-mr"></div>
+                <div id="needle-bc" class="gauge-needle needle-bc"></div>
               </div>
-              <div class="gauge-readout-legend" style="font-size:9.5px; margin-top:4px;">
-                <span class="readout-mr">MR: <strong id="val-mr">9.0</strong> bar</span>
-                <span class="readout-bc">BC: <strong id="val-bc">0.0</strong> bar</span>
+              <div style="display:flex; justify-content:space-around; width:100%; font-size:10px; font-weight:800; margin-top:4px;">
+                <span style="color:#ef4444;">MR: <strong id="val-mr">9.0</strong></span>
+                <span style="color:#64748b;">BC: <strong id="val-bc">0.0</strong></span>
               </div>
-              <div class="component-label" style="margin-top:4px; font-size:9.5px;">공기 압력계(MR, BC)</div>
+              <div class="component-label" style="font-size:9.5px; margin-top:3px;">공기 압력계(MR, BC)</div>
             </div>
 
-            <div class="component-cell" id="wrap-SW_AIR_CLEAN" style="grid-column: span 1;">
-              <div class="air-clean-plate" style="width:84px;">
-                <div class="rotary-unit" style="width:76px; height:74px;" onclick="handleComponentTouch('SW_AIR_CLEAN')">
-                  <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px;"></div>
-                  <div id="comp-SW_AIR_CLEAN" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px; transform: rotate(-45deg);"><div class="rotary-pointer" style="height:17px;"></div></div>
-                  <div class="rotary-ticks">
-                    <span class="tick-label interactive-tick" style="top:15px; left:14px; font-size:8px;" onclick="setRotary3Position('SW_AIR_CLEAN', 'AUTO', event)">AUTO</span>
-                    <span class="tick-label interactive-tick" style="top:4px; left:50%; font-size:9px;" onclick="setRotary3Position('SW_AIR_CLEAN', 'OFF', event)">OFF</span>
-                    <span class="tick-label interactive-tick" style="top:15px; left:62px; font-size:9px;" onclick="setRotary3Position('SW_AIR_CLEAN', 'ON', event)">ON</span>
-                  </div>
-                </div>
+            <div class="component-cell" id="wrap-SW_DRIVE_MODE" onclick="handleComponentTouch('SW_DRIVE_MODE')">
+              <div class="drive-mode-plate" style="width:80px; height:80px;">
+                <span class="dm-lbl" style="top:4px; left:50%; transform:translateX(-50%); font-size:9px;">OFF</span>
+                <div id="comp-SW_DRIVE_MODE" class="dm-lever-knob" style="height:48px; margin-top:-24px;"></div>
               </div>
-              <div class="component-label" style="font-size:9px;">공기질개선장치</div>
-            </div>
-          </div>
-
-          <!-- 운전 모드 단독 박스 -->
-          <div class="drive-mode-recess-box">
-            <div class="drive-mode-box-title">운전 모드</div>
-            <div class="component-cell" id="wrap-SW_DRIVE_MODE" style="margin: 0 auto; min-height: 124px;">
-              <div class="drive-mode-plate" onclick="handleComponentTouch('SW_DRIVE_MODE')">
-                <span class="dm-lbl dm-lbl-off interactive-tick" onclick="setDriveModePosition('OFF', event)">OFF</span>
-                <span class="dm-lbl dm-lbl-rm interactive-tick" onclick="setDriveModePosition('RM', event)">RM</span>
-                <span class="dm-lbl dm-lbl-fm interactive-tick" onclick="setDriveModePosition('FM', event)">FM</span>
-                <span class="dm-lbl dm-lbl-atpm interactive-tick" onclick="setDriveModePosition('ATPM', event)">ATPM</span>
-                <div class="dm-dial-base"></div>
-                <div id="comp-SW_DRIVE_MODE" class="dm-lever-knob" style="transform: rotate(0deg);"><div class="dm-indicator-dot"></div><div class="dm-knob-screw"></div></div>
-              </div>
-              <div class="component-label" style="margin-top: 6px;">운전 모드 (MODE)</div>
+              <div class="component-label">운전 모드</div>
             </div>
           </div>
         </section>
 
         <!-- [패널 5] OP5 : 보조 조작반 -->
-        <section id="panel-op5" class="train-metal-panel" style="display:none;">
+        <section id="panel-op5" class="train-metal-panel">
           <div class="screw tl"></div><div class="screw tr"></div>
           <div class="screw bl"></div><div class="screw br"></div>
-
           <div class="op3-panel-grid">
-            <div class="component-cell" id="wrap-SW_VOBC_RESET" onclick="handleComponentTouch('SW_VOBC_RESET')">
+            <div class="component-cell" id="wrap-SW_VOBC_RESET">
               <div class="metal-bezel-btn" style="width:48px; height:48px;">
-                <div class="hold-progress-wrap" onpointerdown="startVobcResetPress(event)" onpointerup="endVobcResetPress(event)" onpointerleave="endVobcResetPress(event)">
-                  <div id="comp-SW_VOBC_RESET" class="push-btn-inner green" style="width:34px; height:34px;"></div>
-                  <svg class="hold-progress-svg" id="vobc-progress-svg" viewBox="0 0 40 40">
-                    <circle id="vobc-progress-circle" class="hold-progress-circle" cx="20" cy="20" r="18" fill="none" stroke="#34d399" stroke-width="3.5" stroke-dasharray="113.1" stroke-dashoffset="113.1"/>
-                  </svg>
-                </div>
+                <div id="comp-SW_VOBC_RESET" class="push-btn-inner green" style="width:34px; height:34px;"
+                     onpointerdown="startVobcResetPress(event)" onpointerup="endVobcResetPress(event)" onpointerleave="endVobcResetPress(event)"></div>
               </div>
               <div class="component-label">VOBC리셋</div>
             </div>
-
-            <div class="component-cell" id="wrap-SW_UNCOUPLING">
-              <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_UNCOUPLING')">
-                <div id="comp-SW_UNCOUPLING" class="push-btn-inner red latch-lit" style="width:34px; height:34px;"></div>
-              </div>
+            <div class="component-cell" id="wrap-SW_UNCOUPLING" onclick="handleComponentTouch('SW_UNCOUPLING')">
+              <div class="metal-bezel-btn" style="width:48px; height:48px;"><div id="comp-SW_UNCOUPLING" class="push-btn-inner red latch-lit" style="width:34px; height:34px;"></div></div>
               <div class="component-label">언커플링</div>
             </div>
-
-            <div class="component-cell" id="wrap-SW_HB_ACTION">
-              <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_HB_ACTION')">
-                <div id="comp-SW_HB_ACTION" class="push-btn-inner red latch-lit" style="width:34px; height:34px;"></div>
-              </div>
-              <div class="component-label">고속도차단기동작</div>
-            </div>
-
-            <div class="component-cell" id="wrap-SW_MR_BP">
-              <div class="rotary-unit op3-compact" onclick="handleComponentTouch('SW_MR_BP')">
-                <div class="rotary-dial-plate"></div>
-                <div id="comp-SW_MR_BP" class="rotary-knob" style="transform: rotate(-45deg);"><div class="rotary-pointer"></div></div>
-                <div class="rotary-ticks"><span class="tick-label tick-2-left">정상</span><span class="tick-label tick-2-right">바이패스</span></div>
-              </div>
+            <div class="component-cell" id="wrap-SW_MR_BP" onclick="handleComponentTouch('SW_MR_BP')">
+              <div class="rotary-unit op3-compact"><div class="rotary-dial-plate"></div><div id="comp-SW_MR_BP" class="rotary-knob"><div class="rotary-pointer"></div></div></div>
               <div class="component-label">주공기BP</div>
             </div>
-
-            <div class="component-cell" id="wrap-SW_PWM_CUT">
-              <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_PWM_CUT')">
-                <div id="comp-SW_PWM_CUT" class="push-btn-inner red latch-lit" style="width:34px; height:34px;"></div>
-              </div>
-              <div class="component-label">PWM차단</div>
-            </div>
-
-            <div class="component-cell" id="wrap-SW_SAND_TEST">
-              <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_SAND_TEST')">
-                <div id="comp-SW_SAND_TEST" class="push-btn-inner red" style="width:34px; height:34px;"></div>
-              </div>
-              <div class="component-label">살사시험</div>
-            </div>
-
-            <div class="component-cell" id="wrap-SW_INSUL_SECT">
-              <div class="rotary-unit op3-compact" onclick="handleComponentTouch('SW_INSUL_SECT')">
-                <div class="rotary-dial-plate"></div>
-                <div id="comp-SW_INSUL_SECT" class="rotary-knob" style="transform: rotate(-45deg);"><div class="rotary-pointer"></div></div>
-                <div class="rotary-ticks"><span class="tick-label tick-2-left">정상</span><span class="tick-label tick-2-right" style="top:11px; left:56px; font-size:7.5px;">절연구간</span></div>
-              </div>
-              <div class="component-label">절연구간</div>
-            </div>
-
-            <div class="component-cell" id="wrap-SW_PARK_BP">
-              <div class="rotary-unit op3-compact" onclick="handleComponentTouch('SW_PARK_BP')">
-                <div class="rotary-dial-plate"></div>
-                <div id="comp-SW_PARK_BP" class="rotary-knob" style="transform: rotate(-45deg);"><div class="rotary-pointer"></div></div>
-                <div class="rotary-ticks"><span class="tick-label tick-2-left">정상</span><span class="tick-label tick-2-right">바이패스</span></div>
-              </div>
+            <div class="component-cell" id="wrap-SW_PARK_BP" onclick="handleComponentTouch('SW_PARK_BP')">
+              <div class="rotary-unit op3-compact"><div class="rotary-dial-plate"></div><div id="comp-SW_PARK_BP" class="rotary-knob"><div class="rotary-pointer"></div></div></div>
               <div class="component-label">주차제동BP</div>
-            </div>
-          </div>
-
-          <!-- VOBC 실시간 미터 카드 -->
-          <div id="vobc-overlay-card" class="vobc-overlay-card" style="display:none;">
-            <div class="vobc-card-header">
-              <div class="vobc-card-title-wrap"><span>⚠️</span><span style="color:#fde047;">VOBC 리셋 버튼 오취급시 타임아웃 발생!</span></div>
-              <button type="button" onclick="hideVobcGuide()" style="background:none; border:none; color:#94a3b8; font-size:14px; cursor:pointer;">✕</button>
-            </div>
-            <div class="vobc-guide-list">
-              <div id="vobc-guide-step1" class="vobc-guide-item">- 2~3초 누름 : 해당차 재설정</div>
-              <div id="vobc-guide-step2" class="vobc-guide-item">- 5~7초 누름 : 전·후부 VOBC 모두 리셋</div>
-            </div>
-            <div class="vobc-meter-wrap">
-              <div class="vobc-meter-track"><div id="vobc-meter-fill" class="vobc-meter-fill"></div></div>
-              <div class="vobc-meter-info"><span id="vobc-live-timer">⏱️ 0.0초</span><span id="vobc-live-status">버튼을 길게 누르면 측정됩니다</span></div>
             </div>
           </div>
         </section>
@@ -1392,23 +802,20 @@
       </div>
     </main>
 
-    <!-- [교육자 전용 독] Instructor Command Center -->
+    <!-- 교육자 관제 독 -->
     <aside id="instructor-dock">
       <div class="inst-section-title">
         <span>👨‍🏫 교육자 관제 센터</span>
         <span style="background:#a855f7; color:#fff; font-size:9px; padding:1px 5px; border-radius:4px;">REALTIME</span>
       </div>
 
-      <!-- 실시간 텔레메트리 -->
       <div class="inst-card">
         <div class="inst-row"><span>열차 속도:</span><span class="inst-val" id="tel-speed">0 km/h</span></div>
         <div class="inst-row"><span>마스콘 노치:</span><span class="inst-val" id="tel-mascon">N</span></div>
-        <div class="inst-row"><span>역전기 / 제어키:</span><span class="inst-val" id="tel-rev-key">N / OFF</span></div>
         <div class="inst-row"><span>제동통 압력 (BC):</span><span class="inst-val" id="tel-bc">0.0 bar</span></div>
         <div class="inst-row"><span>주공기 압력 (MR):</span><span class="inst-val" id="tel-mr">9.0 bar</span></div>
       </div>
 
-      <!-- 인터록 충족 여부 점검 -->
       <div class="inst-section-title"><span>🔒 역행 인터록 점검</span></div>
       <div class="interlock-grid">
         <div id="chk-key" class="chk-pill">🔑 키 ON</div>
@@ -1419,57 +826,45 @@
         <div id="chk-estop" class="chk-pill ok">🚨 비상제동 해제</div>
       </div>
 
-      <!-- 고장 인가 (Fault Injection) -->
       <div class="inst-section-title"><span>⚡ 신(God) 모드 고장 인가</span></div>
       <div class="fault-grid">
         <button id="btn-fault-door" class="btn-fault" onclick="toggleFault('DOOR_LOCK_FAIL')">🚪 출입문 닫힘 불량</button>
         <button id="btn-fault-brake" class="btn-fault" onclick="toggleFault('EB_STUCK')">🚨 비상제동 완해불능</button>
       </div>
 
-      <!-- 원격 힌트 지시 도구 -->
       <div class="inst-section-title"><span>💡 학생 화면에 원격 지시</span></div>
       <div style="display:flex; gap:6px;">
-        <button class="toolbar-btn primary" style="font-size:10.5px;" onclick="sendRemoteInstructorHint('SW_EMG_STOP')">비상제동 지시</button>
-        <button class="toolbar-btn primary" style="font-size:10.5px;" onclick="sendRemoteInstructorHint('SW_MASCON')">마스콘 지시</button>
-        <button class="toolbar-btn" style="font-size:10.5px;" onclick="sendRemoteInstructorHint('SW_MASTER_KEY')">키 ON 지시</button>
+        <button class="toolbar-btn primary" style="font-size:10px;" onclick="sendRemoteInstructorHint('SW_EMG_STOP')">비상제동 지시</button>
+        <button class="toolbar-btn primary" style="font-size:10px;" onclick="sendRemoteInstructorHint('SW_MASCON')">마스콘 지시</button>
       </div>
 
-      <!-- 학생 조작 실시간 감사 로그 -->
       <div class="inst-section-title"><span>📋 학생 조작 감사 로그</span></div>
-      <div id="audit-log-container" class="audit-log-view">
-        <div class="log-row">관제 세션이 대기 중입니다.</div>
-      </div>
+      <div id="audit-log-container" class="audit-log-view"><div class="log-row">관제 대기 중...</div></div>
     </aside>
   </div>
 
-  <!-- 3. 하단 플로팅 툴바 -->
+  <!-- 3. 하단 툴바 -->
   <footer class="floating-toolbar">
     <button class="toolbar-btn" onclick="triggerHint()">💡 힌트 보기</button>
     <button class="toolbar-btn" onclick="resetCurrentScenario()">↺ 처음부터</button>
-    <button class="toolbar-btn primary" onclick="openScenarioModal()">📋 시나리오 선택</button>
+    <button class="toolbar-btn primary" onclick="openRemoteModal()">📡 원격 세션 설정</button>
   </footer>
 
-  <!-- [모달] Supabase 원격 세션 설정 모달 -->
+  <!-- [모달] 원격 세션 설정 -->
   <div id="modal-supabase" class="modal-backdrop">
     <div class="modal-window">
-      <div class="modal-header">
-        <span>📡 Supabase 원격 세션 설정</span>
-        <span style="cursor:pointer;" onclick="closeModal('modal-supabase')">✕</span>
-      </div>
+      <div class="modal-header"><span>📡 Supabase 원격 세션 설정</span><span style="cursor:pointer;" onclick="closeModal('modal-supabase')">✕</span></div>
       <div class="modal-body">
-        <div style="font-size:11.5px; color:#8b949e; line-height:1.4;">
-          Supabase 대시보드에서 URL과 Anon Public Key를 입력하세요. (Broadcast 방식이므로 별도 테이블이 필요 없습니다)
-        </div>
         <div class="form-group">
           <label>Project URL</label>
           <input type="text" id="sb-input-url" class="form-control" placeholder="https://xxxx.supabase.co" />
         </div>
         <div class="form-group">
           <label>Anon Public Key</label>
-          <input type="password" id="sb-input-key" class="form-control" placeholder="eyJhbGciOiJIUzI1NiIsIn..." />
+          <input type="password" id="sb-input-key" class="form-control" placeholder="eyJhbGci..." />
         </div>
         <div class="form-group">
-          <label>공유 훈련 룸 ID (Room ID)</label>
+          <label>Room ID</label>
           <input type="text" id="sb-input-room" class="form-control" value="train-room-01" />
         </div>
       </div>
@@ -1479,148 +874,78 @@
       </div>
     </div>
   </div>
-
-  <!-- [기존 모달 유지] 시나리오 모달 / 완료 모달 등 -->
-  <div id="modal-scenario-list" class="modal-backdrop">
-    <div class="modal-window">
-      <div class="modal-header"><span>📋 훈련 시나리오 선택 & 관리</span><span style="cursor:pointer;" onclick="closeModal('modal-scenario-list')">✕</span></div>
-      <div class="modal-body">
-        <select id="scenario-selector" class="form-control" size="4" onchange="previewScenarioInfo()"></select>
-        <div id="scenario-preview-desc" style="font-size:12px; color:#8b949e; line-height:1.4;"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="toolbar-btn" onclick="applyScenario(null); closeModal('modal-scenario-list');">자유 모드</button>
-        <button class="toolbar-btn primary" onclick="loadSelectedScenario()">시나리오 시작</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="modal-completion" class="modal-backdrop">
-    <div class="modal-window">
-      <div class="modal-header"><span id="complete-modal-title">🎉 훈련 절차 완료</span><span style="cursor:pointer;" onclick="closeModal('modal-completion')">✕</span></div>
-      <div class="modal-body">
-        <div class="report-card">
-          <div id="complete-grade" class="grade-stamp">PASSED</div>
-          <div id="complete-summary-text" style="font-size:13px; color:#f0f6fc; margin-bottom:8px;">조작을 정확하게 이행하였습니다.</div>
-          <div style="display:flex; justify-content:space-around; font-size:11px; color:#8b949e;">
-            <span>소요 시간: <b id="stat-elapsed" style="color:#fff;">18초</b></span>
-            <span>달성 점수: <b id="stat-score" style="color:#7ee787;">100점</b></span>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer"><button class="toolbar-btn primary" onclick="closeModal('modal-completion')">확인</button></div>
-    </div>
-  </div>
 </div>
 
-<!-- ========================================================
-     5. 핵심 시뮬레이션 엔진 & 3D 궤도 렌더러 & Supabase 연동
-======================================================== -->
 <script>
 /**
- * [Web Audio API 사운드 엔진]
+ * 1. 사운드 엔진
  */
 class SoundEngine {
   constructor() { this.ctx = null; this.isMuted = false; }
   init() {
     if (this.isMuted) return;
     if (!this.ctx) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AudioContext();
+      const AC = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AC();
     }
     if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
   }
   playClick() {
     if (this.isMuted) return; this.init(); if (!this.ctx) return;
-    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
-    osc.type = 'triangle'; osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+    const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.035);
-    gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.035);
     osc.connect(gain); gain.connect(this.ctx.destination);
     osc.start(); osc.stop(this.ctx.currentTime + 0.04);
   }
-  playHeavyLatch() {
-    if (this.isMuted) return; this.init(); if (!this.ctx) return;
-    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
-    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.08);
-    gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
-    osc.connect(gain); gain.connect(this.ctx.destination);
-    osc.start(); osc.stop(this.ctx.currentTime + 0.09);
-  }
-  playAirExhaust(duration = 1.0, filterFreq = 1100, volume = 0.7) {
-    if (this.isMuted) return; this.init(); if (!this.ctx) return;
-    const bufferSize = Math.floor(this.ctx.sampleRate * duration);
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-    const noise = this.ctx.createBufferSource(); noise.buffer = buffer;
-    const filter = this.ctx.createBiquadFilter(); filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(filterFreq, this.ctx.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(Math.max(200, filterFreq * 0.4), this.ctx.currentTime + duration);
-    const gain = this.ctx.createGain(); gain.gain.setValueAtTime(volume, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.005, this.ctx.currentTime + duration);
-    noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
-    noise.start();
-  }
-  playSuccess() { this.playClick(); }
-  playError() { this.playHeavyLatch(); }
-  playRotarySnap() { this.playClick(); }
-  playTrainHorn(duration = 0.38) {
-    if (this.isMuted) return; this.init(); if (!this.ctx) return;
-    [370, 440].forEach(f => {
-      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-      o.type = 'sawtooth'; o.frequency.setValueAtTime(f, this.ctx.currentTime);
-      g.gain.setValueAtTime(0.3, this.ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-      o.connect(g); g.connect(this.ctx.destination);
-      o.start(); o.stop(this.ctx.currentTime + duration);
-    });
-  }
-  updateTrainMotorSound(speed) {}
+  playAirExhaust() { this.playClick(); }
+  updateTrainMotorSound() {}
 }
 const sound = new SoundEngine();
-
-function toggleMuteSound() {
-  sound.isMuted = !sound.isMuted;
-  const btn = document.getElementById('btn-sound-toggle');
-  const icon = document.getElementById('sound-toggle-icon');
-  if (sound.isMuted) {
-    btn.classList.add('muted'); icon.innerText = '🔇';
-  } else {
-    btn.classList.remove('muted'); icon.innerText = '🔊'; sound.playClick();
-  }
-}
-function triggerHaptic(p) { if (navigator.vibrate) navigator.vibrate(p); }
+function toggleMuteSound() { sound.isMuted = !sound.isMuted; }
 
 /**
- * ========================================================
- * [클로드 3D 궤도 투영 엔진 - 완벽 복원 & 통합]
- * ========================================================
+ * 2. 부품 상태 정의
  */
-const CV = {
-  W: 1024, H: 473, horizon: 215, camH: 1.65, fov: 290
+const COMPONENT_REGISTRY = {
+  SW_MASTER_KEY: { name: '제어키', type: 'ROTARY_2', state: 'OFF', panel: 'OP1' },
+  SW_MASCON: { name: '마스콘', type: 'STEPPER', state: 'N', notch: 'N', panel: 'OP1' },
+  SW_REVERSER: { name: '역전기', type: 'STEPPER', state: 'N', notch: 'N', panel: 'OP1' },
+  SW_DOOR_CLOSE: { name: '출입문 닫힘', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
+  SW_DOOR_OPEN_L: { name: '출입문 좌측열림', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
+  SW_DOOR_OPEN_R: { name: '출입문 우측열림', type: 'MOMENTARY', state: 'IDLE', panel: 'OP1' },
+  SW_EMG_STOP: { name: '비상제동체결', type: 'LATCH', state: 'RELEASED', panel: 'OP3' },
+  SW_FORCE_REL: { name: '강제완해', type: 'MOMENTARY', state: 'IDLE', panel: 'OP3' },
+  SW_EMG_COVER: { name: '비상완해 커버', type: 'COVER', state: 'CLOSED', panel: 'OP3' },
+  SW_EMG_RELEASE: { name: '비상제동완해', type: 'LATCH', state: 'RELEASED', panel: 'OP3' },
+  SW_WIRELESS_COVER: { name: '무인모드 커버', type: 'COVER', state: 'CLOSED', panel: 'OP3' },
+  SW_WIRELESS_MODE: { name: '무인모드', type: 'MOMENTARY', state: 'OFF', panel: 'OP3' },
+  SW_WIPER: { name: '와이퍼', type: 'ROTARY_5', state: 'OFF', panel: 'OP4' },
+  SW_DRIVE_MODE: { name: '운전 모드', type: 'ROTARY_4', state: 'OFF', panel: 'OP4' },
+  SW_VOBC_RESET: { name: 'VOBC리셋', type: 'MOMENTARY', state: 'IDLE', panel: 'OP5' }
 };
 
-function cvHash(a, b) {
-  const x = Math.sin(a * 12.9898 + (b || 0) * 78.233) * 43758.5453123;
-  return x - Math.floor(x);
-}
+let trainSpeed = 0.0;
+let trainDistance = 0.0;
+let trainAccelRate = 0.0;
+let lastPhysicsTime = performance.now();
+let currentGaugeBC = 0.0;
+let currentGaugeMR = 9.0;
+let emgStopRotation = 0;
 
-function cvScale(d) {
-  return CV.fov / Math.max(0.15, d);
-}
+const ACTIVE_FAULTS = { DOOR_LOCK_FAIL: false, EB_STUCK: false };
 
+/**
+ * 3. 3D 궤도 투영 엔진 (Pseudo-3D)
+ */
+const CV = { W: 1024, H: 473, horizon: 215, camH: 1.65, fov: 290 };
+function cvScale(d) { return CV.fov / Math.max(0.15, d); }
 function cvProj(u, v, d) {
   const k = CV.fov / Math.max(0.15, d);
-  return {
-    x: CV.W * 0.5 + u * k,
-    y: CV.horizon - (v - CV.camH) * k
-  };
+  return { x: CV.W * 0.5 + u * k, y: CV.horizon - (v - CV.camH) * k };
 }
-
 function cvDrawQuad(ctx, u1, u2, v1, v2, d, fill) {
   const a = cvProj(u1, v1, d), b = cvProj(u2, v1, d), c = cvProj(u2, v2, d), e = cvProj(u1, v2, d);
   ctx.fillStyle = fill;
@@ -1629,625 +954,313 @@ function cvDrawQuad(ctx, u1, u2, v1, v2, d, fill) {
   ctx.closePath(); ctx.fill();
 }
 
-function cvNoise(w, seed) {
-  return Math.sin(w * 0.33 + seed) * 0.50 + Math.sin(w * 0.11 + seed * 2.1) * 0.34 + Math.sin(w * 0.87 + seed * 3.7) * 0.16;
-}
-
-function cvDrawSkyAndGround(ctx, s) {
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, CV.horizon);
-  skyGrad.addColorStop(0, '#50769a');
-  skyGrad.addColorStop(0.7, '#88a8c3');
-  skyGrad.addColorStop(1, '#c5d7e6');
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(0, 0, CV.W, CV.horizon);
-
-  // 원경 산맥
-  ctx.fillStyle = '#617769';
-  ctx.beginPath();
-  ctx.moveTo(0, CV.horizon);
-  for (let x = 0; x <= CV.W; x += 16) {
-    const wx = (x + s * 0.6) * 0.005;
-    const my = CV.horizon - 25 - Math.sin(wx) * 18 - Math.cos(wx * 2.2) * 10;
-    ctx.lineTo(x, my);
-  }
-  ctx.lineTo(CV.W, CV.horizon);
-  ctx.closePath();
-  ctx.fill();
-
-  // 지면 대지
-  const gndGrad = ctx.createLinearGradient(0, CV.horizon, 0, CV.H);
-  gndGrad.addColorStop(0, '#4e613f');
-  gndGrad.addColorStop(0.3, '#3b4b2e');
-  gndGrad.addColorStop(1, '#232e1a');
-  ctx.fillStyle = gndGrad;
-  ctx.fillRect(0, CV.horizon, CV.W, CV.H - CV.horizon);
-}
-
 function cvDrawTrack(ctx, s) {
-  const D_START = 2.0;
-  const D_END = 175.0;
-
-  // 1. 자갈도상 (Ballast)
+  const D_START = 2.0, D_END = 175.0;
+  // 자갈도상
   ctx.beginPath();
   let p1 = cvProj(-2.5, -0.4, D_END), p2 = cvProj(2.5, -0.4, D_END);
   ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
   let p3 = cvProj(3.0, -0.4, D_START), p4 = cvProj(-3.0, -0.4, D_START);
   ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y);
   ctx.closePath();
-  const bGrad = ctx.createLinearGradient(0, CV.horizon, 0, CV.H);
-  bGrad.addColorStop(0, '#585c61');
-  bGrad.addColorStop(0.5, '#404449');
-  bGrad.addColorStop(1, '#2a2d31');
-  ctx.fillStyle = bGrad;
-  ctx.fill();
+  ctx.fillStyle = '#404449'; ctx.fill();
 
-  // 2. 침목 (Sleepers) - 0.70m 간격
-  const SLEEPER_SPACING = 0.70;
-  const startK = Math.ceil((s + D_START) / SLEEPER_SPACING);
-  const endK = Math.floor((s + 90.0) / SLEEPER_SPACING);
-
+  // 침목
+  const startK = Math.ceil((s + D_START) / 0.7), endK = Math.floor((s + 90.0) / 0.7);
   for (let k = endK; k >= startK; k--) {
-    const d = k * SLEEPER_SPACING - s;
+    const d = k * 0.7 - s;
     if (d < D_START || d > 90.0) continue;
-    const col = (k % 2 === 0) ? '#62686e' : '#565b61';
-    cvDrawQuad(ctx, -1.35, 1.35, -0.22, -0.10, d, col);
-    cvDrawQuad(ctx, -0.85, -0.65, -0.09, -0.05, d, '#25282c');
-    cvDrawQuad(ctx, 0.65, 0.85, -0.09, -0.05, d, '#25282c');
+    cvDrawQuad(ctx, -1.35, 1.35, -0.22, -0.10, d, '#565b61');
   }
 
-  // 3. 표준궤 강철 레일 2줄
-  const RAIL_U = 0.718;
-  const RAIL_W = 0.065;
-
-  // 좌측 레일
-  ctx.beginPath();
-  let r1 = cvProj(-RAIL_U - RAIL_W, -0.05, D_END);
-  let r2 = cvProj(-RAIL_U + RAIL_W, -0.05, D_END);
-  let r3 = cvProj(-RAIL_U + RAIL_W, -0.05, D_START);
-  let r4 = cvProj(-RAIL_U - RAIL_W, -0.05, D_START);
-  ctx.moveTo(r1.x, r1.y); ctx.lineTo(r2.x, r2.y); ctx.lineTo(r3.x, r3.y); ctx.lineTo(r4.x, r4.y);
-  ctx.closePath();
-  ctx.fillStyle = '#b6bfc7';
-  ctx.fill();
-
-  // 우측 레일
-  ctx.beginPath();
-  r1 = cvProj(RAIL_U - RAIL_W, -0.05, D_END);
-  r2 = cvProj(RAIL_U + RAIL_W, -0.05, D_END);
-  r3 = cvProj(RAIL_U + RAIL_W, -0.05, D_START);
-  r4 = cvProj(RAIL_U - RAIL_W, -0.05, D_START);
-  ctx.moveTo(r1.x, r1.y); ctx.lineTo(r2.x, r2.y); ctx.lineTo(r3.x, r3.y); ctx.lineTo(r4.x, r4.y);
-  ctx.closePath();
-  ctx.fillStyle = '#b6bfc7';
-  ctx.fill();
-}
-
-function cvHedge(ctx, s, u, dStart, dEnd, hBase, hVar, seed, colTop, colBot) {
-  ctx.beginPath();
-  let first = true, p;
-  for (let d = dEnd; d > dStart; d /= 1.05) {
-    const w = s + d;
-    const h = hBase + hVar * (0.5 + 0.5 * cvNoise(w, seed));
-    p = cvProj(u + cvNoise(w * 0.4, seed + 1.3) * 0.7, h, d);
-    if (first) { ctx.moveTo(p.x, p.y); first = false; } else ctx.lineTo(p.x, p.y);
-  }
-  p = cvProj(u, -0.7, dStart); ctx.lineTo(p.x, p.y);
-  for (let d = dStart; d < dEnd; d *= 1.1) { p = cvProj(u, -0.7, d); ctx.lineTo(p.x, p.y); }
-  p = cvProj(u, -0.7, dEnd); ctx.lineTo(p.x, p.y);
-  ctx.closePath();
-  const g = ctx.createLinearGradient(0, CV.horizon - 24, 0, CV.H);
-  g.addColorStop(0, colTop); g.addColorStop(1, colBot);
-  ctx.fillStyle = g; ctx.fill();
-}
-
-function cvTrees(ctx, s) {
-  const list = [];
-  for (let k = Math.ceil((s + 6) / 11); k * 11 - s < 175; k++) {
-    for (let side = -1; side <= 1; side += 2) {
-      const h = cvHash(k, side * 17);
-      if (h < 0.68) continue;
-      list.push({ d: k * 11 - s + cvHash(k, side) * 6, side: side, h: h });
-    }
-  }
-  list.sort((a, b) => b.d - a.d);
-  for (let i = 0; i < list.length; i++) {
-    const it = list[i], d = it.d, k = cvScale(d);
-    if (d < 3) continue;
-    const u = it.side * (7.5 + it.h * 8);
-    const ht = 4.2 + it.h * 5.4, rad = 1.1 + it.h * 1.7;
-    const base = cvProj(u, -0.5, d), top = cvProj(u, ht, d);
-    const trunkW = Math.max(1, k * 0.16);
-    ctx.fillStyle = '#4a4034';
-    ctx.fillRect(base.x - trunkW / 2, top.y, trunkW, Math.max(1, base.y - top.y));
-    const rx = Math.max(2, rad * k * 0.5);
-    const tone = 52 + Math.floor(cvHash(it.side * 3, d | 0) * 34);
-    for (let b = 0; b < 3; b++) {
-      const ox = (cvHash(d | 0, b) - 0.5) * rx * 1.1;
-      const oy = (cvHash(d | 0, b + 9) - 0.5) * rx * 0.7;
-      const rr = rx * (0.62 + cvHash(d | 0, b + 21) * 0.42);
-      ctx.fillStyle = 'rgb(' + (tone + 10 + b * 7) + ',' + (tone + 36 + b * 8) + ',' + (tone - 16) + ')';
-      ctx.beginPath();
-      ctx.ellipse(base.x + ox, top.y + rx * 0.55 + oy, rr, rr * 0.86, 0, 0, 6.2832);
-      ctx.fill();
-    }
-  }
-}
-
-function cvFence(ctx, s, u, dStart, dEnd, h) {
-  let p, first = true;
-  ctx.beginPath();
-  for (let d = dEnd; d > dStart; d /= 1.08) { p = cvProj(u, h, d); if (first) { ctx.moveTo(p.x, p.y); first = false; } else ctx.lineTo(p.x, p.y); }
-  p = cvProj(u, h, dStart); ctx.lineTo(p.x, p.y);
-  for (let d = dStart; d < dEnd; d *= 1.08) { p = cvProj(u, -0.35, d); ctx.lineTo(p.x, p.y); }
-  p = cvProj(u, -0.35, dEnd); ctx.lineTo(p.x, p.y);
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(214,222,226,0.17)'; ctx.fill();
-  ctx.strokeStyle = 'rgba(196,204,208,0.55)'; ctx.lineWidth = 1;
-  for (let i = 0; i < 4; i++) {
-    const v = 0.12 + i * (h - 0.18) / 3;
-    ctx.beginPath(); first = true;
-    for (let d = dStart; d < dEnd; d *= 1.06) { p = cvProj(u, v, d); if (first) { ctx.moveTo(p.x, p.y); first = false; } else ctx.lineTo(p.x, p.y); }
-    ctx.stroke();
-  }
-  for (let k = Math.ceil((s + dStart) / 3); k * 3 - s < dEnd; k++) {
-    const d = k * 3 - s;
-    if (d < dStart) continue;
-    cvDrawQuad(ctx, u - 0.035, u + 0.035, -0.35, h, d, 'rgba(172,180,184,0.9)');
-  }
-}
-
-function cvCatenary(ctx, s) {
-  const DE = 165;
-  const wire = (v, col, w) => {
-    ctx.strokeStyle = col; ctx.lineWidth = w;
-    ctx.beginPath();
-    let first = true;
-    for (let d = 3; d < DE; d *= 1.055) {
-      const p = cvProj(Math.sin((s + d) * 0.07) * 0.22, v, d);
-      if (first) { ctx.moveTo(p.x, p.y); first = false; } else ctx.lineTo(p.x, p.y);
-    }
-    ctx.stroke();
-  };
-  wire(5.95, 'rgba(66,70,74,0.62)', 1.1);
-  wire(5.20, 'rgba(46,50,54,0.9)', 1.4);
-  ctx.strokeStyle = 'rgba(70,74,78,0.5)'; ctx.lineWidth = 1;
-  for (let k = Math.ceil((s + 3) / 5); k * 5 - s < 95; k++) {
-    const d = k * 5 - s;
-    const a = cvProj(Math.sin((s + d) * 0.07) * 0.22, 5.20, d);
-    const b = cvProj(Math.sin((s + d) * 0.07) * 0.22, 5.95, d);
-    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-  }
-  const masts = [];
-  for (let k = Math.ceil((s + 2) / 45); k * 45 - s < 190; k++) masts.push({ d: k * 45 - s, side: (k & 1) ? 1 : -1 });
-  masts.sort((a, b) => b.d - a.d);
-  for (let i = 0; i < masts.length; i++) {
-    const m = masts[i], d = m.d, u = m.side * 3.25, k = cvScale(d);
-    cvDrawQuad(ctx, u - 0.13, u + 0.13, -0.35, 6.6, d, '#596169');
-    cvDrawQuad(ctx, u - 0.17, u + 0.17, 6.45, 6.7, d, '#454c53');
-    const a = cvProj(u, 6.15, d), b = cvProj(0, 5.95, d), c = cvProj(0, 5.2, d);
-    ctx.strokeStyle = '#4a5158'; ctx.lineWidth = Math.max(0.9, k * 0.045);
-    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.stroke();
-  }
-}
-
-function cvDrawPosts(ctx, s) {
-  for (let k = Math.ceil((s + 2) / 100); k * 100 - s < 180; k++) {
-    const d = k * 100 - s;
-    cvDrawQuad(ctx, -3.85, -3.62, -0.35, 0.95, d, '#e6e4dc');
-    cvDrawQuad(ctx, -3.85, -3.62, 0.76, 0.95, d, '#2f4a6b');
-  }
-  for (let k = Math.ceil((s + 2) / 380); k * 380 - s < 200; k++) {
-    const d = k * 380 - s, u = 3.7, kk = cvScale(d);
-    cvDrawQuad(ctx, u - 0.1, u + 0.1, -0.35, 4.2, d, '#4a5156');
-    cvDrawQuad(ctx, u - 0.36, u + 0.04, 3.25, 4.45, d, '#1f2429');
-    const p = cvProj(u - 0.16, 3.72, d), r = Math.max(1, kk * 0.085);
-    const caution = cvHash(k, 2) > 0.78;
-    ctx.fillStyle = caution ? '#ffd23a' : '#3ef08a';
-    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2832); ctx.fill();
-    ctx.globalAlpha = 0.3;
-    ctx.beginPath(); ctx.arc(p.x, p.y, r * 2.6, 0, 6.2832); ctx.fill();
-    ctx.globalAlpha = 1;
-  }
-}
-
-function cvDrawBuildings(ctx, s) {
-  const list = [];
-  for (let k = Math.ceil((s + 30) / 55); k * 55 - s < 210; k++) {
-    for (let side = -1; side <= 1; side += 2) {
-      const h = cvHash(k + 991, side * 7);
-      if (h < 0.6) continue;
-      list.push({ d: k * 55 - s, side: side, h: h });
-    }
-  }
-  list.sort((a, b) => b.d - a.d);
-  for (let i = 0; i < list.length; i++) {
-    const it = list[i], u = it.side * (30 + it.h * 48), hh = 4.5 + it.h * 10, w = 9 + it.h * 17;
-    ctx.globalAlpha = 0.82;
-    cvDrawQuad(ctx, u - w / 2, u + w / 2, -0.8, hh, it.d, '#b9bcbd');
-    cvDrawQuad(ctx, u - w / 2, u + w / 2, hh, hh + 0.8, it.d, '#8d9294');
-    ctx.globalAlpha = 1;
-  }
-}
-
-function cvDrawFarScenery(ctx, s) {
-  cvDrawBuildings(ctx, s);
-  cvHedge(ctx, s, 15.5, 6, 200, 3.2, 4.0, 1.7, '#8d9a7c', '#59683f');
-  cvHedge(ctx, s, -17.0, 6, 200, 2.8, 3.6, 4.3, '#95a184', '#5f6d46');
-  cvTrees(ctx, s);
-  cvHedge(ctx, s, 5.45, 3, 150, 0.55, 1.75, 2.9, '#7f9154', '#4e5f33');
-  cvHedge(ctx, s, -11.5, 4, 150, 0.70, 1.50, 6.1, '#83945c', '#526239');
-}
-
-function cvDrawNearScenery(ctx, s) {
-  cvFence(ctx, s, 4.70, 3, 120, 1.85);
-  cvFence(ctx, s, -4.95, 3, 120, 1.85);
-  cvCatenary(ctx, s);
-  cvDrawPosts(ctx, s);
-}
-
-/**
- * ========================================================
- * [Supabase 실시간 연동 & 교육자 관제 모드]
- * ========================================================
- */
-let currentUserRole = 'STUDENT'; // 'STUDENT' | 'INSTRUCTOR'
-let supabaseClient = null;
-let realtimeChannel = null;
-let currentRoomId = 'train-room-01';
-
-const ACTIVE_FAULTS = {
-  DOOR_LOCK_FAIL: false,
-  EB_STUCK: false
-};
-
-function toggleUserRole() {
-  currentUserRole = (currentUserRole === 'STUDENT') ? 'INSTRUCTOR' : 'STUDENT';
-  const roleBtn = document.getElementById('btn-role-toggle');
-  const roleIcon = document.getElementById('role-icon');
-  const roleText = document.getElementById('role-text');
-  const appContainer = document.getElementById('app-container');
-
-  if (currentUserRole === 'INSTRUCTOR') {
-    roleBtn.className = 'role-badge-btn instructor';
-    roleIcon.innerText = '👨‍🏫';
-    roleText.innerText = '교육자';
-    appContainer.classList.add('instructor-mode-active');
-    showTemporaryHudFeedback("👨‍🏫 [교육자 관제 모드] 학생 조작 미러링 및 고장 인가가 활성화되었습니다.", false);
-  } else {
-    roleBtn.className = 'role-badge-btn student';
-    roleIcon.innerText = '🧑‍🎓';
-    roleText.innerText = '훈련생';
-    appContainer.classList.remove('instructor-mode-active');
-    showTemporaryHudFeedback("🧑‍🎓 [훈련생 모드] 표준 훈련 상태로 전환되었습니다.", false);
-  }
-}
-
-function openRemoteModal() {
-  document.getElementById('modal-supabase').style.display = 'flex';
-  document.getElementById('sb-input-url').value = localStorage.getItem('SB_URL') || '';
-  document.getElementById('sb-input-key').value = localStorage.getItem('SB_KEY') || '';
-  document.getElementById('sb-input-room').value = localStorage.getItem('SB_ROOM') || 'train-room-01';
-}
-
-function saveSupabaseConfig() {
-  const url = document.getElementById('sb-input-url').value.trim();
-  const key = document.getElementById('sb-input-key').value.trim();
-  const room = document.getElementById('sb-input-room').value.trim() || 'train-room-01';
-
-  if (!url || !key) { alert("URL과 Anon Key를 모두 입력해주세요."); return; }
-  localStorage.setItem('SB_URL', url);
-  localStorage.setItem('SB_KEY', key);
-  localStorage.setItem('SB_ROOM', room);
-
-  closeModal('modal-supabase');
-  initSupabaseSession(url, key, room);
-}
-
-function initSupabaseSession(url, key, room) {
-  if (!window.supabase) return;
-  try {
-    supabaseClient = window.supabase.createClient(url, key);
-    currentRoomId = room || 'train-room-01';
-    if (realtimeChannel) realtimeChannel.unsubscribe();
-
-    realtimeChannel = supabaseClient.channel(currentRoomId, {
-      config: { broadcast: { ack: false } }
-    });
-
-    realtimeChannel.on('broadcast', { event: 'student_action' }, (payload) => {
-      onReceiveRemoteAction(payload.payload);
-    });
-
-    realtimeChannel.on('broadcast', { event: 'instructor_command' }, (payload) => {
-      onReceiveInstructorCommand(payload.payload);
-    });
-
-    realtimeChannel.subscribe((status) => {
-      const pill = document.getElementById('remote-status-pill');
-      const text = document.getElementById('remote-status-text');
-      const dot = document.getElementById('remote-dot');
-
-      if (status === 'SUBSCRIBED') {
-        pill.classList.add('connected');
-        text.innerText = `세션 연결됨 (${currentRoomId})`;
-        dot.innerText = '🟢';
-        logAuditMessage(`룸 [${currentRoomId}] 연결 완료`);
-      } else {
-        pill.classList.remove('connected');
-        text.innerText = '원격 오프라인';
-        dot.innerText = '⚪';
-      }
-    });
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-function broadcastStateChange(actionType, data) {
-  if (!realtimeChannel) return;
-  if (currentUserRole === 'STUDENT') {
-    realtimeChannel.send({
-      type: 'broadcast',
-      event: 'student_action',
-      payload: { ...data, timestamp: Date.now() }
-    });
-  } else {
-    realtimeChannel.send({
-      type: 'broadcast',
-      event: 'instructor_command',
-      payload: { actionType, ...data, timestamp: Date.now() }
-    });
-  }
-}
-
-function onReceiveRemoteAction(data) {
-  if (currentUserRole !== 'INSTRUCTOR') return;
-  const { compId, state, speed, bc, notch, rev } = data;
-
-  if (compId && COMPONENT_REGISTRY[compId]) {
-    COMPONENT_REGISTRY[compId].state = state;
-    syncComponentVisual(compId, state);
-    logAuditMessage(`[훈련생 조작] ${COMPONENT_REGISTRY[compId].name} ➔ ${state}`);
-  }
-
-  if (speed !== undefined) trainSpeed = speed;
-  if (bc !== undefined) updateGaugeUI(bc);
-  if (notch !== undefined && COMPONENT_REGISTRY.SW_MASCON) {
-    COMPONENT_REGISTRY.SW_MASCON.notch = notch;
-    const h = document.getElementById('comp-SW_MASCON');
-    if (h) h.style.top = `${MASCON_POS_MAP[notch] || 68}%`;
-  }
-  if (rev !== undefined && COMPONENT_REGISTRY.SW_REVERSER) {
-    COMPONENT_REGISTRY.SW_REVERSER.notch = rev;
-    const k = document.getElementById('comp-SW_REVERSER');
-    if (k) k.style.top = `${REVERSER_POS_MAP[rev] || 50}%`;
-  }
-  updateInstructorTelemetry();
-}
-
-function onReceiveInstructorCommand(data) {
-  if (currentUserRole !== 'STUDENT') return;
-  const { actionType, faultType, faultValue, targetComp } = data;
-
-  if (actionType === 'SET_FAULT') {
-    ACTIVE_FAULTS[faultType] = faultValue;
-    const pill = document.getElementById('remote-status-pill');
-    pill.classList.toggle('fault-active', ACTIVE_FAULTS.DOOR_LOCK_FAIL || ACTIVE_FAULTS.EB_STUCK);
-
-    if (faultType === 'DOOR_LOCK_FAIL') {
-      const lamp = document.getElementById('lamp-door');
-      if (faultValue) {
-        if (lamp) lamp.classList.remove('lit');
-        showTemporaryHudFeedback("⚠️ [고장 발생] 출입문 닫힘 신호 불량 발생! (역행 불가)", true);
-      } else {
-        if (lamp) lamp.classList.add('lit');
-        showTemporaryHudFeedback("✅ [고장 해제] 출입문 회로 정상 복구", false);
-      }
-    } else if (faultType === 'EB_STUCK') {
-      if (faultValue) {
-        updateGaugeUI(4.0);
-        showTemporaryHudFeedback("🚨 [비상제동 고착] 완해 불능 고장 발생! (BC 4.0 bar)", true);
-      }
-    }
-  } else if (actionType === 'REMOTE_HINT' && targetComp) {
-    triggerComponentHighlight(targetComp);
-    sound.playClick();
-    showTemporaryHudFeedback(`👨‍🏫 [교육자 지시] ${COMPONENT_REGISTRY[targetComp]?.name || targetComp} 부품을 확인하세요!`, false);
-  }
-}
-
-function updateInstructorTelemetry() {
-  const telSpeed = document.getElementById('tel-speed');
-  const telMascon = document.getElementById('tel-mascon');
-  const telRevKey = document.getElementById('tel-rev-key');
-  const telBc = document.getElementById('tel-bc');
-  const telMr = document.getElementById('tel-mr');
-
-  const notch = COMPONENT_REGISTRY.SW_MASCON.notch || 'N';
-  const rev = COMPONENT_REGISTRY.SW_REVERSER.notch || 'N';
-  const key = COMPONENT_REGISTRY.SW_MASTER_KEY.state || 'OFF';
-  const driveMode = COMPONENT_REGISTRY.SW_DRIVE_MODE.state || 'OFF';
-  const isDoorClosed = !ACTIVE_FAULTS.DOOR_LOCK_FAIL && document.getElementById('lamp-door')?.classList.contains('lit');
-  const isEstopLatched = COMPONENT_REGISTRY.SW_EMG_STOP.state === 'LATCHED';
-
-  if (telSpeed) telSpeed.innerText = `${Math.round(trainSpeed)} km/h`;
-  if (telMascon) telMascon.innerText = notch;
-  if (telRevKey) telRevKey.innerText = `${rev} / ${key}`;
-  if (telBc) telBc.innerText = `${currentGaugeBC.toFixed(1)} bar`;
-  if (telMr) telMr.innerText = `${currentGaugeMR.toFixed(1)} bar`;
-
-  document.getElementById('chk-key')?.classList.toggle('ok', key === 'ON');
-  document.getElementById('chk-mode')?.classList.toggle('ok', ['FM', 'RM', 'ATPM'].includes(driveMode));
-  document.getElementById('chk-rev')?.classList.toggle('ok', rev === 'F' || rev === 'R');
-  document.getElementById('chk-door')?.classList.toggle('ok', isDoorClosed);
-  document.getElementById('chk-brake')?.classList.toggle('ok', currentGaugeBC < 0.5);
-  document.getElementById('chk-estop')?.classList.toggle('ok', !isEstopLatched);
-}
-
-function toggleFault(faultKey) {
-  ACTIVE_FAULTS[faultKey] = !ACTIVE_FAULTS[faultKey];
-  const btn = document.getElementById(faultKey === 'DOOR_LOCK_FAIL' ? 'btn-fault-door' : 'btn-fault-brake');
-  if (btn) btn.classList.toggle('active', ACTIVE_FAULTS[faultKey]);
-
-  broadcastStateChange('SET_FAULT', {
-    faultType: faultKey,
-    faultValue: ACTIVE_FAULTS[faultKey]
+  // 레일 2줄
+  [-0.718, 0.718].forEach(u => {
+    let r1 = cvProj(u - 0.05, -0.05, D_END), r2 = cvProj(u + 0.05, -0.05, D_END);
+    let r3 = cvProj(u + 0.05, -0.05, D_START), r4 = cvProj(u - 0.05, -0.05, D_START);
+    ctx.beginPath(); ctx.moveTo(r1.x, r1.y); ctx.lineTo(r2.x, r2.y); ctx.lineTo(r3.x, r3.y); ctx.lineTo(r4.x, r4.y);
+    ctx.fillStyle = '#b6bfc7'; ctx.fill();
   });
-  logAuditMessage(`[고장 인가] ${faultKey} : ${ACTIVE_FAULTS[faultKey] ? '발생' : '정상 복구'}`);
 }
 
-function sendRemoteInstructorHint(compId) {
-  broadcastStateChange('REMOTE_HINT', { targetComp: compId });
-  logAuditMessage(`[원격 지시] 훈련생에게 '${COMPONENT_REGISTRY[compId]?.name}' 강조 전송`);
-}
-
-function logAuditMessage(msg) {
-  const container = document.getElementById('audit-log-container');
-  if (!container) return;
-  const time = new Date().toLocaleTimeString('ko-KR', { hour12: false });
-  const div = document.createElement('div');
-  div.className = 'log-row';
-  div.innerText = `[${time}] ${msg}`;
-  container.prepend(div);
-}
-
-function syncComponentVisual(compId, state) {
-  const el = document.getElementById(`comp-${compId}`);
-  if (!el) return;
-  if (compId === 'SW_MASCON') {
-    el.style.top = `${MASCON_POS_MAP[state] || 68}%`;
-  } else if (compId === 'SW_REVERSER') {
-    el.style.top = `${REVERSER_POS_MAP[state] || 50}%`;
-  } else if (compId === 'SW_MASTER_KEY') {
-    el.classList.toggle('on', state === 'ON');
-  } else if (compId.includes('COVER')) {
-    el.classList.toggle('open', state === 'OPEN');
-  } else if (compId === 'SW_EMG_STOP') {
-    el.classList.toggle('latched', state === 'LATCHED');
-  }
-}
-
-/**
- * ========================================================
- * [열차 물리 엔진 & 통합 3D 렌더 루프]
- * ========================================================
- */
 function updateTrainPhysics() {
   const now = performance.now();
   let dt = (now - lastPhysicsTime) / 1000;
   if (dt > 0.1) dt = 0.1;
   lastPhysicsTime = now;
 
-  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
-  const driveMode = modeComp ? modeComp.state : 'OFF';
-  const wirelessComp = COMPONENT_REGISTRY['SW_WIRELESS_MODE'];
-  const isUnmannedActive = (wirelessComp && wirelessComp.state === 'LIT') && (driveMode === 'OFF');
+  const notch = COMPONENT_REGISTRY.SW_MASCON.notch || 'N';
+  const rev = COMPONENT_REGISTRY.SW_REVERSER.notch || 'N';
+  const key = COMPONENT_REGISTRY.SW_MASTER_KEY.state === 'ON';
+  const driveMode = COMPONENT_REGISTRY.SW_DRIVE_MODE.state || 'OFF';
+  const isDoorClosed = !ACTIVE_FAULTS.DOOR_LOCK_FAIL && document.getElementById('lamp-door')?.classList.contains('lit');
+  const isEmg = COMPONENT_REGISTRY.SW_EMG_STOP.state === 'LATCHED' || ACTIVE_FAULTS.EB_STUCK;
 
-  const masconComp = COMPONENT_REGISTRY['SW_MASCON'];
-  const notch = masconComp ? (masconComp.notch || masconComp.state || 'N') : 'N';
-  const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
-  const revNotch = revComp ? (revComp.notch || revComp.state || 'N') : 'N';
-  const keyComp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
-  const isKeyOn = keyComp && (keyComp.state === 'ON');
-  const emgComp = COMPONENT_REGISTRY['SW_EMG_STOP'];
-  const emgRel = COMPONENT_REGISTRY['SW_EMG_RELEASE'];
-  const isEmgActive = (emgComp && emgComp.state === 'LATCHED' && (!emgRel || emgRel.state !== 'LATCHED')) || ACTIVE_FAULTS.EB_STUCK;
+  let target = 0.0, rate = -0.25;
 
-  const lampDoor = document.getElementById('lamp-door');
-  const isDoorClosed = !ACTIVE_FAULTS.DOOR_LOCK_FAIL && (!lampDoor || lampDoor.classList.contains('lit'));
-
-  let target = 0.0;
-  let rate = -0.25;
-
-  if (isEmgActive || notch === 'EB') {
-    target = 0.0;
-    rate = -8.0;
-  } else if (isUnmannedActive) {
-    if (isDoorClosed && currentGaugeBC < 0.5) {
-      target = 60.0; rate = 2.8;
-    } else {
-      target = 0.0; rate = -3.5;
-    }
-  } else if (['FM', 'RM', 'ATPM'].includes(driveMode) && isKeyOn && isDoorClosed && !isEmgActive && currentGaugeBC < 0.5) {
-    if (notch.startsWith('P') && (revNotch === 'F' || revNotch === 'R')) {
-      const maxSpd = (driveMode === 'RM') ? 25.0 : 80.0;
+  if (isEmg || notch === 'EB') {
+    target = 0.0; rate = -8.0;
+  } else if (['FM', 'RM', 'ATPM'].includes(driveMode) && key && isDoorClosed && currentGaugeBC < 0.5) {
+    if (notch.startsWith('P') && (rev === 'F' || rev === 'R')) {
       const pLvl = parseInt(notch.substring(1)) || 1;
-      target = Math.min(maxSpd, 20.0 + pLvl * 15.0);
+      target = 20.0 + pLvl * 15.0;
       rate = 1.0 + pLvl * 0.75;
     } else if (notch.startsWith('B')) {
       const bLvl = parseInt(notch.substring(1)) || 1;
-      target = 0.0;
-      rate = -1.2 - bLvl * 0.6;
+      target = 0.0; rate = -1.2 - bLvl * 0.6;
     }
-  } else if (notch.startsWith('B')) {
-    const bLvl = parseInt(notch.substring(1)) || 1;
-    target = 0.0;
-    rate = -1.2 - bLvl * 0.6;
   }
 
-  trainTargetSpeed = target;
-  trainAccelRate = rate;
+  trainAccelRate += (target - trainAccelRate) * 2.2 * dt;
+  trainSpeed += trainAccelRate * dt;
+  if (trainSpeed < 0) { trainSpeed = 0; if (target < 0) trainAccelRate = 0; }
+  trainDistance += (trainSpeed / 3.6) * dt;
 
-  if (target > trainSpeed) {
-    trainSpeed = Math.min(target, trainSpeed + rate * dt);
-  } else if (target < trainSpeed) {
-    trainSpeed = Math.max(0, trainSpeed + rate * dt);
-  }
-
-  const speedMs = trainSpeed / 3.6;
-  trainDistance += speedMs * dt;
-  trackTiePhase = (trackTiePhase + speedMs * dt * 0.28) % 1.0;
-
-  updateCabOSD(notch, revNotch, isUnmannedActive, driveMode);
+  const elSpeed = document.getElementById('cab-osd-speed');
+  const elNotch = document.getElementById('cab-osd-notch');
+  const elBadge = document.getElementById('cab-status-badge');
+  if (elSpeed) elSpeed.innerText = Math.round(trainSpeed);
+  if (elNotch) elNotch.innerText = `${rev} ${notch}`;
+  if (elBadge) elBadge.innerText = trainSpeed > 0.5 ? '주행중' : '정차중';
 }
 
 function drawCabViewLoop() {
   updateTrainPhysics();
-
   const canvas = document.getElementById('cab-view-canvas');
   if (canvas) {
     const ctx = canvas.getContext('2d');
-    CV.W = canvas.width;
-    CV.H = canvas.height;
-
-    // 차체 물리 진동 & 피칭
-    const shake = Math.min(2.5, trainSpeed * 0.045);
-    const swayX = Math.sin(Date.now() * 0.02) * shake;
-    const swayY = Math.cos(Date.now() * 0.015) * shake + (trainAccelRate * -1.1);
-
+    CV.W = canvas.width; CV.H = canvas.height;
     ctx.clearRect(0, 0, CV.W, CV.H);
-    ctx.save();
-    ctx.translate(swayX, swayY);
 
-    const s = trainDistance;
+    // 하늘 & 지면
+    ctx.fillStyle = '#88a8c3'; ctx.fillRect(0, 0, CV.W, CV.horizon);
+    ctx.fillStyle = '#3b4b2e'; ctx.fillRect(0, CV.horizon, CV.W, CV.H - CV.horizon);
 
-    // 1. 하늘 & 원경 대지 능선
-    cvDrawSkyAndGround(ctx, s);
-
-    // 2. 원경 건물, 둔덕 식생, 가로수
-    cvDrawFarScenery(ctx, s);
-
-    // 3. 자갈도상, 콘크리트 침목, 2선 강철 레일
-    cvDrawTrack(ctx, s);
-
-    // 4. 근경 방호울타리, 전차선 가선/전주, 신호기
-    cvDrawNearScenery(ctx, s);
-
-    ctx.restore();
-
-    // 5. 전면 운전실 프레임 오버레이
-    if (cabImgLoaded) {
-      ctx.save();
-      ctx.drawImage(cabImg, 0, 0, CV.W, CV.H);
-      ctx.restore();
-    }
+    // 3D 궤도
+    cvDrawTrack(ctx, trainDistance);
   }
-
   requestAnimationFrame(drawCabViewLoop);
 }
 
-// 초기화 시 Supabase 자동 연결 시도
+/**
+ * 4. 뷰포트 슬롯 라우터 (패널 화면 표시 핵심)
+ */
+const ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5'];
+let activeLeftPanel = 'OP1';
+let activeRightPanel = 'OP4';
+
+function selectSlotPanel(slot, panelId) {
+  panelId = panelId.toUpperCase();
+  if (slot === 'left') activeLeftPanel = panelId;
+  else activeRightPanel = panelId;
+  renderDualPanels();
+}
+
+function renderDualPanels() {
+  const leftContent = document.getElementById('slot-left-content');
+  const rightContent = document.getElementById('slot-right-content');
+  const pool = document.getElementById('panel-storage-pool');
+  if (!leftContent || !rightContent || !pool) return;
+
+  const isWide = window.innerWidth >= 768;
+
+  ALL_PANELS.forEach(p => {
+    const el = document.getElementById(`panel-${p.toLowerCase()}`);
+    if (!el) return;
+
+    if (p === activeLeftPanel) {
+      el.style.display = 'block';
+      leftContent.appendChild(el);
+    } else if (isWide && p === activeRightPanel) {
+      el.style.display = 'block';
+      rightContent.appendChild(el);
+    } else {
+      el.style.display = 'none';
+      pool.appendChild(el);
+    }
+  });
+
+  ALL_PANELS.forEach(p => {
+    const pL = p.toLowerCase();
+    document.getElementById(`slot-l-${pL}`)?.classList.toggle('active', p === activeLeftPanel);
+    document.getElementById(`slot-r-${pL}`)?.classList.toggle('active', p === activeRightPanel);
+    document.getElementById(`view-${pL}`)?.classList.toggle('active', p === activeLeftPanel);
+  });
+
+  const lLabel = document.getElementById('slot-left-label');
+  const rLabel = document.getElementById('slot-right-label');
+  if (lLabel) lLabel.innerText = activeLeftPanel;
+  if (rLabel) rLabel.innerText = activeRightPanel;
+}
+
+function switchPanelView(view) {
+  selectSlotPanel('left', view);
+}
+
+/**
+ * 5. 조작 및 상태 관리
+ */
+const MASCON_POS_MAP = { 'EB': 5, 'B4': 38, 'B1': 60, 'N': 68, 'P2': 84, 'P4': 98 };
+const REVERSER_POS_MAP = { 'F': 15, 'N': 50, 'R': 85 };
+
+function handleComponentTouch(compId) {
+  const comp = COMPONENT_REGISTRY[compId];
+  if (!comp) return;
+
+  sound.playClick();
+
+  if (compId === 'SW_MASTER_KEY') {
+    comp.state = (comp.state === 'OFF') ? 'ON' : 'OFF';
+    document.getElementById('comp-SW_MASTER_KEY')?.classList.toggle('on', comp.state === 'ON');
+  } else if (compId === 'SW_EMG_STOP') {
+    comp.state = (comp.state === 'RELEASED') ? 'LATCHED' : 'RELEASED';
+    document.getElementById('comp-SW_EMG_STOP')?.classList.toggle('latched', comp.state === 'LATCHED');
+    updateGaugeUI(comp.state === 'LATCHED' ? 4.0 : 0.0);
+  } else if (compId === 'SW_DOOR_CLOSE') {
+    if (!ACTIVE_FAULTS.DOOR_LOCK_FAIL) document.getElementById('lamp-door')?.classList.add('lit');
+  } else if (compId.includes('DOOR_OPEN')) {
+    document.getElementById('lamp-door')?.classList.remove('lit');
+  }
+
+  broadcastStateChange('TOUCH', { compId, state: comp.state, speed: trainSpeed });
+  updateInstructorTelemetry();
+}
+
+function setMasconNotch(notch) {
+  COMPONENT_REGISTRY.SW_MASCON.notch = notch;
+  const h = document.getElementById('comp-SW_MASCON');
+  if (h) h.style.top = `${MASCON_POS_MAP[notch] || 68}%`;
+  updateGaugeUI(notch.startsWith('B') || notch === 'EB' ? 3.0 : 0.0);
+  broadcastStateChange('MASCON', { notch, speed: trainSpeed });
+  updateInstructorTelemetry();
+}
+
+function handleMasconTrackClick(e) {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const y = (e.clientY - rect.top) / rect.height;
+  if (y < 0.2) setMasconNotch('EB');
+  else if (y < 0.5) setMasconNotch('B1');
+  else if (y < 0.75) setMasconNotch('N');
+  else setMasconNotch('P4');
+}
+
+function setReverserPosition(pos) {
+  COMPONENT_REGISTRY.SW_REVERSER.notch = pos;
+  const knob = document.getElementById('comp-SW_REVERSER');
+  if (knob) knob.style.top = `${REVERSER_POS_MAP[pos] || 50}%`;
+  broadcastStateChange('REVERSER', { pos });
+  updateInstructorTelemetry();
+}
+
+function handleReverserTrackClick(e) {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const y = (e.clientY - rect.top) / rect.height;
+  if (y < 0.33) setReverserPosition('F');
+  else if (y > 0.66) setReverserPosition('R');
+  else setReverserPosition('N');
+}
+
+function updateGaugeUI(bc, mr = 9.0) {
+  currentGaugeBC = bc;
+  const elBc = document.getElementById('needle-bc');
+  const valBc = document.getElementById('val-bc');
+  if (elBc) elBc.style.transform = `rotate(${-135 + bc * 22.5}deg)`;
+  if (valBc) valBc.innerText = bc.toFixed(1);
+}
+
+function toggleFlipCover(id, e) {
+  if (e) e.stopPropagation();
+  const el = document.getElementById(`comp-${id}`);
+  el?.classList.toggle('open');
+}
+
+/**
+ * 6. Supabase 실시간 연동 및 관제
+ */
+let currentUserRole = 'STUDENT';
+let supabaseClient = null;
+let realtimeChannel = null;
+
+function toggleUserRole() {
+  currentUserRole = (currentUserRole === 'STUDENT') ? 'INSTRUCTOR' : 'STUDENT';
+  const btn = document.getElementById('btn-role-toggle');
+  const app = document.getElementById('app-container');
+  if (currentUserRole === 'INSTRUCTOR') {
+    btn.className = 'role-badge-btn instructor';
+    btn.innerHTML = '<span>👨‍🏫</span><span>교육자</span>';
+    app.classList.add('instructor-mode-active');
+  } else {
+    btn.className = 'role-badge-btn student';
+    btn.innerHTML = '<span>🧑‍🎓</span><span>훈련생</span>';
+    app.classList.remove('instructor-mode-active');
+  }
+}
+
+function openRemoteModal() { document.getElementById('modal-supabase').style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+function saveSupabaseConfig() {
+  const url = document.getElementById('sb-input-url').value.trim();
+  const key = document.getElementById('sb-input-key').value.trim();
+  const room = document.getElementById('sb-input-room').value.trim() || 'train-room-01';
+  localStorage.setItem('SB_URL', url);
+  localStorage.setItem('SB_KEY', key);
+  localStorage.setItem('SB_ROOM', room);
+  closeModal('modal-supabase');
+  initSupabaseSession(url, key, room);
+}
+
+function initSupabaseSession(url, key, room) {
+  if (!window.supabase || !url || !key) return;
+  try {
+    supabaseClient = window.supabase.createClient(url, key);
+    if (realtimeChannel) realtimeChannel.unsubscribe();
+    realtimeChannel = supabaseClient.channel(room);
+
+    realtimeChannel.on('broadcast', { event: 'action' }, payload => {
+      if (currentUserRole === 'INSTRUCTOR') {
+        const d = payload.payload;
+        if (d.notch) setMasconNotch(d.notch);
+        if (d.speed !== undefined) trainSpeed = d.speed;
+        updateInstructorTelemetry();
+      }
+    });
+
+    realtimeChannel.subscribe(status => {
+      const pill = document.getElementById('remote-status-pill');
+      if (status === 'SUBSCRIBED') {
+        pill.classList.add('connected');
+        document.getElementById('remote-status-text').innerText = `연결됨 (${room})`;
+      }
+    });
+  } catch(e) { console.error(e); }
+}
+
+function broadcastStateChange(event, data) {
+  if (realtimeChannel && currentUserRole === 'STUDENT') {
+    realtimeChannel.send({ type: 'broadcast', event: 'action', payload: data });
+  }
+}
+
+function updateInstructorTelemetry() {
+  document.getElementById('tel-speed').innerText = `${Math.round(trainSpeed)} km/h`;
+  document.getElementById('tel-mascon').innerText = COMPONENT_REGISTRY.SW_MASCON.notch || 'N';
+  document.getElementById('tel-bc').innerText = `${currentGaugeBC.toFixed(1)} bar`;
+}
+
+function toggleFault(type) {
+  ACTIVE_FAULTS[type] = !ACTIVE_FAULTS[type];
+  document.getElementById(type === 'DOOR_LOCK_FAIL' ? 'btn-fault-door' : 'btn-fault-brake')?.classList.toggle('active', ACTIVE_FAULTS[type]);
+}
+
+/**
+ * 7. 화면 시작 시 초기화
+ */
 window.addEventListener('DOMContentLoaded', () => {
+  renderDualPanels();
+  updateGaugeUI(0.0);
+  lastPhysicsTime = performance.now();
+  requestAnimationFrame(drawCabViewLoop);
+
   const savedUrl = localStorage.getItem('SB_URL');
   const savedKey = localStorage.getItem('SB_KEY');
   const savedRoom = localStorage.getItem('SB_ROOM') || 'train-room-01';
@@ -2255,6 +1268,8 @@ window.addEventListener('DOMContentLoaded', () => {
     initSupabaseSession(savedUrl, savedKey, savedRoom);
   }
 });
+
+window.addEventListener('resize', renderDualPanels);
 </script>
 
 </body>
