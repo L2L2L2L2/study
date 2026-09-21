@@ -2545,6 +2545,212 @@
       color: var(--accent-green);
       margin: 8px 0;
     }
+    /* ========================================================
+       철도 종합관제실(OCC) 고시인성 지휘 통제 콘솔 UI
+    ======================================================== */
+    .occ-dashboard {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: linear-gradient(180deg, #0d121a 0%, #131924 100%);
+      border: 2px solid #1f6feb;
+      border-radius: 10px;
+      padding: 12px 14px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255,255,255,0.1);
+    }
+
+    /* 훈련생 정보 헤더 */
+    .occ-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #283344;
+    }
+    .occ-train-id {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 900;
+      color: #58a6ff;
+    }
+    .occ-live-tag {
+      background: #238636;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 3px;
+      animation: blink 1.2s infinite;
+    }
+
+    /* 계기판 듀얼 랙 (속도계 + 압력계) */
+    .occ-meter-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 8px;
+    }
+    .occ-meter-card {
+      background: #080b10;
+      border: 1px solid #232d3d;
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .occ-meter-title {
+      font-size: 10px;
+      font-weight: 800;
+      color: #8b949e;
+      display: flex;
+      justify-content: space-between;
+    }
+    .occ-speed-display {
+      font-family: 'Consolas', monospace;
+      font-size: 26px;
+      font-weight: 900;
+      color: #38bdf8;
+      line-height: 1.1;
+      margin: 4px 0;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    }
+    .occ-speed-unit {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      margin-left: 2px;
+    }
+    .occ-bar-track {
+      width: 100%;
+      height: 6px;
+      background: #1e2533;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .occ-bar-fill-speed {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8 0%, #22c55e 70%, #eab308 100%);
+      transition: width 0.1s linear;
+    }
+    .occ-bar-fill-bc {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e 0%, #eab308 50%, #ef4444 100%);
+      transition: width 0.1s linear;
+    }
+
+    /* 노치 및 조작 레버 배지 */
+    .occ-notch-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      background: #111722;
+      border: 1px solid #243042;
+      border-radius: 6px;
+      padding: 6px 4px;
+    }
+    .occ-notch-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .occ-notch-lbl {
+      font-size: 9px;
+      color: #8b949e;
+      font-weight: 700;
+    }
+    .occ-notch-val {
+      font-size: 13px;
+      font-weight: 900;
+      color: #f1f5f9;
+      font-family: 'Consolas', monospace;
+    }
+
+    /* 열차 주요 상태 램프 뱅크 */
+    .occ-lamp-bank {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+    .occ-lamp {
+      background: #161d28;
+      border: 1px solid #253040;
+      border-radius: 4px;
+      padding: 4px 2px;
+      text-align: center;
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #4b5563;
+      transition: all 0.2s;
+    }
+    .occ-lamp.lit-green {
+      background: rgba(34, 197, 94, 0.15);
+      border-color: #22c55e;
+      color: #4ade80;
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+    }
+    .occ-lamp.lit-red {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+      color: #f87171;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+    }
+    .occ-lamp.lit-yellow {
+      background: rgba(234, 179, 8, 0.2);
+      border-color: #eab308;
+      color: #fde047;
+      box-shadow: 0 0 8px rgba(234, 179, 8, 0.35);
+    }
+    .occ-lamp.lit-blue {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: #38bdf8;
+      color: #38bdf8;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+    }
+
+    /* 비상 고장 주입 버튼 고도화 */
+    .occ-fault-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: #0f1520;
+      border: 1px solid #2d1d24;
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+    .occ-fault-btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .occ-fault-btn {
+      background: #1a1215;
+      border: 1.5px solid #5a272d;
+      color: #f87171;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 8px 4px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      transition: all 0.15s;
+    }
+    .occ-fault-btn:active { transform: scale(0.97); }
+    .occ-fault-btn.active {
+      background: #b91c1c;
+      border-color: #f87171;
+      color: #ffffff;
+      box-shadow: 0 0 14px rgba(239, 68, 68, 0.7);
+      animation: pulse-red 1.2s infinite;
+    }
   </style>
 
   <!-- Supabase JS SDK v2 -->
@@ -3543,62 +3749,110 @@
           </div>
         </details>
 
-        <div id="remote-instructor-panel" style="display:none; flex-direction:column; gap:10px; background:#161b22; border:1px solid #388bfd; border-radius:8px; padding:12px;">
-          <div style="font-size:12px; font-weight:800; color:#58a6ff; display:flex; align-items:center; gap:5px;">
-            <span>👨‍🏫 관제관 지휘 통제 콘솔</span>
+        <!-- [개선된 OCC 철도 종합관제실 콘솔 대시보드] -->
+        <div id="remote-instructor-panel" class="occ-dashboard" style="display:none;">
+          
+          <!-- 1. 훈련생 정보 & 통신 시간 헤더 -->
+          <div class="occ-header-bar">
+            <div class="occ-train-id">
+              <span class="occ-live-tag">LIVE</span>
+              <span>피교육자: <strong id="inst-mon-name" style="color:#ffffff;">대기중</strong></span>
+            </div>
+            <span id="inst-mon-time" style="font-family:'Consolas',monospace; font-size:11px; color:#64748b;">--:--:--</span>
           </div>
 
-          <div style="background:#0d1117; border:1px solid #30363d; border-radius:6px; padding:8px 10px; font-size:11.5px; line-height:1.5;">
-            <div style="display:flex; justify-content:space-between; color:#8b949e; margin-bottom:4px; font-weight:700;">
-              <span>연결된 훈련생: <strong id="inst-mon-name" style="color:#f0f6fc;">대기중</strong></span>
-              <span id="inst-mon-time" style="font-size:10px; color:#6e7681;">-</span>
-            </div>
-            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:4px; text-align:center;">
-              <div style="background:#21262d; padding:4px; border-radius:4px;">
-                <span style="font-size:9.5px; color:#8b949e;">속도</span><br>
-                <strong id="inst-mon-speed" style="color:#38bdf8; font-size:13px;">0</strong> km/h
+          <!-- 2. 계기판 듀얼 랙 (실시간 속도계 + BC/MR 공기압력) -->
+          <div class="occ-meter-grid">
+            <div class="occ-meter-card">
+              <div class="occ-meter-title">
+                <span>열차 시속 (SPEED)</span>
+                <span id="occ-speed-tag" style="color:#38bdf8; font-weight:900;">0%</span>
               </div>
-              <div style="background:#21262d; padding:4px; border-radius:4px;">
-                <span style="font-size:9.5px; color:#8b949e;">BC 압력</span><br>
-                <strong id="inst-mon-bc" style="color:#cbd5e1; font-size:13px;">0.0</strong> bar
+              <div class="occ-speed-display">
+                <span id="inst-mon-speed">0</span><span class="occ-speed-unit">km/h</span>
               </div>
-              <div style="background:#21262d; padding:4px; border-radius:4px;">
-                <span style="font-size:9.5px; color:#8b949e;">마스콘/역전기</span><br>
-                <strong id="inst-mon-notch" style="color:#34d399; font-size:12px;">N / N</strong>
+              <div class="occ-bar-track">
+                <div id="occ-bar-speed" class="occ-bar-fill-speed"></div>
               </div>
             </div>
-            <div style="margin-top:6px; font-size:10.5px; color:#8b949e;">
-              최근 조작: <span id="inst-mon-action" style="color:#e2e8f0; font-weight:700;">없음</span>
+
+            <div class="occ-meter-card">
+              <div class="occ-meter-title">
+                <span>제동통 (BC 압력)</span>
+                <span id="inst-mon-bc-status" style="color:#22c55e; font-weight:900;">완해</span>
+              </div>
+              <div class="occ-speed-display" style="color:#cbd5e1;">
+                <span id="inst-mon-bc">0.0</span><span class="occ-speed-unit">bar</span>
+              </div>
+              <div class="occ-bar-track">
+                <div id="occ-bar-bc" class="occ-bar-fill-bc"></div>
+              </div>
             </div>
           </div>
 
-          <div style="display:flex; flex-direction:column; gap:6px;">
-            <span style="font-size:11px; font-weight:800; color:#f87171;">⚠️ 실전 비상 고장 인가 (Fault Injection)</span>
-            <div style="display:flex; gap:6px;">
-              <button id="btn-fault-door" class="toolbar-btn" style="border-color:#da3633; color:#f85149;" onclick="TrainRemote.toggleFault('DOOR_LOCK_FAIL')">
-                🚨 출입문 닫힘 불량 인가
+          <!-- 3. 주간제어기 및 역전기 실시간 위치 인디케이터 -->
+          <div class="occ-notch-box">
+            <div class="occ-notch-item">
+              <span class="occ-notch-lbl">역전기</span>
+              <span class="occ-notch-val" id="inst-notch-rev" style="color:#38bdf8;">N</span>
+            </div>
+            <div style="width:1px; height:20px; background:#243042;"></div>
+            <div class="occ-notch-item">
+              <span class="occ-notch-lbl">마스콘 노치</span>
+              <span class="occ-notch-val" id="inst-notch-mascon" style="color:#4ade80;">N</span>
+            </div>
+            <div style="width:1px; height:20px; background:#243042;"></div>
+            <div class="occ-notch-item">
+              <span class="occ-notch-lbl">운전 모드</span>
+              <span class="occ-notch-val" id="inst-mode-val" style="color:#eab308;">OFF</span>
+            </div>
+            <div style="width:1px; height:20px; background:#243042;"></div>
+            <div class="occ-notch-item">
+              <span class="occ-notch-lbl">최근 조작</span>
+              <span class="occ-notch-val" id="inst-mon-action" style="font-size:11px; color:#e2e8f0; font-family:sans-serif;">정상 주행중</span>
+            </div>
+          </div>
+
+          <!-- 4. 열차 상태 표시등 램프 뱅크 (4종 LED) -->
+          <div class="occ-lamp-bank">
+            <div id="occ-lamp-door" class="occ-lamp lit-green">출입문 닫힘</div>
+            <div id="occ-lamp-brake" class="occ-lamp">제동 체결</div>
+            <div id="occ-lamp-power" class="occ-lamp">역행 인가</div>
+            <div id="occ-lamp-emg" class="occ-lamp">비상제동</div>
+          </div>
+
+          <!-- 5. 비상 고장 주입 (Fault Injection) 스위치 랙 -->
+          <div class="occ-fault-section">
+            <span style="font-size:10.5px; font-weight:900; color:#f87171;">⚡ 실전 비상 고장 강제 인가 (FAULT INJECTION)</span>
+            <div class="occ-fault-btn-grid">
+              <button id="btn-fault-door" class="occ-fault-btn" onclick="TrainRemote.toggleFault('DOOR_LOCK_FAIL')">
+                <span>🚨 출입문 닫힘 불량</span>
+                <span id="fault-lbl-door" style="font-size:9px; opacity:0.75;">정상 (클릭 시 인가)</span>
               </button>
-              <button id="btn-fault-eb" class="toolbar-btn" style="border-color:#da3633; color:#f85149;" onclick="TrainRemote.toggleFault('EB_STUCK')">
-                🚨 비상제동 불완해 인가
+              <button id="btn-fault-eb" class="occ-fault-btn" onclick="TrainRemote.toggleFault('EB_STUCK')">
+                <span>🚨 비상제동 불완해</span>
+                <span id="fault-lbl-eb" style="font-size:9px; opacity:0.75;">정상 (클릭 시 인가)</span>
               </button>
             </div>
           </div>
 
+          <!-- 6. 원격 핀포인트 힌트 전송 바 -->
           <div style="display:flex; gap:6px; align-items:center;">
-            <select id="inst-hint-target" class="form-control" style="flex:1; font-size:11px; padding:6px 8px;">
-              <option value="SW_EMG_RELEASE">비상제동완해</option>
-              <option value="SW_DOOR_BYPASS">출입문 바이패스</option>
-              <option value="SW_LOW_SPEED">저속도 바이패스</option>
-              <option value="SW_RESCUE_DRIVE">구원운전</option>
-              <option value="SW_ATP_REV">ATP후진</option>
-              <option value="SW_VOBC_RESET">VOBC리셋</option>
-              <option value="SW_FORCE_REL">강제완해</option>
-              <option value="SW_WIRELESS_MODE">무인모드</option>
+            <select id="inst-hint-target" class="form-control" style="flex:1; font-size:11px; padding:7px 8px; background:#080b10;">
+              <option value="SW_EMG_RELEASE">[OP3] 비상제동완해 (안전커버 내부)</option>
+              <option value="SW_DOOR_BYPASS">[OP4] 출입문 바이패스</option>
+              <option value="SW_LOW_SPEED">[OP3] 저속도 바이패스</option>
+              <option value="SW_RESCUE_DRIVE">[OP3] 구원운전 셀렉터</option>
+              <option value="SW_ATP_REV">[OP3] ATP후진 로터리</option>
+              <option value="SW_VOBC_RESET">[OP5] VOBC리셋 버튼</option>
+              <option value="SW_FORCE_REL">[OP3] 강제완해</option>
+              <option value="SW_WIRELESS_MODE">[OP3] 무인모드 (3초 인가)</option>
             </select>
-            <button class="toolbar-btn primary" style="padding:6px 12px; white-space:nowrap;" onclick="TrainRemote.sendRemoteHint()">
-              💡 힌트 전송
+            <button class="toolbar-btn primary" style="padding:7px 14px; font-size:11px; white-space:nowrap;" onclick="TrainRemote.sendRemoteHint()">
+              💡 힌트 발송
             </button>
           </div>
+
         </div>
 
       </div>
@@ -5201,13 +5455,18 @@ const TrainRemote = {
   toggleFault(faultKey) {
     this.faults[faultKey] = !this.faults[faultKey];
     const isEngaged = this.faults[faultKey];
-    const btn = document.getElementById(faultKey === 'DOOR_LOCK_FAIL' ? 'btn-fault-door' : 'btn-fault-eb');
-    if (btn) {
-      btn.style.background = isEngaged ? '#da3633' : 'transparent';
-      btn.style.color = isEngaged ? '#ffffff' : '#f85149';
-      btn.innerText = (faultKey === 'DOOR_LOCK_FAIL')
-        ? (isEngaged ? '🚨 출입문 닫힘 불량 [인가중]' : '🚨 출입문 닫힘 불량 인가')
-        : (isEngaged ? '🚨 비상제동 불완해 [인가중]' : '🚨 비상제동 불완해 인가');
+    
+    // 버튼 UI 실시간 갱신
+    if (faultKey === 'DOOR_LOCK_FAIL') {
+      const btn = document.getElementById('btn-fault-door');
+      const lbl = document.getElementById('fault-lbl-door');
+      if (btn) btn.classList.toggle('active', isEngaged);
+      if (lbl) lbl.innerText = isEngaged ? '⚠️ 고장 인가 중!' : '정상 (클릭 시 인가)';
+    } else if (faultKey === 'EB_STUCK') {
+      const btn = document.getElementById('btn-fault-eb');
+      const lbl = document.getElementById('fault-lbl-eb');
+      if (btn) btn.classList.toggle('active', isEngaged);
+      if (lbl) lbl.innerText = isEngaged ? '⚠️ 고장 인가 중!' : '정상 (클릭 시 인가)';
     }
 
     this.sendInstructorCommand('SET_FAULT', {
@@ -5233,44 +5492,111 @@ const TrainRemote = {
 
   handleStudentActionReceived(payload) {
     if (this.role !== 'INSTRUCTOR' || !payload) return;
+
+    // 1. 헤더 갱신
     const nameEl = document.getElementById('inst-mon-name');
     const timeEl = document.getElementById('inst-mon-time');
-    const speedEl = document.getElementById('inst-mon-speed');
-    const bcEl = document.getElementById('inst-mon-bc');
-    const notchEl = document.getElementById('inst-mon-notch');
-    const actionEl = document.getElementById('inst-mon-action');
-
-    const curSpeed = (payload.speed !== undefined) ? Math.round(payload.speed) : 0;
-    const curBc = (payload.bc !== undefined) ? Number(payload.bc).toFixed(1) : '0.0';
-    const curNotch = `${payload.rev || 'N'} / ${payload.notch || 'N'}`;
-
-    // 1. 관제 모달 내부 대시보드 갱신
     if (nameEl) nameEl.innerText = payload.user || '훈련생';
     if (timeEl) {
       const d = new Date();
       timeEl.innerText = `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
     }
-    if (speedEl) speedEl.innerText = curSpeed;
-    if (bcEl) bcEl.innerText = curBc;
-    if (notchEl) notchEl.innerText = curNotch;
 
-    // 부품 조작(ACTION)일 때만 최근 조작 내역 업데이트
+    // 2. 대형 디지털 속도계 & 프로그레스 바 연동
+    const curSpeed = (payload.speed !== undefined) ? Math.round(payload.speed) : 0;
+    const speedEl = document.getElementById('inst-mon-speed');
+    const speedBar = document.getElementById('occ-bar-speed');
+    const speedTag = document.getElementById('occ-speed-tag');
+
+    if (speedEl) speedEl.innerText = curSpeed;
+    if (speedBar) speedBar.style.width = `${Math.min(100, (curSpeed / 80) * 100)}%`;
+    if (speedTag) speedTag.innerText = `${Math.round((curSpeed / 80) * 100)}%`;
+
+    // 3. 제동통(BC) 압력계 & 바 연동
+    const curBc = (payload.bc !== undefined) ? Number(payload.bc).toFixed(1) : '0.0';
+    const bcEl = document.getElementById('inst-mon-bc');
+    const bcBar = document.getElementById('occ-bar-bc');
+    const bcStatus = document.getElementById('inst-mon-bc-status');
+
+    if (bcEl) bcEl.innerText = curBc;
+    if (bcBar) bcBar.style.width = `${Math.min(100, (Number(curBc) / 4.0) * 100)}%`;
+    if (bcStatus) {
+      if (Number(curBc) >= 3.8) {
+        bcStatus.innerText = '비상 체결';
+        bcStatus.style.color = '#ef4444';
+      } else if (Number(curBc) > 0.5) {
+        bcStatus.innerText = '상용 제동';
+        bcStatus.style.color = '#eab308';
+      } else {
+        bcStatus.innerText = '완해 (0 bar)';
+        bcStatus.style.color = '#22c55e';
+      }
+    }
+
+    // 4. 레버 노치 (역전기 / 마스콘 / 운전모드)
+    const notchRev = document.getElementById('inst-notch-rev');
+    const notchMascon = document.getElementById('inst-notch-mascon');
+    const modeVal = document.getElementById('inst-mode-val');
+    const curRev = payload.rev || 'N';
+    const curNotch = payload.notch || 'N';
+    const curMode = payload.driveMode || 'OFF';
+
+    if (notchRev) notchRev.innerText = curRev;
+    if (notchMascon) {
+      notchMascon.innerText = curNotch;
+      notchMascon.style.color = curNotch.startsWith('P') ? '#38bdf8' : (curNotch.startsWith('B') || curNotch === 'EB' ? '#ef4444' : '#4ade80');
+    }
+    if (modeVal) modeVal.innerText = curMode;
+
+    // 최근 조작 내역 업데이트
+    const actionEl = document.getElementById('inst-mon-action');
     if (actionEl && payload.compName && payload.type !== 'TELEMETRY') {
       actionEl.innerText = `${payload.compName} ➔ ${payload.state}`;
     }
 
-    // 2. 모달을 닫고 있어도 상단 HUD 상태바에서 실시간으로 감시 가능
+    // 5. 열차 상태 표시등 램프 뱅크 (LED)
+    const lampDoor = document.getElementById('occ-lamp-door');
+    const lampBrake = document.getElementById('occ-lamp-brake');
+    const lampPower = document.getElementById('occ-lamp-power');
+    const lampEmg = document.getElementById('occ-lamp-emg');
+
+    // 출입문 (기본 정상 닫힘 초록)
+    if (lampDoor) {
+      const isDoorOpen = this.faults.DOOR_LOCK_FAIL;
+      lampDoor.className = isDoorOpen ? 'occ-lamp lit-red' : 'occ-lamp lit-green';
+      lampDoor.innerText = isDoorOpen ? '🚪 출입문 열림' : '🚪 출입문 닫힘';
+    }
+
+    // 제동 체결 램프
+    if (lampBrake) {
+      const isBraking = Number(curBc) > 0.5;
+      lampBrake.className = isBraking ? 'occ-lamp lit-yellow' : 'occ-lamp';
+    }
+
+    // 역행 인가 램프
+    if (lampPower) {
+      const isPowering = curNotch.startsWith('P');
+      lampPower.className = isPowering ? 'occ-lamp lit-blue' : 'occ-lamp';
+    }
+
+    // 비상 제동 램프
+    if (lampEmg) {
+      const isEmg = (curNotch === 'EB' || Number(curBc) >= 3.9 || this.faults.EB_STUCK);
+      lampEmg.className = isEmg ? 'occ-lamp lit-red' : 'occ-lamp';
+    }
+
+    // 6. 상단 메인 HUD 상태바 실시간 동기화
     const hudTitle = document.getElementById('hud-mode-title');
     const hudInst = document.getElementById('hud-instruction');
     const hudBadge = document.getElementById('hud-step-count');
 
-    if (hudTitle) hudTitle.innerText = `📡 실시간 관제 모니터링 [${payload.user || '훈련생'}]`;
+    if (hudTitle) hudTitle.innerText = `📡 OCC 관제 중 [${payload.user || '훈련생'}]`;
     if (hudBadge) {
       hudBadge.innerText = `${curSpeed} km/h`;
       hudBadge.style.background = curSpeed > 0 ? '#1f6feb' : '#334155';
     }
     if (hudInst) {
-      hudInst.innerText = `속도: ${curSpeed} km/h | BC: ${curBc} bar | 레버: [${curNotch}] | 조작: ${payload.compName ? payload.compName + ' (' + payload.state + ')' : '정상 주행중'}`;
+      hudInst.innerText = `속도 ${curSpeed}km/h | BC ${curBc}bar | ${curRev}/${curNotch} | 모드 ${curMode} | ${payload.compName ? payload.compName : '정상'}`;
     }
   },
 
