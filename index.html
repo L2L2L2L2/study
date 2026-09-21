@@ -4488,7 +4488,8 @@ const DEFAULT_SCENARIOS = [
         target: "SW_EMG_STOP",
         targetName: "비상제동체결",
         expectedState: "RELEASED",
-        instruction: "마지막으로 체결되어 있던 [비상제동체결] 버튼을 다시 눌러 락을 해제(복귀)하십시오."
+        instruction: "마지막으로 체결되어 있던 [비상제동체결] 버튼을 다시 눌러 락을 해제(복귀)하십시오.",
+        gaugeEffect: { bc: 2.0 }
       }
     ]
   },
@@ -5270,13 +5271,18 @@ function handleComponentTouch(compId) {
           el.classList.remove('unlatching');
         }, 360);
         const lampApply = document.getElementById('lamp-brake-apply');
-        if (typeof currentMasconNotch !== 'undefined' && currentMasconNotch === 'EB') {
+        const masconComp = COMPONENT_REGISTRY['SW_MASCON'];
+        const masconNotch = masconComp ? (masconComp.notch || masconComp.state || 'N') : 'N';
+
+        if (masconNotch === 'EB') {
           updateGaugeUI(4.0);
           if (lampApply) lampApply.classList.add('lit');
         } else {
           if (lampApply) lampApply.classList.remove('lit');
-          if (typeof setMasconNotch === 'function' && typeof currentMasconNotch !== 'undefined') {
-            setMasconNotch(currentMasconNotch, true);
+          if (typeof setMasconNotch === 'function') {
+            setMasconNotch(masconNotch, true);
+          } else {
+            updateGaugeUI(BC_DEFAULT_BAR); // 2.0 bar
           }
         }
         showTemporaryHudFeedback('⚪ [비상제동체결] 복귀 (시계방향 30° 회전 해제)', false);
