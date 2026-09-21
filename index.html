@@ -2360,13 +2360,13 @@
       z-index: 2;
     }
     .cab-osd-notch-tag {
-      background: rgba(0,0,0,0.8);
-      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.85);
+      border: 1px solid rgba(255,255,255,0.25);
       color: #f8fafc;
-      font-size: 9.5px;
-      font-weight: 800;
-      padding: 1px 5px;
-      border-radius: 2px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
       width: fit-content;
       letter-spacing: 0.5px;
       backdrop-filter: blur(2px);
@@ -3276,9 +3276,9 @@
             <div class="cab-screen-viewport" id="cab-screen-viewport">
               <canvas id="cab-view-canvas" width="640" height="360"></canvas>
               
-              <!-- 실물 OSD 오버레이 (노치 인디케이터) -->
+              <!-- 실물 OSD 오버레이 (노치 및 속도 인디케이터) -->
               <div class="cab-osd-overlay">
-                <div class="cab-osd-notch-tag" id="cab-osd-notch">F N</div>
+                <div class="cab-osd-notch-tag" id="cab-osd-notch">| F | N | 0 Km/h |</div>
               </div>
             </div>
           </div>
@@ -5256,7 +5256,8 @@ function updateTrainPhysics() {
 function updateCabOSD(notch, revNotch) {
   const elNotch = document.getElementById('cab-osd-notch');
   if (elNotch) {
-    elNotch.innerText = `${revNotch} ${notch}`;
+    const spd = Math.round(trainSpeed);
+    elNotch.innerText = `| ${revNotch} | ${notch} | ${spd} Km/h |`;
   }
 
   const badge = document.getElementById('cab-status-badge');
