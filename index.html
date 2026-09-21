@@ -3708,12 +3708,12 @@
               <text x="80" y="133" font-size="4.2" font-weight="800" text-anchor="middle" fill="#334155" letter-spacing="0.4">KOREA NAGANO</text>
             </svg>
             <div id="needle-mr" class="gauge-needle needle-mr" style="height:54px; transform: rotate(67.5deg);"></div>
-            <div id="needle-bc" class="gauge-needle needle-bc" style="height:52px; transform: rotate(-90deg);"></div>
+            <div id="needle-bc" class="gauge-needle needle-bc" style="height:52px; transform: rotate(-135deg);"></div>
             <div class="gauge-center-cap"></div>
           </div>
           <div class="gauge-readout-legend" style="font-size:9.5px; margin-top:4px;">
             <span class="readout-mr">MR: <strong id="val-mr">9.0</strong> bar</span>
-            <span class="readout-bc">BC: <strong id="val-bc">2.0</strong> bar</span>
+            <span class="readout-bc">BC: <strong id="val-bc">0.0</strong> bar</span>
           </div>
           <div class="component-label" style="margin-top:4px; font-size:9.5px;">공기 압력계(MR, BC)</div>
         </div>
@@ -4484,7 +4484,7 @@ const DEFAULT_SCENARIOS = [
         targetName: "비상제동완해",
         expectedState: "LATCHED",
         instruction: "보호커버 내부의 빨간색 [비상제동완해] 버튼을 눌러 체결하십시오.",
-        gaugeEffect: { bc: 2.0 }
+        gaugeEffect: { bc: 0.0 }
       },
       {
         step: 4,
@@ -4492,7 +4492,7 @@ const DEFAULT_SCENARIOS = [
         targetName: "비상제동체결",
         expectedState: "RELEASED",
         instruction: "마지막으로 체결되어 있던 [비상제동체결] 버튼을 다시 눌러 락을 해제(복귀)하십시오.",
-        gaugeEffect: { bc: 2.0 }
+        gaugeEffect: { bc: 0.0 }
       }
     ]
   },
@@ -4576,11 +4576,23 @@ let mistakeCount = 0;
 let examStartTime = 0;
 
 // 게이지 상태 및 기본값 상수
-const BC_DEFAULT_BAR = 2.0; // 정차 상태 기본 제동통 압력 (2.0 bar)
+const BC_DEFAULT_BAR = 0.0; // 일반 상태 기본 제동통 압력 (완해 0.0 bar)
 const BC_EMG_BAR = 4.0;     // 비상제동 체결 시 제동통 압력 (4.0 bar)
 let currentGaugeBC = BC_DEFAULT_BAR;
 let currentGaugeMR = 9.0;
 let emgStopRotation = 0; // 비상제동체결 버튼 회전 각도 (0~360도)
+
+// 현재 일반 운전/제동 조건에 따른 정상 제동통 압력 계산
+function getNormalBrakePressure() {
+  const masconComp = COMPONENT_REGISTRY['SW_MASCON'];
+  const notch = masconComp ? (masconComp.notch || masconComp.state || 'N') : 'N';
+  if (notch === 'EB') return 4.0;
+  if (notch === 'B1') return 2.3;
+  if (notch === 'B2') return 2.7;
+  if (notch === 'B3') return 3.0;
+  if (notch === 'B4' || notch === 'B5' || notch === 'B6' || notch === 'B7') return 4.0;
+  return 0.0; // N, P1 ~ P4 완해 상태 (0.0 bar)
+}
 
 // 녹화 버퍼
 let recordedSteps = [];
@@ -5242,18 +5254,31 @@ function handleComponentTouch(compId) {
       triggerHaptic(50);
       if (compId === 'SW_EMG_STOP') {
         el.classList.remove('unlatching');
-        updateGaugeUI(BC_EMG_BAR); // 비상제동체결 시 BC 압력 4.0 bar로 상승
+        const emgRel = COMPONENT_REGISTRY['SW_EMG_RELEASE'];
+        const isBypassed = emgRel && emgRel.state === 'LATCHED';
         const lampApply = document.getElementById('lamp-brake-apply');
-        if (lampApply) lampApply.classList.add('lit');
         const lampCut = document.getElementById('lamp-emg-cut');
-        if (lampCut) lampCut.classList.remove('lit');
+        if (!isBypassed) {
+          updateGaugeUI(BC_EMG_BAR); // 비상제동체결 시 BC 압력 4.0 bar로 상승
+          if (lampApply) lampApply.classList.add('lit');
+          if (lampCut) lampCut.classList.remove('lit');
+          showTemporaryHudFeedback(`🚨 [비상제동체결] 체결 (비상제동 작동, BC: 4.0 bar)`, false);
+        } else {
+          showTemporaryHudFeedback(`🚨 [비상제동체결] 체결 (비상제동완해 바이패스 활성 중)`, false);
+        }
       } else if (compId === 'SW_EMG_RELEASE') {
-        updateGaugeUI(BC_DEFAULT_BAR); // 비상제동완해 시 BC 압력을 기본값(2.0 bar)으로 복귀
+        // 비상제동완해: 비상제동이 불완해(풀리지 않음)일 때 비상제동을 강제 차단/완해
+        // 일반 제동이 0이면 제동통 압력은 0.0 bar로 완해됨 (2.0으로 올라가지 않음)
+        const normalBc = getNormalBrakePressure();
+        if (currentGaugeBC > normalBc) {
+          sound.playAirExhaust(0.6, 1100, 0.45);
+        }
+        updateGaugeUI(normalBc);
         const lampCut = document.getElementById('lamp-emg-cut');
         if (lampCut) lampCut.classList.add('lit'); // 비상제동차단 라이트 점등
         const lampApply = document.getElementById('lamp-brake-apply');
         if (lampApply) lampApply.classList.remove('lit');
-        showTemporaryHudFeedback(`🔴 [비상제동완해] 체결 (비상제동차단 점등)`, false);
+        showTemporaryHudFeedback(`🔴 [비상제동완해] 체결 (비상제동 차단/완해, BC: ${normalBc.toFixed(1)} bar)`, false);
       } else if (compId === 'SW_DOOR_HEATER') {
         showTemporaryHudFeedback(`🟢 [출입문 히터] 켜짐 (ON)`, false);
       }
@@ -5280,15 +5305,16 @@ function handleComponentTouch(compId) {
         if (masconNotch === 'EB') {
           updateGaugeUI(4.0);
           if (lampApply) lampApply.classList.add('lit');
+          showTemporaryHudFeedback('⚪ [비상제동체결] 복귀 (마스콘 EB 체결 유지, BC: 4.0 bar)', false);
         } else {
           if (lampApply) lampApply.classList.remove('lit');
-          if (typeof setMasconNotch === 'function') {
-            setMasconNotch(masconNotch, true);
-          } else {
-            updateGaugeUI(BC_DEFAULT_BAR); // 2.0 bar
+          const normalBc = getNormalBrakePressure();
+          if (currentGaugeBC > normalBc) {
+            sound.playAirExhaust(0.6, 1100, 0.45);
           }
+          updateGaugeUI(normalBc);
+          showTemporaryHudFeedback(`⚪ [비상제동체결] 복귀 (시계방향 30° 회전 해제, BC: ${normalBc.toFixed(1)} bar)`, false);
         }
-        showTemporaryHudFeedback('⚪ [비상제동체결] 복귀 (시계방향 30° 회전 해제)', false);
       } else {
         sound.playClick();
         triggerHaptic(20);
@@ -5296,7 +5322,20 @@ function handleComponentTouch(compId) {
       if (compId === 'SW_EMG_RELEASE') {
         const lampCut = document.getElementById('lamp-emg-cut');
         if (lampCut) lampCut.classList.remove('lit'); // 복귀 시 비상제동차단 라이트 소등
-        showTemporaryHudFeedback(`⚪ [비상제동완해] 복귀 (비상제동차단 소등)`, false);
+        const emgComp = COMPONENT_REGISTRY['SW_EMG_STOP'];
+        const masconComp = COMPONENT_REGISTRY['SW_MASCON'];
+        const masconNotch = masconComp ? (masconComp.notch || masconComp.state || 'N') : 'N';
+        const lampApply = document.getElementById('lamp-brake-apply');
+
+        if ((emgComp && emgComp.state === 'LATCHED') || masconNotch === 'EB') {
+          updateGaugeUI(BC_EMG_BAR);
+          if (lampApply) lampApply.classList.add('lit');
+          showTemporaryHudFeedback('⚪ [비상제동완해] 복귀 (비상제동 재체결, BC: 4.0 bar)', false);
+        } else {
+          const normalBc = getNormalBrakePressure();
+          updateGaugeUI(normalBc);
+          showTemporaryHudFeedback(`⚪ [비상제동완해] 복귀 (비상제동차단 소등, BC: ${normalBc.toFixed(1)} bar)`, false);
+        }
       } else if (compId === 'SW_DOOR_HEATER') {
         showTemporaryHudFeedback(`⚪ [출입문 히터] 꺼짐 (OFF)`, false);
       }
@@ -5367,6 +5406,12 @@ function handleComponentTouch(compId) {
       sound.playRadioMic();
       triggerHaptic([20, 20]);
       showTemporaryHudFeedback(`🎙️ [DM-60 마이크] PTT 송신 상태`, false);
+    } else if (compId === 'SW_FORCE_REL') {
+      // 강제완해: 상용제동 고착/불완해 발생 시 제동통 공기를 강제로 배기하여 완해 (BC: 0.0 bar)
+      updateGaugeUI(0.0);
+      sound.playAirExhaust(0.7, 1150, 0.55);
+      triggerHaptic([35, 45]);
+      showTemporaryHudFeedback("💨 [강제완해] 상용제동 강제 완해 (BC: 0.0 bar)", false);
     } else {
       sound.playClick();
       triggerHaptic(25);
@@ -6002,7 +6047,10 @@ function setMasconNotch(notch, silent = false) {
 
   const lampApply = document.getElementById('lamp-brake-apply');
   const emgComp = COMPONENT_REGISTRY['SW_EMG_STOP'];
-  const elEstop = document.getElementById('comp-SW_EMG_STOP');
+  const emgRelComp = COMPONENT_REGISTRY['SW_EMG_RELEASE'];
+  const isEmgStopLatched = (emgComp && emgComp.state === 'LATCHED');
+  const isEmgReleaseLatched = (emgRelComp && emgRelComp.state === 'LATCHED');
+  const isEmgActive = (isEmgStopLatched && !isEmgReleaseLatched);
 
   // 진행 중이던 역행 완해 지연 타이머 초기화
   if (tractionReleaseTimer) {
@@ -6010,17 +6058,27 @@ function setMasconNotch(notch, silent = false) {
     tractionReleaseTimer = null;
   }
 
-  // 1) EB 노치: BC 압력 4.0 bar 및 제동체결 표시등 점등 (OP3 비상제동 버튼은 건드리지 않음)
-  if (notch === 'EB') {
-    updateGaugeUI(4.0); // 비상제동 4.0 bar
+  // 1) 비상제동(SW_EMG_STOP)이 체결되어 있고 완해 바이패스되지 않은 경우: 마스콘 위치와 무관하게 비상제동(4.0 bar) 유지
+  if (isEmgActive) {
+    updateGaugeUI(4.0);
     if (lampApply) lampApply.classList.add('lit');
+  }
+  // 2) 마스콘 EB 노치: BC 압력 4.0 bar 및 제동체결 표시등 점등 (단, 비상제동완해가 체결되어 있으면 완해)
+  else if (notch === 'EB') {
+    if (!isEmgReleaseLatched) {
+      updateGaugeUI(4.0); // 비상제동 4.0 bar
+      if (lampApply) lampApply.classList.add('lit');
+    } else {
+      updateGaugeUI(0.0);
+      if (lampApply) lampApply.classList.remove('lit');
+    }
   } else {
-    // EB 위치에서 벗어나면 제동체결 라이트 소등 (단, OP3 비상제동체결 버튼이 독립적으로 눌려있지 않은 경우)
-    if (lampApply && (!emgComp || emgComp.state !== 'LATCHED')) {
+    // EB 노치 및 비상제동체결 상태가 아니면 제동체결 라이트 소등
+    if (lampApply) {
       lampApply.classList.remove('lit');
     }
 
-    // 2) 제동 (B1 ~ B7): B4~B7은 4.0 bar 동일, B3은 3.0 bar, B1(2.3) / B2(2.7)
+    // 3) 상용 제동 (B1 ~ B7): B4~B7은 4.0 bar 동일, B3은 3.0 bar, B1(2.3) / B2(2.7)
     if (notch.startsWith('B')) {
       let bcVal = 4.0;
       if (notch === 'B1') bcVal = 2.3;
@@ -6030,26 +6088,12 @@ function setMasconNotch(notch, silent = false) {
 
       updateGaugeUI(bcVal);
     }
-    // 3) 중립 (N): 정차제동 기본값 (2.0 bar)
-    else if (notch === 'N') {
-      updateGaugeUI(BC_DEFAULT_BAR); // 2.0 bar
-    }
-    // 4) 역행 (P1 ~ P4): 움직이게 되면 0.5초 후에 정차제동이 해제되면서 BC값이 0이 됨
-    else if (notch.startsWith('P')) {
-      const wasInP = prevNotch && prevNotch.startsWith('P');
-      if (wasInP && currentGaugeBC === 0.0) {
-        // 이미 역행 구간에서 완해 완료된 상태면 0.0 유지
-        updateGaugeUI(0.0);
-      } else {
-        // N이나 제동 위치에서 P로 진입 시: 정차제동(2.0 bar) 유지 후 0.5초 뒤 완해
-        updateGaugeUI(BC_DEFAULT_BAR);
-        tractionReleaseTimer = setTimeout(() => {
-          tractionReleaseTimer = null;
-          updateGaugeUI(0.0);
-          sound.playAirExhaust(0.5, 1300, 0.45);
-          showTemporaryHudFeedback("💨 [정차제동 완해] 0.5초 경과, 제동 완해 (BC: 0.0 bar)", false);
-        }, 500);
+    // 4) 중립 (N) 및 역행 (P1 ~ P4): 일반 제동 완해 (0.0 bar)
+    else if (notch === 'N' || notch.startsWith('P')) {
+      if (currentGaugeBC > 0.0) {
+        sound.playAirExhaust(0.5, 1200, 0.4);
       }
+      updateGaugeUI(0.0);
     }
   }
 
@@ -6058,9 +6102,9 @@ function setMasconNotch(notch, silent = false) {
     triggerHaptic(25);
     let desc = `🕹️ [마스콘] ${notch}단`;
     if (notch === 'EB') desc = `🚨 [마스콘] EB (비상제동 체결, BC: 4.0 bar)`;
-    else if (notch.startsWith('B')) desc = `🛑 [마스콘 제동] ${notch}단 (BC: ${currentGaugeBC.toFixed(1)} bar)`;
-    else if (notch === 'N') desc = `⚪ [마스콘] N (중립, BC: 2.0 bar)`;
-    else if (notch.startsWith('P')) desc = `⚡ [마스콘 역행] ${notch}단 (0.5초 후 완해)`;
+    else if (notch.startsWith('B')) desc = `🛑 [마스콘 상용제동] ${notch}단 (BC: ${currentGaugeBC.toFixed(1)} bar)`;
+    else if (notch === 'N') desc = `⚪ [마스콘] N (중립, 제동완해 BC: 0.0 bar)`;
+    else if (notch.startsWith('P')) desc = `⚡ [마스콘 역행] ${notch}단 (BC: 0.0 bar)`;
     showTemporaryHudFeedback(desc, false);
 
     if (currentMode === 'REC') {
