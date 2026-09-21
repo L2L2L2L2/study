@@ -5269,6 +5269,11 @@ function updateTrainPhysics() {
   const dt = Math.min(0.1, (now - lastPhysicsTime) / 1000);
   lastPhysicsTime = now;
 
+  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+  const driveMode = modeComp ? modeComp.state : 'OFF';
+  const wirelessComp = COMPONENT_REGISTRY['SW_WIRELESS_MODE'];
+  const isUnmannedActive = (wirelessComp && wirelessComp.state === 'LIT') && (driveMode === 'OFF');
+
   const masconComp = COMPONENT_REGISTRY['SW_MASCON'];
   const notch = masconComp ? (masconComp.notch || masconComp.state || 'N') : 'N';
   const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
@@ -5283,8 +5288,9 @@ function updateTrainPhysics() {
   const lampDoor = document.getElementById('lamp-door');
   const isDoorClosed = !lampDoor || lampDoor.classList.contains('lit');
 
-  // 역행(가속) 가능 인터록 조건: 제어키 ON AND 전후진 F/R AND 출입문 닫힘 AND 비상제동 비체결 AND 제동통압 0.5 이하
-  const canTraction = isKeyOn && (revNotch === 'F' || revNotch === 'R') && isDoorClosed && !isEmgActive && currentGaugeBC < 0.5;
+  // 수동 운전 가능 조건: 운전모드가 FM, RM, ATPM 중 하나 AND 제어키 ON AND 전후진 F/R AND 출입문 닫힘 AND 비상제동 비체결 AND 제동통압 0.5 이하
+  const isManualMode = ['FM', 'RM', 'ATPM'].includes(driveMode);
+  const canManualTraction = isManualMode && isKeyOn && (revNotch === 'F' || revNotch === 'R') && isDoorClosed && !isEmgActive && currentGaugeBC < 0.5;
 
   let target = 0.0;
   let rate = 0.0;
@@ -5292,24 +5298,35 @@ function updateTrainPhysics() {
   if (isEmgActive || notch === 'EB') {
     target = 0.0;
     rate = -8.5; // 비상제동 급감속
-  } else if (notch.startsWith('B')) {
+  } else if (isUnmannedActive) {
+    // [무인운전모드 ATO]: 운전모드 OFF 상태에서 무인운전 인가 시 자동으로 열차가 가속 및 주행
+    if (isDoorClosed && currentGaugeBC < 0.5) {
+      target = 60.0; // ATO 자동 순항 속도 60 km/h
+      rate = 2.8;    // 부드러운 자동 가속도
+    } else {
+      target = 0.0;
+      rate = -3.5;
+    }
+  } else if (isManualMode && notch.startsWith('B')) {
     target = 0.0;
     if (notch === 'B1') rate = -1.8;
     else if (notch === 'B2') rate = -2.6;
     else if (notch === 'B3') rate = -3.6;
     else rate = -5.5; // B4 ~ B7
-  } else if (notch.startsWith('P')) {
-    if (canTraction) {
-      if (notch === 'P1') { target = 25.0; rate = 2.2; }
-      else if (notch === 'P2') { target = 45.0; rate = 3.6; }
-      else if (notch === 'P3') { target = 65.0; rate = 5.0; }
-      else if (notch === 'P4') { target = 80.0; rate = 6.2; }
+  } else if (isManualMode && notch.startsWith('P')) {
+    if (canManualTraction) {
+      // RM(지령/제한수동) 모드는 25km/h 제한속도 적용
+      const maxSpeed = (driveMode === 'RM') ? 25.0 : 80.0;
+      if (notch === 'P1') { target = Math.min(25.0, maxSpeed); rate = 2.2; }
+      else if (notch === 'P2') { target = Math.min(45.0, maxSpeed); rate = 3.6; }
+      else if (notch === 'P3') { target = Math.min(65.0, maxSpeed); rate = 5.0; }
+      else if (notch === 'P4') { target = Math.min(80.0, maxSpeed); rate = 6.2; }
     } else {
       target = 0.0;
       rate = -0.6; // 역행 조건 미충족 시 자연 감속
     }
   } else {
-    // N (타행 / 중립)
+    // N (타행 / 중립) 또는 OFF 정지 상태
     target = 0.0;
     rate = -0.35; // 타행 자연 저항 감속
   }
@@ -5334,13 +5351,17 @@ function updateTrainPhysics() {
   }
 
   // OSD UI 업데이트
-  updateCabOSD(notch, revNotch);
+  updateCabOSD(notch, revNotch, isUnmannedActive, driveMode);
 }
 
-function updateCabOSD(notch, revNotch) {
+function updateCabOSD(notch, revNotch, isUnmannedActive, driveMode) {
   const elNotch = document.getElementById('cab-osd-notch');
   if (elNotch) {
-    elNotch.innerText = `${revNotch} ${notch}`;
+    if (isUnmannedActive) {
+      elNotch.innerText = `ATO 무인`;
+    } else {
+      elNotch.innerText = `${revNotch} ${notch}`;
+    }
   }
 
   const elSpeed = document.getElementById('cab-osd-speed');
@@ -5352,7 +5373,11 @@ function updateCabOSD(notch, revNotch) {
   const dot = document.getElementById('cab-cam-dot');
   if (badge) {
     badge.className = 'cab-badge';
-    if (trainSpeed <= 0.2) {
+    if (isUnmannedActive) {
+      badge.classList.add('driving');
+      badge.innerText = '무인운전 (ATO)';
+      if (dot) dot.classList.add('moving');
+    } else if (trainSpeed <= 0.2) {
       badge.classList.add('stopped');
       badge.innerText = '정차중';
       if (dot) dot.classList.remove('moving');
@@ -5362,7 +5387,7 @@ function updateCabOSD(notch, revNotch) {
       if (dot) dot.classList.add('moving');
     } else if (notch.startsWith('P')) {
       badge.classList.add('driving');
-      badge.innerText = `${notch}단 가속`;
+      badge.innerText = `${driveMode || ''} ${notch}단 가속`.trim();
       if (dot) dot.classList.add('moving');
     } else {
       badge.classList.add('driving');
@@ -5582,6 +5607,49 @@ function startUnmannedPress(evt) {
     return;
   }
 
+  // [무인운전모드 4대 필수 인가 조건 검증]
+  // 1. 운전모드: OFF
+  // 2. 제어키: OFF
+  // 3. 전후진제어기: N
+  // 4. 운전대(마스콘): N
+  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+  const driveMode = modeComp ? modeComp.state : 'OFF';
+  const keyComp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
+  const isKeyOff = !keyComp || keyComp.state === 'OFF';
+  const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
+  const isRevN = !revComp || revComp.state === 'N';
+  const masconComp = COMPONENT_REGISTRY['SW_MASCON'];
+  const isMasconN = !masconComp || (masconComp.notch || masconComp.state) === 'N';
+
+  if (driveMode !== 'OFF') {
+    sound.playError();
+    triggerHaptic([40, 40]);
+    triggerShakeScreen();
+    showTemporaryHudFeedback("⚠️ [무인모드 인가 불가] 운전모드가 OFF 상태여야 합니다!", true);
+    return;
+  }
+  if (!isKeyOff) {
+    sound.playError();
+    triggerHaptic([40, 40]);
+    triggerShakeScreen();
+    showTemporaryHudFeedback("⚠️ [무인모드 인가 불가] 제어키가 OFF 상태여야 합니다!", true);
+    return;
+  }
+  if (!isRevN) {
+    sound.playError();
+    triggerHaptic([40, 40]);
+    triggerShakeScreen();
+    showTemporaryHudFeedback("⚠️ [무인모드 인가 불가] 전후진제어기가 N(중립) 위치여야 합니다!", true);
+    return;
+  }
+  if (!isMasconN) {
+    sound.playError();
+    triggerHaptic([40, 40]);
+    triggerShakeScreen();
+    showTemporaryHudFeedback("⚠️ [무인모드 인가 불가] 운전대(마스콘)가 N(중립) 위치여야 합니다!", true);
+    return;
+  }
+
   const btnEl = document.getElementById('comp-SW_WIRELESS_MODE');
   const svgEl = document.getElementById('unmanned-progress-svg');
   btnEl.classList.add('pressed');
@@ -5591,7 +5659,7 @@ function startUnmannedPress(evt) {
   if (svgEl) svgEl.classList.add('charging');
   unmannedStartTime = Date.now();
 
-  showTemporaryHudFeedback("⏳ 무인모드 인가 중... (3초간 유지)", false);
+  showTemporaryHudFeedback("⏳ 무인운전 인가 중... (3초간 유지)", false);
 
   unmannedTimer = setTimeout(() => {
     completeUnmannedModeToggle();
@@ -5611,7 +5679,7 @@ function endUnmannedPress(evt) {
     if (elapsed < 3000 && unmannedStartTime > 0) {
       sound.playError();
       triggerHaptic(40);
-      showTemporaryHudFeedback("⚠️ 3초 이상 길게 눌러야 점등됩니다!", true);
+      showTemporaryHudFeedback("⚠️ 3초 이상 길게 눌러야 인가됩니다!", true);
     }
   }
   unmannedStartTime = 0;
@@ -5632,12 +5700,12 @@ function completeUnmannedModeToggle() {
     btnEl.classList.add('lit');
     sound.playSuccess();
     triggerHaptic([50, 40, 70]);
-    showTemporaryHudFeedback("🟢 [무인모드] 3초 인가 완료 (LED 점등)", false);
+    showTemporaryHudFeedback("🟢 [무인운전모드 ATO] 3초 인가 완료 - 열차가 자동으로 주행합니다!", false);
   } else {
     btnEl.classList.remove('lit');
     sound.playClick();
     triggerHaptic(30);
-    showTemporaryHudFeedback("⚪ [무인모드] 해제 (소등)", false);
+    showTemporaryHudFeedback("⚪ [무인운전모드 ATO] 무인운전 해제 - 열차가 정지합니다.", false);
   }
 
   if (currentMode === 'REC') {
@@ -6151,6 +6219,15 @@ function handleComponentTouch(compId) {
       newState = (comp.state === 'OFF') ? 'ON' : 'OFF';
       el.style.transform = (newState === 'ON') ? 'rotate(90deg)' : 'rotate(0deg)';
     } else if (compId === 'SW_MASTER_KEY') {
+      const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+      const driveMode = modeComp ? modeComp.state : 'OFF';
+      if (comp.state === 'OFF' && driveMode === 'OFF') {
+        sound.playError();
+        triggerHaptic([40, 40]);
+        triggerShakeScreen();
+        showTemporaryHudFeedback("⚠️ [운전모드 OFF] 수동 운전(키 ON)을 하려면 운전모드를 FM, RM, ATPM 중 하나로 변경해야 합니다.", true);
+        return;
+      }
       const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
       if (revComp && (revComp.state === 'F' || revComp.state === 'R')) {
         showReverserNotNeutralWarning();
@@ -6249,7 +6326,7 @@ function handleComponentTouch(compId) {
     const labels = {
       'FM': 'FM (Full Manual / 완전 수동)',
       'RM': 'RM (Restricted Manual / 제한 수동)',
-      'OFF': 'OFF (운전 모드 정지)',
+      'OFF': 'OFF (운전 모드 정지 / 무인운전 대기)',
       'ATPM': 'ATPM (차상 신호 수동 운전)'
     };
 
@@ -6278,6 +6355,24 @@ function handleComponentTouch(compId) {
     comp.state = newState;
     if (el) el.style.transform = `rotate(${rot}deg)`;
     updateLeadCarLamp(newState);
+
+    if (newState === 'OFF') {
+      const keyComp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
+      if (keyComp && keyComp.state === 'ON') {
+        setMasterKeyPosition('OFF');
+      }
+      setReverserPosition('N', true);
+      setMasconNotch('N', true);
+    } else {
+      const wirelessComp = COMPONENT_REGISTRY['SW_WIRELESS_MODE'];
+      if (wirelessComp && wirelessComp.state === 'LIT') {
+        wirelessComp.state = 'OFF';
+        const btnEl = document.getElementById('comp-SW_WIRELESS_MODE');
+        if (btnEl) btnEl.classList.remove('lit');
+        showTemporaryHudFeedback(`ℹ️ 수동운전(${newState}) 진입으로 무인운전이 해제되었습니다.`, false);
+      }
+    }
+
     showTemporaryHudFeedback(`🎛️ [운전 모드] ${labels[newState]}`, false);
   } else if (compId === 'SW_WINDOW_HEATER') {
     // 전면창 히터 왕복 2단 로터리 스위치 (자동 ↔ 수동)
@@ -6490,7 +6585,7 @@ function setDriveModePosition(targetState, evt) {
   const modeSteps = {
     'FM':   { angle: -90, label: 'FM (Full Manual / 완전 수동)' },
     'RM':   { angle: -45, label: 'RM (Restricted Manual / 제한 수동)' },
-    'OFF':  { angle: 0,   label: 'OFF (운전 모드 정지)' },
+    'OFF':  { angle: 0,   label: 'OFF (운전 모드 정지 / 무인운전 대기)' },
     'ATPM': { angle: 45,  label: 'ATPM (차상 신호 수동 운전)' }
   };
 
@@ -6508,6 +6603,26 @@ function setDriveModePosition(targetState, evt) {
     const idx = b.states.indexOf(targetState);
     if (idx === 0) b.dir = 1; // FM이면 다음은 RM 방향
     else if (idx === b.states.length - 1) b.dir = -1; // ATPM이면 다음은 OFF 방향
+  }
+
+  // 모드 전환에 따른 제어기 인터록 처리
+  if (targetState === 'OFF') {
+    // OFF 전환 시 제어키가 ON이었으면 OFF로 차단하고 레버들을 N(중립)으로 복귀
+    const keyComp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
+    if (keyComp && keyComp.state === 'ON') {
+      setMasterKeyPosition('OFF');
+    }
+    setReverserPosition('N', true);
+    setMasconNotch('N', true);
+  } else {
+    // 수동 운전 모드(FM, RM, ATPM)로 전환 시 진행 중이던 무인모드 자동 해제
+    const wirelessComp = COMPONENT_REGISTRY['SW_WIRELESS_MODE'];
+    if (wirelessComp && wirelessComp.state === 'LIT') {
+      wirelessComp.state = 'OFF';
+      const btnEl = document.getElementById('comp-SW_WIRELESS_MODE');
+      if (btnEl) btnEl.classList.remove('lit');
+      showTemporaryHudFeedback(`ℹ️ 수동운전(${targetState}) 진입으로 무인운전이 해제되었습니다.`, false);
+    }
   }
 
   sound.playRotarySnap();
@@ -6659,6 +6774,16 @@ function showReverserNotNeutralWarning() {
 }
 
 function checkMasterKeyForReverser() {
+  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+  const driveMode = modeComp ? modeComp.state : 'OFF';
+  if (driveMode === 'OFF') {
+    sound.playError();
+    triggerHaptic([40, 40]);
+    triggerShakeScreen();
+    showTemporaryHudFeedback("⚠️ [운전모드 OFF] 전후진제어기는 운전모드가 FM, RM, ATPM일 때만 조작 가능합니다.", true);
+    return false;
+  }
+
   const keyComp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
   if (!keyComp || keyComp.state !== 'ON') {
     showKeyOffWarning();
@@ -6673,6 +6798,18 @@ function setMasterKeyPosition(targetState, evt) {
   hideVobcGuide();
   const comp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
   if (!comp) return;
+
+  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+  const driveMode = modeComp ? modeComp.state : 'OFF';
+
+  // 운전모드가 OFF일 때는 키를 ON으로 돌릴 수 없음 (FM, RM, ATPM 상태여야 수동 운전 가능)
+  if (targetState === 'ON' && driveMode === 'OFF') {
+    sound.playError();
+    triggerHaptic([40, 40]);
+    triggerShakeScreen();
+    showTemporaryHudFeedback("⚠️ [운전모드 OFF] 수동 운전(키 ON)을 하려면 운전모드를 FM, RM, ATPM 중 하나로 변경해야 합니다.", true);
+    return;
+  }
 
   // 전후진제어기가 F 또는 R 위치면 키를 ON이나 OFF로 조작 불가 (N 위치여야만 가능)
   const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
@@ -6729,6 +6866,16 @@ const MASCON_POS_MAP = {
 function setMasconNotch(notch, silent = false) {
   const comp = COMPONENT_REGISTRY['SW_MASCON'];
   if (!comp) return;
+
+  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+  const driveMode = modeComp ? modeComp.state : 'OFF';
+  if (!silent && notch !== 'N' && driveMode === 'OFF') {
+    sound.playError();
+    triggerHaptic([35, 35]);
+    triggerShakeScreen();
+    showTemporaryHudFeedback("⚠️ [운전모드 OFF] 마스콘(역행/제동)은 운전모드가 FM, RM, ATPM일 때만 조작 가능합니다.", true);
+    return;
+  }
 
   const topPos = MASCON_POS_MAP[notch];
   if (topPos === undefined) return;
@@ -6820,6 +6967,15 @@ function setMasconNotch(notch, silent = false) {
 // 마스콘 트랙 클릭 위치로 이동
 function handleMasconTrackClick(event) {
   if (event) event.stopPropagation();
+  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+  const driveMode = modeComp ? modeComp.state : 'OFF';
+  if (driveMode === 'OFF') {
+    sound.playError();
+    triggerHaptic([35, 35]);
+    triggerShakeScreen();
+    showTemporaryHudFeedback("⚠️ [운전모드 OFF] 마스콘(역행/제동)은 운전모드가 FM, RM, ATPM일 때만 조작 가능합니다.", true);
+    return;
+  }
   const track = document.getElementById('tbar-track');
   if (!track) return;
   const rect = track.getBoundingClientRect();
@@ -6921,6 +7077,17 @@ function initMasconDraggable() {
 
   function onPointerDown(e) {
     if (e.button !== undefined && e.button !== 0) return;
+    const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+    const driveMode = modeComp ? modeComp.state : 'OFF';
+    if (driveMode === 'OFF') {
+      sound.playError();
+      triggerHaptic([35, 35]);
+      triggerShakeScreen();
+      showTemporaryHudFeedback("⚠️ [운전모드 OFF] 마스콘(역행/제동)은 운전모드가 FM, RM, ATPM일 때만 조작 가능합니다.", true);
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     isMasconDragging = true;
     masconDragPointerId = e.pointerId;
     try { handle.setPointerCapture(e.pointerId); } catch (_) {}
@@ -7268,7 +7435,7 @@ function updateGaugeUI(bcBar, mrBar = currentGaugeMR) {
 }
 
 // OP2 선두차지정 표시등 상태 갱신
-// 점등 조건: 운전모드(RM 또는 FM) AND 제어키(ON) AND 전후진제어기(F 또는 R)
+// 점등 조건: 운전모드(RM, FM, ATPM) AND 제어키(ON) AND 전후진제어기(F 또는 R)
 function updateLeadCarLamp(modeState) {
   const lampLeadCar = document.getElementById('lamp-lead-car');
   if (!lampLeadCar) return;
@@ -7282,9 +7449,9 @@ function updateLeadCarLamp(modeState) {
   const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
   const isReverserEngaged = revComp && (revComp.state === 'F' || revComp.state === 'R');
 
-  const isModeEligible = (driveMode === 'RM' || driveMode === 'FM');
+  const isModeEligible = (driveMode === 'RM' || driveMode === 'FM' || driveMode === 'ATPM');
 
-  // 3가지 조건(운전모드 RM/FM, 키 ON, 전후진제어기 F/R)이 모두 만족될 때만 점등
+  // 3가지 조건(운전모드 RM/FM/ATPM, 키 ON, 전후진제어기 F/R)이 모두 만족될 때만 점등
   if (isModeEligible && isKeyOn && isReverserEngaged) {
     lampLeadCar.classList.add('lit');
   } else {
