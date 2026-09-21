@@ -4854,6 +4854,23 @@ function updateTrainPhysics() {
   }
 
   updateCabOSD(notch, revNotch, isUnmannedActive, driveMode);
+
+  // [핵심 추가] 100ms 주기(초당 10회) 실시간 텔레메트리 스트리밍 (속도, 게이지, 노치 연동)
+  if (typeof TrainRemote !== 'undefined' && TrainRemote.isConnected && TrainRemote.role === 'STUDENT') {
+    if (!TrainRemote._lastTelemetry || (now - TrainRemote._lastTelemetry >= 100)) {
+      TrainRemote._lastTelemetry = now;
+      TrainRemote.sendStudentAction({
+        type: 'TELEMETRY',
+        speed: trainSpeed,
+        bc: currentGaugeBC,
+        mr: currentGaugeMR,
+        notch: notch,
+        rev: revNotch,
+        key: isKeyOn ? 'ON' : 'OFF',
+        driveMode: driveMode
+      });
+    }
+  }
 }
 
 function updateCabOSD(notch, revNotch, isUnmannedActive, driveMode) {
@@ -5223,16 +5240,37 @@ const TrainRemote = {
     const notchEl = document.getElementById('inst-mon-notch');
     const actionEl = document.getElementById('inst-mon-action');
 
+    const curSpeed = (payload.speed !== undefined) ? Math.round(payload.speed) : 0;
+    const curBc = (payload.bc !== undefined) ? Number(payload.bc).toFixed(1) : '0.0';
+    const curNotch = `${payload.rev || 'N'} / ${payload.notch || 'N'}`;
+
+    // 1. 관제 모달 내부 대시보드 갱신
     if (nameEl) nameEl.innerText = payload.user || '훈련생';
     if (timeEl) {
       const d = new Date();
       timeEl.innerText = `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
     }
-    if (speedEl && payload.speed !== undefined) speedEl.innerText = Math.round(payload.speed);
-    if (bcEl && payload.bc !== undefined) bcEl.innerText = Number(payload.bc).toFixed(1);
-    if (notchEl) notchEl.innerText = `${payload.rev || 'N'} / ${payload.notch || 'N'}`;
+    if (speedEl) speedEl.innerText = curSpeed;
+    if (bcEl) bcEl.innerText = curBc;
+    if (notchEl) notchEl.innerText = curNotch;
+
+    // 부품 조작(ACTION)일 때만 최근 조작 내역 업데이트
     if (actionEl && payload.compName && payload.type !== 'TELEMETRY') {
       actionEl.innerText = `${payload.compName} ➔ ${payload.state}`;
+    }
+
+    // 2. 모달을 닫고 있어도 상단 HUD 상태바에서 실시간으로 감시 가능
+    const hudTitle = document.getElementById('hud-mode-title');
+    const hudInst = document.getElementById('hud-instruction');
+    const hudBadge = document.getElementById('hud-step-count');
+
+    if (hudTitle) hudTitle.innerText = `📡 실시간 관제 모니터링 [${payload.user || '훈련생'}]`;
+    if (hudBadge) {
+      hudBadge.innerText = `${curSpeed} km/h`;
+      hudBadge.style.background = curSpeed > 0 ? '#1f6feb' : '#334155';
+    }
+    if (hudInst) {
+      hudInst.innerText = `속도: ${curSpeed} km/h | BC: ${curBc} bar | 레버: [${curNotch}] | 조작: ${payload.compName ? payload.compName + ' (' + payload.state + ')' : '정상 주행중'}`;
     }
   },
 
