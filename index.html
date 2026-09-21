@@ -2234,6 +2234,204 @@
       max-width: 460px;
     }
 
+    /* [0] 운전실 전면 주행 뷰 모니터 (인천 2호선 전면 시야창) */
+    .cab-view-monitor {
+      background: #14171d;
+      border: 2px solid #363d47;
+      border-radius: 8px;
+      padding: 5px;
+      position: relative;
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.06), 0 4px 12px rgba(0,0,0,0.6);
+      user-select: none;
+      overflow: hidden;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .cab-view-monitor.zoomed {
+      max-width: 100%;
+      box-shadow: 0 0 25px rgba(0,0,0,0.85);
+    }
+    .cab-monitor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1px 4px 4px 4px;
+      font-size: 10px;
+      font-weight: 800;
+      color: #94a3b8;
+    }
+    .cab-header-left {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .cab-cam-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 6px #22c55e;
+      animation: camDotPulse 2s infinite ease-in-out;
+    }
+    .cab-cam-dot.moving {
+      background: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8;
+      animation: camDotPulse 0.8s infinite ease-in-out;
+    }
+    @keyframes camDotPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(0.8); }
+    }
+    .cab-monitor-title {
+      color: #cbd5e1;
+      letter-spacing: 0.5px;
+      font-size: 9.5px;
+    }
+    .cab-header-right {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .cab-badge {
+      font-size: 8.5px;
+      font-weight: 900;
+      padding: 1px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.3px;
+    }
+    .cab-badge.stopped {
+      background: #334155;
+      color: #94a3b8;
+    }
+    .cab-badge.driving {
+      background: #15803d;
+      color: #dcfce7;
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+    }
+    .cab-badge.braking {
+      background: #b91c1c;
+      color: #fee2e2;
+    }
+    .cab-expand-btn {
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #cbd5e1;
+      border-radius: 3px;
+      font-size: 9px;
+      padding: 1px 5px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .cab-expand-btn:hover {
+      background: #334155;
+      color: #fff;
+    }
+
+    /* 스크린 뷰포트 */
+    .cab-screen-viewport {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #090d12;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid #1e293b;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.85);
+    }
+    #cab-view-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      will-change: transform;
+    }
+
+    /* OSD 오버레이 (실물 계기 100% 매칭) */
+    .cab-osd-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 4px 6px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      color: #ffffff;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.9), 0 0 3px rgba(0,0,0,0.8);
+      z-index: 2;
+    }
+    .cab-osd-topright {
+      align-self: flex-end;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    .cab-osd-speed-bar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-size: 9px;
+      background: rgba(0,0,0,0.7);
+      padding: 1px 5px;
+      border-radius: 2px;
+      border: 1px solid rgba(255,255,255,0.15);
+      backdrop-filter: blur(2px);
+    }
+    .osd-limit {
+      color: #cbd5e1;
+    }
+    .osd-limit strong {
+      color: #facc15;
+    }
+    .osd-current {
+      color: #ffffff;
+    }
+    .osd-current strong {
+      font-size: 11px;
+      color: #4ade80;
+    }
+    .osd-clock {
+      color: #94a3b8;
+      font-size: 8px;
+    }
+    .cab-osd-schedule {
+      background: rgba(15, 23, 42, 0.78);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 2px;
+      padding: 2px 4px;
+      font-size: 7px;
+      line-height: 1.25;
+      min-width: 110px;
+      backdrop-filter: blur(2px);
+    }
+    .sched-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+    }
+    .sched-row.header {
+      color: #94a3b8;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      margin-bottom: 1px;
+      font-weight: 700;
+    }
+    .sched-row.active {
+      color: #fde047;
+      font-weight: 700;
+    }
+    .cab-osd-notch-tag {
+      background: rgba(0,0,0,0.8);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #f8fafc;
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 2px;
+      width: fit-content;
+      letter-spacing: 0.5px;
+      backdrop-filter: blur(2px);
+    }
+
     /* [1] COB 방송 및 통화용 마이크 패널 */
     .cob-panel {
       background: #181c22;
@@ -3119,9 +3317,47 @@
 
       <div class="op1-container">
         
-        <!-- [좌측 열] COB 방송장치 + 출입문 스위치 -->
+        <!-- [좌측 열] 전면 뷰 모니터 + COB 방송장치 + 출입문 스위치 -->
         <div class="op1-left-col">
           
+          <!-- (0) 운전실 전면 주행 뷰 모니터 (인천 2호선 전면 시야창) -->
+          <div class="cab-view-monitor" id="wrap-CAB_VIEW">
+            <div class="cab-monitor-header">
+              <div class="cab-header-left">
+                <span class="cab-cam-dot" id="cab-cam-dot"></span>
+                <span class="cab-monitor-title">전면 운전실 뷰 (CAB VIEW)</span>
+              </div>
+              <div class="cab-header-right">
+                <span id="cab-status-badge" class="cab-badge stopped">정차중</span>
+                <button type="button" class="cab-expand-btn" onclick="toggleCabZoom(event)" title="화면 크기 확대/원래대로">🔍</button>
+              </div>
+            </div>
+
+            <div class="cab-screen-viewport" id="cab-screen-viewport">
+              <canvas id="cab-view-canvas" width="640" height="360"></canvas>
+              
+              <!-- 실물 OSD 오버레이 (계기 및 스케줄) -->
+              <div class="cab-osd-overlay">
+                <div class="cab-osd-topright">
+                  <div class="cab-osd-speed-bar">
+                    <span class="osd-limit">Speed Limit <strong>65</strong> km/h</span>
+                    <span class="osd-current"><strong id="cab-osd-speed">0</strong> km/h</span>
+                    <span class="osd-clock" id="cab-osd-clock">15:10:41</span>
+                  </div>
+                  <div class="cab-osd-schedule">
+                    <div class="sched-row header"><span>STATION</span><span>ARR</span><span>DEP</span></div>
+                    <div class="sched-row active" id="sched-st-1"><span>검  암</span><span>15:10:29</span><span id="sched-dep-time">15:11:04</span></div>
+                    <div class="sched-row" id="sched-st-2"><span>검 바 위</span><span>15:12:22</span><span>15:12:47</span></div>
+                    <div class="sched-row" id="sched-st-3"><span>아시아드경기장</span><span>15:14:11</span><span>15:14:36</span></div>
+                    <div class="sched-row" id="sched-st-4"><span>서 구 청</span><span>15:15:44</span><span>15:16:09</span></div>
+                  </div>
+                </div>
+
+                <div class="cab-osd-notch-tag" id="cab-osd-notch">F N</div>
+              </div>
+            </div>
+          </div>
+
           <!-- (1) COB / 방송 및 통화용 마이크 -->
           <div class="cob-panel" id="wrap-COB_PANEL">
             <span class="cob-tag-label">2 12040</span>
@@ -4374,6 +4610,51 @@ class SoundEngine {
       osc.stop(now + i * 0.14 + 0.5);
     });
   }
+  // 열차 가속 주행 및 인버터 모터 사운드 (Web Audio API)
+  updateTrainMotorSound(speed) {
+    if (this.isMuted || !this.ctx) {
+      if (this.motorGain) {
+        this.motorGain.gain.setValueAtTime(0, this.ctx.currentTime);
+      }
+      return;
+    }
+    
+    if (speed <= 0.2) {
+      if (this.motorGain) {
+        this.motorGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.15);
+      }
+      return;
+    }
+
+    if (!this.motorOsc) {
+      try {
+        this.motorOsc = this.ctx.createOscillator();
+        this.motorOsc.type = 'triangle';
+        
+        this.motorFilter = this.ctx.createBiquadFilter();
+        this.motorFilter.type = 'lowpass';
+        this.motorFilter.frequency.value = 800;
+        
+        this.motorGain = this.ctx.createGain();
+        this.motorGain.gain.value = 0.0;
+        
+        this.motorOsc.connect(this.motorFilter);
+        this.motorFilter.connect(this.motorGain);
+        this.motorGain.connect(this.ctx.destination);
+        this.motorOsc.start();
+      } catch (e) {}
+    }
+
+    if (this.motorOsc && this.motorFilter && this.motorGain) {
+      const now = this.ctx.currentTime;
+      const pitch = 130 + Math.min(80, speed) * 5.2;
+      this.motorOsc.frequency.setTargetAtTime(pitch, now, 0.1);
+      this.motorFilter.frequency.setTargetAtTime(pitch * 2.2, now, 0.1);
+      
+      const vol = Math.min(0.065, (speed / 80) * 0.05 + 0.012);
+      this.motorGain.gain.setTargetAtTime(vol, now, 0.12);
+    }
+  }
 }
 
 const sound = new SoundEngine();
@@ -4948,6 +5229,267 @@ window.addEventListener('orientationchange', () => {
   }, 100);
 });
 
+// ========================================================
+// 운전실 전면 주행 뷰 시뮬레이션 엔진 (인천 2호선 실물 뷰)
+// ========================================================
+const cabImg = new Image();
+cabImg.src = 'cab_view.png';
+let cabImgLoaded = false;
+cabImg.onload = () => { cabImgLoaded = true; };
+
+let trainSpeed = 0.0;       // 현재 시속 (km/h)
+let trainDistance = 0.0;    // 누적 이동 거리 (m)
+let trainTargetSpeed = 0.0; // 목표 속도 (km/h)
+let trainAccelRate = 0.0;   // 현재 가감속도 (km/h/s)
+let trackTiePhase = 0.0;    // 궤도 침목 위상 (0.0 ~ 1.0)
+let lastPhysicsTime = performance.now();
+let isCabZoomed = false;
+
+function toggleCabZoom(event) {
+  if (event) event.stopPropagation();
+  isCabZoomed = !isCabZoomed;
+  const monitor = document.getElementById('wrap-CAB_VIEW');
+  if (monitor) {
+    monitor.classList.toggle('zoomed', isCabZoomed);
+  }
+  triggerHaptic(25);
+}
+
+function updateTrainPhysics() {
+  const now = performance.now();
+  const dt = Math.min(0.1, (now - lastPhysicsTime) / 1000);
+  lastPhysicsTime = now;
+
+  const masconComp = COMPONENT_REGISTRY['SW_MASCON'];
+  const notch = masconComp ? (masconComp.notch || masconComp.state || 'N') : 'N';
+  const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
+  const revNotch = revComp ? (revComp.notch || revComp.state || 'N') : 'N';
+  const keyComp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
+  const isKeyOn = keyComp && (keyComp.state === 'ON');
+  const emgComp = COMPONENT_REGISTRY['SW_EMG_STOP'];
+  const emgRel = COMPONENT_REGISTRY['SW_EMG_RELEASE'];
+  const isEmgActive = (emgComp && emgComp.state === 'LATCHED') && (!emgRel || emgRel.state !== 'LATCHED');
+
+  // 출입문 닫힘 상태
+  const lampDoor = document.getElementById('lamp-door');
+  const isDoorClosed = !lampDoor || lampDoor.classList.contains('lit');
+
+  // 역행(가속) 가능 인터록 조건: 제어키 ON AND 전후진 F/R AND 출입문 닫힘 AND 비상제동 비체결 AND 제동통압 0.5 이하
+  const canTraction = isKeyOn && (revNotch === 'F' || revNotch === 'R') && isDoorClosed && !isEmgActive && currentGaugeBC < 0.5;
+
+  let target = 0.0;
+  let rate = 0.0;
+
+  if (isEmgActive || notch === 'EB') {
+    target = 0.0;
+    rate = -8.5; // 비상제동 급감속
+  } else if (notch.startsWith('B')) {
+    target = 0.0;
+    if (notch === 'B1') rate = -1.8;
+    else if (notch === 'B2') rate = -2.6;
+    else if (notch === 'B3') rate = -3.6;
+    else rate = -5.5; // B4 ~ B7
+  } else if (notch.startsWith('P')) {
+    if (canTraction) {
+      if (notch === 'P1') { target = 25.0; rate = 2.2; }
+      else if (notch === 'P2') { target = 45.0; rate = 3.6; }
+      else if (notch === 'P3') { target = 65.0; rate = 5.0; }
+      else if (notch === 'P4') { target = 80.0; rate = 6.2; }
+    } else {
+      target = 0.0;
+      rate = -0.6; // 역행 조건 미충족 시 자연 감속
+    }
+  } else {
+    // N (타행 / 중립)
+    target = 0.0;
+    rate = -0.35; // 타행 자연 저항 감속
+  }
+
+  trainTargetSpeed = target;
+  trainAccelRate = rate;
+
+  if (target > trainSpeed) {
+    trainSpeed = Math.min(target, trainSpeed + rate * dt);
+  } else if (target < trainSpeed) {
+    trainSpeed = Math.max(0, trainSpeed + rate * dt);
+  }
+
+  // 이동 거리 및 침목 애니메이션 위상 누적
+  const speedMs = trainSpeed / 3.6;
+  trainDistance += speedMs * dt;
+  trackTiePhase = (trackTiePhase + speedMs * dt * 0.28) % 1.0;
+
+  // 음향 엔진 연동
+  if (sound && typeof sound.updateTrainMotorSound === 'function') {
+    sound.updateTrainMotorSound(trainSpeed);
+  }
+
+  // OSD UI 업데이트
+  updateCabOSD(notch, revNotch);
+}
+
+function updateCabOSD(notch, revNotch) {
+  const elSpeed = document.getElementById('cab-osd-speed');
+  if (elSpeed) elSpeed.innerText = Math.round(trainSpeed);
+
+  const elClock = document.getElementById('cab-osd-clock');
+  if (elClock) {
+    const d = new Date();
+    elClock.innerText = d.toTimeString().split(' ')[0];
+  }
+
+  const elNotch = document.getElementById('cab-osd-notch');
+  if (elNotch) {
+    elNotch.innerText = `${revNotch} ${notch}`;
+  }
+
+  const badge = document.getElementById('cab-status-badge');
+  const dot = document.getElementById('cab-cam-dot');
+  if (badge) {
+    badge.className = 'cab-badge';
+    if (trainSpeed <= 0.2) {
+      badge.classList.add('stopped');
+      badge.innerText = '정차중';
+      if (dot) dot.classList.remove('moving');
+    } else if (notch.startsWith('B') || notch === 'EB') {
+      badge.classList.add('braking');
+      badge.innerText = '제동중';
+      if (dot) dot.classList.add('moving');
+    } else if (notch.startsWith('P')) {
+      badge.classList.add('driving');
+      badge.innerText = `${notch}단 가속`;
+      if (dot) dot.classList.add('moving');
+    } else {
+      badge.classList.add('driving');
+      badge.innerText = '타행중';
+      if (dot) dot.classList.add('moving');
+    }
+  }
+
+  // 역 스케줄 진행
+  const s1 = document.getElementById('sched-st-1');
+  const s2 = document.getElementById('sched-st-2');
+  if (s1 && s2) {
+    if (trainDistance > 300) {
+      s1.classList.remove('active');
+      s2.classList.add('active');
+    } else {
+      s1.classList.add('active');
+      s2.classList.remove('active');
+    }
+  }
+}
+
+function drawCabViewLoop() {
+  updateTrainPhysics();
+
+  const canvas = document.getElementById('cab-view-canvas');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // 카메라 흔들림 (레일 주행 진동 & 롤링)
+    let swayX = 0;
+    let swayY = 0;
+    let pitchY = 0;
+
+    if (trainSpeed > 0.5) {
+      const rumble = Date.now() * 0.008 * Math.max(3, trainSpeed * 0.14);
+      swayX = Math.sin(rumble) * Math.min(2.5, trainSpeed * 0.04);
+      swayY = Math.cos(rumble * 1.6) * Math.min(1.5, trainSpeed * 0.025);
+      pitchY = (trainAccelRate > 0 ? -1.2 : (trainAccelRate < 0 ? 1.2 : 0)) * Math.min(2.0, Math.abs(trainAccelRate) * 0.35);
+    }
+
+    ctx.save();
+    ctx.translate(swayX, swayY + pitchY);
+
+    // 1. 실물 캡 뷰 이미지 렌더링
+    if (cabImgLoaded) {
+      // 이미지 경계 흔들림 여백 커버 (약간 확대 렌더링)
+      ctx.drawImage(cabImg, -6, -4, W + 12, H + 8);
+    } else {
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // 2. 움직임 애니메이션: 중앙 창문(Center Windshield) 내부 선로 침목 & 궤도 모션 레이어
+    // 중앙 유리창 경계: x: 242~410, y: 35~275
+    if (trainSpeed > 0.5) {
+      ctx.save();
+      // 중앙 전면 유리창 영역만 정밀 클리핑
+      ctx.beginPath();
+      ctx.rect(244, 40, 164, 235);
+      ctx.clip();
+
+      const vx = 326; // 원근 소실점 X
+      const vy = 138; // 원근 소실점 Y
+      const bottomY = 275;
+      const numTies = 14;
+
+      // 움직이는 침목(Sleepers) 렌더링
+      for (let i = 0; i < numTies; i++) {
+        const prog = (trackTiePhase + i / numTies) % 1.0;
+        const p = Math.pow(prog, 2.5); // 비선형 원근감
+        const y = vy + (bottomY - vy) * p;
+
+        if (y > vy + 12) {
+          const w = 12 + 62 * p;
+          const x1 = vx - w * 0.5;
+          const x2 = vx + w * 0.5;
+          const h = Math.max(1.5, 3.8 * p);
+          const alpha = Math.min(0.85, p * 1.1);
+
+          // 콘크리트 침목 본체
+          ctx.fillStyle = `rgba(180, 175, 165, ${alpha * 0.75})`;
+          ctx.fillRect(x1, y - h * 0.5, w, h);
+
+          // 레일 체결구/패스너 포인트
+          ctx.fillStyle = `rgba(50, 55, 65, ${alpha * 0.9})`;
+          ctx.fillRect(x1 + w * 0.16, y - h * 0.6, 2.5 * p + 1, h * 1.2);
+          ctx.fillRect(x2 - w * 0.16 - (2.5 * p + 1), y - h * 0.6, 2.5 * p + 1, h * 1.2);
+        }
+      }
+
+      // 측면 고가교 난간 지주(Pillars/Posts) 흐름 효과
+      for (let i = 0; i < 8; i++) {
+        const prog = (trackTiePhase * 1.2 + i / 8) % 1.0;
+        const p = Math.pow(prog, 2.2);
+        const y = vy + (bottomY - vy) * p;
+        if (y > vy + 15) {
+          const postH = 8 + 25 * p;
+          const alpha = Math.min(0.6, p * 0.8);
+          // 좌측 난간 지주
+          ctx.fillStyle = `rgba(140, 150, 165, ${alpha})`;
+          ctx.fillRect(vx - (32 + 75 * p), y - postH, 2 * p + 1, postH);
+          // 우측 난간 지주
+          ctx.fillRect(vx + (30 + 72 * p), y - postH, 2 * p + 1, postH);
+        }
+      }
+
+      // 출발 시 승강장 스크린도어 후퇴 페이드 효과
+      if (trainDistance < 35) {
+        const fade = 1.0 - (trainDistance / 35);
+        ctx.fillStyle = `rgba(15, 23, 42, ${fade * 0.35})`;
+        ctx.fillRect(244, 40, 164, 235);
+      }
+
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  requestAnimationFrame(drawCabViewLoop);
+}
+
+function initCabViewSimulation() {
+  lastPhysicsTime = performance.now();
+  requestAnimationFrame(drawCabViewLoop);
+}
+
 // 초기화
 window.addEventListener('DOMContentLoaded', () => {
   setAppHeight();
@@ -4960,6 +5502,7 @@ window.addEventListener('DOMContentLoaded', () => {
   setReverserPosition('N', true);
   initMasconDraggable();
   initReverserDraggable();
+  initCabViewSimulation();
   const keyEl = document.getElementById('comp-SW_MASTER_KEY');
   if (keyEl) {
     keyEl.style.transform = 'rotate(-90deg)';
