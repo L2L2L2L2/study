@@ -2330,7 +2330,7 @@
     .cab-screen-viewport {
       position: relative;
       width: 100%;
-      aspect-ratio: 16 / 9;
+      aspect-ratio: 1024 / 473;
       background: #090d12;
       border-radius: 4px;
       overflow: hidden;
@@ -2353,23 +2353,43 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      padding: 4px 6px;
+      padding: 5px 7px;
       font-family: 'Consolas', 'Courier New', monospace;
       color: #ffffff;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.9), 0 0 3px rgba(0,0,0,0.8);
       z-index: 2;
     }
     .cab-osd-notch-tag {
-      background: rgba(0,0,0,0.85);
-      border: 1px solid rgba(255,255,255,0.25);
+      display: inline-flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.22);
       color: #f8fafc;
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 700;
-      padding: 2px 6px;
+      padding: 2px 7px;
       border-radius: 3px;
       width: fit-content;
       letter-spacing: 0.5px;
-      backdrop-filter: blur(2px);
+      backdrop-filter: blur(3px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    }
+    .cab-osd-notch-tag .osd-sep {
+      display: inline-block;
+      width: 1px;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.25);
+      margin: 0 6px;
+    }
+    .cab-osd-notch-tag .osd-current {
+      color: #ffffff;
+      font-size: 9px;
+      font-weight: 400;
+    }
+    .cab-osd-notch-tag .osd-current strong {
+      font-size: 11px;
+      font-weight: 800;
+      color: #4ade80;
     }
 
     /* [1] COB 방송 및 통화용 마이크 패널 */
@@ -3274,11 +3294,15 @@
             </div>
 
             <div class="cab-screen-viewport" id="cab-screen-viewport">
-              <canvas id="cab-view-canvas" width="640" height="360"></canvas>
+              <canvas id="cab-view-canvas" width="1024" height="473"></canvas>
               
               <!-- 실물 OSD 오버레이 (노치 및 속도 인디케이터) -->
               <div class="cab-osd-overlay">
-                <div class="cab-osd-notch-tag" id="cab-osd-notch">| F | N | 0 Km/h |</div>
+                <div class="cab-osd-notch-tag" id="cab-osd-notch-bar">
+                  <span id="cab-osd-notch">F N</span>
+                  <span class="osd-sep"></span>
+                  <span class="osd-current"><strong id="cab-osd-speed">0</strong> km/h</span>
+                </div>
               </div>
             </div>
           </div>
@@ -5256,8 +5280,12 @@ function updateTrainPhysics() {
 function updateCabOSD(notch, revNotch) {
   const elNotch = document.getElementById('cab-osd-notch');
   if (elNotch) {
-    const spd = Math.round(trainSpeed);
-    elNotch.innerText = `| ${revNotch} | ${notch} | ${spd} Km/h |`;
+    elNotch.innerText = `${revNotch} ${notch}`;
+  }
+
+  const elSpeed = document.getElementById('cab-osd-speed');
+  if (elSpeed) {
+    elSpeed.innerText = Math.round(trainSpeed);
   }
 
   const badge = document.getElementById('cab-status-badge');
@@ -5295,89 +5323,61 @@ function drawCabViewLoop() {
 
     ctx.clearRect(0, 0, W, H);
 
-    // 카메라 흔들림 (레일 주행 진동 & 롤링)
+    // 카메라 흔들림 (레일 주행 진동 & 가감속 피칭)
     let swayX = 0;
     let swayY = 0;
     let pitchY = 0;
 
     if (trainSpeed > 0.5) {
-      const rumble = Date.now() * 0.008 * Math.max(3, trainSpeed * 0.14);
-      swayX = Math.sin(rumble) * Math.min(2.5, trainSpeed * 0.04);
-      swayY = Math.cos(rumble * 1.6) * Math.min(1.5, trainSpeed * 0.025);
-      pitchY = (trainAccelRate > 0 ? -1.2 : (trainAccelRate < 0 ? 1.2 : 0)) * Math.min(2.0, Math.abs(trainAccelRate) * 0.35);
+      const rumble = Date.now() * 0.009 * Math.max(3, trainSpeed * 0.12);
+      swayX = Math.sin(rumble) * Math.min(3.0, trainSpeed * 0.045);
+      swayY = Math.cos(rumble * 1.5) * Math.min(2.0, trainSpeed * 0.025);
+      pitchY = (trainAccelRate > 0 ? -1.8 : (trainAccelRate < 0 ? 1.8 : 0)) * Math.min(2.5, Math.abs(trainAccelRate) * 0.4);
     }
 
     ctx.save();
     ctx.translate(swayX, swayY + pitchY);
 
-    // 1. 실물 캡 뷰 이미지 렌더링
+    // 1. 실물 운전실 전면 뷰 이미지 렌더링 (진동 여백 커버)
     if (cabImgLoaded) {
-      // 이미지 경계 흔들림 여백 커버 (약간 확대 렌더링)
-      ctx.drawImage(cabImg, -6, -4, W + 12, H + 8);
+      ctx.drawImage(cabImg, -8, -6, W + 16, H + 12);
     } else {
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, 0, W, H);
     }
 
-    // 2. 움직임 애니메이션: 중앙 창문(Center Windshield) 내부 선로 침목 & 궤도 모션 레이어
-    // 중앙 유리창 경계: x: 242~410, y: 35~275
+    // 2. 주행 모션: 곡선 선로 궤도 유동 모션 (속도 연동)
     if (trainSpeed > 0.5) {
       ctx.save();
-      // 중앙 전면 유리창 영역만 정밀 클리핑
+      // 전면 대형 유리창 영역 정밀 클리핑
       ctx.beginPath();
-      ctx.rect(244, 40, 164, 235);
+      ctx.rect(130, 42, 770, 376);
       ctx.clip();
 
-      const vx = 326; // 원근 소실점 X
-      const vy = 138; // 원근 소실점 Y
-      const bottomY = 275;
-      const numTies = 14;
-
-      // 움직이는 침목(Sleepers) 렌더링
+      // 곡선 궤도 침목 및 자갈 흐름 (선로 곡선 궤적: (420, 420) -> (315, 280))
+      const numTies = 10;
       for (let i = 0; i < numTies; i++) {
         const prog = (trackTiePhase + i / numTies) % 1.0;
-        const p = Math.pow(prog, 2.5); // 비선형 원근감
-        const y = vy + (bottomY - vy) * p;
-
-        if (y > vy + 12) {
-          const w = 12 + 62 * p;
-          const x1 = vx - w * 0.5;
-          const x2 = vx + w * 0.5;
-          const h = Math.max(1.5, 3.8 * p);
-          const alpha = Math.min(0.85, p * 1.1);
-
-          // 콘크리트 침목 본체
-          ctx.fillStyle = `rgba(180, 175, 165, ${alpha * 0.75})`;
-          ctx.fillRect(x1, y - h * 0.5, w, h);
-
-          // 레일 체결구/패스너 포인트
-          ctx.fillStyle = `rgba(50, 55, 65, ${alpha * 0.9})`;
-          ctx.fillRect(x1 + w * 0.16, y - h * 0.6, 2.5 * p + 1, h * 1.2);
-          ctx.fillRect(x2 - w * 0.16 - (2.5 * p + 1), y - h * 0.6, 2.5 * p + 1, h * 1.2);
-        }
-      }
-
-      // 측면 고가교 난간 지주(Pillars/Posts) 흐름 효과
-      for (let i = 0; i < 8; i++) {
-        const prog = (trackTiePhase * 1.2 + i / 8) % 1.0;
         const p = Math.pow(prog, 2.2);
-        const y = vy + (bottomY - vy) * p;
-        if (y > vy + 15) {
-          const postH = 8 + 25 * p;
-          const alpha = Math.min(0.6, p * 0.8);
-          // 좌측 난간 지주
-          ctx.fillStyle = `rgba(140, 150, 165, ${alpha})`;
-          ctx.fillRect(vx - (32 + 75 * p), y - postH, 2 * p + 1, postH);
-          // 우측 난간 지주
-          ctx.fillRect(vx + (30 + 72 * p), y - postH, 2 * p + 1, postH);
-        }
+        const y = 280 + (420 - 280) * p;
+        const cx = 315 + (420 - 315) * Math.pow(p, 1.4);
+        const w = 18 + 95 * p;
+        const h = Math.max(1.5, 3.5 * p);
+        const alpha = Math.min(0.35, p * 0.45);
+
+        // 부드러운 자갈/침목 잔상 오버레이
+        ctx.fillStyle = `rgba(40, 45, 55, ${alpha})`;
+        ctx.fillRect(cx - w * 0.5, y - h * 0.5, w, h);
       }
 
-      // 출발 시 승강장 스크린도어 후퇴 페이드 효과
-      if (trainDistance < 35) {
-        const fade = 1.0 - (trainDistance / 35);
-        ctx.fillStyle = `rgba(15, 23, 42, ${fade * 0.35})`;
-        ctx.fillRect(244, 40, 164, 235);
+      // 고속 주행 시 전면 주변부 속도감 비네팅
+      if (trainSpeed > 40) {
+        const motionAlpha = Math.min(0.22, (trainSpeed - 40) * 0.005);
+        const grad = ctx.createRadialGradient(480, 240, 180, 480, 240, 420);
+        grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        grad.addColorStop(1, `rgba(15, 23, 42, ${motionAlpha})`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(130, 42, 770, 376);
       }
 
       ctx.restore();
