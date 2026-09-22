@@ -2214,28 +2214,61 @@
 
     .op1-container {
       display: flex;
-      gap: 10px;
-      justify-content: center;
-      align-items: stretch;
-      padding: 2px 2px;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 8px;
       width: 100%;
       max-width: 100%;
       margin: 0 auto;
       box-sizing: border-box;
+      padding: 2px 2px;
     }
 
-    .op1-left-col {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      flex: 1 1 320px;
-      max-width: 100%;
+    /* 상단 행: 전면 운전실 뷰 (폭 100% 와이드 배치) */
+    .op1-top-row {
       width: 100%;
       box-sizing: border-box;
     }
+    .op1-top-row .cab-view-monitor {
+      width: 100%;
+      max-width: 100%;
+    }
 
-    .op1-right-col {
+    /* 하단 행: 좌우 2열 분할 (좌측: 마이크+출입문, 우측: 마스콘 운전대) */
+    .op1-bottom-row {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      width: 100%;
+      box-sizing: border-box;
+      align-items: stretch;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* 하단 좌측 열: 방송 및 통화용 마이크 + 출입문 버튼 */
+    .op1-bottom-left-col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1 1 280px;
+      min-width: 260px;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* 하단 우측 열: 마스콘 및 운전대 (T-bar, 키, 역전기, 축전지) */
+    .op1-bottom-right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1.2 1 320px;
+      min-width: 280px;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* 레거시/대체 호환용 */
+    .op1-left-col, .op1-right-col {
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -2868,11 +2901,11 @@
       pointer-events: none;
     }
 
-    /* (2) 제어키 (Master Key) - 마스콘과 역전기 사이 상단 중앙 (라인 안쪽 남동쪽 배치) */
+    /* (2) 제어키 (Master Key) - 마스콘과 역전기 사이 상단 중앙 (크기 50% 확대 적용) */
     .mascon-key-unit {
       position: absolute;
-      left: 254px;
-      top: 24px;
+      left: 250px;
+      top: 26px;
       transform: translateX(-50%);
       display: flex;
       flex-direction: column;
@@ -2882,12 +2915,12 @@
       z-index: 10;
     }
     .key-cylinder {
-      width: 32px;
-      height: 32px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
       background: radial-gradient(circle, #e2e8f0 0%, #94a3b8 45%, #334155 100%);
-      border: 2px solid #cbd5e1;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.4);
+      border: 2.5px solid #cbd5e1;
+      box-shadow: 0 5px 12px rgba(0,0,0,0.7), inset 0 1.5px 3px rgba(255,255,255,0.4);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -2895,20 +2928,20 @@
     }
     .key-brass-core {
       position: absolute;
-      width: 18px;
-      height: 18px;
+      width: 27px;
+      height: 27px;
       border-radius: 50%;
       background: radial-gradient(circle, #e5c07b 0%, #b8860b 55%, #4a3608 100%);
       box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
       pointer-events: none;
     }
     .key-blade-handle {
-      width: 8px;
-      height: 22px;
+      width: 12px;
+      height: 33px;
       background: linear-gradient(to right, #64748b 0%, #f8fafc 45%, #e2e8f0 55%, #64748b 100%);
-      border-radius: 2.5px;
+      border-radius: 3.5px;
       border: 1px solid #475569;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.7);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.75);
       transition: transform 0.22s cubic-bezier(0.25, 1, 0.5, 1);
       transform: rotate(-90deg); /* 기본 OFF: 왼쪽 9시 */
       position: relative;
@@ -2917,26 +2950,26 @@
     .key-blade-handle::after {
       content: '';
       position: absolute;
-      top: 2px;
-      bottom: 2px;
-      left: 2px;
-      right: 2px;
+      top: 3px;
+      bottom: 3px;
+      left: 3px;
+      right: 3px;
       background: rgba(0,0,0,0.25);
-      border-radius: 1px;
+      border-radius: 1.5px;
     }
     .key-blade-handle.on {
       transform: rotate(0deg); /* ON: 위쪽 12시 */
     }
     .key-lbl-off {
       position: absolute;
-      left: -32px;
+      left: -42px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 8px;
+      font-size: 9.5px;
       font-weight: 900;
       color: #fff;
       background: #000;
-      padding: 1px 4px;
+      padding: 2px 5px;
       border-radius: 2px;
       border: 1.5px solid #94a3b8;
       cursor: pointer;
@@ -2944,14 +2977,14 @@
     }
     .key-lbl-on {
       position: absolute;
-      top: -16px;
+      top: -22px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 8px;
+      font-size: 9.5px;
       font-weight: 900;
       color: #fff;
       background: #000;
-      padding: 1px 4px;
+      padding: 2px 5px;
       border-radius: 2px;
       border: 1.5px solid #94a3b8;
       cursor: pointer;
@@ -2961,8 +2994,8 @@
     /* 글래스모피즘 키 OFF 경고 팝업 */
     .key-warning-toast {
       position: absolute;
-      top: 68px;
-      left: 254px;
+      top: 80px;
+      left: 250px;
       transform: translateX(-50%);
       background: rgba(15, 23, 42, 0.95);
       backdrop-filter: blur(12px);
@@ -3703,9 +3736,8 @@
 
       <div class="op1-container">
         
-        <!-- [좌측 열] 전면 뷰 모니터 + COB 방송장치 + 출입문 스위치 -->
-        <div class="op1-left-col">
-          
+        <!-- [상단 와이드 행] 전면 주행 뷰 모니터 (너비 100% 와이드 뷰) -->
+        <div class="op1-top-row">
           <!-- (0) 운전실 전면 주행 뷰 모니터 (인천 2호선 전면 시야창) -->
           <div class="cab-view-monitor" id="wrap-CAB_VIEW">
             <div class="cab-monitor-header">
@@ -3732,10 +3764,15 @@
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- (1) COB / 방송 및 통화용 마이크 -->
-          <div class="cob-panel" id="wrap-COB_PANEL">
-            <div class="cob-title-bar">방송 및 통화용 마이크</div>
+        <!-- [하단 2단 분할 행] 좌측: 마이크 및 출입문 / 우측: 마스콘 및 운전대 -->
+        <div class="op1-bottom-row">
+          <!-- [하단 좌측 열] 방송 및 통화용 마이크 + 출입문 버튼 -->
+          <div class="op1-bottom-left-col">
+            <!-- (1) COB / 방송 및 통화용 마이크 -->
+            <div class="cob-panel" id="wrap-COB_PANEL">
+              <div class="cob-title-bar">방송 및 통화용 마이크</div>
 
             <div class="cob-body">
               <!-- 좌측: 볼륨 2종 & 마이크 커넥터 -->
@@ -3841,11 +3878,11 @@
             </div>
           </div>
 
-        </div>
+          </div>
 
-        <!-- [우측 열] 주간제어기 (Master Controller) -->
-        <div class="op1-right-col">
-          <div class="mascon-frame" id="mascon-panel-frame">
+          <!-- [하단 우측 열] 주간제어기 및 운전대 (Master Controller) -->
+          <div class="op1-bottom-right-col">
+            <div class="mascon-frame" id="mascon-panel-frame">
             <!-- 실물 볼트 5개 (좌상, 상부중앙, 챔퍼대각, 우하, 좌하) -->
             <div class="screw mascon-screw-tl"></div>
             <div class="screw mascon-screw-tc"></div>
@@ -3968,9 +4005,10 @@
           </div>
         </div>
       </div>
+    </div>
 
-      </div>
-    </section>
+  </div>
+</section>
 
     <!-- [패널 2] OP2 : 상부 표시등 및 조작반 (실물 사진 100% 반영) -->
     <section id="panel-op2" class="train-metal-panel" style="display:none;">
