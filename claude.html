@@ -6612,38 +6612,24 @@ function cvFence(ctx, s, u, dStart, dEnd, h) {
   }
 }
 
-/* 전차선 설비 (전주 + 가고 + 전차선 + 드로퍼) */
+/* 선로변 전신주 설비 (열차 위 전차선은 제거하고 선로변 전신주 기둥 및 완철/애자만 유지) */
 function cvCatenary(ctx, s) {
-  const DE = 165;
-  const wire = (v, col, w) => {
-    ctx.strokeStyle = col; ctx.lineWidth = w;
-    ctx.beginPath();
-    let first = true;
-    for (let d = 3; d < DE; d *= 1.055) {
-      const p = cvProj(Math.sin((s + d) * 0.07) * 0.22, v, d);
-      if (first) { ctx.moveTo(p.x, p.y); first = false; } else ctx.lineTo(p.x, p.y);
-    }
-    ctx.stroke();
-  };
-  wire(5.95, 'rgba(66,70,74,0.62)', 1.1);
-  wire(5.20, 'rgba(46,50,54,0.9)', 1.4);
-  ctx.strokeStyle = 'rgba(70,74,78,0.5)'; ctx.lineWidth = 1;
-  for (let k = Math.ceil((s + 3) / 5); k * 5 - s < 95; k++) {
-    const d = k * 5 - s;
-    const a = cvProj(Math.sin((s + d) * 0.07) * 0.22, 5.20, d);
-    const b = cvProj(Math.sin((s + d) * 0.07) * 0.22, 5.95, d);
-    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-  }
   const masts = [];
   for (let k = Math.ceil((s + 2) / 45); k * 45 - s < 190; k++) masts.push({ d: k * 45 - s, side: (k & 1) ? 1 : -1 });
   masts.sort((a, b) => b.d - a.d);
   for (let i = 0; i < masts.length; i++) {
     const m = masts[i], d = m.d, u = m.side * 3.25, k = cvScale(d);
+    // 전신주 기둥 및 상부 캡
     cvDrawQuad(ctx, u - 0.13, u + 0.13, -0.35, 6.6, d, '#596169');
     cvDrawQuad(ctx, u - 0.17, u + 0.17, 6.45, 6.7, d, '#454c53');
-    const a = cvProj(u, 6.15, d), b = cvProj(0, 5.95, d), c = cvProj(0, 5.2, d);
-    ctx.strokeStyle = '#4a5158'; ctx.lineWidth = Math.max(0.9, k * 0.045);
-    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.stroke();
+    // 전신주 상부 완철 (선로변 전주 가로대)
+    cvDrawQuad(ctx, u - 0.45, u + 0.45, 5.85, 6.0, d, '#454c53');
+    // 애자 포인트 (선로 위로 넘어오지 않고 전신주 완철 위에만 배치)
+    const p1 = cvProj(u - 0.32, 6.12, d), p2 = cvProj(u + 0.32, 6.12, d);
+    const r = Math.max(0.8, k * 0.05);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.beginPath(); ctx.arc(p1.x, p1.y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(p2.x, p2.y, r, 0, Math.PI * 2); ctx.fill();
   }
 }
 
