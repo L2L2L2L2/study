@@ -8911,6 +8911,10 @@ function showReverserNotNeutralWarning() {
   showGlassToast('⚠️ 전후진제어기를 N(중립)으로 놓으세요', '⚠️ [제어키] 전후진제어기를 N(중립) 위치로 놓으세요!');
 }
 
+function showMasconNotNeutralWarning() {
+  showGlassToast('⚠️ 마스콘을 N(중립)으로 놓으세요', '⚠️ [전후진제어기] 마스콘이 N(중립) 위치일 때만 전후진제어기를 N으로 옮길 수 있습니다!');
+}
+
 function checkMasterKeyForReverser() {
   const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
   const driveMode = modeComp ? modeComp.state : 'OFF';
@@ -9143,14 +9147,29 @@ const REVERSER_POS_MAP = {
 
 function setReverserPosition(pos, silent = false) {
   if (!silent && !checkMasterKeyForReverser()) {
-    return;
+    return false;
   }
 
   const comp = COMPONENT_REGISTRY['SW_REVERSER'];
-  if (!comp) return;
+  if (!comp) return false;
+
+  const masconComp = COMPONENT_REGISTRY['SW_MASCON'];
+  const masconNotch = masconComp ? (masconComp.notch || masconComp.state || 'N') : 'N';
+
+  // [인터록] 전후진제어기 F, R인 상황에서 N으로 옮기려고 할 때 마스콘이 N이 아니면 조작 불가
+  if (!silent && (comp.state === 'F' || comp.state === 'R') && (pos === 'N' || pos !== comp.state) && masconNotch !== 'N') {
+    showMasconNotNeutralWarning();
+    triggerShakeScreen();
+    const currentTop = REVERSER_POS_MAP[comp.state];
+    const knob = document.getElementById('comp-SW_REVERSER');
+    if (knob && currentTop !== undefined) {
+      knob.style.top = `${currentTop}%`;
+    }
+    return false;
+  }
 
   const topPos = REVERSER_POS_MAP[pos];
-  if (topPos === undefined) return;
+  if (topPos === undefined) return false;
 
   comp.state = pos;
   comp.notch = pos;
@@ -9338,6 +9357,7 @@ function initReverserDraggable() {
     try { knob.releasePointerCapture(e.pointerId); } catch (_) {}
     knob.classList.remove('dragging');
     const comp = COMPONENT_REGISTRY['SW_REVERSER'];
+    if (comp) comp._lastBlockWarned = null;
     if (comp && comp.notch) {
       setReverserPosition(comp.notch);
     }
@@ -9364,18 +9384,33 @@ function updateReverserDrag(e) {
   const knob = document.getElementById('comp-SW_REVERSER');
   if (!track || !knob) return;
 
+  const comp = COMPONENT_REGISTRY['SW_REVERSER'];
+  const masconComp = COMPONENT_REGISTRY['SW_MASCON'];
+  const masconNotch = masconComp ? (masconComp.notch || masconComp.state || 'N') : 'N';
+
   const rect = track.getBoundingClientRect();
   const rawY = e.clientY - rect.top;
   const yRatio = Math.max(0, Math.min(1, rawY / rect.height));
-
-  knob.style.top = `${yRatio * 100}%`;
 
   let pos = 'N';
   if (yRatio < 0.33) pos = 'F';
   else if (yRatio > 0.66) pos = 'R';
   else pos = 'N';
 
-  const comp = COMPONENT_REGISTRY['SW_REVERSER'];
+  if (comp && (comp.state === 'F' || comp.state === 'R') && (pos === 'N' || pos !== comp.state) && masconNotch !== 'N') {
+    if (comp._lastBlockWarned !== pos) {
+      comp._lastBlockWarned = pos;
+      showMasconNotNeutralWarning();
+      triggerShakeScreen();
+    }
+    const currentTop = REVERSER_POS_MAP[comp.state];
+    knob.style.top = `${currentTop}%`;
+    return;
+  }
+  if (comp) comp._lastBlockWarned = null;
+
+  knob.style.top = `${yRatio * 100}%`;
+
   if (comp && comp.notch !== pos) {
     setReverserPosition(pos);
   }
