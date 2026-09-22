@@ -8349,15 +8349,6 @@ function handleComponentTouch(compId) {
       newState = (comp.state === 'OFF') ? 'ON' : 'OFF';
       el.style.transform = (newState === 'ON') ? 'rotate(90deg)' : 'rotate(0deg)';
     } else if (compId === 'SW_MASTER_KEY') {
-      const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
-      const driveMode = modeComp ? modeComp.state : 'OFF';
-      if (comp.state === 'OFF' && driveMode === 'OFF') {
-        sound.playError();
-        triggerHaptic([40, 40]);
-        triggerShakeScreen();
-        showTemporaryHudFeedback("⚠️ [운전모드 OFF] 수동 운전(키 ON)을 하려면 운전모드를 FM, RM, ATPM 중 하나로 변경해야 합니다.", true);
-        return;
-      }
       const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
       if (revComp && (revComp.state === 'F' || revComp.state === 'R')) {
         showReverserNotNeutralWarning();
@@ -8486,14 +8477,7 @@ function handleComponentTouch(compId) {
     if (el) el.style.transform = `rotate(${rot}deg)`;
     updateLeadCarLamp(newState);
 
-    if (newState === 'OFF') {
-      const keyComp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
-      if (keyComp && keyComp.state === 'ON') {
-        setMasterKeyPosition('OFF');
-      }
-      setReverserPosition('N', true);
-      setMasconNotch('N', true);
-    } else {
+    if (newState !== 'OFF') {
       const wirelessComp = COMPONENT_REGISTRY['SW_WIRELESS_MODE'];
       if (wirelessComp && wirelessComp.state === 'LIT') {
         wirelessComp.state = 'OFF';
@@ -8739,17 +8723,8 @@ function setDriveModePosition(targetState, evt) {
     else if (idx === b.states.length - 1) b.dir = -1; // ATPM이면 다음은 OFF 방향
   }
 
-  // 모드 전환에 따른 제어기 인터록 처리
-  if (targetState === 'OFF') {
-    // OFF 전환 시 제어키가 ON이었으면 OFF로 차단하고 레버들을 N(중립)으로 복귀
-    const keyComp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
-    if (keyComp && keyComp.state === 'ON') {
-      setMasterKeyPosition('OFF');
-    }
-    setReverserPosition('N', true);
-    setMasconNotch('N', true);
-  } else {
-    // 수동 운전 모드(FM, RM, ATPM)로 전환 시 진행 중이던 무인모드 자동 해제
+  // 수동 운전 모드(FM, RM, ATPM)로 전환 시 진행 중이던 무인모드 자동 해제
+  if (targetState !== 'OFF') {
     const wirelessComp = COMPONENT_REGISTRY['SW_WIRELESS_MODE'];
     if (wirelessComp && wirelessComp.state === 'LIT') {
       wirelessComp.state = 'OFF';
@@ -8916,16 +8891,6 @@ function showMasconNotNeutralWarning() {
 }
 
 function checkMasterKeyForReverser() {
-  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
-  const driveMode = modeComp ? modeComp.state : 'OFF';
-  if (driveMode === 'OFF') {
-    sound.playError();
-    triggerHaptic([40, 40]);
-    triggerShakeScreen();
-    showTemporaryHudFeedback("⚠️ [운전모드 OFF] 전후진제어기는 운전모드가 FM, RM, ATPM일 때만 조작 가능합니다.", true);
-    return false;
-  }
-
   const keyComp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
   if (!keyComp || keyComp.state !== 'ON') {
     showKeyOffWarning();
@@ -8943,15 +8908,6 @@ function setMasterKeyPosition(targetState, evt) {
 
   const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
   const driveMode = modeComp ? modeComp.state : 'OFF';
-
-  // 운전모드가 OFF일 때는 키를 ON으로 돌릴 수 없음 (FM, RM, ATPM 상태여야 수동 운전 가능)
-  if (targetState === 'ON' && driveMode === 'OFF') {
-    sound.playError();
-    triggerHaptic([40, 40]);
-    triggerShakeScreen();
-    showTemporaryHudFeedback("⚠️ [운전모드 OFF] 수동 운전(키 ON)을 하려면 운전모드를 FM, RM, ATPM 중 하나로 변경해야 합니다.", true);
-    return;
-  }
 
   // 전후진제어기가 F 또는 R 위치면 키를 ON이나 OFF로 조작 불가 (N 위치여야만 가능)
   const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
@@ -9012,13 +8968,6 @@ function setMasconNotch(notch, silent = false) {
 
   const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
   const driveMode = modeComp ? modeComp.state : 'OFF';
-  if (!silent && notch !== 'N' && driveMode === 'OFF') {
-    sound.playError();
-    triggerHaptic([35, 35]);
-    triggerShakeScreen();
-    showTemporaryHudFeedback("⚠️ [운전모드 OFF] 마스콘(역행/제동)은 운전모드가 FM, RM, ATPM일 때만 조작 가능합니다.", true);
-    return;
-  }
 
   const topPos = MASCON_POS_MAP[notch];
   if (topPos === undefined) return;
@@ -9093,11 +9042,19 @@ function setMasconNotch(notch, silent = false) {
     sound.playRotarySnap();
     triggerHaptic(25);
     let desc = `🕹️ [마스콘] ${notch}단`;
+    let isWarn = false;
     if (notch === 'EB') desc = `🚨 [마스콘] EB (비상제동 체결, BC: 4.0 bar)`;
     else if (notch.startsWith('B')) desc = `🛑 [마스콘 상용제동] ${notch}단 (BC: ${currentGaugeBC.toFixed(1)} bar)`;
     else if (notch === 'N') desc = `⚪ [마스콘] N (중립, 제동완해 BC: 0.0 bar)`;
-    else if (notch.startsWith('P')) desc = `⚡ [마스콘 역행] ${notch}단 (BC: 0.0 bar)`;
-    showTemporaryHudFeedback(desc, false);
+    else if (notch.startsWith('P')) {
+      if (driveMode === 'OFF') {
+        desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [운전모드 OFF] 역행 출력이 차단되어 열차가 움직이지 않습니다. 수동 운전: FM/RM/ATPM, 무인 운전: 키 OFF·전후진 N 후 무인모드 3초 인가)`;
+        isWarn = true;
+      } else {
+        desc = `⚡ [마스콘 역행] ${notch}단 (BC: 0.0 bar)`;
+      }
+    }
+    showTemporaryHudFeedback(desc, isWarn);
 
     if (currentMode === 'REC') {
       promptRecordStep('SW_MASCON', comp.name, notch);
@@ -9111,15 +9068,6 @@ function setMasconNotch(notch, silent = false) {
 // 마스콘 트랙 클릭 위치로 이동
 function handleMasconTrackClick(event) {
   if (event) event.stopPropagation();
-  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
-  const driveMode = modeComp ? modeComp.state : 'OFF';
-  if (driveMode === 'OFF') {
-    sound.playError();
-    triggerHaptic([35, 35]);
-    triggerShakeScreen();
-    showTemporaryHudFeedback("⚠️ [운전모드 OFF] 마스콘(역행/제동)은 운전모드가 FM, RM, ATPM일 때만 조작 가능합니다.", true);
-    return;
-  }
   const track = document.getElementById('tbar-track');
   if (!track) return;
   const rect = track.getBoundingClientRect();
@@ -9236,17 +9184,6 @@ function initMasconDraggable() {
 
   function onPointerDown(e) {
     if (e.button !== undefined && e.button !== 0) return;
-    const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
-    const driveMode = modeComp ? modeComp.state : 'OFF';
-    if (driveMode === 'OFF') {
-      sound.playError();
-      triggerHaptic([35, 35]);
-      triggerShakeScreen();
-      showTemporaryHudFeedback("⚠️ [운전모드 OFF] 마스콘(역행/제동)은 운전모드가 FM, RM, ATPM일 때만 조작 가능합니다.", true);
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
     isMasconDragging = true;
     masconDragPointerId = e.pointerId;
     try { handle.setPointerCapture(e.pointerId); } catch (_) {}
