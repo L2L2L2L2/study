@@ -3316,13 +3316,13 @@
       height: 100%;
       width: 0%;
       background: linear-gradient(90deg, #38bdf8 0%, #22c55e 65%, #eab308 85%, #ef4444 100%);
-      transition: width 0.1s linear;
+      transition: width 0.35s ease-out;
     }
     .occ-progress-bc {
       height: 100%;
       width: 0%;
       background: linear-gradient(90deg, #22c55e 0%, #eab308 50%, #ef4444 100%);
-      transition: width 0.1s linear;
+      transition: width 0.25s ease-out;
     }
 
     /* 노치 및 조작 상태 랙 */
@@ -6234,10 +6234,36 @@ function updateTrainPhysics() {
 
   updateCabOSD(notch, revNotch, isUnmannedActive, driveMode);
 
-  // 원격 관제 실시간 텔레메트리 전송 (교육생 -> 관제실, 100ms 간격)
+  // 원격 관제 실시간 텔레메트리 전송 (Supabase 트래픽 최적화: 적응형 브로드캐스트)
   if (typeof TrainRemote !== 'undefined' && TrainRemote.isConnected && TrainRemote.role === 'STUDENT') {
-    if (!TrainRemote._lastPhysicsBroadcast || (now - TrainRemote._lastPhysicsBroadcast > 100)) {
+    const isMoving = trainSpeed > 0.1;
+    const minInterval = isMoving ? 350 : 1500;
+    const currentBCVal = cvBC();
+    const isEmgVal = isEmgActive || (notch === 'EB') || !!window.__FAULT_EB_STUCK;
+    const keyVal = isKeyOn ? 'ON' : 'OFF';
+
+    const last = TrainRemote._lastTelemetry || {};
+    const stateChanged = (
+      last.notch !== notch ||
+      last.reverser !== revNotch ||
+      last.driveMode !== driveMode ||
+      last.isEmg !== isEmgVal ||
+      last.masterKey !== keyVal ||
+      (last.isMoving !== undefined && last.isMoving !== isMoving) ||
+      (last.bc !== undefined && Math.abs(last.bc - currentBCVal) > 0.3)
+    );
+
+    if (stateChanged || !TrainRemote._lastPhysicsBroadcast || (now - TrainRemote._lastPhysicsBroadcast >= minInterval)) {
       TrainRemote._lastPhysicsBroadcast = now;
+      TrainRemote._lastTelemetry = {
+        notch: notch,
+        reverser: revNotch,
+        driveMode: driveMode,
+        isEmg: isEmgVal,
+        masterKey: keyVal,
+        isMoving: isMoving,
+        bc: currentBCVal
+      };
       TrainRemote.sendStudentAction({
         type: 'TELEMETRY',
         speed: trainSpeed,
@@ -6245,10 +6271,10 @@ function updateTrainPhysics() {
         notch: notch,
         reverser: revNotch,
         driveMode: driveMode,
-        masterKey: isKeyOn ? 'ON' : 'OFF',
+        masterKey: keyVal,
         isUnmanned: isUnmannedActive,
-        isEmg: isEmgActive || (notch === 'EB') || !!window.__FAULT_EB_STUCK,
-        bcPressure: cvBC(),
+        isEmg: isEmgVal,
+        bcPressure: currentBCVal,
         mrPressure: (typeof currentGaugeMR !== 'undefined') ? currentGaugeMR : 9.0
       });
     }
