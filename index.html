@@ -599,11 +599,10 @@
 
     /* 대화면 (태블릿, 폴드 펼침, PC 데스크톱: >= 768px) 반응형 확장 */
     @media (min-width: 768px) {
-      #app-container {
-        max-width: 1180px;
-      }
+      #app-container,
       #app-container.triple-split {
-        max-width: 1720px;
+        max-width: 100vw !important;
+        width: 100% !important;
       }
       .panel-view-switcher {
         display: none !important; /* 상단 단일 탭 대신 슬롯별 독립 탭 활성화 */
@@ -613,14 +612,17 @@
       }
       #panel-viewport {
         display: grid !important;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 12px;
         align-items: start;
-        padding: 12px 14px 16px 14px;
+        padding: 10px 12px 16px 12px;
+        width: 100%;
+        box-sizing: border-box;
       }
       #panel-viewport.triple-split {
-        grid-template-columns: repeat(3, minmax(320px, 1fr)) !important;
-        overflow-x: auto;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 10px;
+        overflow-x: hidden;
       }
       #slot-right {
         display: flex !important;
@@ -1810,6 +1812,24 @@
       box-shadow: 0 0 14px #10b981, 0 0 24px rgba(16, 185, 129, 0.85), inset 0 1px 2px #ffffff !important;
       border-color: #6ee7b7 !important;
     }
+    /* 출입문 개방/고장 시 점멸(BLINKING) 상태 */
+    .op2-ind-lamp.blinking .lens-green {
+      animation: doorLampBlink 0.6s infinite !important;
+    }
+    @keyframes doorLampBlink {
+      0%, 100% {
+        background: radial-gradient(circle at 35% 35%, #a7f3d0 0%, #10b981 50%, #047857 100%) !important;
+        box-shadow: 0 0 14px #10b981, 0 0 24px rgba(16, 185, 129, 0.85), inset 0 1px 2px #ffffff !important;
+        border-color: #6ee7b7 !important;
+        opacity: 1;
+      }
+      50% {
+        background: radial-gradient(circle at 35% 35%, #1b4332 0%, #081c15 90%) !important;
+        box-shadow: none !important;
+        border-color: rgba(0,0,0,0.6) !important;
+        opacity: 0.25;
+      }
+    }
     .op2-ind-lamp.lit .lens-yellow {
       background: radial-gradient(circle at 35% 35%, #fef08a 0%, #eab308 50%, #a16207 100%) !important;
       box-shadow: 0 0 14px #eab308, 0 0 24px rgba(234, 179, 8, 0.88), inset 0 1px 2px #ffffff !important;
@@ -2212,33 +2232,66 @@
 
     .op1-container {
       display: flex;
-      gap: 10px;
-      justify-content: center;
-      align-items: stretch;
-      padding: 2px 2px;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 8px;
       width: 100%;
-      max-width: 920px;
+      max-width: 100%;
       margin: 0 auto;
       box-sizing: border-box;
+      padding: 2px 2px;
     }
 
-    .op1-left-col {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      flex: 1 1 340px;
-      max-width: 440px;
+    /* 상단 행: 전면 운전실 뷰 (폭 100% 와이드 배치) */
+    .op1-top-row {
       width: 100%;
       box-sizing: border-box;
     }
+    .op1-top-row .cab-view-monitor {
+      width: 100%;
+      max-width: 100%;
+    }
 
-    .op1-right-col {
+    /* 하단 행: 좌우 2열 분할 (좌측: 마이크+출입문, 우측: 마스콘 운전대) */
+    .op1-bottom-row {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      width: 100%;
+      box-sizing: border-box;
+      align-items: stretch;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* 하단 좌측 열: 방송 및 통화용 마이크 + 출입문 버튼 */
+    .op1-bottom-left-col {
       display: flex;
       flex-direction: column;
       gap: 6px;
-      flex: 1 1 340px;
-      max-width: 440px;
+      flex: 1 1 280px;
+      min-width: 260px;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* 하단 우측 열: 마스콘 및 운전대 (T-bar, 키, 역전기, 축전지) */
+    .op1-bottom-right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1.2 1 320px;
+      min-width: 280px;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* 레거시/대체 호환용 */
+    .op1-left-col, .op1-right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1 1 320px;
+      max-width: 100%;
       width: 100%;
       box-sizing: border-box;
     }
@@ -2718,12 +2771,26 @@
     .mascon-screw-tr { top: 25px; right: 8px; }
     .mascon-screw-br { bottom: 7px; right: 7px; }
     .mascon-screw-bl { bottom: 7px; left: 7px; }
+ 
+    .mascon-scaler-wrap {
+      width: 100%;
+      height: 220px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      overflow: hidden;
+    }
 
     .mascon-inner-border {
       position: relative;
-      width: 100%;
+      width: 440px;
+      min-width: 440px;
       height: 220px;
       box-sizing: border-box;
+      transform-origin: top center;
+      transform: scale(var(--mascon-scale, 1));
+      transition: transform 0.1s ease-out;
     }
 
     .mascon-pinstripe-svg {
@@ -2852,10 +2919,10 @@
       pointer-events: none;
     }
 
-    /* (2) 제어키 (Master Key) - 마스콘과 역전기 사이 상단 중앙 (라인 안쪽 남동쪽 배치) */
+    /* (2) 제어키 (Master Key) - 마스콘과 역전기 사이 상단 중앙 (크기 50% 확대 적용) */
     .mascon-key-unit {
       position: absolute;
-      left: 58%;
+      left: 247px;
       top: 26px;
       transform: translateX(-50%);
       display: flex;
@@ -2866,12 +2933,12 @@
       z-index: 10;
     }
     .key-cylinder {
-      width: 32px;
-      height: 32px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
       background: radial-gradient(circle, #e2e8f0 0%, #94a3b8 45%, #334155 100%);
-      border: 2px solid #cbd5e1;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.4);
+      border: 2.5px solid #cbd5e1;
+      box-shadow: 0 5px 12px rgba(0,0,0,0.7), inset 0 1.5px 3px rgba(255,255,255,0.4);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -2879,20 +2946,20 @@
     }
     .key-brass-core {
       position: absolute;
-      width: 18px;
-      height: 18px;
+      width: 27px;
+      height: 27px;
       border-radius: 50%;
       background: radial-gradient(circle, #e5c07b 0%, #b8860b 55%, #4a3608 100%);
       box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
       pointer-events: none;
     }
     .key-blade-handle {
-      width: 8px;
-      height: 22px;
+      width: 12px;
+      height: 33px;
       background: linear-gradient(to right, #64748b 0%, #f8fafc 45%, #e2e8f0 55%, #64748b 100%);
-      border-radius: 2.5px;
+      border-radius: 3.5px;
       border: 1px solid #475569;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.7);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.75);
       transition: transform 0.22s cubic-bezier(0.25, 1, 0.5, 1);
       transform: rotate(-90deg); /* 기본 OFF: 왼쪽 9시 */
       position: relative;
@@ -2901,26 +2968,26 @@
     .key-blade-handle::after {
       content: '';
       position: absolute;
-      top: 2px;
-      bottom: 2px;
-      left: 2px;
-      right: 2px;
+      top: 3px;
+      bottom: 3px;
+      left: 3px;
+      right: 3px;
       background: rgba(0,0,0,0.25);
-      border-radius: 1px;
+      border-radius: 1.5px;
     }
     .key-blade-handle.on {
       transform: rotate(0deg); /* ON: 위쪽 12시 */
     }
     .key-lbl-off {
       position: absolute;
-      left: -32px;
+      left: -42px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 8px;
+      font-size: 9.5px;
       font-weight: 900;
       color: #fff;
       background: #000;
-      padding: 1px 4px;
+      padding: 2px 5px;
       border-radius: 2px;
       border: 1.5px solid #94a3b8;
       cursor: pointer;
@@ -2928,14 +2995,14 @@
     }
     .key-lbl-on {
       position: absolute;
-      top: -16px;
+      top: -22px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 8px;
+      font-size: 9.5px;
       font-weight: 900;
       color: #fff;
       background: #000;
-      padding: 1px 4px;
+      padding: 2px 5px;
       border-radius: 2px;
       border: 1.5px solid #94a3b8;
       cursor: pointer;
@@ -2945,8 +3012,8 @@
     /* 글래스모피즘 키 OFF 경고 팝업 */
     .key-warning-toast {
       position: absolute;
-      top: 68px;
-      left: 58%;
+      top: 80px;
+      left: 247px;
       transform: translateX(-50%);
       background: rgba(15, 23, 42, 0.95);
       backdrop-filter: blur(12px);
@@ -2981,10 +3048,10 @@
       100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
     }
 
-    /* (3) 역전기 (전후진제어기) 우측 독립 서브플레이트 (라인 안쪽으로 여유있게 배치) */
+    /* (3) 역전기 (전후진제어기) 우측 독립 서브플레이트 (모서리 챔퍼 안쪽으로 안전하게 배치) */
     .reverser-subplate {
       position: absolute;
-      right: 25px;
+      right: 58px;
       top: 14px;
       width: 84px;
       height: 116px;
@@ -3058,10 +3125,10 @@
       transition: none !important;
     }
 
-    /* (4) 축전지 조작부 (Battery) 우측 하단 독립 서브플레이트 (라인 안쪽으로 여유있게 배치) */
+    /* (4) 축전지 조작부 (Battery) 우측 하단 독립 서브플레이트 (모서리 안쪽으로 정렬) */
     .mascon-battery-plate {
       position: absolute;
-      right: 25px;
+      right: 58px;
       bottom: 12px;
       width: 84px;
       height: 60px;
@@ -3189,7 +3256,7 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      max-width: 900px;
+      max-width: 100%;
       margin: 0 auto;
       width: 100%;
     }
@@ -3400,6 +3467,17 @@
       border-color: #38bdf8;
       color: #38bdf8;
       box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    }
+    .occ-ind-lamp.blink-amber {
+      background: rgba(234, 179, 8, 0.25);
+      border-color: #eab308;
+      color: #fde047;
+      box-shadow: 0 0 12px rgba(234, 179, 8, 0.6);
+      animation: occBlinkAmber 0.6s infinite;
+    }
+    @keyframes occBlinkAmber {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
     }
 
     /* 실시간 조작 로그 터미널 */
@@ -3687,9 +3765,8 @@
 
       <div class="op1-container">
         
-        <!-- [좌측 열] 전면 뷰 모니터 + COB 방송장치 + 출입문 스위치 -->
-        <div class="op1-left-col">
-          
+        <!-- [상단 와이드 행] 전면 주행 뷰 모니터 (너비 100% 와이드 뷰) -->
+        <div class="op1-top-row">
           <!-- (0) 운전실 전면 주행 뷰 모니터 (인천 2호선 전면 시야창) -->
           <div class="cab-view-monitor" id="wrap-CAB_VIEW">
             <div class="cab-monitor-header">
@@ -3716,10 +3793,15 @@
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- (1) COB / 방송 및 통화용 마이크 -->
-          <div class="cob-panel" id="wrap-COB_PANEL">
-            <div class="cob-title-bar">방송 및 통화용 마이크</div>
+        <!-- [하단 2단 분할 행] 좌측: 마이크 및 출입문 / 우측: 마스콘 및 운전대 -->
+        <div class="op1-bottom-row">
+          <!-- [하단 좌측 열] 방송 및 통화용 마이크 + 출입문 버튼 -->
+          <div class="op1-bottom-left-col">
+            <!-- (1) COB / 방송 및 통화용 마이크 -->
+            <div class="cob-panel" id="wrap-COB_PANEL">
+              <div class="cob-title-bar">방송 및 통화용 마이크</div>
 
             <div class="cob-body">
               <!-- 좌측: 볼륨 2종 & 마이크 커넥터 -->
@@ -3825,11 +3907,11 @@
             </div>
           </div>
 
-        </div>
+          </div>
 
-        <!-- [우측 열] 주간제어기 (Master Controller) -->
-        <div class="op1-right-col">
-          <div class="mascon-frame" id="mascon-panel-frame">
+          <!-- [하단 우측 열] 주간제어기 및 운전대 (Master Controller) -->
+          <div class="op1-bottom-right-col">
+            <div class="mascon-frame" id="mascon-panel-frame">
             <!-- 실물 볼트 5개 (좌상, 상부중앙, 챔퍼대각, 우하, 좌하) -->
             <div class="screw mascon-screw-tl"></div>
             <div class="screw mascon-screw-tc"></div>
@@ -3837,7 +3919,8 @@
             <div class="screw mascon-screw-br"></div>
             <div class="screw mascon-screw-bl"></div>
 
-            <div class="mascon-inner-border">
+            <div class="mascon-scaler-wrap">
+              <div class="mascon-inner-border">
               <!-- 우상단 챔퍼(대각 컷)를 따라 렌더링되는 실버 더블 핀스트라이프 -->
               <svg class="mascon-pinstripe-svg" viewBox="0 0 440 220" preserveAspectRatio="none">
                 <path d="M 6,3 L 388,3 L 437,52 L 437,214 A 4 4 0 0 1 433,217 L 7,217 A 4 4 0 0 1 3,214 L 3,7 A 4 4 0 0 1 7,3 Z" 
@@ -3950,9 +4033,11 @@
             </div>
           </div>
         </div>
-
       </div>
-    </section>
+    </div>
+
+  </div>
+</section>
 
     <!-- [패널 2] OP2 : 상부 표시등 및 조작반 (실물 사진 100% 반영) -->
     <section id="panel-op2" class="train-metal-panel" style="display:none;">
@@ -4032,7 +4117,7 @@
             </div>
             <div class="rotary-unit headlight-unit" onclick="handleComponentTouch('SW_HEADLIGHT')">
               <div class="rotary-dial-plate"></div>
-              <div id="comp-SW_HEADLIGHT" class="rotary-knob" style="transform: rotate(0deg);">
+              <div id="comp-SW_HEADLIGHT" class="rotary-knob" style="transform: rotate(-90deg);">
                 <div class="rotary-pointer"></div>
               </div>
               <div class="rotary-ticks">
@@ -5406,7 +5491,7 @@ const COMPONENT_REGISTRY = {
 
   // [OP2] 상부 표시등 및 조작반 부품군 (실물 사진 100% 반영)
   SW_WINDOW_HEATER: { name: '전면창 히터', type: 'ROTARY_2', state: 'AUTO', panel: 'OP2' },
-  SW_HEADLIGHT: { name: '전조등', type: 'ROTARY_5', state: 'OFF', panel: 'OP2' },
+  SW_HEADLIGHT: { name: '전조등', type: 'ROTARY_5', state: 'REMOTE', panel: 'OP2' },
   SW_ELEC_HORN: { name: '전기혼', type: 'MOMENTARY', state: 'IDLE', panel: 'OP2' },
 
   // [OP3] A필러 부품군 (비상제동완해, ATP후진, 무인모드 투명커버 보호)
@@ -5812,6 +5897,37 @@ function renderDualPanels() {
 
   const rLabel = document.getElementById('slot-right-label');
   if (rLabel) rLabel.innerText = getPanelDisplayName(activeRightPanel);
+
+  requestAnimationFrame(updateMasconScalers);
+}
+
+// OP1 마스콘 패널 반응형 자동 스케일러 (어떤 해상도 및 분할 모드에서도 겹침 없는 유동적 비율 유지)
+function updateMasconScalers() {
+  document.querySelectorAll('.mascon-frame').forEach(frame => {
+    const wrap = frame.querySelector('.mascon-scaler-wrap');
+    const inner = frame.querySelector('.mascon-inner-border');
+    if (!inner) return;
+    const w = frame.clientWidth - 16;
+    if (w <= 0) return;
+    const scale = Math.max(0.50, Math.min(1.25, w / 440));
+    inner.style.setProperty('--mascon-scale', scale);
+    inner.style.transform = `scale(${scale})`;
+    if (wrap) {
+      wrap.style.height = `${Math.round(220 * scale)}px`;
+    }
+  });
+}
+
+function initMasconResponsiveScaler() {
+  document.querySelectorAll('.mascon-frame').forEach(frame => {
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(() => {
+        updateMasconScalers();
+      });
+      ro.observe(frame);
+    }
+  });
+  updateMasconScalers();
 }
 
 function getPanelDisplayName(panelId) {
@@ -5866,11 +5982,13 @@ setAppHeight();
 window.addEventListener('resize', () => {
   setAppHeight();
   renderDualPanels();
+  updateMasconScalers();
 });
 window.addEventListener('orientationchange', () => {
   setTimeout(() => {
     setAppHeight();
     renderDualPanels();
+    updateMasconScalers();
   }, 100);
 });
 
@@ -5907,6 +6025,7 @@ let trainAccelRate = 0.0;
 let trackTiePhase = 0.0;
 let lastPhysicsTime = performance.now();
 let isCabZoomed = false;
+let isDoorOpen = false;
 
 /* 내부 상태 */
 const cvState = {
@@ -6127,18 +6246,20 @@ function updateTrainPhysics() {
                       (cvCompState('SW_EMG_RELEASE', 'RELEASED') !== 'LATCHED');
 
   const lampDoor = document.getElementById('lamp-door');
-  const isDoorClosed = !lampDoor || lampDoor.classList.contains('lit');
+  const isDoorClosed = !isDoorOpen && (!window.__FAULT_DOOR_FAIL) && (lampDoor ? lampDoor.classList.contains('lit') : true);
+  const isDoorBypassed = (cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
+  const isDoorInterlockCleared = isDoorClosed || isDoorBypassed;
 
   const isManualMode = ['FM', 'RM', 'ATPM'].indexOf(driveMode) >= 0;
   const canManualTraction = isManualMode && isKeyOn && (revNotch === 'F' || revNotch === 'R') &&
-                            isDoorClosed && !isEmgActive && cvBC() < 0.5;
+                            isDoorInterlockCleared && !isEmgActive && cvBC() < 0.5;
 
   let target = 0.0, rate = 0.0;
 
   if (isEmgActive || notch === 'EB') {
     target = 0.0; rate = -8.5;
   } else if (isUnmannedActive) {
-    if (isDoorClosed && cvBC() < 0.5) { target = 60.0; rate = 2.8; }
+    if (isDoorInterlockCleared && cvBC() < 0.5) { target = 60.0; rate = 2.8; }
     else { target = 0.0; rate = -3.5; }
   } else if (isManualMode && notch.charAt(0) === 'B') {
     target = 0.0;
@@ -6523,38 +6644,24 @@ function cvFence(ctx, s, u, dStart, dEnd, h) {
   }
 }
 
-/* 전차선 설비 (전주 + 가고 + 전차선 + 드로퍼) */
+/* 선로변 전신주 설비 (열차 위 전차선은 제거하고 선로변 전신주 기둥 및 완철/애자만 유지) */
 function cvCatenary(ctx, s) {
-  const DE = 165;
-  const wire = (v, col, w) => {
-    ctx.strokeStyle = col; ctx.lineWidth = w;
-    ctx.beginPath();
-    let first = true;
-    for (let d = 3; d < DE; d *= 1.055) {
-      const p = cvProj(Math.sin((s + d) * 0.07) * 0.22, v, d);
-      if (first) { ctx.moveTo(p.x, p.y); first = false; } else ctx.lineTo(p.x, p.y);
-    }
-    ctx.stroke();
-  };
-  wire(5.95, 'rgba(66,70,74,0.62)', 1.1);
-  wire(5.20, 'rgba(46,50,54,0.9)', 1.4);
-  ctx.strokeStyle = 'rgba(70,74,78,0.5)'; ctx.lineWidth = 1;
-  for (let k = Math.ceil((s + 3) / 5); k * 5 - s < 95; k++) {
-    const d = k * 5 - s;
-    const a = cvProj(Math.sin((s + d) * 0.07) * 0.22, 5.20, d);
-    const b = cvProj(Math.sin((s + d) * 0.07) * 0.22, 5.95, d);
-    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-  }
   const masts = [];
   for (let k = Math.ceil((s + 2) / 45); k * 45 - s < 190; k++) masts.push({ d: k * 45 - s, side: (k & 1) ? 1 : -1 });
   masts.sort((a, b) => b.d - a.d);
   for (let i = 0; i < masts.length; i++) {
     const m = masts[i], d = m.d, u = m.side * 3.25, k = cvScale(d);
+    // 전신주 기둥 및 상부 캡
     cvDrawQuad(ctx, u - 0.13, u + 0.13, -0.35, 6.6, d, '#596169');
     cvDrawQuad(ctx, u - 0.17, u + 0.17, 6.45, 6.7, d, '#454c53');
-    const a = cvProj(u, 6.15, d), b = cvProj(0, 5.95, d), c = cvProj(0, 5.2, d);
-    ctx.strokeStyle = '#4a5158'; ctx.lineWidth = Math.max(0.9, k * 0.045);
-    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.stroke();
+    // 전신주 상부 완철 (선로변 전주 가로대)
+    cvDrawQuad(ctx, u - 0.45, u + 0.45, 5.85, 6.0, d, '#454c53');
+    // 애자 포인트 (선로 위로 넘어오지 않고 전신주 완철 위에만 배치)
+    const p1 = cvProj(u - 0.32, 6.12, d), p2 = cvProj(u + 0.32, 6.12, d);
+    const r = Math.max(0.8, k * 0.05);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.beginPath(); ctx.arc(p1.x, p1.y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(p2.x, p2.y, r, 0, Math.PI * 2); ctx.fill();
   }
 }
 
@@ -6718,26 +6825,39 @@ function cvDrawHeadlight(ctx, power, reach) {
    7. 유리면 (빗방울 / 와이퍼 / 반사)
 --------------------------------------------------------------------------- */
 const CV_WIPER = {
-  pivot: { x: 668, y: 488 },
-  blade: [{ x: 556, y: 426 }, { x: 742, y: 180 }],
-  link: [{ x: 598, y: 426 }, { x: 748, y: 198 }],
-  post: [{ x: 736, y: 424 }, { x: 741, y: 190 }],
-  rod: [{ x: 747, y: 176 }, { x: 771, y: 50 }],
-  hinge: { x: 740, y: 184 }
+  // 선로 중앙 하부 차체 몰딩 지지대 피벗 (메인 암 및 보조축 시작점: x=517 선로 중앙)
+  baseMain: { x: 517, y: 426 },
+  baseAux:  { x: 538, y: 424 },
+  armLength: 286,
+
+  // 회전 각도 범위: 우측 대기 위치(-45.4도) ~ 좌측 대칭 한계 위치(-134.5도)
+  parkAngle: -0.793,  // -45.4 deg (우측 파킹)
+  sweepAngle: -2.348, // -134.5 deg (좌측 최대 스위프)
+
+  // 블레이드 제원 (중앙 브래킷 기준 상부 12시 방향 + 하부 6시 방향 일체형 롱 블레이드)
+  bladeTopLen: 200,
+  bladeBottomLen: 210,
+
+  // 블레이드 틸트 (차체 좌우 필러 경사에 맞추어 자연스럽게 추종)
+  bladeTiltPark: 0.12,   // +6.9 deg
+  bladeTiltSweep: -0.12  // -6.9 deg
 };
+
 function cvWiperMode() {
   const st = cvCompState('SW_WIPER', 'OFF');
   if (st === 'OFF') return { period: 0, pause: 0 };
-  if (st === 'INT') return { period: 1.5, pause: 2.4 };
+  if (st === 'INT') return { period: 1.6, pause: 2.2 };
   if (st === 'SLOW') return { period: 1.5, pause: 0 };
   if (st === 'FAST') return { period: 0.85, pause: 0 };
   if (st === 'AUTO') return cvState.rain > 0.05 ? { period: 1.3, pause: cvState.rain > 0.5 ? 0 : 1.6 } : { period: 0, pause: 0 };
   return { period: 0, pause: 0 };
 }
+
 function cvUpdateWiper(dt) {
   const m = cvWiperMode();
   if (m.period <= 0) {
-    cvState.wiperAngle += (0 - cvState.wiperAngle) * Math.min(1, dt * 6);
+    // 자연스럽게 우측 파킹 위치로 복귀
+    cvState.wiperAngle += (0 - cvState.wiperAngle) * Math.min(1, dt * 5);
     cvState.wiperTimer = 0;
     return;
   }
@@ -6746,37 +6866,183 @@ function cvUpdateWiper(dt) {
   const t = cvState.wiperTimer % total;
   if (t < m.period) {
     const ph = t / m.period;
-    cvState.wiperAngle = Math.sin(ph * Math.PI) * 0.46;
+    // 0(우측) -> 1(좌측) -> 0(우측)으로 왕복하는 부드러운 조화 운동 (좌우로 움직여 닦음)
+    cvState.wiperAngle = 0.5 * (1 - Math.cos(ph * Math.PI * 2));
   } else {
     cvState.wiperAngle += (0 - cvState.wiperAngle) * Math.min(1, dt * 8);
   }
 }
-function cvRot(pt, a) {
-  const dx = pt.x - CV_WIPER.pivot.x, dy = pt.y - CV_WIPER.pivot.y;
-  const c = Math.cos(a), s = Math.sin(a);
-  return { x: CV_WIPER.pivot.x + dx * c - dy * s, y: CV_WIPER.pivot.y + dx * s + dy * c };
-}
-function cvDrawWiper(ctx) {
-  const a = cvState.wiperAngle;
-  const line = (seg, w, col) => {
-    const p1 = cvRot(seg[0], a), p2 = cvRot(seg[1], a);
-    ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+
+// 팬터그래프 와이퍼 기하학 계산 함수 (progress: 0 = 우측 파킹, 1 = 좌측 최대 도달)
+function cvGetWiperGeometry(progress) {
+  const p = Math.max(0, Math.min(1, progress));
+  const armAngle = CV_WIPER.parkAngle + (CV_WIPER.sweepAngle - CV_WIPER.parkAngle) * p;
+
+  // 메인 암 끝 중앙 연결부 (블레이드의 세로 중앙 축)
+  const pJoint = {
+    x: CV_WIPER.baseMain.x + CV_WIPER.armLength * Math.cos(armAngle),
+    y: CV_WIPER.baseMain.y + CV_WIPER.armLength * Math.sin(armAngle)
   };
+
+  // 보조 평행 링크(보조축) 끝 연결부 (메인 암과 평행한 4절 링크 기구)
+  const auxOffset = {
+    x: CV_WIPER.baseAux.x - CV_WIPER.baseMain.x,
+    y: CV_WIPER.baseAux.y - CV_WIPER.baseMain.y
+  };
+  const qJoint = {
+    x: pJoint.x + auxOffset.x,
+    y: pJoint.y + auxOffset.y
+  };
+
+  // 일체형 와이퍼 블레이드 각도
+  const tilt = CV_WIPER.bladeTiltPark + (CV_WIPER.bladeTiltSweep - CV_WIPER.bladeTiltPark) * p;
+  const uBlade = {
+    x: Math.sin(tilt),
+    y: -Math.cos(tilt)
+  };
+
+  // 블레이드 12시 방향 상단 및 6시 방향 하단 끝점 (1개의 연속된 롱 블레이드)
+  const bladeTop = {
+    x: pJoint.x + uBlade.x * CV_WIPER.bladeTopLen,
+    y: pJoint.y + uBlade.y * CV_WIPER.bladeTopLen
+  };
+  const bladeBottom = {
+    x: pJoint.x - uBlade.x * CV_WIPER.bladeBottomLen,
+    y: pJoint.y - uBlade.y * CV_WIPER.bladeBottomLen
+  };
+
+  return {
+    pBase: CV_WIPER.baseMain,
+    qBase: CV_WIPER.baseAux,
+    pJoint,
+    qJoint,
+    bladeTop,
+    bladeBottom,
+    uBlade
+  };
+}
+
+function cvDrawWiper(ctx) {
+  const geo = cvGetWiperGeometry(cvState.wiperAngle);
   ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
-  line(CV_WIPER.rod, 3.4, '#20242a');
-  line(CV_WIPER.post, 5.6, '#1d2127');
-  line(CV_WIPER.link, 4.4, '#23272d');
-  line(CV_WIPER.blade, 7.2, '#191d22');
-  const h = cvRot(CV_WIPER.hinge, a);
-  ctx.shadowBlur = 0;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // 1. 유리 표면 그림자
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.40)';
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetX = 3;
+  ctx.shadowOffsetY = 4;
+
+  // 2. 메인 구동 암 (선로 중앙 메인축 -> 블레이드 중앙 연결부)
+  ctx.strokeStyle = '#181b20';
+  ctx.lineWidth = 5.2;
+  ctx.beginPath();
+  ctx.moveTo(geo.pBase.x, geo.pBase.y);
+  ctx.lineTo(geo.pJoint.x, geo.pJoint.y);
+  ctx.stroke();
+
+  // 3. 보조 평행 링크 암 (선로 중앙 보조축 -> 블레이드 중앙 연결부, 메인 암과 평행)
+  ctx.strokeStyle = '#22262d';
+  ctx.lineWidth = 3.2;
+  ctx.beginPath();
+  ctx.moveTo(geo.qBase.x, geo.qBase.y);
+  ctx.lineTo(geo.qJoint.x, geo.qJoint.y);
+  ctx.stroke();
+
+  // 메인 암 금속 반사 하이라이트
+  ctx.shadowColor = 'transparent';
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.28)';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(geo.pBase.x - 0.7, geo.pBase.y - 0.7);
+  ctx.lineTo(geo.pJoint.x - 0.7, geo.pJoint.y - 0.7);
+  ctx.stroke();
+
+  // 4. 중앙 연결부 브래킷 (실물 마름모 메탈 브래킷: 메인 암과 보조축이 블레이드 중앙에서 결합)
+  const uB = geo.uBlade;
+  const brkTop = { x: geo.pJoint.x + uB.x * 22, y: geo.pJoint.y + uB.y * 22 };
+  const brkBottom = { x: geo.pJoint.x - uB.x * 22, y: geo.pJoint.y - uB.y * 22 };
+  const nB = { x: -uB.y, y: uB.x };
+
+  ctx.fillStyle = '#262a32';
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(brkTop.x, brkTop.y);
+  ctx.lineTo(geo.qJoint.x + nB.x * 3.5, geo.qJoint.y + nB.y * 3.5);
+  ctx.lineTo(geo.qJoint.x - nB.x * 3.5, geo.qJoint.y - nB.y * 3.5);
+  ctx.lineTo(brkBottom.x, brkBottom.y);
+  ctx.lineTo(geo.pJoint.x - nB.x * 4.5, geo.pJoint.y - nB.y * 4.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // 5. 닦는 부분: 12시와 6시가 하나로 이어진 일체형 롱 와이퍼 블레이드
+  // (1) 고무 블레이드 백본 (두꺼운 지지대)
+  ctx.strokeStyle = '#0a0c0f';
+  ctx.lineWidth = 7.0;
+  ctx.beginPath();
+  ctx.moveTo(geo.bladeBottom.x, geo.bladeBottom.y);
+  ctx.lineTo(geo.bladeTop.x, geo.bladeTop.y);
+  ctx.stroke();
+
+  // (2) 메탈 블레이드 가이드 바
+  ctx.strokeStyle = '#2b303a';
+  ctx.lineWidth = 4.0;
+  ctx.beginPath();
+  ctx.moveTo(geo.bladeBottom.x, geo.bladeBottom.y);
+  ctx.lineTo(geo.bladeTop.x, geo.bladeTop.y);
+  ctx.stroke();
+
+  // (3) 블레이드 상단 반사 하이라이트
+  ctx.strokeStyle = 'rgba(203, 213, 225, 0.45)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(geo.bladeBottom.x + 0.6, geo.bladeBottom.y);
+  ctx.lineTo(geo.bladeTop.x + 0.6, geo.bladeTop.y);
+  ctx.stroke();
+
+  // 6. 힌지 리벳 및 볼트 (메인축 피벗 및 보조축 피벗)
+  // 메인 힌지 볼트
+  ctx.fillStyle = '#1e232a';
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(geo.pJoint.x, geo.pJoint.y, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#cbd5e1';
+  ctx.beginPath();
+  ctx.arc(geo.pJoint.x, geo.pJoint.y, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 보조 힌지 볼트
+  ctx.fillStyle = '#1e232a';
+  ctx.strokeStyle = '#64748b';
+  ctx.lineWidth = 1.0;
+  ctx.beginPath();
+  ctx.arc(geo.qJoint.x, geo.qJoint.y, 3.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // 7. 선로 중앙 하부 차체 베이스 마운트 피벗
   ctx.fillStyle = '#15181d';
-  ctx.beginPath(); ctx.arc(h.x, h.y, 9, 0, 6.2832); ctx.fill();
-  ctx.fillStyle = '#39404a';
-  ctx.beginPath(); ctx.arc(h.x, h.y, 3.4, 0, 6.2832); ctx.fill();
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(geo.pBase.x, geo.pBase.y, 6.0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(geo.qBase.x, geo.qBase.y, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
   ctx.restore();
 }
+
 function cvUpdateRain(ctx, dt) {
   const rain = cvState.rain;
   const drops = cvState.drops;
@@ -6793,18 +7059,41 @@ function cvUpdateRain(ctx, dt) {
     }
   }
   const wind = Math.min(2.4, trainSpeed * 0.045);
-  const bp1 = cvRot(CV_WIPER.blade[0], cvState.wiperAngle);
-  const bp2 = cvRot(CV_WIPER.blade[1], cvState.wiperAngle);
+  // 현재 일체형 블레이드의 상단 및 하단 위치 계산
+  const geo = cvGetWiperGeometry(cvState.wiperAngle);
+  const bp1 = geo.bladeBottom;
+  const bp2 = geo.bladeTop;
+  const vx = bp2.x - bp1.x, vy = bp2.y - bp1.y;
+  const vLenSq = vx * vx + vy * vy;
+
+  const ap1 = geo.pBase;
+  const ap2 = geo.pJoint;
+  const ax = ap2.x - ap1.x, ay = ap2.y - ap1.y;
+  const aLenSq = ax * ax + ay * ay;
+
   for (let i = drops.length - 1; i >= 0; i--) {
     const d = drops[i];
     d.v += (d.r * 0.55 - d.v) * dt * 2.2;
     d.y += d.v * dt * 26;
     d.x += wind * dt * 14 * (d.r / 3);
-    /* 와이퍼가 지나간 자리는 닦임 */
-    const vx = bp2.x - bp1.x, vy = bp2.y - bp1.y;
-    const t = Math.max(0, Math.min(1, ((d.x - bp1.x) * vx + (d.y - bp1.y) * vy) / (vx * vx + vy * vy)));
-    const cx = bp1.x + vx * t, cy = bp1.y + vy * t;
-    if ((d.x - cx) * (d.x - cx) + (d.y - cy) * (d.y - cy) < 220) { drops.splice(i, 1); continue; }
+
+    /* 와이퍼 일체형 롱 블레이드 및 구동 암이 지나간 전 구간 빗방울 완벽 소거 */
+    const tb = Math.max(0, Math.min(1, ((d.x - bp1.x) * vx + (d.y - bp1.y) * vy) / vLenSq));
+    const cxb = bp1.x + vx * tb, cyb = bp1.y + vy * tb;
+    const distSqB = (d.x - cxb) * (d.x - cxb) + (d.y - cyb) * (d.y - cyb);
+    if (distSqB < 380) {
+      drops.splice(i, 1);
+      continue;
+    }
+
+    const ta = Math.max(0, Math.min(1, ((d.x - ap1.x) * ax + (d.y - ap1.y) * ay) / aLenSq));
+    const cxa = ap1.x + ax * ta, cya = ap1.y + ay * ta;
+    const distSqA = (d.x - cxa) * (d.x - cxa) + (d.y - cya) * (d.y - cya);
+    if (distSqA < 220) {
+      drops.splice(i, 1);
+      continue;
+    }
+
     if (d.y > 440 || d.x > 960) { drops.splice(i, 1); continue; }
   }
   /* 렌더 */
@@ -7464,7 +7753,10 @@ const TrainRemote = {
     if (lampBrake) lampBrake.classList.toggle('lit-red', isBraking);
     if (lampPower) lampPower.classList.toggle('lit-green', notch.startsWith('P'));
     if (lampEmg) lampEmg.classList.toggle('lit-red', isEmg);
-    if (lampLead) lampLead.classList.toggle('lit-yellow', data.driveMode && data.driveMode !== 'OFF');
+    const isOccLead = (data.driveMode === 'RM' || data.driveMode === 'FM') &&
+                      (data.masterKey === 'ON') &&
+                      (data.reverser === 'F' || data.reverser === 'R');
+    if (lampLead) lampLead.classList.toggle('lit-yellow', isOccLead);
     if (lampAto) lampAto.classList.toggle('lit-yellow', !!data.isUnmanned);
   },
 
@@ -7509,9 +7801,29 @@ const TrainRemote = {
     if (faultType === 'DOOR_LOCK_FAIL') {
       window.__FAULT_DOOR_FAIL = active;
       const lampD = document.getElementById('occ-lamp-door');
-      if (lampD) lampD.classList.toggle('lit-green', !active);
+      if (lampD) {
+        if (active) {
+          lampD.classList.remove('lit-green');
+          lampD.classList.add('blink-amber');
+          lampD.innerText = '⚠️ 출입문 고장 (점멸)';
+        } else {
+          lampD.classList.remove('blink-amber');
+          lampD.classList.add('lit-green');
+          lampD.innerText = '🚪 출입문 닫힘';
+        }
+      }
+      const lampDoor = document.getElementById('lamp-door');
+      if (lampDoor) {
+        if (active) {
+          lampDoor.classList.remove('lit');
+          lampDoor.classList.add('blinking');
+        } else if (!isDoorOpen) {
+          lampDoor.classList.remove('blinking');
+          lampDoor.classList.add('lit');
+        }
+      }
       if (active) {
-        alert('🚨 [관제실 비상 통보] 출입문 닫힘 신호 루프 불량 발생!\n출입문 바이패스 및 필요 스위치를 취급하십시오.');
+        alert('🚨 [관제실 비상 통보] 출입문 닫힘 신호 루프 불량 발생!\n출입문 표시등이 점멸하며 역행(Traction) 출력이 차단됩니다.\nOP4 패널의 [출입문 바이패스] 스위치를 "바이패스" 위치로 절체하십시오.');
       }
     } else if (faultType === 'EB_STUCK') {
       window.__FAULT_EB_STUCK = active;
@@ -7647,6 +7959,7 @@ window.addEventListener('DOMContentLoaded', () => {
     keyEl.classList.remove('on');
   }
   TrainRemote.initStorage();
+  initMasconResponsiveScaler();
 });
 
 // 모드 드롭다운 토글 및 조작 함수
@@ -8293,17 +8606,62 @@ function handleComponentTouch(compId) {
       triggerHaptic([35, 25, 60]);
       showTemporaryHudFeedback("📢 [전기혼] 빵! (열차 경적 취명)", false);
     } else if (compId === 'SW_DOOR_OPEN_L' || compId === 'SW_DOOR_OPEN_R') {
+      // 1. [인터록] 열차 주행 중(이동 중)에는 출입문 열림 버튼을 눌러도 출입문이 열리지 않음 (영속도 인터록 / Zero Speed Interlock)
+      if (trainSpeed > 0.5) {
+        sound.playError();
+        triggerHaptic([60, 40, 60]);
+        showTemporaryHudFeedback(`⚠️ [출입문 인터록] 열차 주행 중(현재 속도: ${Math.round(trainSpeed)} km/h)에는 출입문을 열 수 없습니다. (정차 후 취급 가능)`, true);
+        return;
+      }
+
+      // 2. 정차 중 정상 개방 동작
+      isDoorOpen = true;
       sound.playAirExhaust(0.8, 1200, 0.6);
       triggerHaptic([30, 40]);
+
+      // OP2 출입문 표시등: 점등(lit) 해제 및 점멸(blinking) 활성화
       const lampDoor = document.getElementById('lamp-door');
-      if (lampDoor) lampDoor.classList.remove('lit'); // 출입문 개방 시 표시등 소등
-      showTemporaryHudFeedback(`🚪 [출입문 열림] ${compId === 'SW_DOOR_OPEN_L' ? '좌측' : '우측'} 출입문 개방`, false);
+      if (lampDoor) {
+        lampDoor.classList.remove('lit');
+        lampDoor.classList.add('blinking');
+      }
+
+      // OCC 관제 출입문 표시등 상태 업데이트 (황색 점멸)
+      const occLampDoor = document.getElementById('occ-lamp-door');
+      if (occLampDoor) {
+        occLampDoor.classList.remove('lit-green');
+        occLampDoor.classList.add('blink-amber');
+        occLampDoor.innerText = '🚪 출입문 열림 (점멸)';
+      }
+
+      showTemporaryHudFeedback(`🚪 [출입문 열림] ${compId === 'SW_DOOR_OPEN_L' ? '좌측' : '우측'} 출입문 개방 (표시등 점멸, 역행 차단)`, false);
     } else if (compId === 'SW_DOOR_CLOSE') {
       sound.playAirExhaust(1.0, 900, 0.7);
       triggerHaptic([30, 40]);
-      const lampDoor = document.getElementById('lamp-door');
-      if (lampDoor) lampDoor.classList.add('lit'); // 출입문 닫힘 체결 시 표시등 점등
-      showTemporaryHudFeedback(`🚪 [출입문 닫힘] 전체 출입문 닫힘 체결`, false);
+
+      if (window.__FAULT_DOOR_FAIL) {
+        isDoorOpen = true;
+        const lampDoor = document.getElementById('lamp-door');
+        if (lampDoor) {
+          lampDoor.classList.remove('lit');
+          lampDoor.classList.add('blinking');
+        }
+        showTemporaryHudFeedback(`🚨 [출입문 고장] 출입문 닫힘 신호 루프 불량! (완폐 불가, 점멸 지속 / OP4 출입문 바이패스 취급 필요)`, true);
+      } else {
+        isDoorOpen = false;
+        const lampDoor = document.getElementById('lamp-door');
+        if (lampDoor) {
+          lampDoor.classList.remove('blinking');
+          lampDoor.classList.add('lit');
+        }
+        const occLampDoor = document.getElementById('occ-lamp-door');
+        if (occLampDoor) {
+          occLampDoor.classList.remove('blink-amber');
+          occLampDoor.classList.add('lit-green');
+          occLampDoor.innerText = '🚪 출입문 닫힘';
+        }
+        showTemporaryHudFeedback(`🚪 [출입문 닫힘] 전체 출입문 닫힘 체결 (표시등 점등, 역행 가능)`, false);
+      }
     } else if (compId === 'SW_BATT_ON') {
       sound.playHeavyLatch();
       triggerHaptic([40, 50]);
@@ -8389,6 +8747,13 @@ function handleComponentTouch(compId) {
     } else { // 저속도, 바이패스 스위치류 (SW_LOW_SPEED, SW_DOOR_BYPASS, SW_OBSTACLE_BYPASS, SW_RESERVE_ROTARY, SW_MR_BP, SW_PARK_BP)
       newState = (comp.state === 'NORMAL') ? 'BYPASS' : 'NORMAL';
       el.style.transform = (newState === 'BYPASS') ? 'rotate(45deg)' : 'rotate(-45deg)';
+      if (compId === 'SW_DOOR_BYPASS') {
+        if (newState === 'BYPASS') {
+          showTemporaryHudFeedback("⚡ [OP4 출입문 바이패스] 바이패스(BYPASS) 투입 - 출입문 개방/고장 시에도 역행(Traction) 가능", false);
+        } else {
+          showTemporaryHudFeedback("🔒 [OP4 출입문 바이패스] 정상(NORMAL) 복귀 - 출입문 완폐 인터록 복귀", false);
+        }
+      }
     }
     comp.state = newState;
   } else if (comp.type === 'ROTARY_3') {
@@ -9095,8 +9460,14 @@ function setMasconNotch(notch, silent = false) {
     else if (notch.startsWith('B')) desc = `🛑 [마스콘 상용제동] ${notch}단 (BC: ${currentGaugeBC.toFixed(1)} bar)`;
     else if (notch === 'N') desc = `⚪ [마스콘] N (중립, 제동완해 BC: 0.0 bar)`;
     else if (notch.startsWith('P')) {
+      const isDoorBypassed = (cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
+      const isDoorInterlockCleared = (!isDoorOpen && !window.__FAULT_DOOR_FAIL) || isDoorBypassed;
+
       if (driveMode === 'OFF') {
         desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [운전모드 OFF] 역행 출력이 차단되어 열차가 움직이지 않습니다. 수동 운전: FM/RM/ATPM, 무인 운전: 키 OFF·전후진 N 후 무인모드 3초 인가)`;
+        isWarn = true;
+      } else if (!isDoorInterlockCleared) {
+        desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [출입문 인터록] 출입문 개방/고장으로 역행(Traction)이 차단되었습니다. 출입문을 닫거나 OP4 [출입문 바이패스] 스위치를 '바이패스' 위치로 절체하십시오)`;
         isWarn = true;
       } else {
         desc = `⚡ [마스콘 역행] ${notch}단 (BC: 0.0 bar)`;
@@ -9615,7 +9986,7 @@ function updateGaugeUI(bcBar, mrBar = currentGaugeMR) {
 }
 
 // OP2 선두차지정 표시등 상태 갱신
-// 점등 조건: 운전모드(RM, FM, ATPM) AND 제어키(ON) AND 전후진제어기(F 또는 R)
+// 점등 조건: 운전모드(RM, FM) AND 제어키(ON) AND 전후진제어기(F 또는 R)
 function updateLeadCarLamp(modeState) {
   const lampLeadCar = document.getElementById('lamp-lead-car');
   if (!lampLeadCar) return;
@@ -9629,9 +10000,9 @@ function updateLeadCarLamp(modeState) {
   const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
   const isReverserEngaged = revComp && (revComp.state === 'F' || revComp.state === 'R');
 
-  const isModeEligible = (driveMode === 'RM' || driveMode === 'FM' || driveMode === 'ATPM');
+  const isModeEligible = (driveMode === 'RM' || driveMode === 'FM');
 
-  // 3가지 조건(운전모드 RM/FM/ATPM, 키 ON, 전후진제어기 F/R)이 모두 만족될 때만 점등
+  // 3가지 조건(운전모드 RM/FM, 키 ON, 전후진제어기 F/R)이 모두 만족될 때만 점등
   if (isModeEligible && isKeyOn && isReverserEngaged) {
     lampLeadCar.classList.add('lit');
   } else {
@@ -9724,7 +10095,7 @@ function resetCurrentScenario() {
           ROTARY3_BOUNCE.SW_WINDOW_HEATER.dir = 1;
         }
       } else if (id === 'SW_HEADLIGHT') {
-        comp.state = 'OFF';
+        comp.state = 'REMOTE';
         if (typeof ROTARY3_BOUNCE !== 'undefined' && ROTARY3_BOUNCE.SW_HEADLIGHT) {
           ROTARY3_BOUNCE.SW_HEADLIGHT.dir = 1;
         }
@@ -9736,7 +10107,9 @@ function resetCurrentScenario() {
         if (id === 'SW_MASTER_KEY') {
           el.style.transform = 'rotate(-90deg)';
           el.classList.remove('on');
-        } else if (id === 'SW_ATP_REV' || id === 'SW_WIPER' || id === 'SW_DRIVE_MODE' || id === 'SW_HEADLIGHT') {
+        } else if (id === 'SW_HEADLIGHT') {
+          el.style.transform = 'rotate(-90deg)'; // 9시 REMOTE
+        } else if (id === 'SW_ATP_REV' || id === 'SW_WIPER' || id === 'SW_DRIVE_MODE') {
           el.style.transform = 'rotate(0deg)'; // 12시 OFF
         } else if (id === 'SW_WINDOW_HEATER' || id === 'SW_LOW_SPEED' || id === 'SW_RESERVE_ROTARY' ||
             id === 'SW_OBSTACLE_BYPASS' || id === 'SW_DOOR_BYPASS' || id === 'SW_AIR_CLEAN' ||
@@ -9774,8 +10147,19 @@ function resetCurrentScenario() {
   });
 
   // OP2 상부 표시등 초기화 (출입문 점등, 선두차지정은 운전모드 OFF이므로 소등, 제동체결/비상제동차단/커플링 소등)
+  isDoorOpen = false;
+  window.__FAULT_DOOR_FAIL = false;
   const lampDoor = document.getElementById('lamp-door');
-  if (lampDoor) lampDoor.classList.add('lit');
+  if (lampDoor) {
+    lampDoor.classList.remove('blinking');
+    lampDoor.classList.add('lit');
+  }
+  const occLampDoor = document.getElementById('occ-lamp-door');
+  if (occLampDoor) {
+    occLampDoor.classList.remove('blink-amber');
+    occLampDoor.classList.add('lit-green');
+    occLampDoor.innerText = '🚪 출입문 닫힘';
+  }
   const lampBrakeApply = document.getElementById('lamp-brake-apply');
   if (lampBrakeApply) lampBrakeApply.classList.remove('lit');
   updateLeadCarLamp('OFF');
