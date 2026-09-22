@@ -5334,11 +5334,23 @@ function updateTrainPhysics() {
   trainTargetSpeed = target;
   trainAccelRate = rate;
 
-  if (target > trainSpeed) {
+  // [버그 수정 핵심] 내리막 가속 및 모드 전환 시 무제한 폭주 방지
+  if (trainSpeed < target) {
+    // 가속 단계: 현재 목표 속도(target)를 절대 초과하지 못하도록 고정
     trainSpeed = Math.min(target, trainSpeed + rate * dt);
-  } else if (target < trainSpeed) {
-    trainSpeed = Math.max(0, trainSpeed + rate * dt);
+  } else if (trainSpeed > target) {
+    // 감속 단계: FM(고속)에서 RM(25km/h)으로 전환하거나 노치를 내렸을 때 확실하게 감속
+    const decel = Math.min(rate, -2.5); // 안전 감속력 보장
+    trainSpeed = Math.max(target, trainSpeed + decel * dt);
   }
+
+  // [이중 안전장치] 운전 모드별 절대 최고 상한선 (RM은 25.0, FM/ATPM은 80.0)
+  const absoluteLimit = (driveMode === 'RM') ? 25.0 : 80.0;
+  if (trainSpeed > absoluteLimit) {
+    trainSpeed = Math.max(absoluteLimit, trainSpeed - 5.0 * dt);
+  }
+
+  if (trainSpeed < 0) trainSpeed = 0;
 
   // 이동 거리 및 침목 애니메이션 위상 누적
   const speedMs = trainSpeed / 3.6;
