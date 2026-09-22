@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>열차 운전실 모바일 훈련 시뮬레이터</title>
+  <!-- Supabase JS SDK v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg-dark: #121519;
@@ -3121,6 +3123,409 @@
       transform: scale(0.9);
       filter: brightness(1.2);
     }
+
+    /* ========================================================
+       원격 교육 버튼 및 종합관제실(OCC) 패널 스타일
+       ======================================================== */
+    .sound-toggle-btn.remote-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      width: auto;
+      padding: 0 9px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #93c5fd;
+      border-color: #2563eb;
+      background: rgba(37, 99, 235, 0.15);
+      cursor: pointer;
+    }
+    .sound-toggle-btn.remote-btn:hover {
+      background: rgba(37, 99, 235, 0.28);
+      border-color: #3b82f6;
+      color: #fff;
+    }
+    .sound-toggle-btn.connected {
+      background: rgba(34, 197, 94, 0.2) !important;
+      border-color: #22c55e !important;
+      color: #4ade80 !important;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.35);
+    }
+    .sound-toggle-btn.instructor {
+      background: rgba(56, 189, 248, 0.22) !important;
+      border-color: #0284c7 !important;
+      color: #38bdf8 !important;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+    }
+    .remote-btn-lbl {
+      font-size: 10px;
+      letter-spacing: -0.2px;
+    }
+
+    .panel-toggle-btn.occ-tab-btn,
+    .slot-switch-btn.occ-slot-btn {
+      background: rgba(37, 99, 235, 0.2) !important;
+      border-color: #2563eb !important;
+      color: #93c5fd !important;
+      font-weight: 900 !important;
+    }
+    .panel-toggle-btn.occ-tab-btn.active,
+    .slot-switch-btn.occ-slot-btn.active {
+      background: #1d4ed8 !important;
+      border-color: #60a5fa !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.5) !important;
+    }
+
+    .occ-panel-board {
+      background: radial-gradient(circle at 50% 20%, #151d2a 0%, #0a0e14 100%) !important;
+      border: 2px solid #1e3a8a !important;
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 8px 32px rgba(0,0,0,0.7) !important;
+      padding: 16px !important;
+      color: #e2e8f0;
+      overflow-y: auto;
+    }
+    .occ-board-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .occ-top-status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0d1522;
+      border: 1px solid #1e293b;
+      border-left: 4px solid #38bdf8;
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+    .occ-train-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .occ-live-pill {
+      background: #22c55e;
+      color: #052e16;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      animation: occ-pulse 1.4s infinite;
+    }
+    @keyframes occ-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.65; transform: scale(0.96); }
+    }
+    .occ-train-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+    .occ-room-tag {
+      font-size: 10px;
+      background: #1e293b;
+      color: #94a3b8;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Consolas', monospace;
+    }
+    .occ-right-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .occ-time-clock {
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+      font-weight: 800;
+      color: #38bdf8;
+    }
+    .occ-cfg-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 4px 8px;
+      font-size: 10.5px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .occ-cfg-btn:hover {
+      background: #334155;
+      color: #fff;
+    }
+
+    /* 대형 계기판 그리드 */
+    .occ-telemetry-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 600px) {
+      .occ-telemetry-grid { grid-template-columns: 1fr; }
+    }
+    .occ-telemetry-card {
+      background: #080d16;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .occ-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: #94a3b8;
+    }
+    .occ-main-speed {
+      font-family: 'Consolas', monospace;
+      font-size: 38px;
+      font-weight: 900;
+      color: #38bdf8;
+      line-height: 1;
+      text-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .occ-main-speed-unit {
+      font-size: 13px;
+      font-weight: 700;
+      color: #64748b;
+    }
+    .occ-progress-track {
+      width: 100%;
+      height: 8px;
+      background: #172033;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .occ-progress-speed {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8 0%, #22c55e 65%, #eab308 85%, #ef4444 100%);
+      transition: width 0.1s linear;
+    }
+    .occ-progress-bc {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e 0%, #eab308 50%, #ef4444 100%);
+      transition: width 0.1s linear;
+    }
+
+    /* 노치 및 조작 상태 랙 */
+    .occ-controls-rack {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      background: #0a0f1a;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .occ-control-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-align: center;
+      padding: 4px 0;
+      border-right: 1px solid #1e293b;
+    }
+    .occ-control-col:last-child { border-right: none; }
+    .occ-control-lbl {
+      font-size: 10px;
+      font-weight: 800;
+      color: #94a3b8;
+    }
+    .occ-control-val {
+      font-family: 'Consolas', monospace;
+      font-size: 17px;
+      font-weight: 900;
+      color: #f1f5f9;
+    }
+
+    /* 6대 상태 램프 뱅크 */
+    .occ-lamps-container {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+    @media (max-width: 600px) {
+      .occ-lamps-container { grid-template-columns: repeat(3, 1fr); }
+    }
+    .occ-ind-lamp {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 8px 4px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 800;
+      color: #475569;
+      transition: all 0.2s;
+    }
+    .occ-ind-lamp.lit-green {
+      background: rgba(34, 197, 94, 0.18);
+      border-color: #22c55e;
+      color: #4ade80;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.35);
+    }
+    .occ-ind-lamp.lit-red {
+      background: rgba(239, 68, 68, 0.22);
+      border-color: #ef4444;
+      color: #f87171;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.45);
+    }
+    .occ-ind-lamp.lit-yellow {
+      background: rgba(234, 179, 8, 0.2);
+      border-color: #eab308;
+      color: #fde047;
+      box-shadow: 0 0 10px rgba(234, 179, 8, 0.4);
+    }
+    .occ-ind-lamp.lit-blue {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: #38bdf8;
+      color: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    }
+
+    /* 실시간 조작 로그 터미널 */
+    .occ-log-terminal {
+      background: #05080f;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .occ-log-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: #94a3b8;
+      border-bottom: 1px solid #172033;
+      padding-bottom: 6px;
+    }
+    .occ-log-list {
+      max-height: 130px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-family: 'Consolas', monospace;
+      font-size: 11px;
+    }
+    .occ-log-row {
+      display: flex;
+      gap: 8px;
+      color: #cbd5e1;
+      line-height: 1.3;
+      padding: 3px 6px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.02);
+      border-left: 2px solid #38bdf8;
+    }
+    .occ-log-time {
+      color: #64748b;
+      flex-shrink: 0;
+    }
+    .occ-log-comp {
+      color: #38bdf8;
+      font-weight: 700;
+    }
+    .occ-log-state {
+      color: #4ade80;
+      font-weight: 700;
+    }
+
+    /* 비상 고장 인가 섹션 */
+    .occ-fault-box {
+      background: linear-gradient(180deg, #140d12 0%, #0d080b 100%);
+      border: 1.5px solid #7f1d1d;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .occ-fault-header {
+      font-size: 11.5px;
+      font-weight: 900;
+      color: #f87171;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .occ-fault-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .occ-fault-toggle-btn {
+      background: #1f1317;
+      border: 1.5px solid #5a1d24;
+      border-radius: 6px;
+      padding: 10px 8px;
+      color: #f87171;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.15s;
+    }
+    .occ-fault-toggle-btn:hover { background: #2d181e; }
+    .occ-fault-toggle-btn:active { transform: scale(0.98); }
+    .occ-fault-toggle-btn.active {
+      background: #b91c1c;
+      border-color: #fca5a5;
+      color: #ffffff;
+      box-shadow: 0 0 14px rgba(239, 68, 68, 0.6);
+      animation: occ-fault-flash 1s infinite;
+    }
+    @keyframes occ-fault-flash {
+      0%, 100% { border-color: #fca5a5; }
+      50% { border-color: #ef4444; }
+    }
+    .occ-fault-sub {
+      font-size: 9.5px;
+      opacity: 0.8;
+      font-weight: 600;
+    }
+
+    /* 원격 힌트 & 지령 섹션 */
+    .occ-hint-dispatch {
+      background: #080d16;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .occ-hint-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
@@ -3159,17 +3564,24 @@
         </div>
       </div>
 
-      <!-- 패널 전환 뷰 스위처 (OP1 ~ OP5) -->
+      <!-- 패널 전환 뷰 스위처 (OP1 ~ OP5 + OCC) -->
       <div class="panel-view-switcher">
         <button id="view-op1" class="panel-toggle-btn" onclick="switchPanelView('OP1')">OP1</button>
         <button id="view-op2" class="panel-toggle-btn" onclick="switchPanelView('OP2')">OP2</button>
         <button id="view-op3" class="panel-toggle-btn active" onclick="switchPanelView('OP3')">OP3</button>
         <button id="view-op4" class="panel-toggle-btn" onclick="switchPanelView('OP4')">OP4</button>
         <button id="view-op5" class="panel-toggle-btn" onclick="switchPanelView('OP5')">OP5</button>
+        <button id="view-occ" class="panel-toggle-btn occ-tab-btn" style="display:none;" onclick="switchPanelView('OCC')">OCC</button>
       </div>
 
-      <!-- 상단 우측 컨트롤 그룹 (뷰포트 분할 스위처 + 음소거 버튼 묶음) -->
+      <!-- 상단 우측 컨트롤 그룹 (원격 교육 버튼 + 뷰포트 분할 스위처 + 음소거 버튼 묶음) -->
       <div class="hud-top-right-group">
+        <!-- 원격 교육 및 실시간 관제 연동 버튼 (2~3분할 선택부분 왼쪽) -->
+        <button id="btn-remote-toggle" class="sound-toggle-btn remote-btn" onclick="openRemoteModal()" title="원격 교육 및 종합관제 연동 (Supabase)">
+          <span id="remote-toggle-icon">📡</span>
+          <span class="remote-btn-lbl">원격교육</span>
+        </button>
+
         <!-- 대화면(폴드/패드/PC) 뷰포트 분할 스위처 (2분할 / 3분할 선택 가능) -->
         <div class="dual-view-badge" id="split-mode-badge" onclick="toggleSplitMode()" title="클릭하여 2분할 / 3분할 뷰포트 전환">
           <span class="split-badge-icon">🖥️</span>
@@ -3221,6 +3633,7 @@
           <button id="slot-l-op3" class="slot-switch-btn active" onclick="selectSlotPanel('left', 'OP3')">OP3</button>
           <button id="slot-l-op4" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP4')">OP4</button>
           <button id="slot-l-op5" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP5')">OP5</button>
+          <button id="slot-l-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('left', 'OCC')">OCC</button>
         </div>
       </div>
       <div id="slot-left-content" class="slot-content"></div>
@@ -3239,6 +3652,7 @@
           <button id="slot-c-op3" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP3')">OP3</button>
           <button id="slot-c-op4" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP4')">OP4</button>
           <button id="slot-c-op5" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP5')">OP5</button>
+          <button id="slot-c-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('center', 'OCC')">OCC</button>
         </div>
       </div>
       <div id="slot-center-content" class="slot-content"></div>
@@ -3257,6 +3671,7 @@
           <button id="slot-r-op3" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP3')">OP3</button>
           <button id="slot-r-op4" class="slot-switch-btn active" onclick="selectSlotPanel('right', 'OP4')">OP4</button>
           <button id="slot-r-op5" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP5')">OP5</button>
+          <button id="slot-r-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('right', 'OCC')">OCC</button>
         </div>
       </div>
       <div id="slot-right-content" class="slot-content"></div>
@@ -4190,6 +4605,165 @@
           </div>
         </div>
       </div>
+    <!-- [패널 6] OCC : 종합관제소 (교관/관제사 전용 실시간 훈련 감시 및 고장 인가 패널) -->
+    <section id="panel-occ" class="train-metal-panel occ-panel-board" style="display:none;">
+      <div class="screw tl"></div><div class="screw tr"></div>
+      <div class="screw bl"></div><div class="screw br"></div>
+
+      <div class="occ-board-inner">
+        <!-- 1. 헤더 바: 훈련생 연결 상태 및 기본 정보 -->
+        <div class="occ-top-status-bar">
+          <div class="occ-train-meta">
+            <span class="occ-live-pill" id="occ-live-badge">LIVE</span>
+            <span class="occ-train-name">👨‍✈️ 훈련생: <strong id="inst-mon-name" style="color:#38bdf8;">미연결 대기중</strong></span>
+            <span class="occ-room-tag" id="inst-mon-room">ROOM: train-room-01</span>
+          </div>
+          <div class="occ-right-meta">
+            <span class="occ-time-clock" id="inst-mon-time">--:--:--</span>
+            <button type="button" class="occ-cfg-btn" onclick="openRemoteModal()">⚙️ 연동 설정</button>
+          </div>
+        </div>
+
+        <!-- 2. 대형 디지털 계기판 그리드 (속도계 + 공기압력계) -->
+        <div class="occ-telemetry-grid">
+          <!-- 열차 시속 계기 카드 -->
+          <div class="occ-telemetry-card">
+            <div class="occ-card-head">
+              <span>열차 주행 속도 (SPEED)</span>
+              <span id="occ-speed-tag" style="color:#38bdf8; font-weight:900;">0%</span>
+            </div>
+            <div class="occ-main-speed">
+              <span id="inst-mon-speed">0</span>
+              <span class="occ-main-speed-unit">km/h</span>
+            </div>
+            <div class="occ-progress-track">
+              <div id="occ-bar-speed" class="occ-progress-speed"></div>
+            </div>
+          </div>
+
+          <!-- 제동통 / 주공기 압력 계기 카드 -->
+          <div class="occ-telemetry-card">
+            <div class="occ-card-head">
+              <span>공기 압력 (BC / MR)</span>
+              <span id="inst-mon-bc-status" style="color:#22c55e; font-weight:900;">완해 (0.0 bar)</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+              <div class="occ-main-speed" style="color:#cbd5e1; font-size:30px;">
+                <span id="inst-mon-bc">0.0</span>
+                <span class="occ-main-speed-unit">bar (BC)</span>
+              </div>
+              <div style="font-size:12px; color:#64748b; font-weight:700;">
+                MR: <strong id="inst-mon-mr" style="color:#f87171;">9.0</strong> bar
+              </div>
+            </div>
+            <div class="occ-progress-track">
+              <div id="occ-bar-bc" class="occ-progress-bc"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 주간제어기 및 역전기 실시간 위치 인디케이터 -->
+        <div class="occ-controls-rack">
+          <div class="occ-control-col">
+            <span class="occ-control-lbl">전후진제어기</span>
+            <span class="occ-control-val" id="inst-notch-rev" style="color:#38bdf8;">N</span>
+          </div>
+          <div class="occ-control-col">
+            <span class="occ-control-lbl">마스콘 노치</span>
+            <span class="occ-control-val" id="inst-notch-mascon" style="color:#4ade80;">N</span>
+          </div>
+          <div class="occ-control-col">
+            <span class="occ-control-lbl">운전 모드</span>
+            <span class="occ-control-val" id="inst-mode-val" style="color:#eab308;">OFF</span>
+          </div>
+          <div class="occ-control-col">
+            <span class="occ-control-lbl">제어키</span>
+            <span class="occ-control-val" id="inst-key-val" style="color:#94a3b8;">OFF</span>
+          </div>
+        </div>
+
+        <!-- 4. 열차 상태 표시등 LED 뱅크 (6종) -->
+        <div class="occ-lamps-container">
+          <div id="occ-lamp-door" class="occ-ind-lamp lit-green">🚪 출입문 닫힘</div>
+          <div id="occ-lamp-brake" class="occ-ind-lamp">🛑 제동 체결</div>
+          <div id="occ-lamp-power" class="occ-ind-lamp">⚡ 역행 인가</div>
+          <div id="occ-lamp-emg" class="occ-ind-lamp">🚨 비상제동</div>
+          <div id="occ-lamp-lead" class="occ-ind-lamp">🟡 선두차지정</div>
+          <div id="occ-lamp-ato" class="occ-ind-lamp">📡 무인운전 ATO</div>
+        </div>
+
+        <!-- 5. 선로 위치 및 운행 상황 -->
+        <div style="background:#0a0f1a; border:1px solid #1e293b; border-radius:8px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+          <div>
+            <span style="color:#8b949e; font-weight:700;">누적 주행거리:</span>
+            <strong id="occ-train-dist" style="color:#38bdf8; font-family:'Consolas',monospace; font-size:12px;">0 m</strong>
+          </div>
+          <div>
+            <span style="color:#8b949e; font-weight:700;">구간 상태:</span>
+            <strong id="occ-train-zone" style="color:#4ade80;">본선 지상구간 (정상)</strong>
+          </div>
+          <div>
+            <span style="color:#8b949e; font-weight:700;">기상/환경:</span>
+            <strong id="occ-train-weather" style="color:#cbd5e1;">맑음</strong>
+          </div>
+        </div>
+
+        <!-- 6. 실시간 조작 타임라인 로그 터미널 -->
+        <div class="occ-log-terminal">
+          <div class="occ-log-head">
+            <span>📋 훈련생 실시간 조작 로그 (EVENT STREAM)</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <span id="occ-log-count" style="font-size:10px; color:#64748b;">0건 기록</span>
+              <button type="button" class="occ-cfg-btn" style="padding:2px 6px; font-size:10px;" onclick="TrainRemote.clearLog()">로그 지우기</button>
+            </div>
+          </div>
+          <div class="occ-log-list" id="occ-log-list">
+            <div class="occ-log-row" style="border-left-color:#64748b; color:#64748b;">
+              <span>관제 연동 대기 중입니다. 훈련생이 조작을 시작하면 실시간으로 출력됩니다.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. 비상 고장 원격 강제 주입 (FAULT INJECTION) -->
+        <div class="occ-fault-box">
+          <div class="occ-fault-header">
+            <span>⚡ 실전 비상 고장 강제 인가 (EMERGENCY FAULT INJECTION)</span>
+            <span id="occ-fault-status-tag" style="font-size:10px; color:#94a3b8; margin-left:auto; font-weight:700;">정상 운행 중</span>
+          </div>
+          <div class="occ-fault-actions">
+            <button type="button" id="btn-fault-door" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('DOOR_LOCK_FAIL')">
+              <span>🚨 출입문 닫힘 불량</span>
+              <span id="fault-lbl-door" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
+            </button>
+            <button type="button" id="btn-fault-eb" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('EB_STUCK')">
+              <span>🚨 비상제동 불완해 (고착)</span>
+              <span id="fault-lbl-eb" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 8. 원격 지령 및 힌트 발송 바 -->
+        <div class="occ-hint-dispatch">
+          <span style="font-size:11px; font-weight:800; color:#94a3b8;">💡 훈련생 원격 조치 힌트 & 지시 발송</span>
+          <div class="occ-hint-row">
+            <select id="inst-hint-target" class="form-control" style="flex:1; font-size:11px; padding:7px 8px; background:#080b10;">
+              <option value="SW_EMG_RELEASE">[OP3] 비상제동완해 (안전커버 내부)</option>
+              <option value="SW_DOOR_BYPASS">[OP4] 출입문 바이패스</option>
+              <option value="SW_LOW_SPEED">[OP3] 저속도 바이패스</option>
+              <option value="SW_RESCUE">[OP3] 구원운전 로터리</option>
+              <option value="SW_ATP_REV">[OP3] ATP후진 로터리</option>
+              <option value="SW_VOBC_RESET">[OP5] VOBC리셋 버튼 (롱프레스)</option>
+              <option value="SW_FORCE_REL">[OP3] 강제완해</option>
+              <option value="SW_WIRELESS_MODE">[OP3] 무인모드 (3초 인가)</option>
+            </select>
+            <input type="text" id="inst-hint-msg" class="form-control" style="flex:1.2; font-size:11px; padding:7px 8px; background:#080b10;" placeholder="추가 무전 지시문 입력 (선택사항)" />
+            <button type="button" class="toolbar-btn primary" style="padding:7px 14px; font-size:11px; white-space:nowrap;" onclick="TrainRemote.sendRemoteHint()">
+              💡 지령 발송
+            </button>
+          </div>
+        </div>
+
+      </div>
     </section>
     </div>
     <!-- /panel-storage-pool -->
@@ -4221,6 +4795,67 @@
   <!-- ========================================================
        4. 모달 팝업들
   ======================================================== -->
+
+  <!-- [원격 교육 설정 모달] -->
+  <div id="modal-remote-sync" class="modal-backdrop" style="display:none;">
+    <div class="modal-window" style="max-width: 480px;">
+      <div class="modal-header">
+        <span>📡 원격 교육 & 실시간 관제 연동 설정</span>
+        <span style="cursor:pointer;" onclick="closeModal('modal-remote-sync')">✕</span>
+      </div>
+      <div class="modal-body">
+        <!-- 역할 선택 버튼군 -->
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#161b22; padding:8px 12px; border-radius:6px; border:1px solid #30363d;">
+          <div style="display:flex; gap:6px;">
+            <button type="button" id="remote-role-student" class="toolbar-btn active" style="padding:5px 12px; font-size:11px; background:#1f6feb; color:#fff; font-weight:800;" onclick="TrainRemote.setRole('STUDENT')">👨‍🎓 학생 (훈련생)</button>
+            <button type="button" id="remote-role-instructor" class="toolbar-btn" style="padding:5px 12px; font-size:11px; font-weight:800;" onclick="TrainRemote.setRole('INSTRUCTOR')">👨‍🏫 교관 (관제사)</button>
+          </div>
+          <span id="remote-conn-status" class="hud-step-badge" style="background:#30363d; color:#8b949e;">미연결</span>
+        </div>
+
+        <!-- 교관 모드 선택 시 안내 배너 -->
+        <div id="remote-instructor-guide" style="display:none; background:#081c36; border:1px solid #1d4ed8; border-radius:6px; padding:8px 10px; font-size:11px; color:#93c5fd; line-height:1.4;">
+          💡 <strong>교관 모드</strong>가 활성화되었습니다. 연동 시작 시 상단 패널 메뉴에 <strong>[OCC] 종합관제실 모니터링 화면</strong>이 추가되어 2분할/3분할로 훈련생 열차를 실시간 감시하고 고장을 인가할 수 있습니다.
+        </div>
+
+        <!-- 룸 코드 & 사용자명 -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+          <div class="form-group">
+            <label>세션 / 룸 코드 (Room ID)</label>
+            <input type="text" id="remote-room-id" class="form-control" value="train-room-01" placeholder="예: train-room-01" oninput="TrainRemote.saveStorageFromInput()" />
+          </div>
+          <div class="form-group">
+            <label>내 이름 / 호출명</label>
+            <input type="text" id="remote-user-name" class="form-control" value="운전연습생 1" oninput="TrainRemote.saveStorageFromInput()" />
+          </div>
+        </div>
+
+        <!-- Supabase 연결 설정 (URL & Key 자동 저장) -->
+        <div style="background:#0d1117; border:1px solid #30363d; border-radius:6px; padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; font-weight:800; color:#38bdf8;">⚙️ Supabase API 키 설정 (자동 영구 저장)</span>
+            <span style="font-size:9.5px; color:#22c55e; font-weight:700;">입력 즉시 로컬 자동 저장됨</span>
+          </div>
+          <div class="form-group">
+            <label style="font-size:10.5px; color:#94a3b8;">Supabase Project URL</label>
+            <input type="text" id="remote-sb-url" class="form-control" style="font-size:11px; padding:6px 8px; font-family:'Consolas',monospace;" placeholder="https://xyzcompany.supabase.co" oninput="TrainRemote.saveStorageFromInput()" />
+          </div>
+          <div class="form-group">
+            <label style="font-size:10.5px; color:#94a3b8;">Supabase Anon Public Key</label>
+            <input type="password" id="remote-sb-key" class="form-control" style="font-size:11px; padding:6px 8px; font-family:'Consolas',monospace;" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." oninput="TrainRemote.saveStorageFromInput()" />
+          </div>
+          <div style="font-size:10px; color:#6e7681; line-height:1.4;">
+            * <strong>URL과 Key를 입력하면 영구 저장</strong>되어 다음 접속 시에도 그대로 유지됩니다.<br>
+            * URL과 Key를 비워두면 <strong>동일 PC의 브라우저 탭/창 간 로컬 브로드캐스트</strong>로 즉시 원격 연동을 테스트할 수 있습니다.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+        <button type="button" class="toolbar-btn" onclick="closeModal('modal-remote-sync')">닫기</button>
+        <button type="button" id="btn-remote-connect" class="toolbar-btn primary" onclick="TrainRemote.connect()">📡 연동 시작</button>
+      </div>
+    </div>
+  </div>
 
   <!-- [A] 녹화 단계 입력 모달 -->
   <div id="modal-record-step" class="modal-backdrop">
@@ -4990,7 +5625,7 @@ let pendingRecordedStep = null;
 // ========================================================
 // 반응형 멀티 뷰포트 시스템 (모바일 1분할 / 2분할 듀얼 / 3분할 트리플)
 // ========================================================
-const ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5'];
+let ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5'];
 let currentSplitMode = 2;       // 대화면 기본: 2분할 (2 또는 3)
 let activeLeftPanel = 'OP3';    // 좌측 슬롯 (기본 OP3)
 let activeCenterPanel = 'OP1';  // 중앙 슬롯 (3분할 전용 기본 OP1)
@@ -5186,6 +5821,7 @@ function getPanelDisplayName(panelId) {
     case 'OP3': return 'OP3 (긴급 제동 조작반)';
     case 'OP4': return 'OP4 (메인 계기 & 바이패스)';
     case 'OP5': return 'OP5 (하부 바이패스 & 차상)';
+    case 'OCC': return 'OCC (종합관제실 모니터링)';
     default: return panelId;
   }
 }
@@ -5597,6 +6233,26 @@ function updateTrainPhysics() {
   cvUpdateRollNoise(trainSpeed);
 
   updateCabOSD(notch, revNotch, isUnmannedActive, driveMode);
+
+  // 원격 관제 실시간 텔레메트리 전송 (교육생 -> 관제실, 100ms 간격)
+  if (typeof TrainRemote !== 'undefined' && TrainRemote.isConnected && TrainRemote.role === 'STUDENT') {
+    if (!TrainRemote._lastPhysicsBroadcast || (now - TrainRemote._lastPhysicsBroadcast > 100)) {
+      TrainRemote._lastPhysicsBroadcast = now;
+      TrainRemote.sendStudentAction({
+        type: 'TELEMETRY',
+        speed: trainSpeed,
+        distance: trainDistance,
+        notch: notch,
+        reverser: revNotch,
+        driveMode: driveMode,
+        masterKey: isKeyOn ? 'ON' : 'OFF',
+        isUnmanned: isUnmannedActive,
+        isEmg: isEmgActive || (notch === 'EB') || !!window.__FAULT_EB_STUCK,
+        bcPressure: cvBC(),
+        mrPressure: (typeof currentGaugeMR !== 'undefined') ? currentGaugeMR : 9.0
+      });
+    }
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -6360,6 +7016,581 @@ function resetCabView() {
   lastPhysicsTime = performance.now();
 }
 
+// ========================================================
+// 📡 원격 교육 & 종합관제(OCC) 실시간 연동 시스템 (Supabase & Broadcast)
+// ========================================================
+const TrainRemote = {
+  role: 'STUDENT', // 'STUDENT' | 'INSTRUCTOR'
+  isConnected: false,
+  channel: null,
+  localBc: null,
+  sbClient: null,
+  room: 'train-room-01',
+  userName: '운전연습생 1',
+  activeFaults: {
+    DOOR_LOCK_FAIL: false,
+    EB_STUCK: false
+  },
+  _lastPhysicsBroadcast: 0,
+  logCount: 0,
+
+  initStorage() {
+    const savedUrl = localStorage.getItem('TRAIN_SB_URL') || '';
+    const savedKey = localStorage.getItem('TRAIN_SB_KEY') || '';
+    const savedRoom = localStorage.getItem('TRAIN_SB_ROOM') || 'train-room-01';
+    const savedRole = localStorage.getItem('TRAIN_SB_ROLE') || 'STUDENT';
+    const savedName = localStorage.getItem('TRAIN_SB_NAME') || (savedRole === 'INSTRUCTOR' ? '관제사 1' : '운전연습생 1');
+
+    this.role = savedRole;
+    this.room = savedRoom;
+    this.userName = savedName;
+
+    this.syncModalFromStorage();
+    this.applyRoleUI(this.role);
+  },
+
+  syncModalFromStorage() {
+    const urlEl = document.getElementById('remote-sb-url');
+    const keyEl = document.getElementById('remote-sb-key');
+    const roomEl = document.getElementById('remote-room-id');
+    const nameEl = document.getElementById('remote-user-name');
+
+    if (urlEl) urlEl.value = localStorage.getItem('TRAIN_SB_URL') || '';
+    if (keyEl) keyEl.value = localStorage.getItem('TRAIN_SB_KEY') || '';
+    if (roomEl) roomEl.value = localStorage.getItem('TRAIN_SB_ROOM') || 'train-room-01';
+    if (nameEl) nameEl.value = localStorage.getItem('TRAIN_SB_NAME') || (this.role === 'INSTRUCTOR' ? '관제사 1' : '운전연습생 1');
+
+    this.updateRoleButtonsUI();
+  },
+
+  saveStorageFromInput() {
+    const urlEl = document.getElementById('remote-sb-url');
+    const keyEl = document.getElementById('remote-sb-key');
+    const roomEl = document.getElementById('remote-room-id');
+    const nameEl = document.getElementById('remote-user-name');
+
+    if (urlEl) localStorage.setItem('TRAIN_SB_URL', urlEl.value.trim());
+    if (keyEl) localStorage.setItem('TRAIN_SB_KEY', keyEl.value.trim());
+    if (roomEl) {
+      const r = roomEl.value.trim() || 'train-room-01';
+      localStorage.setItem('TRAIN_SB_ROOM', r);
+      this.room = r;
+    }
+    if (nameEl) {
+      const n = nameEl.value.trim() || '사용자';
+      localStorage.setItem('TRAIN_SB_NAME', n);
+      this.userName = n;
+    }
+  },
+
+  setRole(role) {
+    this.role = role;
+    localStorage.setItem('TRAIN_SB_ROLE', role);
+    this.updateRoleButtonsUI();
+    this.applyRoleUI(role);
+  },
+
+  updateRoleButtonsUI() {
+    const studentBtn = document.getElementById('remote-role-student');
+    const instructorBtn = document.getElementById('remote-role-instructor');
+    const guideEl = document.getElementById('remote-instructor-guide');
+
+    if (studentBtn && instructorBtn) {
+      if (this.role === 'STUDENT') {
+        studentBtn.classList.add('active');
+        studentBtn.style.background = '#1f6feb';
+        studentBtn.style.color = '#fff';
+        instructorBtn.classList.remove('active');
+        instructorBtn.style.background = '';
+        instructorBtn.style.color = '';
+        if (guideEl) guideEl.style.display = 'none';
+      } else {
+        instructorBtn.classList.add('active');
+        instructorBtn.style.background = '#8b5cf6';
+        instructorBtn.style.color = '#fff';
+        studentBtn.classList.remove('active');
+        studentBtn.style.background = '';
+        studentBtn.style.color = '';
+        if (guideEl) guideEl.style.display = 'block';
+      }
+    }
+  },
+
+  applyRoleUI(role) {
+    const occTab = document.getElementById('view-occ');
+    const occSlotL = document.getElementById('slot-l-occ');
+    const occSlotC = document.getElementById('slot-c-occ');
+    const occSlotR = document.getElementById('slot-r-occ');
+
+    if (role === 'INSTRUCTOR') {
+      if (!ALL_PANELS.includes('OCC')) {
+        ALL_PANELS.push('OCC');
+      }
+      if (occTab) occTab.style.display = 'inline-flex';
+      if (occSlotL) occSlotL.style.display = 'inline-block';
+      if (occSlotC) occSlotC.style.display = 'inline-block';
+      if (occSlotR) occSlotR.style.display = 'inline-block';
+    } else {
+      const idx = ALL_PANELS.indexOf('OCC');
+      if (idx !== -1) ALL_PANELS.splice(idx, 1);
+      if (occTab) occTab.style.display = 'none';
+      if (occSlotL) occSlotL.style.display = 'none';
+      if (occSlotC) occSlotC.style.display = 'none';
+      if (occSlotR) occSlotR.style.display = 'none';
+
+      if (activeLeftPanel === 'OCC') activeLeftPanel = 'OP3';
+      if (activeCenterPanel === 'OCC') activeCenterPanel = 'OP1';
+      if (activeRightPanel === 'OCC') activeRightPanel = 'OP4';
+      renderDualPanels();
+    }
+  },
+
+  async connect() {
+    this.saveStorageFromInput();
+    const url = localStorage.getItem('TRAIN_SB_URL') || '';
+    const key = localStorage.getItem('TRAIN_SB_KEY') || '';
+    const room = localStorage.getItem('TRAIN_SB_ROOM') || 'train-room-01';
+    const name = localStorage.getItem('TRAIN_SB_NAME') || (this.role === 'INSTRUCTOR' ? '관제사 1' : '운전연습생 1');
+
+    this.room = room;
+    this.userName = name;
+
+    const btnConnect = document.getElementById('btn-remote-connect');
+    if (btnConnect) {
+      btnConnect.innerText = '연동 중...';
+      btnConnect.disabled = true;
+    }
+
+    try {
+      if (url && key && typeof window.supabase !== 'undefined') {
+        this.sbClient = window.supabase.createClient(url, key);
+        this.channel = this.sbClient.channel(`room_${room}`, {
+          config: { broadcast: { self: false } }
+        });
+
+        this.channel
+          .on('broadcast', { event: 'train_msg' }, (payload) => {
+            this.handleIncomingMessage(payload.payload);
+          })
+          .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+              this.onConnected(true);
+            }
+          });
+      } else {
+        if (typeof BroadcastChannel !== 'undefined') {
+          if (this.localBc) {
+            try { this.localBc.close(); } catch(e){}
+          }
+          this.localBc = new BroadcastChannel(`train_channel_${room}`);
+          this.localBc.onmessage = (ev) => {
+            this.handleIncomingMessage(ev.data);
+          };
+          this.onConnected(false);
+        } else {
+          alert('이 브라우저는 원격 연동 통신을 지원하지 않습니다.');
+          if (btnConnect) { btnConnect.innerText = '📡 연동 시작'; btnConnect.disabled = false; }
+          return;
+        }
+      }
+    } catch(err) {
+      console.error('Remote connect error:', err);
+      alert('연동 설정 중 오류가 발생했습니다: ' + err.message);
+      if (btnConnect) { btnConnect.innerText = '📡 연동 시작'; btnConnect.disabled = false; }
+    }
+  },
+
+  onConnected(isSupabase) {
+    this.isConnected = true;
+    const btnConnect = document.getElementById('btn-remote-connect');
+    const statusBadge = document.getElementById('remote-conn-status');
+    const hudBtn = document.getElementById('btn-remote-toggle');
+
+    if (btnConnect) {
+      btnConnect.innerText = '연동 해제';
+      btnConnect.disabled = false;
+      btnConnect.onclick = () => this.disconnect();
+    }
+
+    if (statusBadge) {
+      statusBadge.style.background = '#238636';
+      statusBadge.style.color = '#ffffff';
+      statusBadge.innerText = isSupabase ? 'Supabase 클라우드 연결됨' : '로컬 브로드캐스트 연결됨';
+    }
+
+    if (hudBtn) {
+      hudBtn.classList.add('connected');
+      if (this.role === 'INSTRUCTOR') {
+        hudBtn.classList.add('instructor');
+        hudBtn.innerHTML = `📡 교관: ${this.room}`;
+      } else {
+        hudBtn.classList.remove('instructor');
+        hudBtn.innerHTML = `📡 교육생: ${this.room}`;
+      }
+    }
+
+    const instRoomEl = document.getElementById('inst-mon-room');
+    if (instRoomEl) instRoomEl.innerText = `ROOM: ${this.room}`;
+
+    if (this.role === 'INSTRUCTOR') {
+      this.applyRoleUI('INSTRUCTOR');
+      const isWide = checkIsDualMode();
+      if (isWide) {
+        selectSlotPanel('right', 'OCC');
+      } else {
+        switchPanelView('OCC');
+      }
+      this.addLog(`[관제 연결] 세션(${this.room}) 교관(${this.userName}) 관제 준비 완료`, 'green');
+    } else {
+      this.sendStudentAction({
+        type: 'STUDENT_JOIN',
+        studentName: this.userName,
+        timestamp: Date.now()
+      });
+      alert(`[원격 교육 연동 완료]\n룸: ${this.room}\n역할: 학생 (${this.userName})\n이제 교관 화면에 내 조작 상태가 실시간 전송됩니다.`);
+    }
+
+    closeModal('modal-remote-sync');
+  },
+
+  disconnect() {
+    if (this.channel && this.sbClient) {
+      try { this.sbClient.removeChannel(this.channel); } catch(e){}
+      this.channel = null;
+    }
+    if (this.localBc) {
+      try { this.localBc.close(); } catch(e){}
+      this.localBc = null;
+    }
+
+    this.isConnected = false;
+
+    const btnConnect = document.getElementById('btn-remote-connect');
+    const statusBadge = document.getElementById('remote-conn-status');
+    const hudBtn = document.getElementById('btn-remote-toggle');
+
+    if (btnConnect) {
+      btnConnect.innerText = '📡 연동 시작';
+      btnConnect.disabled = false;
+      btnConnect.onclick = () => this.connect();
+    }
+    if (statusBadge) {
+      statusBadge.style.background = '#30363d';
+      statusBadge.style.color = '#8b949e';
+      statusBadge.innerText = '미연결';
+    }
+    if (hudBtn) {
+      hudBtn.classList.remove('connected', 'instructor');
+      hudBtn.innerHTML = '📡 원격교육';
+    }
+  },
+
+  sendMessage(data) {
+    if (!this.isConnected) return;
+    try {
+      if (this.channel) {
+        this.channel.send({
+          type: 'broadcast',
+          event: 'train_msg',
+          payload: data
+        });
+      }
+      if (this.localBc) {
+        this.localBc.postMessage(data);
+      }
+    } catch(err) {
+      console.warn('Send remote message failed:', err);
+    }
+  },
+
+  sendStudentAction(actionObj) {
+    if (!this.isConnected || this.role !== 'STUDENT') return;
+    this.sendMessage({
+      senderRole: 'STUDENT',
+      studentName: this.userName,
+      room: this.room,
+      ...actionObj
+    });
+  },
+
+  sendInstructorCommand(cmdObj) {
+    if (!this.isConnected || this.role !== 'INSTRUCTOR') return;
+    this.sendMessage({
+      senderRole: 'INSTRUCTOR',
+      instructorName: this.userName,
+      room: this.room,
+      ...cmdObj
+    });
+  },
+
+  handleIncomingMessage(msg) {
+    if (!msg || typeof msg !== 'object') return;
+
+    if (this.role === 'INSTRUCTOR' && msg.senderRole === 'STUDENT') {
+      this.handleStudentMessage(msg);
+    } else if (this.role === 'STUDENT' && msg.senderRole === 'INSTRUCTOR') {
+      this.handleInstructorCommand(msg);
+    }
+  },
+
+  handleStudentMessage(msg) {
+    if (msg.type === 'STUDENT_JOIN') {
+      const nameEl = document.getElementById('inst-mon-name');
+      if (nameEl) nameEl.innerText = msg.studentName || '연결됨';
+      this.addLog(`[학생 접속] ${msg.studentName} 학생이 훈련에 참가하였습니다.`, 'green');
+      return;
+    }
+
+    if (msg.type === 'TELEMETRY') {
+      this.updateOCCMeters(msg);
+      return;
+    }
+
+    if (msg.type === 'COMPONENT_ACTION') {
+      const nameEl = document.getElementById('inst-mon-name');
+      if (nameEl && msg.studentName) nameEl.innerText = msg.studentName;
+      this.addLog(`[학생 조작] ${msg.compName || msg.compId} ➔ ${msg.state}`, 'blue');
+      return;
+    }
+  },
+
+  handleInstructorCommand(cmd) {
+    if (cmd.type === 'INJECT_FAULT') {
+      this.applyFaultOnStudent(cmd.fault, cmd.active);
+      return;
+    }
+    if (cmd.type === 'REMOTE_HINT') {
+      this.showRemoteHint(cmd.target, cmd.message, cmd.instructorName);
+      return;
+    }
+  },
+
+  updateOCCMeters(data) {
+    const spdEl = document.getElementById('inst-mon-speed');
+    const spdTag = document.getElementById('occ-speed-tag');
+    const spdBar = document.getElementById('occ-bar-speed');
+    const bcEl = document.getElementById('inst-mon-bc');
+    const mrEl = document.getElementById('inst-mon-mr');
+    const bcBar = document.getElementById('occ-bar-bc');
+    const bcStatus = document.getElementById('inst-mon-bc-status');
+    const masconEl = document.getElementById('inst-notch-mascon');
+    const revEl = document.getElementById('inst-notch-rev');
+    const modeEl = document.getElementById('inst-mode-val');
+    const keyEl = document.getElementById('inst-key-val');
+    const distEl = document.getElementById('occ-train-dist');
+    const timeEl = document.getElementById('inst-mon-time');
+
+    const speed = Math.round(data.speed || 0);
+    if (spdEl) spdEl.innerText = speed;
+    if (spdTag) spdTag.innerText = `${Math.min(100, Math.round((speed / 80) * 100))}%`;
+    if (spdBar) spdBar.style.width = `${Math.min(100, (speed / 80) * 100)}%`;
+
+    const bc = (typeof data.bcPressure === 'number') ? data.bcPressure.toFixed(1) : '0.0';
+    const mr = (typeof data.mrPressure === 'number') ? data.mrPressure.toFixed(1) : '9.0';
+    if (bcEl) bcEl.innerText = bc;
+    if (mrEl) mrEl.innerText = mr;
+    if (bcBar) bcBar.style.width = `${Math.min(100, (parseFloat(bc) / 4.0) * 100)}%`;
+
+    const notch = data.notch || 'N';
+    const isEmg = !!(data.isEmg || notch === 'EB');
+    const isServiceBrake = notch.startsWith('B');
+
+    if (bcStatus) {
+      if (isEmg) {
+        bcStatus.innerText = `🚨 비상제동 체결 (${bc} bar)`;
+        bcStatus.style.color = '#ef4444';
+      } else if (isServiceBrake) {
+        bcStatus.innerText = `🛑 상용제동 ${notch}단 (${bc} bar)`;
+        bcStatus.style.color = '#f59e0b';
+      } else if (parseFloat(bc) > 0.5) {
+        bcStatus.innerText = `🛑 제동 체결 (${bc} bar)`;
+        bcStatus.style.color = '#f59e0b';
+      } else {
+        bcStatus.innerText = '완해 (0.0 bar)';
+        bcStatus.style.color = '#22c55e';
+      }
+    }
+
+    if (masconEl) {
+      masconEl.innerText = notch;
+      if (notch.startsWith('P')) masconEl.style.color = '#38bdf8';
+      else if (notch === 'EB') masconEl.style.color = '#ef4444';
+      else if (isServiceBrake) masconEl.style.color = '#f59e0b';
+      else masconEl.style.color = '#4ade80';
+    }
+
+    if (revEl) revEl.innerText = data.reverser || 'N';
+    if (modeEl) modeEl.innerText = data.driveMode || 'OFF';
+    if (keyEl) keyEl.innerText = data.masterKey || 'OFF';
+    if (distEl) distEl.innerText = `${Math.round(data.distance || 0)} m`;
+
+    const now = new Date();
+    if (timeEl) timeEl.innerText = now.toTimeString().split(' ')[0];
+
+    const lampDoor = document.getElementById('occ-lamp-door');
+    const lampBrake = document.getElementById('occ-lamp-brake');
+    const lampPower = document.getElementById('occ-lamp-power');
+    const lampEmg = document.getElementById('occ-lamp-emg');
+    const lampLead = document.getElementById('occ-lamp-lead');
+    const lampAto = document.getElementById('occ-lamp-ato');
+
+    const isBraking = isServiceBrake || isEmg || parseFloat(bc) > 0.5;
+    if (lampBrake) lampBrake.classList.toggle('lit-red', isBraking);
+    if (lampPower) lampPower.classList.toggle('lit-green', notch.startsWith('P'));
+    if (lampEmg) lampEmg.classList.toggle('lit-red', isEmg);
+    if (lampLead) lampLead.classList.toggle('lit-yellow', data.driveMode && data.driveMode !== 'OFF');
+    if (lampAto) lampAto.classList.toggle('lit-yellow', !!data.isUnmanned);
+  },
+
+  toggleFault(faultType) {
+    if (!this.isConnected) {
+      alert('원격 관제 연동 시작 후 고장을 인가할 수 있습니다.');
+      return;
+    }
+    this.activeFaults[faultType] = !this.activeFaults[faultType];
+    const isAct = this.activeFaults[faultType];
+
+    const btnDoor = document.getElementById('btn-fault-door');
+    const btnEb = document.getElementById('btn-fault-eb');
+    const lblDoor = document.getElementById('fault-lbl-door');
+    const lblEb = document.getElementById('fault-lbl-eb');
+    const statusTag = document.getElementById('occ-fault-status-tag');
+
+    if (faultType === 'DOOR_LOCK_FAIL') {
+      if (btnDoor) btnDoor.classList.toggle('active', isAct);
+      if (lblDoor) lblDoor.innerText = isAct ? '🚨 고장 발생 중 (클릭 시 복구)' : '정상 (클릭 시 고장 인가)';
+      this.addLog(`[비상 고장 인가] 출입문 닫힘 불량(고장) ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
+    } else if (faultType === 'EB_STUCK') {
+      if (btnEb) btnEb.classList.toggle('active', isAct);
+      if (lblEb) lblEb.innerText = isAct ? '🚨 비상제동 불완해 고착 중' : '정상 (클릭 시 고장 인가)';
+      this.addLog(`[비상 고장 인가] 비상제동 불완해 고착 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
+    }
+
+    const anyActive = this.activeFaults.DOOR_LOCK_FAIL || this.activeFaults.EB_STUCK;
+    if (statusTag) {
+      statusTag.innerText = anyActive ? '⚠️ 비상 고장 주입 운용 중' : '정상 운행 중';
+      statusTag.style.color = anyActive ? '#f87171' : '#94a3b8';
+    }
+
+    this.sendInstructorCommand({
+      type: 'INJECT_FAULT',
+      fault: faultType,
+      active: isAct
+    });
+  },
+
+  applyFaultOnStudent(faultType, active) {
+    if (faultType === 'DOOR_LOCK_FAIL') {
+      window.__FAULT_DOOR_FAIL = active;
+      const lampD = document.getElementById('occ-lamp-door');
+      if (lampD) lampD.classList.toggle('lit-green', !active);
+      if (active) {
+        alert('🚨 [관제실 비상 통보] 출입문 닫힘 신호 루프 불량 발생!\n출입문 바이패스 및 필요 스위치를 취급하십시오.');
+      }
+    } else if (faultType === 'EB_STUCK') {
+      window.__FAULT_EB_STUCK = active;
+      if (active) {
+        currentGaugeBC = BC_EMG_BAR;
+        updateGaugeUI(BC_EMG_BAR, currentGaugeMR);
+        alert('🚨 [관제실 비상 통보] 비상제동 완해 불량(고착) 발생!\n비상제동 완해 절차를 수행하십시오.');
+      }
+    }
+  },
+
+  sendRemoteHint() {
+    if (!this.isConnected) {
+      alert('원격 연동 후 지령을 발송할 수 있습니다.');
+      return;
+    }
+    const targetSel = document.getElementById('inst-hint-target');
+    const msgInput = document.getElementById('inst-hint-msg');
+    const target = targetSel ? targetSel.value : '';
+    const message = msgInput ? msgInput.value.trim() : '';
+
+    this.sendInstructorCommand({
+      type: 'REMOTE_HINT',
+      target: target,
+      message: message
+    });
+
+    this.addLog(`[지령 발송] ➔ 대상 부품: ${target}${message ? ` | "${message}"` : ''}`, 'blue');
+    if (msgInput) msgInput.value = '';
+    triggerHaptic(20);
+  },
+
+  showRemoteHint(target, message, instructorName) {
+    const compEl = document.getElementById(`comp-${target}`);
+    if (compEl) {
+      compEl.classList.add('hint-highlight');
+      setTimeout(() => compEl.classList.remove('hint-highlight'), 5000);
+      compEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    const toast = document.getElementById('vobc-result-toast');
+    const title = document.getElementById('vobc-toast-title');
+    const desc = document.getElementById('vobc-toast-desc');
+    const icon = document.getElementById('vobc-toast-icon');
+
+    if (toast && title && desc) {
+      if (icon) icon.innerText = '📡';
+      title.innerText = `관제 지령 (${instructorName || '종합관제'})`;
+      desc.innerText = message || `지정 부품 [${target}]을(를) 확인 및 조작하십시오.`;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    if (typeof sound !== 'undefined' && sound && typeof sound.playBeepSound === 'function') {
+      sound.playBeepSound();
+    }
+  },
+
+  addLog(text, color = 'default') {
+    const list = document.getElementById('occ-log-list');
+    const countEl = document.getElementById('occ-log-count');
+    if (!list) return;
+
+    this.logCount++;
+    if (countEl) countEl.innerText = `${this.logCount}건 기록`;
+
+    const row = document.createElement('div');
+    row.className = 'occ-log-row';
+    if (color === 'red') row.style.borderLeftColor = '#ef4444';
+    else if (color === 'green') row.style.borderLeftColor = '#22c55e';
+    else if (color === 'blue') row.style.borderLeftColor = '#38bdf8';
+
+    const now = new Date().toTimeString().split(' ')[0];
+    row.innerHTML = `<span style="color:#64748b; font-size:10px; margin-right:6px;">[${now}]</span> <span>${text}</span>`;
+
+    list.appendChild(row);
+    list.scrollTop = list.scrollHeight;
+  },
+
+  clearLog() {
+    const list = document.getElementById('occ-log-list');
+    const countEl = document.getElementById('occ-log-count');
+    if (list) list.innerHTML = '';
+    this.logCount = 0;
+    if (countEl) countEl.innerText = '0건 기록';
+  }
+};
+
+function openRemoteModal() {
+  TrainRemote.syncModalFromStorage();
+  openModal('modal-remote-sync');
+}
+
+function broadcastStudentState(compId, state) {
+  if (typeof TrainRemote !== 'undefined' && TrainRemote.isConnected && TrainRemote.role === 'STUDENT') {
+    const comp = (typeof COMPONENT_REGISTRY !== 'undefined') ? COMPONENT_REGISTRY[compId] : null;
+    TrainRemote.sendStudentAction({
+      type: 'COMPONENT_ACTION',
+      compId: compId,
+      compName: comp ? comp.name : compId,
+      state: state
+    });
+  }
+}
+
 function initCabViewSimulation() {
   lastPhysicsTime = performance.now();
   cvState.lastFrame = performance.now();
@@ -6389,6 +7620,7 @@ window.addEventListener('DOMContentLoaded', () => {
     keyEl.style.transform = 'rotate(-90deg)';
     keyEl.classList.remove('on');
   }
+  TrainRemote.initStorage();
 });
 
 // 모드 드롭다운 토글 및 조작 함수
@@ -6608,6 +7840,7 @@ function completeUnmannedModeToggle() {
   } else {
     evaluateStepAction('SW_WIRELESS_MODE', newState);
   }
+  broadcastStudentState('SW_WIRELESS_MODE', newState);
 }
 
 /**
@@ -6764,6 +7997,7 @@ function endVobcResetPress(evt) {
     } else {
       evaluateStepAction('SW_VOBC_RESET', '해당차 재설정');
     }
+    broadcastStudentState('SW_VOBC_RESET', '해당차 재설정');
   } else if (elapsed >= 5000 && elapsed <= 7800) {
     // 5~7초: 전·후부 VOBC 모두 리셋
     sound.playSuccess();
@@ -6782,6 +8016,7 @@ function endVobcResetPress(evt) {
     } else {
       evaluateStepAction('SW_VOBC_RESET', '전·후부 VOBC 모두 리셋');
     }
+    broadcastStudentState('SW_VOBC_RESET', '전·후부 VOBC 모두 리셋');
   } else if (elapsed < 2000) {
     // 2초 미만 (너무 짧음)
     sound.playError();
@@ -7332,6 +8567,7 @@ function handleComponentTouch(compId) {
   } else {
     evaluateStepAction(compId, newState);
   }
+  broadcastStudentState(compId, newState);
 }
 
 // 투명 아크릴 커버 개폐 핸들러
@@ -7360,6 +8596,7 @@ function toggleFlipCover(coverId, evt) {
   } else {
     evaluateStepAction(coverId, newState);
   }
+  broadcastStudentState(coverId, newState);
 }
 
 // 와이퍼 각 위치 직접 선택 함수 (AUTO, OFF, INT, SLOW, FAST 터치 시)
@@ -7394,6 +8631,7 @@ function setWiperPosition(targetState, evt) {
   } else {
     evaluateStepAction('SW_WIPER', targetState);
   }
+  broadcastStudentState('SW_WIPER', targetState);
 }
 
 // 와이퍼 위치 라벨 (라벨 강조색 없음)
@@ -7452,6 +8690,7 @@ function setRotary3Position(compId, targetState, evt) {
   } else {
     evaluateStepAction(compId, targetState);
   }
+  broadcastStudentState(compId, targetState);
 }
 
 // 운전 모드 4단계 각 위치 직접 선택 함수 (FM, RM, OFF, ATPM 터치 시)
@@ -7504,6 +8743,7 @@ function setDriveModePosition(targetState, evt) {
   } else {
     evaluateStepAction('SW_DRIVE_MODE', targetState);
   }
+  broadcastStudentState('SW_DRIVE_MODE', targetState);
 }
 
 // 전면창 히터 각 위치 직접 선택 함수 (자동, 수동 터치 시)
@@ -7541,6 +8781,7 @@ function setWindowHeaterPosition(targetState, evt) {
   } else {
     evaluateStepAction('SW_WINDOW_HEATER', targetState);
   }
+  broadcastStudentState('SW_WINDOW_HEATER', targetState);
 }
 
 // 전조등 5단계 각 위치 직접 선택 함수 (원격, 자동, OFF, 수동상향, 수동하향 터치 시)
@@ -7581,6 +8822,7 @@ function setHeadlightPosition(targetState, evt) {
   } else {
     evaluateStepAction('SW_HEADLIGHT', targetState);
   }
+  broadcastStudentState('SW_HEADLIGHT', targetState);
 }
 
 // ATP후진 2단 각 위치 직접 선택 함수 (OFF, ON 터치 시)
@@ -7612,6 +8854,7 @@ function setAtpRevPosition(targetState, evt) {
   } else {
     evaluateStepAction('SW_ATP_REV', targetState);
   }
+  broadcastStudentState('SW_ATP_REV', targetState);
 }
 
 // [OP1] 제어키 & 역전기 연동 및 경고 상태 관리
@@ -7703,6 +8946,7 @@ function setMasterKeyPosition(targetState, evt) {
   } else {
     evaluateStepAction('SW_MASTER_KEY', targetState);
   }
+  broadcastStudentState('SW_MASTER_KEY', targetState);
 }
 
 // [OP1] 마스콘 T바 핸들 노치 절체 함수 (EB, B7~B1, N, P1~P4)
@@ -7839,6 +9083,7 @@ function setMasconNotch(notch, silent = false) {
     } else {
       evaluateStepAction('SW_MASCON', notch);
     }
+    broadcastStudentState('SW_MASCON', notch);
   }
 }
 
@@ -7863,15 +9108,14 @@ function handleMasconTrackClick(event) {
   setMasconNotch(closestNotch);
 }
 
-// [OP1] 역전기 (F / N / R) 절체 함수
+// [OP1] 역전기 노브 위치 절체 함수 (F, N, R)
 const REVERSER_POS_MAP = {
-  'F': 15,
+  'F': 12,
   'N': 50,
-  'R': 85
+  'R': 88
 };
 
 function setReverserPosition(pos, silent = false) {
-  // 키가 ON 위치가 아니면 조작 불가
   if (!silent && !checkMasterKeyForReverser()) {
     return false;
   }
@@ -7926,6 +9170,7 @@ function setReverserPosition(pos, silent = false) {
     } else {
       evaluateStepAction('SW_REVERSER', pos);
     }
+    broadcastStudentState('SW_REVERSER', pos);
   }
 }
 
