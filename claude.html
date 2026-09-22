@@ -6247,6 +6247,7 @@ function updateTrainPhysics() {
         driveMode: driveMode,
         masterKey: isKeyOn ? 'ON' : 'OFF',
         isUnmanned: isUnmannedActive,
+        isEmg: isEmgActive || (notch === 'EB') || !!window.__FAULT_EB_STUCK,
         bcPressure: cvBC(),
         mrPressure: (typeof currentGaugeMR !== 'undefined') ? currentGaugeMR : 9.0
       });
@@ -7390,12 +7391,19 @@ const TrainRemote = {
     if (mrEl) mrEl.innerText = mr;
     if (bcBar) bcBar.style.width = `${Math.min(100, (parseFloat(bc) / 4.0) * 100)}%`;
 
+    const notch = data.notch || 'N';
+    const isEmg = !!(data.isEmg || notch === 'EB');
+    const isServiceBrake = notch.startsWith('B');
+
     if (bcStatus) {
-      if (parseFloat(bc) > 3.5) {
-        bcStatus.innerText = '비상/상용 최대 체결';
+      if (isEmg) {
+        bcStatus.innerText = `🚨 비상제동 체결 (${bc} bar)`;
         bcStatus.style.color = '#ef4444';
+      } else if (isServiceBrake) {
+        bcStatus.innerText = `🛑 상용제동 ${notch}단 (${bc} bar)`;
+        bcStatus.style.color = '#f59e0b';
       } else if (parseFloat(bc) > 0.5) {
-        bcStatus.innerText = `제동 체결 (${bc} bar)`;
+        bcStatus.innerText = `🛑 제동 체결 (${bc} bar)`;
         bcStatus.style.color = '#f59e0b';
       } else {
         bcStatus.innerText = '완해 (0.0 bar)';
@@ -7404,9 +7412,10 @@ const TrainRemote = {
     }
 
     if (masconEl) {
-      masconEl.innerText = data.notch || 'N';
-      if ((data.notch || '').startsWith('P')) masconEl.style.color = '#38bdf8';
-      else if ((data.notch || '').startsWith('B') || data.notch === 'EB') masconEl.style.color = '#f87171';
+      masconEl.innerText = notch;
+      if (notch.startsWith('P')) masconEl.style.color = '#38bdf8';
+      else if (notch === 'EB') masconEl.style.color = '#ef4444';
+      else if (isServiceBrake) masconEl.style.color = '#f59e0b';
       else masconEl.style.color = '#4ade80';
     }
 
@@ -7425,10 +7434,10 @@ const TrainRemote = {
     const lampLead = document.getElementById('occ-lamp-lead');
     const lampAto = document.getElementById('occ-lamp-ato');
 
-    const notch = data.notch || 'N';
-    if (lampBrake) lampBrake.classList.toggle('lit-red', notch.startsWith('B') || notch === 'EB' || parseFloat(bc) > 0.5);
+    const isBraking = isServiceBrake || isEmg || parseFloat(bc) > 0.5;
+    if (lampBrake) lampBrake.classList.toggle('lit-red', isBraking);
     if (lampPower) lampPower.classList.toggle('lit-green', notch.startsWith('P'));
-    if (lampEmg) lampEmg.classList.toggle('lit-red', notch === 'EB' || parseFloat(bc) >= 3.8);
+    if (lampEmg) lampEmg.classList.toggle('lit-red', isEmg);
     if (lampLead) lampLead.classList.toggle('lit-yellow', data.driveMode && data.driveMode !== 'OFF');
     if (lampAto) lampAto.classList.toggle('lit-yellow', !!data.isUnmanned);
   },
