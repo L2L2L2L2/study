@@ -1812,6 +1812,24 @@
       box-shadow: 0 0 14px #10b981, 0 0 24px rgba(16, 185, 129, 0.85), inset 0 1px 2px #ffffff !important;
       border-color: #6ee7b7 !important;
     }
+    /* 출입문 개방/고장 시 점멸(BLINKING) 상태 */
+    .op2-ind-lamp.blinking .lens-green {
+      animation: doorLampBlink 0.6s infinite !important;
+    }
+    @keyframes doorLampBlink {
+      0%, 100% {
+        background: radial-gradient(circle at 35% 35%, #a7f3d0 0%, #10b981 50%, #047857 100%) !important;
+        box-shadow: 0 0 14px #10b981, 0 0 24px rgba(16, 185, 129, 0.85), inset 0 1px 2px #ffffff !important;
+        border-color: #6ee7b7 !important;
+        opacity: 1;
+      }
+      50% {
+        background: radial-gradient(circle at 35% 35%, #1b4332 0%, #081c15 90%) !important;
+        box-shadow: none !important;
+        border-color: rgba(0,0,0,0.6) !important;
+        opacity: 0.25;
+      }
+    }
     .op2-ind-lamp.lit .lens-yellow {
       background: radial-gradient(circle at 35% 35%, #fef08a 0%, #eab308 50%, #a16207 100%) !important;
       box-shadow: 0 0 14px #eab308, 0 0 24px rgba(234, 179, 8, 0.88), inset 0 1px 2px #ffffff !important;
@@ -3449,6 +3467,17 @@
       border-color: #38bdf8;
       color: #38bdf8;
       box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    }
+    .occ-ind-lamp.blink-amber {
+      background: rgba(234, 179, 8, 0.25);
+      border-color: #eab308;
+      color: #fde047;
+      box-shadow: 0 0 12px rgba(234, 179, 8, 0.6);
+      animation: occBlinkAmber 0.6s infinite;
+    }
+    @keyframes occBlinkAmber {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
     }
 
     /* 실시간 조작 로그 터미널 */
@@ -5996,6 +6025,7 @@ let trainAccelRate = 0.0;
 let trackTiePhase = 0.0;
 let lastPhysicsTime = performance.now();
 let isCabZoomed = false;
+let isDoorOpen = false;
 
 /* 내부 상태 */
 const cvState = {
@@ -6216,18 +6246,20 @@ function updateTrainPhysics() {
                       (cvCompState('SW_EMG_RELEASE', 'RELEASED') !== 'LATCHED');
 
   const lampDoor = document.getElementById('lamp-door');
-  const isDoorClosed = !lampDoor || lampDoor.classList.contains('lit');
+  const isDoorClosed = !isDoorOpen && (!window.__FAULT_DOOR_FAIL) && (lampDoor ? lampDoor.classList.contains('lit') : true);
+  const isDoorBypassed = (cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
+  const isDoorInterlockCleared = isDoorClosed || isDoorBypassed;
 
   const isManualMode = ['FM', 'RM', 'ATPM'].indexOf(driveMode) >= 0;
   const canManualTraction = isManualMode && isKeyOn && (revNotch === 'F' || revNotch === 'R') &&
-                            isDoorClosed && !isEmgActive && cvBC() < 0.5;
+                            isDoorInterlockCleared && !isEmgActive && cvBC() < 0.5;
 
   let target = 0.0, rate = 0.0;
 
   if (isEmgActive || notch === 'EB') {
     target = 0.0; rate = -8.5;
   } else if (isUnmannedActive) {
-    if (isDoorClosed && cvBC() < 0.5) { target = 60.0; rate = 2.8; }
+    if (isDoorInterlockCleared && cvBC() < 0.5) { target = 60.0; rate = 2.8; }
     else { target = 0.0; rate = -3.5; }
   } else if (isManualMode && notch.charAt(0) === 'B') {
     target = 0.0;
@@ -7587,9 +7619,29 @@ const TrainRemote = {
     if (faultType === 'DOOR_LOCK_FAIL') {
       window.__FAULT_DOOR_FAIL = active;
       const lampD = document.getElementById('occ-lamp-door');
-      if (lampD) lampD.classList.toggle('lit-green', !active);
+      if (lampD) {
+        if (active) {
+          lampD.classList.remove('lit-green');
+          lampD.classList.add('blink-amber');
+          lampD.innerText = '⚠️ 출입문 고장 (점멸)';
+        } else {
+          lampD.classList.remove('blink-amber');
+          lampD.classList.add('lit-green');
+          lampD.innerText = '🚪 출입문 닫힘';
+        }
+      }
+      const lampDoor = document.getElementById('lamp-door');
+      if (lampDoor) {
+        if (active) {
+          lampDoor.classList.remove('lit');
+          lampDoor.classList.add('blinking');
+        } else if (!isDoorOpen) {
+          lampDoor.classList.remove('blinking');
+          lampDoor.classList.add('lit');
+        }
+      }
       if (active) {
-        alert('🚨 [관제실 비상 통보] 출입문 닫힘 신호 루프 불량 발생!\n출입문 바이패스 및 필요 스위치를 취급하십시오.');
+        alert('🚨 [관제실 비상 통보] 출입문 닫힘 신호 루프 불량 발생!\n출입문 표시등이 점멸하며 역행(Traction) 출력이 차단됩니다.\nOP4 패널의 [출입문 바이패스] 스위치를 "바이패스" 위치로 절체하십시오.');
       }
     } else if (faultType === 'EB_STUCK') {
       window.__FAULT_EB_STUCK = active;
@@ -8372,17 +8424,62 @@ function handleComponentTouch(compId) {
       triggerHaptic([35, 25, 60]);
       showTemporaryHudFeedback("📢 [전기혼] 빵! (열차 경적 취명)", false);
     } else if (compId === 'SW_DOOR_OPEN_L' || compId === 'SW_DOOR_OPEN_R') {
+      // 1. [인터록] 열차 주행 중(이동 중)에는 출입문 열림 버튼을 눌러도 출입문이 열리지 않음 (영속도 인터록 / Zero Speed Interlock)
+      if (trainSpeed > 0.5) {
+        sound.playError();
+        triggerHaptic([60, 40, 60]);
+        showTemporaryHudFeedback(`⚠️ [출입문 인터록] 열차 주행 중(현재 속도: ${Math.round(trainSpeed)} km/h)에는 출입문을 열 수 없습니다. (정차 후 취급 가능)`, true);
+        return;
+      }
+
+      // 2. 정차 중 정상 개방 동작
+      isDoorOpen = true;
       sound.playAirExhaust(0.8, 1200, 0.6);
       triggerHaptic([30, 40]);
+
+      // OP2 출입문 표시등: 점등(lit) 해제 및 점멸(blinking) 활성화
       const lampDoor = document.getElementById('lamp-door');
-      if (lampDoor) lampDoor.classList.remove('lit'); // 출입문 개방 시 표시등 소등
-      showTemporaryHudFeedback(`🚪 [출입문 열림] ${compId === 'SW_DOOR_OPEN_L' ? '좌측' : '우측'} 출입문 개방`, false);
+      if (lampDoor) {
+        lampDoor.classList.remove('lit');
+        lampDoor.classList.add('blinking');
+      }
+
+      // OCC 관제 출입문 표시등 상태 업데이트 (황색 점멸)
+      const occLampDoor = document.getElementById('occ-lamp-door');
+      if (occLampDoor) {
+        occLampDoor.classList.remove('lit-green');
+        occLampDoor.classList.add('blink-amber');
+        occLampDoor.innerText = '🚪 출입문 열림 (점멸)';
+      }
+
+      showTemporaryHudFeedback(`🚪 [출입문 열림] ${compId === 'SW_DOOR_OPEN_L' ? '좌측' : '우측'} 출입문 개방 (표시등 점멸, 역행 차단)`, false);
     } else if (compId === 'SW_DOOR_CLOSE') {
       sound.playAirExhaust(1.0, 900, 0.7);
       triggerHaptic([30, 40]);
-      const lampDoor = document.getElementById('lamp-door');
-      if (lampDoor) lampDoor.classList.add('lit'); // 출입문 닫힘 체결 시 표시등 점등
-      showTemporaryHudFeedback(`🚪 [출입문 닫힘] 전체 출입문 닫힘 체결`, false);
+
+      if (window.__FAULT_DOOR_FAIL) {
+        isDoorOpen = true;
+        const lampDoor = document.getElementById('lamp-door');
+        if (lampDoor) {
+          lampDoor.classList.remove('lit');
+          lampDoor.classList.add('blinking');
+        }
+        showTemporaryHudFeedback(`🚨 [출입문 고장] 출입문 닫힘 신호 루프 불량! (완폐 불가, 점멸 지속 / OP4 출입문 바이패스 취급 필요)`, true);
+      } else {
+        isDoorOpen = false;
+        const lampDoor = document.getElementById('lamp-door');
+        if (lampDoor) {
+          lampDoor.classList.remove('blinking');
+          lampDoor.classList.add('lit');
+        }
+        const occLampDoor = document.getElementById('occ-lamp-door');
+        if (occLampDoor) {
+          occLampDoor.classList.remove('blink-amber');
+          occLampDoor.classList.add('lit-green');
+          occLampDoor.innerText = '🚪 출입문 닫힘';
+        }
+        showTemporaryHudFeedback(`🚪 [출입문 닫힘] 전체 출입문 닫힘 체결 (표시등 점등, 역행 가능)`, false);
+      }
     } else if (compId === 'SW_BATT_ON') {
       sound.playHeavyLatch();
       triggerHaptic([40, 50]);
@@ -8468,6 +8565,13 @@ function handleComponentTouch(compId) {
     } else { // 저속도, 바이패스 스위치류 (SW_LOW_SPEED, SW_DOOR_BYPASS, SW_OBSTACLE_BYPASS, SW_RESERVE_ROTARY, SW_MR_BP, SW_PARK_BP)
       newState = (comp.state === 'NORMAL') ? 'BYPASS' : 'NORMAL';
       el.style.transform = (newState === 'BYPASS') ? 'rotate(45deg)' : 'rotate(-45deg)';
+      if (compId === 'SW_DOOR_BYPASS') {
+        if (newState === 'BYPASS') {
+          showTemporaryHudFeedback("⚡ [OP4 출입문 바이패스] 바이패스(BYPASS) 투입 - 출입문 개방/고장 시에도 역행(Traction) 가능", false);
+        } else {
+          showTemporaryHudFeedback("🔒 [OP4 출입문 바이패스] 정상(NORMAL) 복귀 - 출입문 완폐 인터록 복귀", false);
+        }
+      }
     }
     comp.state = newState;
   } else if (comp.type === 'ROTARY_3') {
@@ -9174,8 +9278,14 @@ function setMasconNotch(notch, silent = false) {
     else if (notch.startsWith('B')) desc = `🛑 [마스콘 상용제동] ${notch}단 (BC: ${currentGaugeBC.toFixed(1)} bar)`;
     else if (notch === 'N') desc = `⚪ [마스콘] N (중립, 제동완해 BC: 0.0 bar)`;
     else if (notch.startsWith('P')) {
+      const isDoorBypassed = (cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
+      const isDoorInterlockCleared = (!isDoorOpen && !window.__FAULT_DOOR_FAIL) || isDoorBypassed;
+
       if (driveMode === 'OFF') {
         desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [운전모드 OFF] 역행 출력이 차단되어 열차가 움직이지 않습니다. 수동 운전: FM/RM/ATPM, 무인 운전: 키 OFF·전후진 N 후 무인모드 3초 인가)`;
+        isWarn = true;
+      } else if (!isDoorInterlockCleared) {
+        desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [출입문 인터록] 출입문 개방/고장으로 역행(Traction)이 차단되었습니다. 출입문을 닫거나 OP4 [출입문 바이패스] 스위치를 '바이패스' 위치로 절체하십시오)`;
         isWarn = true;
       } else {
         desc = `⚡ [마스콘 역행] ${notch}단 (BC: 0.0 bar)`;
@@ -9855,8 +9965,19 @@ function resetCurrentScenario() {
   });
 
   // OP2 상부 표시등 초기화 (출입문 점등, 선두차지정은 운전모드 OFF이므로 소등, 제동체결/비상제동차단/커플링 소등)
+  isDoorOpen = false;
+  window.__FAULT_DOOR_FAIL = false;
   const lampDoor = document.getElementById('lamp-door');
-  if (lampDoor) lampDoor.classList.add('lit');
+  if (lampDoor) {
+    lampDoor.classList.remove('blinking');
+    lampDoor.classList.add('lit');
+  }
+  const occLampDoor = document.getElementById('occ-lamp-door');
+  if (occLampDoor) {
+    occLampDoor.classList.remove('blink-amber');
+    occLampDoor.classList.add('lit-green');
+    occLampDoor.innerText = '🚪 출입문 닫힘';
+  }
   const lampBrakeApply = document.getElementById('lamp-brake-apply');
   if (lampBrakeApply) lampBrakeApply.classList.remove('lit');
   updateLeadCarLamp('OFF');
