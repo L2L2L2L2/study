@@ -6825,26 +6825,38 @@ function cvDrawHeadlight(ctx, power, reach) {
    7. 유리면 (빗방울 / 와이퍼 / 반사)
 --------------------------------------------------------------------------- */
 const CV_WIPER = {
-  pivot: { x: 668, y: 488 },
-  blade: [{ x: 556, y: 426 }, { x: 742, y: 180 }],
-  link: [{ x: 598, y: 426 }, { x: 748, y: 198 }],
-  post: [{ x: 736, y: 424 }, { x: 741, y: 190 }],
-  rod: [{ x: 747, y: 176 }, { x: 771, y: 50 }],
-  hinge: { x: 740, y: 184 }
+  // 하부 차체 몰딩 지지대 피벗 (메인 암 및 보조축 시작점)
+  baseMain: { x: 715, y: 432 },
+  baseAux:  { x: 739, y: 436 },
+  armLength: 255,
+
+  // 회전 각도 범위: 우측 기둥 파킹 위치(-65도) ~ 좌측 전면 깊은 스위프(-155도)
+  parkAngle: -1.134,  // -65 deg
+  sweepAngle: -2.705, // -155 deg
+
+  // 블레이드 제원 (중앙 브래킷을 기준으로 12시 방향 상부 + 6시 방향 하부 일체형)
+  bladeTopLen: 195,
+  bladeBottomLen: 175,
+
+  // 블레이드 틸트 (우측 기둥 경사각 +9도에서 스위프 시 수직에 가깝게 유지)
+  bladeTiltPark: 0.155,  // +8.9 deg
+  bladeTiltSweep: 0.035  // +2.0 deg
 };
+
 function cvWiperMode() {
   const st = cvCompState('SW_WIPER', 'OFF');
   if (st === 'OFF') return { period: 0, pause: 0 };
-  if (st === 'INT') return { period: 1.5, pause: 2.4 };
+  if (st === 'INT') return { period: 1.6, pause: 2.2 };
   if (st === 'SLOW') return { period: 1.5, pause: 0 };
   if (st === 'FAST') return { period: 0.85, pause: 0 };
   if (st === 'AUTO') return cvState.rain > 0.05 ? { period: 1.3, pause: cvState.rain > 0.5 ? 0 : 1.6 } : { period: 0, pause: 0 };
   return { period: 0, pause: 0 };
 }
+
 function cvUpdateWiper(dt) {
   const m = cvWiperMode();
   if (m.period <= 0) {
-    cvState.wiperAngle += (0 - cvState.wiperAngle) * Math.min(1, dt * 6);
+    cvState.wiperAngle += (0 - cvState.wiperAngle) * Math.min(1, dt * 5);
     cvState.wiperTimer = 0;
     return;
   }
@@ -6853,37 +6865,182 @@ function cvUpdateWiper(dt) {
   const t = cvState.wiperTimer % total;
   if (t < m.period) {
     const ph = t / m.period;
-    cvState.wiperAngle = Math.sin(ph * Math.PI) * 0.46;
+    const rawProgress = Math.sin(ph * Math.PI);
+    cvState.wiperAngle = Math.sin(rawProgress * Math.PI * 0.5);
   } else {
-    cvState.wiperAngle += (0 - cvState.wiperAngle) * Math.min(1, dt * 8);
+    cvState.wiperAngle += (0 - cvState.wiperAngle) * Math.min(1, dt * 7);
   }
 }
-function cvRot(pt, a) {
-  const dx = pt.x - CV_WIPER.pivot.x, dy = pt.y - CV_WIPER.pivot.y;
-  const c = Math.cos(a), s = Math.sin(a);
-  return { x: CV_WIPER.pivot.x + dx * c - dy * s, y: CV_WIPER.pivot.y + dx * s + dy * c };
-}
-function cvDrawWiper(ctx) {
-  const a = cvState.wiperAngle;
-  const line = (seg, w, col) => {
-    const p1 = cvRot(seg[0], a), p2 = cvRot(seg[1], a);
-    ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+
+// 팬터그래프 와이퍼 기하학 계산 함수 (progress: 0 = 우측 파킹, 1 = 좌측 최대 도달)
+function cvGetWiperGeometry(progress) {
+  const p = Math.max(0, Math.min(1, progress));
+  const armAngle = CV_WIPER.parkAngle + (CV_WIPER.sweepAngle - CV_WIPER.parkAngle) * p;
+
+  // 메인 암 끝 중앙 연결부 (블레이드의 세로 중앙 축)
+  const pJoint = {
+    x: CV_WIPER.baseMain.x + CV_WIPER.armLength * Math.cos(armAngle),
+    y: CV_WIPER.baseMain.y + CV_WIPER.armLength * Math.sin(armAngle)
   };
+
+  // 보조 평행 링크(보조축) 끝 연결부 (메인 암과 평행한 4절 링크 기구)
+  const auxOffset = {
+    x: CV_WIPER.baseAux.x - CV_WIPER.baseMain.x,
+    y: CV_WIPER.baseAux.y - CV_WIPER.baseMain.y
+  };
+  const qJoint = {
+    x: pJoint.x + auxOffset.x,
+    y: pJoint.y + auxOffset.y
+  };
+
+  // 일체형 와이퍼 블레이드 각도
+  const tilt = CV_WIPER.bladeTiltPark + (CV_WIPER.bladeTiltSweep - CV_WIPER.bladeTiltPark) * p;
+  const uBlade = {
+    x: Math.sin(tilt),
+    y: -Math.cos(tilt)
+  };
+
+  // 블레이드 12시 방향 상단 및 6시 방향 하단 끝점 (1개의 연속된 롱 블레이드)
+  const bladeTop = {
+    x: pJoint.x + uBlade.x * CV_WIPER.bladeTopLen,
+    y: pJoint.y + uBlade.y * CV_WIPER.bladeTopLen
+  };
+  const bladeBottom = {
+    x: pJoint.x - uBlade.x * CV_WIPER.bladeBottomLen,
+    y: pJoint.y - uBlade.y * CV_WIPER.bladeBottomLen
+  };
+
+  return {
+    pBase: CV_WIPER.baseMain,
+    qBase: CV_WIPER.baseAux,
+    pJoint,
+    qJoint,
+    bladeTop,
+    bladeBottom,
+    uBlade
+  };
+}
+
+function cvDrawWiper(ctx) {
+  const geo = cvGetWiperGeometry(cvState.wiperAngle);
   ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
-  line(CV_WIPER.rod, 3.4, '#20242a');
-  line(CV_WIPER.post, 5.6, '#1d2127');
-  line(CV_WIPER.link, 4.4, '#23272d');
-  line(CV_WIPER.blade, 7.2, '#191d22');
-  const h = cvRot(CV_WIPER.hinge, a);
-  ctx.shadowBlur = 0;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // 1. 유리 표면 그림자
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.40)';
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetX = 3;
+  ctx.shadowOffsetY = 4;
+
+  // 2. 메인 구동 암 (하부 메인축 -> 블레이드 중앙 연결부)
+  ctx.strokeStyle = '#181b20';
+  ctx.lineWidth = 5.2;
+  ctx.beginPath();
+  ctx.moveTo(geo.pBase.x, geo.pBase.y);
+  ctx.lineTo(geo.pJoint.x, geo.pJoint.y);
+  ctx.stroke();
+
+  // 3. 보조 평행 링크 암 (하부 보조축 -> 블레이드 중앙 연결부, 메인 암과 평행)
+  ctx.strokeStyle = '#22262d';
+  ctx.lineWidth = 3.2;
+  ctx.beginPath();
+  ctx.moveTo(geo.qBase.x, geo.qBase.y);
+  ctx.lineTo(geo.qJoint.x, geo.qJoint.y);
+  ctx.stroke();
+
+  // 메인 암 금속 반사 하이라이트
+  ctx.shadowColor = 'transparent';
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.28)';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(geo.pBase.x - 0.7, geo.pBase.y - 0.7);
+  ctx.lineTo(geo.pJoint.x - 0.7, geo.pJoint.y - 0.7);
+  ctx.stroke();
+
+  // 4. 중앙 연결부 브래킷 (실물 마름모 메탈 브래킷: 메인 암과 보조축이 블레이드 중앙에서 결합)
+  const uB = geo.uBlade;
+  const brkTop = { x: geo.pJoint.x + uB.x * 24, y: geo.pJoint.y + uB.y * 24 };
+  const brkBottom = { x: geo.pJoint.x - uB.x * 24, y: geo.pJoint.y - uB.y * 24 };
+
+  ctx.fillStyle = '#262a32';
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(brkTop.x, brkTop.y);
+  ctx.lineTo(geo.qJoint.x + 4, geo.qJoint.y - 3);
+  ctx.lineTo(geo.qJoint.x + 4, geo.qJoint.y + 4);
+  ctx.lineTo(brkBottom.x, brkBottom.y);
+  ctx.lineTo(geo.pJoint.x - 4, geo.pJoint.y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // 5. 닦는 부분: 12시와 6시가 하나로 이어진 일체형 롱 와이퍼 블레이드
+  // (1) 고무 블레이드 백본 (두꺼운 지지대)
+  ctx.strokeStyle = '#0a0c0f';
+  ctx.lineWidth = 7.0;
+  ctx.beginPath();
+  ctx.moveTo(geo.bladeBottom.x, geo.bladeBottom.y);
+  ctx.lineTo(geo.bladeTop.x, geo.bladeTop.y);
+  ctx.stroke();
+
+  // (2) 메탈 블레이드 가이드 바
+  ctx.strokeStyle = '#2b303a';
+  ctx.lineWidth = 4.0;
+  ctx.beginPath();
+  ctx.moveTo(geo.bladeBottom.x, geo.bladeBottom.y);
+  ctx.lineTo(geo.bladeTop.x, geo.bladeTop.y);
+  ctx.stroke();
+
+  // (3) 블레이드 상단 반사 하이라이트
+  ctx.strokeStyle = 'rgba(203, 213, 225, 0.45)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(geo.bladeBottom.x + 0.6, geo.bladeBottom.y);
+  ctx.lineTo(geo.bladeTop.x + 0.6, geo.bladeTop.y);
+  ctx.stroke();
+
+  // 6. 힌지 리벳 및 볼트 (메인축 피벗 및 보조축 피벗)
+  // 메인 힌지 볼트
+  ctx.fillStyle = '#1e232a';
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(geo.pJoint.x, geo.pJoint.y, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#cbd5e1';
+  ctx.beginPath();
+  ctx.arc(geo.pJoint.x, geo.pJoint.y, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 보조 힌지 볼트
+  ctx.fillStyle = '#1e232a';
+  ctx.strokeStyle = '#64748b';
+  ctx.lineWidth = 1.0;
+  ctx.beginPath();
+  ctx.arc(geo.qJoint.x, geo.qJoint.y, 3.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // 7. 하부 차체 베이스 마운트 피벗
   ctx.fillStyle = '#15181d';
-  ctx.beginPath(); ctx.arc(h.x, h.y, 9, 0, 6.2832); ctx.fill();
-  ctx.fillStyle = '#39404a';
-  ctx.beginPath(); ctx.arc(h.x, h.y, 3.4, 0, 6.2832); ctx.fill();
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(geo.pBase.x, geo.pBase.y, 6.0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(geo.qBase.x, geo.qBase.y, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
   ctx.restore();
 }
+
 function cvUpdateRain(ctx, dt) {
   const rain = cvState.rain;
   const drops = cvState.drops;
@@ -6900,18 +7057,27 @@ function cvUpdateRain(ctx, dt) {
     }
   }
   const wind = Math.min(2.4, trainSpeed * 0.045);
-  const bp1 = cvRot(CV_WIPER.blade[0], cvState.wiperAngle);
-  const bp2 = cvRot(CV_WIPER.blade[1], cvState.wiperAngle);
+  // 현재 일체형 블레이드의 상단 및 하단 위치 계산
+  const geo = cvGetWiperGeometry(cvState.wiperAngle);
+  const bp1 = geo.bladeBottom;
+  const bp2 = geo.bladeTop;
+  const vx = bp2.x - bp1.x, vy = bp2.y - bp1.y;
+  const vLenSq = vx * vx + vy * vy;
+
   for (let i = drops.length - 1; i >= 0; i--) {
     const d = drops[i];
     d.v += (d.r * 0.55 - d.v) * dt * 2.2;
     d.y += d.v * dt * 26;
     d.x += wind * dt * 14 * (d.r / 3);
-    /* 와이퍼가 지나간 자리는 닦임 */
-    const vx = bp2.x - bp1.x, vy = bp2.y - bp1.y;
-    const t = Math.max(0, Math.min(1, ((d.x - bp1.x) * vx + (d.y - bp1.y) * vy) / (vx * vx + vy * vy)));
+
+    /* 와이퍼 일체형 롱 블레이드가 지나간 전 구간 빗방울 완벽 소거 */
+    const t = Math.max(0, Math.min(1, ((d.x - bp1.x) * vx + (d.y - bp1.y) * vy) / vLenSq));
     const cx = bp1.x + vx * t, cy = bp1.y + vy * t;
-    if ((d.x - cx) * (d.x - cx) + (d.y - cy) * (d.y - cy) < 220) { drops.splice(i, 1); continue; }
+    const distSq = (d.x - cx) * (d.x - cx) + (d.y - cy) * (d.y - cy);
+    if (distSq < 360) {
+      drops.splice(i, 1);
+      continue;
+    }
     if (d.y > 440 || d.x > 960) { drops.splice(i, 1); continue; }
   }
   /* 렌더 */
