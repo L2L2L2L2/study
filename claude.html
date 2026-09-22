@@ -8890,6 +8890,10 @@ function showMasconNotNeutralWarning() {
   showGlassToast('⚠️ 마스콘을 N(중립)으로 놓으세요', '⚠️ [전후진제어기] 마스콘이 N(중립) 위치일 때만 전후진제어기를 N으로 옮길 수 있습니다!');
 }
 
+function showReverserNeutralForMasconWarning() {
+  showGlassToast('⚠️ 전후진제어기가 N(중립) 위치입니다', '⚠️ [마스콘] 전후진제어기가 N(중립)일 때는 마스콘을 N에서 조작할 수 없습니다! (F 또는 R 위치로 이동 필요)');
+}
+
 function checkMasterKeyForReverser() {
   const keyComp = COMPONENT_REGISTRY['SW_MASTER_KEY'];
   if (!keyComp || keyComp.state !== 'ON') {
@@ -8964,7 +8968,25 @@ const MASCON_POS_MAP = {
 
 function setMasconNotch(notch, silent = false) {
   const comp = COMPONENT_REGISTRY['SW_MASCON'];
-  if (!comp) return;
+  if (!comp) return false;
+
+  const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
+  const revPos = revComp ? revComp.state : 'N';
+  const currentNotch = comp.notch || comp.state || 'N';
+
+  // [인터록] 전후진제어기 N 위치일 때 마스콘을 N에서 다른 위치로 조작 불가
+  if (!silent && revPos === 'N' && (currentNotch === 'N' || notch !== 'N') && notch !== 'N') {
+    sound.playError();
+    triggerHaptic([40, 40]);
+    triggerShakeScreen();
+    showReverserNeutralForMasconWarning();
+    const currentTop = MASCON_POS_MAP[comp.notch || 'N'] || MASCON_POS_MAP['N'];
+    const handle = document.getElementById('comp-SW_MASCON');
+    if (handle && currentTop !== undefined) {
+      handle.style.top = `${currentTop}%`;
+    }
+    return false;
+  }
 
   const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
   const driveMode = modeComp ? modeComp.state : 'OFF';
@@ -9207,6 +9229,7 @@ function initMasconDraggable() {
     try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
     handle.classList.remove('dragging');
     const comp = COMPONENT_REGISTRY['SW_MASCON'];
+    if (comp) comp._lastBlockWarned = null;
     if (comp && comp.notch) {
       setMasconNotch(comp.notch);
     }
@@ -9233,11 +9256,14 @@ function updateMasconDrag(e) {
   const handle = document.getElementById('comp-SW_MASCON');
   if (!track || !handle) return;
 
+  const comp = COMPONENT_REGISTRY['SW_MASCON'];
+  const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
+  const revPos = revComp ? revComp.state : 'N';
+  const currentNotch = comp ? (comp.notch || comp.state || 'N') : 'N';
+
   const rect = track.getBoundingClientRect();
   const rawY = e.clientY - rect.top;
   const yPercent = Math.max(5, Math.min(98, (rawY / rect.height) * 100));
-
-  handle.style.top = `${yPercent}%`;
 
   let closestNotch = 'N';
   let minDiff = 9999;
@@ -9249,7 +9275,23 @@ function updateMasconDrag(e) {
     }
   }
 
-  const comp = COMPONENT_REGISTRY['SW_MASCON'];
+  // [인터록] 전후진제어기가 N 위치이면 마스콘을 N에서 다른 위치로 드래그 불가
+  if (revPos === 'N' && (currentNotch === 'N' || closestNotch !== 'N') && closestNotch !== 'N') {
+    if (comp && comp._lastBlockWarned !== closestNotch) {
+      comp._lastBlockWarned = closestNotch;
+      sound.playError();
+      triggerHaptic([40, 40]);
+      triggerShakeScreen();
+      showReverserNeutralForMasconWarning();
+    }
+    const currentTop = MASCON_POS_MAP[comp.notch || 'N'] || MASCON_POS_MAP['N'];
+    handle.style.top = `${currentTop}%`;
+    return;
+  }
+  if (comp) comp._lastBlockWarned = null;
+
+  handle.style.top = `${yPercent}%`;
+
   if (comp && comp.notch !== closestNotch) {
     setMasconNotch(closestNotch);
   }
