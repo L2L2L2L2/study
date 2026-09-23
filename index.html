@@ -3244,6 +3244,436 @@
       box-shadow: 0 0 10px rgba(37, 99, 235, 0.5) !important;
     }
 
+    /* DU/ADU 탭 버튼 및 슬롯 스위처 버튼 스타일 */
+    .panel-toggle-btn.du-tab-btn,
+    .slot-switch-btn.du-slot-btn {
+      background: rgba(14, 165, 233, 0.18) !important;
+      border-color: #0284c7 !important;
+      color: #38bdf8 !important;
+      font-weight: 800 !important;
+    }
+    .panel-toggle-btn.du-tab-btn.active,
+    .slot-switch-btn.du-slot-btn.active {
+      background: #0284c7 !important;
+      border-color: #38bdf8 !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 10px rgba(14, 165, 233, 0.5) !important;
+    }
+
+    /* DU & ADU 모니터 패널 */
+    .du-panel-board {
+      background: #14171d !important;
+      border: 2px solid #2d333b !important;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 8px 30px rgba(0,0,0,0.7) !important;
+      padding: 14px !important;
+      color: #e2e8f0;
+    }
+    .du-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .du-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1c2128;
+      border: 1px solid #30363d;
+      border-left: 4px solid #0284c7;
+      border-radius: 6px;
+      padding: 8px 12px;
+    }
+    .du-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #f0f6fc;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .du-badge {
+      background: #0284c7;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+    .du-conn-status {
+      font-size: 11px;
+      font-weight: 800;
+      color: #4ade80;
+      font-family: 'Consolas', monospace;
+    }
+
+    .du-monitors-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 14px;
+    }
+
+    /* 산업용 모니터 베젤 프레임 */
+    .mmi-monitor-frame {
+      background: #10141a;
+      border: 3px solid #2d333b;
+      border-radius: 10px;
+      box-shadow: inset 0 2px 6px rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .mmi-bezel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #181c24;
+      border-bottom: 2px solid #262c36;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #8b949e;
+      letter-spacing: 0.5px;
+    }
+    .mmi-leds {
+      display: flex;
+      gap: 6px;
+    }
+    .mmi-led {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2a303c;
+      border: 1px solid #1c2028;
+    }
+    .mmi-led.green.lit {
+      background: #22c55e;
+      box-shadow: 0 0 6px #22c55e;
+    }
+    .mmi-led.amber.lit {
+      background: #f59e0b;
+      box-shadow: 0 0 6px #f59e0b;
+      animation: led-blink 0.8s infinite;
+    }
+    .mmi-led.red.lit {
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+      animation: led-blink 0.5s infinite;
+    }
+    @keyframes led-blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.25; }
+    }
+
+    /* 모니터 내부 스크린 LCD */
+    .mmi-screen {
+      background: #080c13;
+      padding: 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: inset 0 0 25px rgba(0,0,0,0.85);
+      border-top: 1px solid #1f2530;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 'Consolas', monospace;
+    }
+
+    /* DU 화면 내부 요소 */
+    .du-scr-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0e1520;
+      border: 1px solid #1e2634;
+      border-radius: 6px;
+      padding: 6px 10px;
+    }
+    .du-train-id {
+      font-weight: 800;
+      font-size: 12px;
+      color: #38bdf8;
+    }
+    .du-time {
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+      font-weight: 800;
+      color: #f1f5f9;
+    }
+    .du-mode-badge {
+      background: #1e3a8a;
+      color: #93c5fd;
+      font-weight: 900;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid #3b82f6;
+    }
+
+    /* 차량 2량 편성 비주얼 */
+    .du-train-cars-visual {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .du-car-box {
+      background: #0c111a;
+      border: 1px solid #1e2634;
+      border-radius: 6px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .du-car-name {
+      font-size: 11px;
+      font-weight: 800;
+      color: #94a3b8;
+      border-bottom: 1px solid #1e2634;
+      padding-bottom: 4px;
+      text-align: center;
+    }
+    .du-car-items {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .du-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10.5px;
+    }
+    .du-item .lbl {
+      color: #64748b;
+    }
+    .du-item .val {
+      font-weight: 800;
+      color: #cbd5e1;
+      font-family: 'Consolas', monospace;
+    }
+    .du-item .val.green { color: #4ade80; }
+    .du-item .val.red { color: #f87171; }
+    .du-item .val.amber { color: #fbbf24; }
+
+    /* 공압 및 제동 요약 */
+    .du-pneumatic-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .du-gauge-box {
+      background: #0a0e16;
+      border: 1px solid #1e2634;
+      border-radius: 6px;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .du-gauge-box .lbl {
+      font-size: 10px;
+      color: #64748b;
+    }
+    .du-gauge-box .val {
+      font-size: 13px;
+      font-weight: 800;
+      color: #38bdf8;
+      font-family: 'Consolas', monospace;
+    }
+    .du-gauge-box .val.green { color: #4ade80; }
+
+    /* DU 진단 로그 박스 */
+    .du-log-panel {
+      background: #06090e;
+      border: 1px solid #18202c;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 11px;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+    }
+    .du-log-line {
+      font-family: 'Consolas', monospace;
+      font-weight: 700;
+    }
+    .du-log-line.info { color: #38bdf8; }
+    .du-log-line.warn { color: #fbbf24; }
+    .du-log-line.danger { color: #f87171; font-weight: 900; animation: led-blink 0.7s infinite; }
+
+    /* ADU (속도계/신호) 화면 */
+    .adu-screen-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0e1520;
+      border: 1px solid #1e2634;
+      border-radius: 6px;
+      padding: 6px 10px;
+    }
+    .adu-station-tag .lbl, .adu-dwell-tag .lbl {
+      font-size: 9px;
+      color: #64748b;
+      display: block;
+    }
+    .adu-station-tag .val, .adu-dwell-tag .val {
+      font-size: 12px;
+      font-weight: 800;
+      color: #f1f5f9;
+    }
+    .adu-rotem-logo {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      color: #38bdf8;
+      font-style: italic;
+    }
+
+    .adu-speedo-zone {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 12px;
+      padding: 6px 0;
+    }
+    .adu-dial-wrap {
+      position: relative;
+      width: 190px;
+      height: 190px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .adu-dial-wrap canvas {
+      width: 100%;
+      height: 100%;
+    }
+    .adu-digital-readout {
+      position: absolute;
+      bottom: 24px;
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+    }
+    .adu-digi-val {
+      font-family: 'Consolas', monospace;
+      font-size: 32px;
+      font-weight: 900;
+      color: #ffffff;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+    }
+    .adu-digi-unit {
+      font-size: 12px;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+
+    .adu-target-zone {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .adu-limit-card, .adu-mode-card {
+      background: #0c111a;
+      border: 1px solid #1e2634;
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .adu-limit-card .lbl, .adu-mode-card .lbl {
+      font-size: 10px;
+      color: #64748b;
+    }
+    .adu-limit-card .val {
+      font-size: 14px;
+      font-weight: 900;
+      color: #f59e0b;
+      font-family: 'Consolas', monospace;
+    }
+    .adu-mode-card .val {
+      font-size: 13px;
+      font-weight: 900;
+      color: #38bdf8;
+    }
+    .adu-eb-card {
+      background: rgba(220, 38, 38, 0.25);
+      border: 1px solid #ef4444;
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      animation: led-blink 0.6s infinite;
+    }
+    .adu-eb-badge {
+      font-size: 11px;
+      font-weight: 900;
+      color: #f87171;
+    }
+    .adu-eb-desc {
+      font-size: 10px;
+      color: #fca5a5;
+    }
+    .adu-warn-card {
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid #f59e0b;
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      animation: led-blink 0.8s infinite;
+    }
+    .adu-warn-badge {
+      font-size: 11px;
+      font-weight: 900;
+      color: #fbbf24;
+    }
+    .adu-warn-desc {
+      font-size: 10px;
+      color: #fde68a;
+      font-weight: 800;
+      font-family: 'Consolas', monospace;
+    }
+
+    .adu-target-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: #0c111a;
+      border: 1px solid #1e2634;
+      border-radius: 6px;
+      padding: 6px 10px;
+    }
+    .adu-bar-lbl {
+      font-size: 10.5px;
+      color: #94a3b8;
+    }
+    .adu-bar-lbl b {
+      color: #38bdf8;
+      font-family: 'Consolas', monospace;
+    }
+    .adu-target-track {
+      height: 8px;
+      background: #18202c;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid #242e3f;
+    }
+    .adu-target-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
     .occ-panel-board {
       background: radial-gradient(circle at 50% 20%, #151d2a 0%, #0a0e14 100%) !important;
       border: 2px solid #1e3a8a !important;
@@ -3642,13 +4072,14 @@
         </div>
       </div>
 
-      <!-- 패널 전환 뷰 스위처 (OP1 ~ OP5 + OCC) -->
+      <!-- 패널 전환 뷰 스위처 (OP1 ~ OP5 + DU/ADU + OCC) -->
       <div class="panel-view-switcher">
         <button id="view-op1" class="panel-toggle-btn" onclick="switchPanelView('OP1')">OP1</button>
         <button id="view-op2" class="panel-toggle-btn" onclick="switchPanelView('OP2')">OP2</button>
         <button id="view-op3" class="panel-toggle-btn active" onclick="switchPanelView('OP3')">OP3</button>
         <button id="view-op4" class="panel-toggle-btn" onclick="switchPanelView('OP4')">OP4</button>
         <button id="view-op5" class="panel-toggle-btn" onclick="switchPanelView('OP5')">OP5</button>
+        <button id="view-du" class="panel-toggle-btn du-tab-btn" onclick="switchPanelView('DU')">DU/ADU</button>
         <button id="view-occ" class="panel-toggle-btn occ-tab-btn" style="display:none;" onclick="switchPanelView('OCC')">OCC</button>
       </div>
 
@@ -3711,6 +4142,7 @@
           <button id="slot-l-op3" class="slot-switch-btn active" onclick="selectSlotPanel('left', 'OP3')">OP3</button>
           <button id="slot-l-op4" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP4')">OP4</button>
           <button id="slot-l-op5" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP5')">OP5</button>
+          <button id="slot-l-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('left', 'DU')">DU/ADU</button>
           <button id="slot-l-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('left', 'OCC')">OCC</button>
         </div>
       </div>
@@ -3730,6 +4162,7 @@
           <button id="slot-c-op3" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP3')">OP3</button>
           <button id="slot-c-op4" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP4')">OP4</button>
           <button id="slot-c-op5" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP5')">OP5</button>
+          <button id="slot-c-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('center', 'DU')">DU/ADU</button>
           <button id="slot-c-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('center', 'OCC')">OCC</button>
         </div>
       </div>
@@ -3749,6 +4182,7 @@
           <button id="slot-r-op3" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP3')">OP3</button>
           <button id="slot-r-op4" class="slot-switch-btn active" onclick="selectSlotPanel('right', 'OP4')">OP4</button>
           <button id="slot-r-op5" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP5')">OP5</button>
+          <button id="slot-r-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('right', 'DU')">DU/ADU</button>
           <button id="slot-r-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('right', 'OCC')">OCC</button>
         </div>
       </div>
@@ -4850,6 +5284,153 @@
 
       </div>
     </section>
+
+    <!-- [패널 6] DU & ADU : 운전실 모니터 (차량정보제어장치 TCMS & 운전정보속도계 ATC/ATO) -->
+    <section id="panel-du" class="train-metal-panel du-panel-board" style="display:none;">
+      <div class="screw tl"></div><div class="screw tr"></div>
+      <div class="screw bl"></div><div class="screw br"></div>
+
+      <div class="du-container">
+        <!-- 모니터 상단 상태바 -->
+        <div class="du-header-bar">
+          <div class="du-title">
+            <span class="du-badge">CAB DISPLAY</span>
+            <span>DU & ADU 디지털 통합 모니터 패널</span>
+          </div>
+          <div class="du-conn-status">● TCMS / ATC SYSTEM ONLINE</div>
+        </div>
+
+        <!-- 2대 모니터 나란히 배치 그리드 -->
+        <div class="du-monitors-grid">
+
+          <!-- [좌측 모니터] DU (Display Unit - 차량 모니터링 / TCMS) -->
+          <div class="mmi-monitor-frame du-frame">
+            <div class="mmi-bezel-header">
+              <span class="mmi-model">DU-201 (TCMS DISPLAY UNIT)</span>
+              <div class="mmi-leds">
+                <span class="mmi-led green lit" title="POWER"></span>
+                <span class="mmi-led green lit" title="RUN"></span>
+                <span class="mmi-led red" id="du-led-err" title="FAULT"></span>
+              </div>
+            </div>
+            <div class="mmi-screen du-screen">
+              <div class="du-scr-header">
+                <span class="du-train-id">201편성 [2011-2012]</span>
+                <span class="du-time" id="du-live-clock">12:00:00</span>
+                <span class="du-mode-badge" id="du-drive-mode">RM 모드</span>
+              </div>
+
+              <!-- 2량 1편성 차량 상태 그래픽 -->
+              <div class="du-train-cars-visual">
+                <div class="du-car-box" id="du-car-1">
+                  <div class="du-car-name">2011 (Mc1 선두차)</div>
+                  <div class="du-car-items">
+                    <div class="du-item"><span class="lbl">팬터/집전</span><span class="val green" id="du-panto-1">인가(ON)</span></div>
+                    <div class="du-item"><span class="lbl">모터VVVF</span><span class="val" id="du-motor-1">0% (N)</span></div>
+                    <div class="du-item"><span class="lbl">축전지</span><span class="val green">DC 100V</span></div>
+                    <div class="du-item"><span class="lbl">출입문 1~4</span><span class="val green" id="du-doors-1">닫힘(LOCKED)</span></div>
+                  </div>
+                </div>
+                <div class="du-car-box" id="du-car-2">
+                  <div class="du-car-name">2012 (Mc2 후미차)</div>
+                  <div class="du-car-items">
+                    <div class="du-item"><span class="lbl">팬터/집전</span><span class="val green" id="du-panto-2">인가(ON)</span></div>
+                    <div class="du-item"><span class="lbl">모터VVVF</span><span class="val" id="du-motor-2">0% (N)</span></div>
+                    <div class="du-item"><span class="lbl">축전지</span><span class="val green">DC 100V</span></div>
+                    <div class="du-item"><span class="lbl">출입문 1~4</span><span class="val green" id="du-doors-2">닫힘(LOCKED)</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 공압 및 보조전원 요약 -->
+              <div class="du-pneumatic-summary">
+                <div class="du-gauge-box">
+                  <span class="lbl">MR (주공기)</span>
+                  <span class="val" id="du-mr-val">9.0 bar</span>
+                </div>
+                <div class="du-gauge-box">
+                  <span class="lbl">BC (제동통)</span>
+                  <span class="val" id="du-bc-val">0.0 bar</span>
+                </div>
+                <div class="du-gauge-box">
+                  <span class="lbl">보조전원 SIV</span>
+                  <span class="val green">정상 (ON)</span>
+                </div>
+              </div>
+
+              <!-- 진단 상태 로그 메시지 -->
+              <div class="du-log-panel">
+                <span class="du-log-line info" id="du-status-msg">● TCMS 시스템 정상 가동 중 - 이상 없음</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- [우측 모니터] ADU (ATC/ATO Display Unit - 운전정보 및 신호 속도계) -->
+          <div class="mmi-monitor-frame adu-frame">
+            <div class="mmi-bezel-header">
+              <span class="mmi-model">ADU-201 (ATC/ATO DRIVER DISPLAY)</span>
+              <div class="mmi-leds">
+                <span class="mmi-led green lit" title="SIGNAL"></span>
+                <span class="mmi-led amber" id="adu-led-warn" title="OVERSPEED"></span>
+                <span class="mmi-led red" id="adu-led-eb" title="EMG BRAKE"></span>
+              </div>
+            </div>
+            <div class="mmi-screen adu-screen">
+              <div class="adu-screen-top">
+                <div class="adu-station-tag">
+                  <span class="lbl">차기 정차역</span>
+                  <span class="val" id="adu-next-st">검암</span>
+                </div>
+                <div class="adu-dwell-tag">
+                  <span class="lbl">Dwell Time</span>
+                  <span class="val" id="adu-dwell-val">--</span>
+                </div>
+                <div class="adu-rotem-logo">Hyundai Rotem</div>
+              </div>
+
+              <!-- 대형 원형 아날로그 속도계 & 디지털 속도 -->
+              <div class="adu-speedo-zone">
+                <div class="adu-dial-wrap">
+                  <canvas id="adu-speedo-canvas" width="220" height="220"></canvas>
+                  <div class="adu-digital-readout">
+                    <span class="adu-digi-val" id="adu-speed-digital">0</span>
+                    <span class="adu-digi-unit">km/h</span>
+                  </div>
+                </div>
+
+                <div class="adu-target-zone">
+                  <div class="adu-limit-card">
+                    <span class="lbl">제한 속도 (LIMIT)</span>
+                    <span class="val" id="adu-limit-val">15 km/h</span>
+                  </div>
+                  <div class="adu-mode-card">
+                    <span class="lbl">운전 모드</span>
+                    <span class="val" id="adu-mode-val">RM</span>
+                  </div>
+                  <div class="adu-eb-card" id="adu-eb-card" style="display:none;">
+                    <span class="adu-eb-badge">🚨 비상제동 체결</span>
+                    <span class="adu-eb-desc">RM 허용속도 초과</span>
+                  </div>
+                  <div class="adu-warn-card" id="adu-warn-card" style="display:none;">
+                    <span class="adu-warn-badge">⚠️ 과속 경고 (15~17km/h)</span>
+                    <span class="adu-warn-desc" id="adu-warn-timer">5.0초 후 비상제동</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 하단 타겟 포인트 거리 게이지 바 -->
+              <div class="adu-target-bar-wrap">
+                <span class="adu-bar-lbl">Target Point: <b id="adu-target-dist">1,023 m</b></span>
+                <div class="adu-target-track">
+                  <div class="adu-target-fill" id="adu-target-fill" style="width: 72%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
     </div>
     <!-- /panel-storage-pool -->
 
@@ -5710,7 +6291,7 @@ let pendingRecordedStep = null;
 // ========================================================
 // 반응형 멀티 뷰포트 시스템 (모바일 1분할 / 2분할 듀얼 / 3분할 트리플)
 // ========================================================
-let ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5'];
+let ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5', 'DU'];
 let currentSplitMode = 2;       // 대화면 기본: 2분할 (2 또는 3)
 let activeLeftPanel = 'OP3';    // 좌측 슬롯 (기본 OP3)
 let activeCenterPanel = 'OP1';  // 중앙 슬롯 (3분할 전용 기본 OP1)
@@ -5937,6 +6518,7 @@ function getPanelDisplayName(panelId) {
     case 'OP3': return 'OP3 (긴급 제동 조작반)';
     case 'OP4': return 'OP4 (메인 계기 & 바이패스)';
     case 'OP5': return 'OP5 (하부 바이패스 & 차상)';
+    case 'DU': return 'DU / ADU (차량 모니터 & 운전표시기)';
     case 'OCC': return 'OCC (종합관제실 모니터링)';
     default: return panelId;
   }
@@ -6026,6 +6608,8 @@ let trackTiePhase = 0.0;
 let lastPhysicsTime = performance.now();
 let isCabZoomed = false;
 let isDoorOpen = false;
+let isRmEbActive = false;
+let rmOverspeedTimer = 0.0;
 
 /* 내부 상태 */
 const cvState = {
@@ -6232,6 +6816,335 @@ function cvBC() {
   return 0;
 }
 
+function triggerRmEmergencyBrake(reason) {
+  if (isRmEbActive) return;
+  isRmEbActive = true;
+  updateGaugeUI(4.0);
+  const lampApply = document.getElementById('lamp-brake-apply');
+  if (lampApply) lampApply.classList.add('lit');
+  try {
+    if (typeof sound !== 'undefined' && sound) {
+      sound.playError();
+      sound.playAirExhaust(0.7, 1800, 0.5);
+    }
+    triggerHaptic([60, 60, 100]);
+    triggerShakeScreen();
+  } catch (e) {}
+  showTemporaryHudFeedback(`🚨 [RM 과속 비상제동] ${reason} - 비상제동(4.0 bar) 체결! (완전 정차 후 완해 조작 요망)`, true);
+}
+
+function resetRmEmergencyBrake() {
+  if (!isRmEbActive && rmOverspeedTimer === 0.0) return;
+  isRmEbActive = false;
+  rmOverspeedTimer = 0.0;
+  
+  const normalBc = getNormalBrakePressure();
+  updateGaugeUI(normalBc);
+  const lampApply = document.getElementById('lamp-brake-apply');
+  if (lampApply) {
+    if (normalBc > 0.0) lampApply.classList.add('lit');
+    else lampApply.classList.remove('lit');
+  }
+  showTemporaryHudFeedback('ℹ️ [RM 비상제동 완해] 비상제동이 정상 해제되었습니다.', false);
+}
+
+function drawAduSpeedoGauge(speed, driveMode) {
+  const canvas = document.getElementById('adu-speedo-canvas');
+  if (!canvas || !canvas.offsetParent) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const cx = w / 2, cy = h / 2, r = 85;
+  const startAng = 0.75 * Math.PI; // 135 deg
+  const endAng = 2.25 * Math.PI;   // 405 deg
+  const totalAng = 1.5 * Math.PI;  // 270 deg
+
+  // Background Outer Ring Bezel
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 14, 0, Math.PI * 2);
+  ctx.fillStyle = '#0f172a';
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#334155';
+  ctx.stroke();
+
+  // Dial Inner Face
+  const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, r);
+  grad.addColorStop(0, '#1e293b');
+  grad.addColorStop(0.85, '#0b0f19');
+  grad.addColorStop(1, '#050810');
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Dial Track Arc
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, startAng, endAng);
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#334155';
+  ctx.stroke();
+
+  // RM or FM Limit zone Arc
+  if (driveMode === 'RM') {
+    const ang15 = startAng + (15 / 100) * totalAng;
+    // Safe arc
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, startAng, ang15);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#22c55e';
+    ctx.stroke();
+
+    // Overspeed arc (15 to 100)
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, ang15, endAng);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.75)';
+    ctx.stroke();
+
+    // 15 km/h limit triangular marker
+    const tx = cx + (r - 10) * Math.cos(ang15);
+    const ty = cy + (r - 10) * Math.sin(ang15);
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.rotate(ang15 + Math.PI / 2);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-4, -8);
+    ctx.lineTo(4, -8);
+    ctx.closePath();
+    ctx.fillStyle = '#f59e0b';
+    ctx.fill();
+    ctx.restore();
+  } else {
+    const ang80 = startAng + (80 / 100) * totalAng;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, startAng, ang80);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#38bdf8';
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, ang80, endAng);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+    ctx.stroke();
+  }
+
+  // Ticks & Numbers (0 to 100 km/h, step 10)
+  ctx.font = '9px Consolas, monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  for (let s = 0; s <= 100; s += 5) {
+    const ang = startAng + (s / 100) * totalAng;
+    const isMajor = (s % 10 === 0);
+    const tickLen = isMajor ? 8 : 4;
+    const x1 = cx + (r - 2) * Math.cos(ang);
+    const y1 = cy + (r - 2) * Math.sin(ang);
+    const x2 = cx + (r - 2 - tickLen) * Math.cos(ang);
+    const y2 = cy + (r - 2 - tickLen) * Math.sin(ang);
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.lineWidth = isMajor ? 1.5 : 1;
+    if (driveMode === 'RM' && s > 15) {
+      ctx.strokeStyle = '#ef4444';
+    } else {
+      ctx.strokeStyle = isMajor ? '#94a3b8' : '#475569';
+    }
+    ctx.stroke();
+
+    if (isMajor) {
+      const numR = r - 18;
+      const nx = cx + numR * Math.cos(ang);
+      const ny = cy + numR * Math.sin(ang);
+      ctx.fillStyle = (driveMode === 'RM' && s > 15) ? '#f87171' : '#cbd5e1';
+      ctx.fillText(s.toString(), nx, ny);
+    }
+  }
+
+  // Active Speed Arc Fill
+  const clampedSpeed = Math.max(0, Math.min(100, speed));
+  const currentAng = startAng + (clampedSpeed / 100) * totalAng;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 5, startAng, currentAng);
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = (driveMode === 'RM' && speed > 15) ? '#ef4444' : '#38bdf8';
+  ctx.stroke();
+
+  // Speed Needle
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(currentAng);
+
+  ctx.beginPath();
+  ctx.moveTo(-3, -2);
+  ctx.lineTo(r - 12, 0);
+  ctx.lineTo(-3, 2);
+  ctx.closePath();
+  ctx.fillStyle = (driveMode === 'RM' && speed > 15) ? '#ff3b30' : '#f97316';
+  ctx.shadowColor = (driveMode === 'RM' && speed > 15) ? 'rgba(255, 59, 48, 0.8)' : 'rgba(249, 115, 22, 0.6)';
+  ctx.shadowBlur = 6;
+  ctx.fill();
+  ctx.restore();
+
+  // Center Boss Cap
+  ctx.beginPath();
+  ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+  ctx.fillStyle = '#1e293b';
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#475569';
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#38bdf8';
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function updateDuAduDisplay(driveMode, notch, now) {
+  // 1. DU Live Clock
+  const clockEl = document.getElementById('du-live-clock');
+  if (clockEl) {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    const ss = String(d.getSeconds()).padStart(2, '0');
+    clockEl.innerText = `${hh}:${mm}:${ss}`;
+  }
+
+  // 2. DU Drive Mode Badge
+  const modeBadge = document.getElementById('du-drive-mode');
+  if (modeBadge) {
+    modeBadge.innerText = `${driveMode || 'OFF'} 모드`;
+  }
+
+  // 3. DU Motor / VVVF
+  const m1 = document.getElementById('du-motor-1');
+  const m2 = document.getElementById('du-motor-2');
+  let motorStr = '0% (N)';
+  if (isRmEbActive) {
+    motorStr = 'EB 비상제동';
+  } else if (notch.startsWith('P')) {
+    const pct = notch === 'P1' ? '25%' : notch === 'P2' ? '50%' : notch === 'P3' ? '75%' : '100%';
+    motorStr = `${pct} (${notch})`;
+  } else if (notch.startsWith('B')) {
+    motorStr = `회생제동 (${notch})`;
+  } else if (notch === 'EB') {
+    motorStr = 'EB 제동';
+  }
+  if (m1) m1.innerText = motorStr;
+  if (m2) m2.innerText = motorStr;
+
+  // 4. DU Doors
+  const d1 = document.getElementById('du-doors-1');
+  const d2 = document.getElementById('du-doors-2');
+  const lampDoor = document.getElementById('lamp-door');
+  const isDoorClosed = !isDoorOpen && (!window.__FAULT_DOOR_FAIL) && (lampDoor ? lampDoor.classList.contains('lit') : true);
+  const doorText = isDoorClosed ? '닫힘 (LOCKED)' : '개방 (OPEN)';
+  const doorColorClass = isDoorClosed ? 'val green' : 'val red';
+  if (d1) { d1.innerText = doorText; d1.className = doorColorClass; }
+  if (d2) { d2.innerText = doorText; d2.className = doorColorClass; }
+
+  // 5. DU Pressures
+  const mrEl = document.getElementById('du-mr-val');
+  const bcEl = document.getElementById('du-bc-val');
+  if (mrEl) mrEl.innerText = `${(typeof currentGaugeMR !== 'undefined' ? currentGaugeMR : 9.0).toFixed(1)} bar`;
+  if (bcEl) bcEl.innerText = `${cvBC().toFixed(1)} bar`;
+
+  // 6. DU Fault / Status Message & LED
+  const errLed = document.getElementById('du-led-err');
+  const statusMsg = document.getElementById('du-status-msg');
+  if (isRmEbActive) {
+    if (errLed) errLed.className = 'mmi-led red lit';
+    if (statusMsg) {
+      statusMsg.className = 'du-log-line error';
+      statusMsg.innerText = '🚨 [경고] RM 운전모드 허용속도 초과 - 비상제동 체결 중 (정차 후 복구 요망)';
+    }
+  } else if (driveMode === 'RM' && rmOverspeedTimer > 0) {
+    if (errLed) errLed.className = 'mmi-led red';
+    if (statusMsg) {
+      statusMsg.className = 'du-log-line warn';
+      statusMsg.innerText = `⚠️ [주의] RM 허용속도(15km/h) 초과 감지 - ${(5.0 - rmOverspeedTimer).toFixed(1)}초 후 비상제동`;
+    }
+  } else {
+    if (errLed) errLed.className = 'mmi-led red';
+    if (statusMsg) {
+      statusMsg.className = 'du-log-line info';
+      statusMsg.innerText = '● TCMS 시스템 정상 가동 중 - 전체 기기 정상';
+    }
+  }
+
+  // 7. ADU Station & Target
+  const stInfo = cvStationInfo(trainDistance);
+  const nextStEl = document.getElementById('adu-next-st');
+  if (nextStEl) nextStEl.innerText = stInfo.name;
+
+  const dwellEl = document.getElementById('adu-dwell-val');
+  if (dwellEl) dwellEl.innerText = (trainSpeed <= 0.2) ? '00:30' : '--';
+
+  const distToStation = Math.max(0, Math.round(stInfo.dStart));
+  const targetDistEl = document.getElementById('adu-target-dist');
+  const targetFillEl = document.getElementById('adu-target-fill');
+  if (targetDistEl) targetDistEl.innerText = `${distToStation.toLocaleString()} m`;
+  if (targetFillEl) {
+    const pct = Math.max(5, Math.min(100, (1 - distToStation / CV_LINE.cycle) * 100));
+    targetFillEl.style.width = `${pct.toFixed(0)}%`;
+  }
+
+  // 8. ADU Limit & Mode
+  const limitEl = document.getElementById('adu-limit-val');
+  if (limitEl) {
+    if (driveMode === 'RM') limitEl.innerText = '15 km/h';
+    else if (driveMode === 'FM') limitEl.innerText = '80 km/h';
+    else if (driveMode === 'ATPM') limitEl.innerText = '70 km/h';
+    else limitEl.innerText = '--';
+  }
+  const modeValEl = document.getElementById('adu-mode-val');
+  if (modeValEl) modeValEl.innerText = driveMode || 'OFF';
+
+  // 9. ADU Digital Speed
+  const digiSpeedEl = document.getElementById('adu-speed-digital');
+  if (digiSpeedEl) digiSpeedEl.innerText = Math.round(trainSpeed);
+
+  // 10. ADU Warnings & LEDs
+  const ebCard = document.getElementById('adu-eb-card');
+  const warnCard = document.getElementById('adu-warn-card');
+  const warnTimerEl = document.getElementById('adu-warn-timer');
+  const aduLedWarn = document.getElementById('adu-led-warn');
+  const aduLedEb = document.getElementById('adu-led-eb');
+
+  if (isRmEbActive) {
+    if (ebCard) ebCard.style.display = 'flex';
+    if (warnCard) warnCard.style.display = 'none';
+    if (aduLedEb) aduLedEb.className = 'mmi-led red lit';
+    if (aduLedWarn) aduLedWarn.className = 'mmi-led amber';
+  } else if (driveMode === 'RM' && rmOverspeedTimer > 0) {
+    if (ebCard) ebCard.style.display = 'none';
+    if (warnCard) warnCard.style.display = 'flex';
+    if (warnTimerEl) warnTimerEl.innerText = `${(5.0 - rmOverspeedTimer).toFixed(1)}초 후 비상제동`;
+    if (aduLedEb) aduLedEb.className = 'mmi-led red';
+    if (aduLedWarn) aduLedWarn.className = 'mmi-led amber lit';
+  } else {
+    if (ebCard) ebCard.style.display = 'none';
+    if (warnCard) warnCard.style.display = 'none';
+    if (aduLedEb) aduLedEb.className = 'mmi-led red';
+    if (aduLedWarn) aduLedWarn.className = 'mmi-led amber';
+  }
+
+  // 11. ADU Speedometer Canvas
+  drawAduSpeedoGauge(trainSpeed, driveMode);
+}
+
 function updateTrainPhysics() {
   const now = performance.now();
   const dt = Math.min(0.1, (now - lastPhysicsTime) / 1000);
@@ -6250,14 +7163,36 @@ function updateTrainPhysics() {
   const isDoorBypassed = (cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
   const isDoorInterlockCleared = isDoorClosed || isDoorBypassed;
 
+  // [RM 모드 과속 감시 및 비상제동(EB) 인터록]
+  // FM: 제한 없음 (최대 80km/h까지 주행 가능)
+  // RM: 15~17km/h 5초 이상 초과 시 비상제동, 18km/h 이상 즉시 비상제동 체결
+  if (driveMode === 'RM') {
+    if (isRmEbActive) {
+      // 이미 RM EB 체결 상태
+    } else if (trainSpeed >= 18.0) {
+      // 3km/h (18~)이상 초과 시 바로 비상제동 체결 (FM 고속에서 RM 전환 시 포함)
+      triggerRmEmergencyBrake('RM 운전모드 허용속도(15km/h) 3km/h 이상 초과 (18km/h 이상)');
+    } else if (trainSpeed > 15.0) {
+      // 15Km/h를 2Km/h까지(15~17) 5초이상 초과 시 비상제동
+      rmOverspeedTimer += dt;
+      if (rmOverspeedTimer >= 5.0) {
+        triggerRmEmergencyBrake('RM 운전모드 허용속도(15km/h) 5초 이상 지속 초과');
+      }
+    } else {
+      rmOverspeedTimer = 0.0;
+    }
+  } else {
+    rmOverspeedTimer = 0.0;
+  }
+
   const isManualMode = ['FM', 'RM', 'ATPM'].indexOf(driveMode) >= 0;
   const canManualTraction = isManualMode && isKeyOn && (revNotch === 'F' || revNotch === 'R') &&
-                            isDoorInterlockCleared && !isEmgActive && cvBC() < 0.5;
+                            isDoorInterlockCleared && !isEmgActive && !isRmEbActive && cvBC() < 0.5;
 
   let target = 0.0, rate = 0.0;
 
-  if (isEmgActive || notch === 'EB') {
-    target = 0.0; rate = -8.5;
+  if (isEmgActive || notch === 'EB' || isRmEbActive) {
+    target = 0.0; rate = -5.0; // 비상제동 체결되어 서서히 멈춤
   } else if (isUnmannedActive) {
     if (isDoorInterlockCleared && cvBC() < 0.5) { target = 60.0; rate = 2.8; }
     else { target = 0.0; rate = -3.5; }
@@ -6272,19 +7207,16 @@ function updateTrainPhysics() {
     else rate = -6.4;
   } else if (isManualMode && notch.charAt(0) === 'P') {
     if (canManualTraction) {
-      // RM 모드일 때는 최대 25.0, FM/ATPM일 때는 최대 80.0
-      const maxSpeed = (driveMode === 'RM') ? 25.0 : 80.0;
-      
-      // [기존 원본 속도 단계 유지]
-      if (notch === 'P1') { target = Math.min(25.0, maxSpeed); rate = 2.2; }
-      else if (notch === 'P2') { target = Math.min(45.0, maxSpeed); rate = 3.6; }
-      else if (notch === 'P3') { target = Math.min(65.0, maxSpeed); rate = 5.0; }
-      else if (notch === 'P4') { target = Math.min(80.0, maxSpeed); rate = 6.2; }
+      // FM 및 RM 모두 P1~P4 당김 가능 (최대 80km/h까지, RM은 15km/h 초과 시 상기 비상제동 인터록 적용)
+      if (notch === 'P1') { target = 25.0; rate = 2.2; }
+      else if (notch === 'P2') { target = 45.0; rate = 3.6; }
+      else if (notch === 'P3') { target = 65.0; rate = 5.0; }
+      else if (notch === 'P4') { target = 80.0; rate = 6.2; }
     } else { 
-      target = 0.0; rate = -0.15; 
+      target = 0.0; rate = -0.04; 
     }
   } else {
-    target = 0.0; rate = -0.15; // 타행(N) 시 자연 감속 (미세한 구름/공기 저항)
+    target = 0.0; rate = -0.04; // 타행(N) 시 자연 감속 (미세한 구름/공기 저항: 10초당 0.4km/h 수준으로 부드럽고 여유로운 타행감)
   }
 
   /* 구배 저항 */
@@ -6295,29 +7227,31 @@ function updateTrainPhysics() {
   const prevSpeed = trainSpeed;
 
   if (trainSpeed < target) {
-    // 가속 단계: 구배 가속이 더해져도 현재 목표 속도(target)를 절대 초과하지 못하도록 고정
+    // 가속 단계
     trainSpeed = Math.min(target, trainSpeed + (rate + gradeAcc) * dt);
   } else if (trainSpeed > target) {
-    if (isManualMode && notch.charAt(0) === 'P') {
-      // 감단(P4->P1 등) 또는 모드 전환(FM->RM) 시 하위 목표 속도까지 안전 감속
+    if (isRmEbActive || isEmgActive || notch === 'EB') {
+      // 비상제동 체결 상태: 안전 정차까지 감속
+      trainSpeed = Math.max(0.0, trainSpeed + rate * dt);
+      if (trainSpeed <= 0.05) trainSpeed = 0.0;
+    } else if (isManualMode && notch.charAt(0) === 'P') {
+      // 감단(P4->P1 등) 시 하위 목표 속도까지 안전 감속
       trainSpeed = Math.max(target, trainSpeed - 2.2 * dt);
-    } else if (notch.charAt(0) === 'B' || isEmgActive || notch === 'EB' || isUnmannedActive) {
-      // 제동 체결 상태: 제동력 + 구배 저항 반영
+    } else if (notch.charAt(0) === 'B' || isUnmannedActive) {
+      // 상용 제동 체결 상태: 제동력 + 구배 저항 반영
       trainSpeed = Math.max(target, trainSpeed + (rate + gradeAcc) * dt);
     } else {
       // 타행(N) 상태: 제동이 전혀 걸리지 않은 상태로, 자연 주행 저항(구름/공기) + 구배 저항만 적용
-      // 브레이크 체결 시(-1.2 ~ -6.4)와 확연히 구분되는 부드럽고 여유로운 타행감 (-0.15 km/h/s 수준)
+      // 브레이크 체결 시(-1.2 ~ -6.4)와 확연히 구분되는 부드럽고 여유로운 타행감 (-0.04 km/h/s 수준)
       const coastDecel = rate + gradeAcc;
       trainSpeed = Math.max(target, trainSpeed + coastDecel * dt);
     }
   }
 
-  // [이중 안전장치] 운전 모드별 절대 최고 상한선 (RM은 25.0, FM/ATPM은 80.0)
-  const absoluteLimit = (driveMode === 'RM') ? 25.0 : 80.0;
-  if (trainSpeed > absoluteLimit) {
-    trainSpeed = Math.max(absoluteLimit, trainSpeed - 5.0 * dt);
+  // 물리 최고 상한선 80.0 km/h
+  if (trainSpeed > 80.0) {
+    trainSpeed = 80.0;
   }
-
   if (trainSpeed < 0) trainSpeed = 0;
 
   const realAcc = dt > 0 ? (trainSpeed - prevSpeed) / dt : 0;
@@ -6365,6 +7299,7 @@ function updateTrainPhysics() {
   cvUpdateRollNoise(trainSpeed);
 
   updateCabOSD(notch, revNotch, isUnmannedActive, driveMode);
+  updateDuAduDisplay(driveMode, notch, now);
 
   // 원격 관제 실시간 텔레메트리 전송 (Supabase 트래픽 최적화: 적응형 브로드캐스트)
   if (typeof TrainRemote !== 'undefined' && TrainRemote.isConnected && TrainRemote.role === 'STUDENT') {
@@ -7209,7 +8144,13 @@ function updateCabOSD(notch, revNotch, isUnmannedActive, driveMode) {
   const dot = document.getElementById('cab-cam-dot');
   if (!badge) return;
   badge.className = 'cab-badge';
-  if (isUnmannedActive) {
+  if (isRmEbActive) {
+    badge.classList.add('braking'); badge.innerText = '🚨 RM 비상제동';
+    if (dot) dot.classList.add('moving');
+  } else if (driveMode === 'RM' && rmOverspeedTimer > 0) {
+    badge.classList.add('braking'); badge.innerText = `⚠️ 과속 ${(5.0 - rmOverspeedTimer).toFixed(1)}s`;
+    if (dot) dot.classList.add('moving');
+  } else if (isUnmannedActive) {
     badge.classList.add('driving'); badge.innerText = '무인운전 (ATO)';
     if (dot) dot.classList.add('moving');
   } else if (trainSpeed <= 0.2) {
@@ -8518,7 +9459,9 @@ function handleComponentTouch(compId) {
         }
       } else if (compId === 'SW_EMG_RELEASE') {
         // 비상제동완해: 비상제동이 불완해(풀리지 않음)일 때 비상제동을 강제 차단/완해
-        // 일반 제동이 0이면 제동통 압력은 0.0 bar로 완해됨 (2.0으로 올라가지 않음)
+        if (isRmEbActive && trainSpeed <= 0.2) {
+          resetRmEmergencyBrake();
+        }
         const normalBc = getNormalBrakePressure();
         if (currentGaugeBC > normalBc) {
           sound.playAirExhaust(0.6, 1100, 0.45);
@@ -9136,6 +10079,17 @@ function setDriveModePosition(targetState, evt) {
     }
   }
 
+  // RM 모드로 전환 시 과속 감시 (고속 주행 중 RM 전환 시 즉시 비상제동)
+  if (targetState === 'RM') {
+    if (trainSpeed >= 18.0) {
+      triggerRmEmergencyBrake('고속 주행 중 RM 모드 진입 (원칙적으로 정차 후 운전모드 변경)');
+    } else {
+      rmOverspeedTimer = 0.0;
+    }
+  } else {
+    rmOverspeedTimer = 0.0;
+  }
+
   sound.playRotarySnap();
   triggerHaptic(30);
   showTemporaryHudFeedback(`🎛️ [운전 모드] ${step.label}`, false);
@@ -9421,6 +10375,20 @@ function setMasconNotch(notch, silent = false) {
   if (tractionReleaseTimer) {
     clearTimeout(tractionReleaseTimer);
     tractionReleaseTimer = null;
+  }
+
+  // RM 비상제동(isRmEbActive) 복구 및 인터록 처리
+  if (isRmEbActive) {
+    if (trainSpeed <= 0.2) {
+      if (notch === 'EB' || notch === 'N') {
+        resetRmEmergencyBrake();
+      }
+    } else {
+      // 주행 중에는 RM 비상제동 해제 불가 (4.0 bar 및 제동 유지)
+      updateGaugeUI(4.0);
+      if (lampApply) lampApply.classList.add('lit');
+      return true;
+    }
   }
 
   // 1) 비상제동(SW_EMG_STOP)이 체결되어 있고 완해 바이패스되지 않은 경우: 마스콘 위치와 무관하게 비상제동(4.0 bar) 유지
