@@ -3519,12 +3519,13 @@
     .du2-arrow-ind {
       font-size: 22px;
       font-weight: 900;
-      color: #222222;
+      color: #3a3a3a; /* N위치 시 회색 */
       text-align: center;
-      transition: color 0.2s;
+      transition: color 0.2s, text-shadow 0.2s;
+      user-select: none;
     }
     .du2-arrow-ind.active {
-      color: #00ff00;
+      color: #00ff00; /* F/R 선택 시 형광 녹색 */
       text-shadow: 0 0 8px #00ff00;
     }
 
@@ -3564,23 +3565,34 @@
       top: 5px;
       bottom: 5px;
       width: 8px;
-      background: #ffffff;
+      background: #0000ff; /* 전면 출입문 기본 닫힘 파란색 고증 */
       border-radius: 2px;
+      transition: background-color 0.2s;
+    }
+    .du2-cab-mark.open {
+      background: #ffffff !important; /* 전면 개방 시 흰색 */
     }
     .du2-cab-mark.left { left: 4px; }
     .du2-cab-mark.right { right: 4px; }
 
     .du2-door-indicators {
       display: flex;
-      justify-content: space-around;
-      width: 65%;
-      gap: 8px;
+      justify-content: space-between;
+      width: 76px;
+      gap: 4px;
+    }
+    .du2-car-unit.mc1 .du2-door-indicators {
+      margin-left: 12px;
+    }
+    .du2-car-unit.mc2 .du2-door-indicators {
+      margin-right: 12px;
     }
     .du2-door-block {
-      width: 20px;
-      height: 6px;
+      width: 18px;
+      height: 5px;
       background: #0000ff; /* 기본 닫힘 파랑 */
       border: 1px solid #111111;
+      border-radius: 1px;
       transition: background-color 0.2s;
     }
     .du2-door-block.open {
@@ -5928,22 +5940,24 @@
                 <div class="du2-cars-row">
                   <!-- Mc1 전진 화살표 -->
                   <div class="du2-arrow-col-left">
-                    <span class="du2-arrow-ind active" id="du2-arrow-fwd">◀</span>
+                    <span class="du2-arrow-ind" id="du2-arrow-fwd">◀</span>
                   </div>
 
-                  <!-- Mc1 차체 -->
+                  <!-- Mc1 차체 (상단 3개, 하단 3개 출입문) -->
                   <div class="du2-car-unit mc1">
                     <span class="du2-car-label">Mc1</span>
                     <div class="du2-car-capsule">
-                      <div class="du2-cab-mark left"></div>
+                      <div class="du2-cab-mark left" id="du2-cab-mark-1"></div>
                       <div class="du2-door-indicators top">
-                        <span class="du2-door-block" id="du2-d1-1"></span>
-                        <span class="du2-door-block" id="du2-d1-2"></span>
+                        <span class="du2-door-block" id="du2-d1-t1"></span>
+                        <span class="du2-door-block" id="du2-d1-t2"></span>
+                        <span class="du2-door-block" id="du2-d1-t3"></span>
                       </div>
                       <span class="du2-car-code">2101</span>
                       <div class="du2-door-indicators bottom">
-                        <span class="du2-door-block" id="du2-d1-3"></span>
-                        <span class="du2-door-block" id="du2-d1-4"></span>
+                        <span class="du2-door-block" id="du2-d1-b1"></span>
+                        <span class="du2-door-block" id="du2-d1-b2"></span>
+                        <span class="du2-door-block" id="du2-d1-b3"></span>
                       </div>
                     </div>
                   </div>
@@ -5951,20 +5965,22 @@
                   <!-- 중앙 연결부 (빈 공간) -->
                   <div></div>
 
-                  <!-- Mc2 차체 -->
+                  <!-- Mc2 차체 (상단 3개, 하단 3개 출입문) -->
                   <div class="du2-car-unit mc2">
                     <span class="du2-car-label">Mc2</span>
                     <div class="du2-car-capsule">
                       <div class="du2-door-indicators top">
-                        <span class="du2-door-block" id="du2-d2-1"></span>
-                        <span class="du2-door-block" id="du2-d2-2"></span>
+                        <span class="du2-door-block" id="du2-d2-t1"></span>
+                        <span class="du2-door-block" id="du2-d2-t2"></span>
+                        <span class="du2-door-block" id="du2-d2-t3"></span>
                       </div>
                       <span class="du2-car-code">2001</span>
                       <div class="du2-door-indicators bottom">
-                        <span class="du2-door-block" id="du2-d2-3"></span>
-                        <span class="du2-door-block" id="du2-d2-4"></span>
+                        <span class="du2-door-block" id="du2-d2-b1"></span>
+                        <span class="du2-door-block" id="du2-d2-b2"></span>
+                        <span class="du2-door-block" id="du2-d2-b3"></span>
                       </div>
-                      <div class="du2-cab-mark right"></div>
+                      <div class="du2-cab-mark right" id="du2-cab-mark-2"></div>
                     </div>
                   </div>
 
@@ -7481,6 +7497,7 @@ let trackTiePhase = 0.0;
 let lastPhysicsTime = performance.now();
 let isCabZoomed = false;
 let isDoorOpen = false;
+let doorOpenSide = 'R'; // 기본 개방 측 (L 또는 R)
 let isRmEbActive = false;
 let rmOverspeedTimer = 0.0;
 
@@ -7906,26 +7923,90 @@ function updateDuAduDisplay(driveMode, notch, now) {
     }
     if (ampEl) ampEl.innerText = currentAmp.toString();
 
-    // 4. Direction Arrows
+    // 4. Train Direction Arrows (◀ Mc1 Mc2 ◀ when Forward, ▶ Mc1 Mc2 ▶ when Reverse, unlit gray when Neutral)
     const revNotch = cvCompState('SW_REVERSER', 'N');
     const fwdArrow = document.getElementById('du2-arrow-fwd');
     const revArrow = document.getElementById('du2-arrow-rev');
-    if (fwdArrow) fwdArrow.classList.toggle('active', revNotch === 'F');
-    if (revArrow) revArrow.classList.toggle('active', revNotch === 'R');
 
-    // 5. Doors on Cars
+    if (fwdArrow && revArrow) {
+      if (revNotch === 'F') {
+        // 전진: 열차 진행방향에 맞춰 앞뒤 모두 녹색 ◀
+        fwdArrow.innerText = '◀';
+        fwdArrow.className = 'du2-arrow-ind active';
+        revArrow.innerText = '◀';
+        revArrow.className = 'du2-arrow-ind active';
+      } else if (revNotch === 'R') {
+        // 후진: 열차 진행방향에 맞춰 앞뒤 모두 녹색 ▶
+        fwdArrow.innerText = '▶';
+        fwdArrow.className = 'du2-arrow-ind active';
+        revArrow.innerText = '▶';
+        revArrow.className = 'du2-arrow-ind active';
+      } else {
+        // N 중립: 회색으로 방향선택 없이 나타남 (◀ Mc1 Mc2 ▶)
+        fwdArrow.innerText = '◀';
+        fwdArrow.className = 'du2-arrow-ind';
+        revArrow.innerText = '▶';
+        revArrow.className = 'du2-arrow-ind';
+      }
+    }
+
+    // 5. Doors on Cars (상단 6개, 하단 6개 총 12개 출입문 및 전면 출입문 파랑/흰색 연동)
     const lampDoor = document.getElementById('lamp-door');
     const isDoorClosed = !isDoorOpen && (!window.__FAULT_DOOR_FAIL) && (lampDoor ? lampDoor.classList.contains('lit') : true);
     const isDoorBypassed = (cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
     const isDoorInterlockCleared = isDoorClosed || isDoorBypassed;
-    const doorStateClass = window.__FAULT_DOOR_FAIL ? 'fault' : (!isDoorClosed ? 'open' : '');
 
-    ['du2-d1-1', 'du2-d1-2', 'du2-d1-3', 'du2-d1-4', 'du2-d2-1', 'du2-d2-2', 'du2-d2-3', 'du2-d2-4'].forEach(id => {
+    const topDoorIds = ['du2-d1-t1', 'du2-d1-t2', 'du2-d1-t3', 'du2-d2-t1', 'du2-d2-t2', 'du2-d2-t3'];
+    const bottomDoorIds = ['du2-d1-b1', 'du2-d1-b2', 'du2-d1-b3', 'du2-d2-b1', 'du2-d2-b2', 'du2-d2-b3'];
+
+    let isTopOpen = false;
+    let isBottomOpen = false;
+
+    if (isDoorOpen || window.__FAULT_DOOR_FAIL) {
+      const isFacingRev = (revNotch === 'R');
+      const side = (typeof doorOpenSide !== 'undefined' ? doorOpenSide : window.doorOpenSide) || 'R';
+      if (!isFacingRev) {
+        // ◀ 전진 방향 기준: 우측열림(R) = 상단 6개 개방(흰색), 좌측열림(L) = 하단 6개 개방(흰색)
+        if (side === 'R') isTopOpen = true;
+        if (side === 'L') isBottomOpen = true;
+      } else {
+        // ▶ 후진 방향 기준: 우측열림(R) = 하단 6개 개방(흰색), 좌측열림(L) = 상단 6개 개방(흰색)
+        if (side === 'R') isBottomOpen = true;
+        if (side === 'L') isTopOpen = true;
+      }
+    }
+
+    topDoorIds.forEach(id => {
       const el = document.getElementById(id);
       if (el) {
-        el.className = 'du2-door-block ' + doorStateClass;
+        if (window.__FAULT_DOOR_FAIL && isTopOpen) {
+          el.className = 'du2-door-block fault';
+        } else if (isTopOpen) {
+          el.className = 'du2-door-block open';
+        } else {
+          el.className = 'du2-door-block';
+        }
       }
     });
+
+    bottomDoorIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (window.__FAULT_DOOR_FAIL && isBottomOpen) {
+          el.className = 'du2-door-block fault';
+        } else if (isBottomOpen) {
+          el.className = 'du2-door-block open';
+        } else {
+          el.className = 'du2-door-block';
+        }
+      }
+    });
+
+    // 전면/후면 출입문 (닫힘 파란색 / 개방 흰색)
+    const cabDoor1 = document.getElementById('du2-cab-mark-1');
+    const cabDoor2 = document.getElementById('du2-cab-mark-2');
+    if (cabDoor1) cabDoor1.className = (window.__CAB_DOOR_OPEN ? 'du2-cab-mark left open' : 'du2-cab-mark left');
+    if (cabDoor2) cabDoor2.className = (window.__CAB_DOOR_OPEN ? 'du2-cab-mark right open' : 'du2-cab-mark right');
 
     // 6. Alarm Message Row
     const alarmEl = document.getElementById('du2-alarm-text');
@@ -10719,6 +10800,8 @@ function handleComponentTouch(compId) {
 
       // 2. 정차 중 정상 개방 동작
       isDoorOpen = true;
+      doorOpenSide = (compId === 'SW_DOOR_OPEN_L' ? 'L' : 'R');
+      window.doorOpenSide = doorOpenSide;
       sound.playAirExhaust(0.8, 1200, 0.6);
       triggerHaptic([30, 40]);
 
@@ -10752,6 +10835,8 @@ function handleComponentTouch(compId) {
         showTemporaryHudFeedback(`🚨 [출입문 고장] 출입문 닫힘 신호 루프 불량! (완폐 불가, 점멸 지속 / OP4 출입문 바이패스 취급 필요)`, true);
       } else {
         isDoorOpen = false;
+        doorOpenSide = null;
+        window.doorOpenSide = null;
         const lampDoor = document.getElementById('lamp-door');
         if (lampDoor) {
           lampDoor.classList.remove('blinking');
@@ -12276,6 +12361,8 @@ function resetCurrentScenario() {
 
   // OP2 상부 표시등 초기화 (출입문 점등, 선두차지정은 운전모드 OFF이므로 소등, 제동체결/비상제동차단/커플링 소등)
   isDoorOpen = false;
+  doorOpenSide = 'R';
+  window.doorOpenSide = 'R';
   window.__FAULT_DOOR_FAIL = false;
   const lampDoor = document.getElementById('lamp-door');
   if (lampDoor) {
