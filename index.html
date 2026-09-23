@@ -3719,6 +3719,12 @@
       font-weight: 900 !important;
       text-shadow: 0 0 6px rgba(0, 255, 0, 0.6);
     }
+    .du2-val-box.yellow {
+      background: #cca000;
+      color: #ffffff;
+      border: 1px solid #e6b800;
+      font-weight: 800;
+    }
     .du2-val-box.red {
       background: #ff0000;
       color: #ffffff;
@@ -4096,8 +4102,48 @@
       font-size: 13px;
       font-weight: 900;
     }
-    .adu2-subsys-line.red { color: #ff0000; }
-    .adu2-subsys-line.green { color: #00ff00; }
+    .adu2-subsys-line {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      line-height: 1.3;
+    }
+    .adu2-subsys-line.red {
+      color: #ff2222;
+      text-shadow: 0 0 4px rgba(255, 34, 34, 0.6);
+    }
+    .adu2-subsys-line.green {
+      color: #00ff00;
+      text-shadow: 0 0 4px rgba(0, 255, 0, 0.5);
+    }
+    .adu2-subsys-line.amber {
+      color: #ff8533;
+      text-shadow: 0 0 4px rgba(255, 133, 51, 0.6);
+    }
+    .adu2-subsys-line.crossed {
+      color: #ff8533;
+      text-shadow: 0 0 3px rgba(255, 133, 51, 0.4);
+    }
+    .adu2-subsys-line.crossed::before,
+    .adu2-subsys-line.crossed::after {
+      content: '';
+      position: absolute;
+      left: -3px;
+      right: -3px;
+      top: 50%;
+      height: 2.5px;
+      background: #ff1111;
+      box-shadow: 0 0 4px #ff0000;
+      border-radius: 1px;
+      pointer-events: none;
+    }
+    .adu2-subsys-line.crossed::before {
+      transform: translateY(-50%) rotate(18deg);
+    }
+    .adu2-subsys-line.crossed::after {
+      transform: translateY(-50%) rotate(-18deg);
+    }
     .vobc-active-icon {
       display: inline-block;
       border: 1.5px solid #00ff00;
@@ -5756,6 +5802,18 @@
               <span>🚨 비상제동 불완해 (고착)</span>
               <span id="fault-lbl-eb" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
             </button>
+            <button type="button" id="btn-fault-vobc" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('VOBC_FAIL')">
+              <span>🚨 VOBC 고장 (DU 적색 / ADU 앰버)</span>
+              <span id="fault-lbl-vobc" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
+            </button>
+            <button type="button" id="btn-fault-vobc-comm" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('VOBC_COMM')">
+              <span>⚠️ VOBC 통신고장 (DU 황색 / ADU 앰버)</span>
+              <span id="fault-lbl-vobc-comm" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
+            </button>
+            <button type="button" id="btn-fault-tcms" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('TCMS_FAIL')">
+              <span>🚨 TCMS 통신이상 (ADU 적색)</span>
+              <span id="fault-lbl-tcms" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
+            </button>
           </div>
         </div>
 
@@ -6004,7 +6062,7 @@
                     <div class="du2-th">신호장치</div>
                     <!-- Mc1 -->
                     <div class="du2-tcol-eq">
-                      <div class="du2-val-box red" id="du2-vobc-1">VOBC</div>
+                      <div class="du2-val-box blue active-vobc" id="du2-vobc-1">VOBC</div>
                     </div>
                     <!-- 중앙 ESK 브리지 -->
                     <div class="du2-tcol-center">
@@ -6016,7 +6074,7 @@
                     </div>
                     <!-- Mc2 -->
                     <div class="du2-tcol-eq">
-                      <div class="du2-val-box red" id="du2-vobc-2">VOBC</div>
+                      <div class="du2-val-box blue" id="du2-vobc-2">VOBC</div>
                     </div>
                     <!-- 우측 범례 -->
                     <div class="du2-tr-side">
@@ -6213,7 +6271,7 @@
                       <span class="adu2-info-val green" id="adu2-door-enable">Left</span>
                     </div>
                     <div class="adu2-subsys-block">
-                      <div class="adu2-subsys-line red" id="adu2-subsys-tcms">TCMS</div>
+                      <div class="adu2-subsys-line green" id="adu2-subsys-tcms">TCMS</div>
                       <div class="adu2-subsys-line green" id="adu2-subsys-vobc1">VOBC 1 <span class="vobc-active-icon">Ⓐ</span></div>
                       <div class="adu2-subsys-line green" id="adu2-subsys-vobc2">VOBC 2</div>
                     </div>
@@ -6230,7 +6288,7 @@
                     <div id="adu2-log-1">11:34:54 HOLD</div>
                     <div id="adu2-log-2">11:34:08 SKIP</div>
                     <div id="adu2-log-3">11:34:40 FSB FAIL</div>
-                    <div id="adu2-log-4">11:34:24 TCMS LINK FAIL</div>
+                    <div id="adu2-log-4">11:34:24 TCMS LINK OK</div>
                   </div>
                   <div class="adu2-bottom-btn-wrap">
                     <button type="button" class="adu2-setup-btn" onclick="showTemporaryHudFeedback('ℹ️ [ADU Setup] SelTrac MMI 환경설정 메뉴', false)">Setup</button>
@@ -7932,13 +7990,45 @@ function updateDuAduDisplay(driveMode, notch, now) {
     if (bc2a) bc2a.innerText = bcStr;
     if (bc2b) bc2b.innerText = bcStr;
 
-    // 9. VOBC Signaling Status & Active (A) Indication
+    // 9. VOBC Signaling Status & TCMS Status
+    const isTcmsFail = !!window.__FAULT_TCMS_FAIL;
+    const tcmsEl = document.getElementById('adu2-subsys-tcms');
+    if (tcmsEl) {
+      tcmsEl.className = isTcmsFail ? 'adu2-subsys-line red' : 'adu2-subsys-line green';
+    }
+
+    const duConnEl = document.querySelector('.du-conn-status');
+    if (duConnEl) {
+      if (isTcmsFail) {
+        duConnEl.innerText = '● TCMS COMM ERROR / DEGRADED';
+        duConnEl.style.color = '#ff4444';
+      } else {
+        duConnEl.innerText = '● TCMS / ATC SYSTEM ONLINE';
+        duConnEl.style.color = '#00ff88';
+      }
+    }
+
+    const isVobc1Fail = !!window.__FAULT_VOBC_FAIL || !!window.__FAULT_VOBC1_FAIL;
+    const isVobc2Fail = !!window.__FAULT_VOBC_FAIL || !!window.__FAULT_VOBC2_FAIL;
+    const isVobc1Comm = !isVobc1Fail && (!!window.__FAULT_VOBC_COMM || !!window.__FAULT_VOBC1_COMM);
+    const isVobc2Comm = !isVobc2Fail && (!!window.__FAULT_VOBC_COMM || !!window.__FAULT_VOBC2_COMM);
+    const isFmMode = (driveMode === 'FM');
     const isVobc2Active = (revNotch === 'R') || (window.__ACTIVE_VOBC === 2);
+
+    // DU (운전일반) 신호장치 박스 표시
+    // - 고장: 빨간배경에 흰글씨
+    // - 통신고장: 노란배경에 흰글씨
+    // - FM모드: 전원차단 (회색)
+    // - 정상: 활성차는 파란배경에 녹색글씨, 비활성차는 파란배경에 흰글씨 (비상제동 체결 시에도 VOBC 색상 불변)
     const vobc1Du = document.getElementById('du2-vobc-1');
     const vobc2Du = document.getElementById('du2-vobc-2');
     if (vobc1Du) {
-      if (isEbActive) {
+      if (isVobc1Fail) {
         vobc1Du.className = 'du2-val-box red';
+      } else if (isVobc1Comm) {
+        vobc1Du.className = 'du2-val-box yellow';
+      } else if (isFmMode) {
+        vobc1Du.className = 'du2-val-box gray';
       } else if (!isVobc2Active) {
         vobc1Du.className = 'du2-val-box blue active-vobc';
       } else {
@@ -7946,8 +8036,12 @@ function updateDuAduDisplay(driveMode, notch, now) {
       }
     }
     if (vobc2Du) {
-      if (isEbActive) {
+      if (isVobc2Fail) {
         vobc2Du.className = 'du2-val-box red';
+      } else if (isVobc2Comm) {
+        vobc2Du.className = 'du2-val-box yellow';
+      } else if (isFmMode) {
+        vobc2Du.className = 'du2-val-box gray';
       } else if (isVobc2Active) {
         vobc2Du.className = 'du2-val-box blue active-vobc';
       } else {
@@ -7955,14 +8049,42 @@ function updateDuAduDisplay(driveMode, notch, now) {
       }
     }
 
-    // ADU VOBC 1 / 2 Active (A) Icon Sync
+    // ADU VOBC 1 / 2 표시
+    // - FM 모드: VOBC 전원 차단 -> 글씨 위에 사선 엑스(✕) 표시 (네 번째 이미지)
+    // - 고장/통신고장: 주황/앰버 글씨, 활성(A) 마크 없음 (세 번째 이미지)
+    // - 정상: 녹색 글씨, 활성 차수에만 Ⓐ 마크 현시
     const vobc1Adu = document.getElementById('adu2-subsys-vobc1');
     const vobc2Adu = document.getElementById('adu2-subsys-vobc2');
-    if (vobc1Adu) {
-      vobc1Adu.innerHTML = isVobc2Active ? 'VOBC 1' : 'VOBC 1 <span class="vobc-active-icon">Ⓐ</span>';
-    }
-    if (vobc2Adu) {
-      vobc2Adu.innerHTML = isVobc2Active ? 'VOBC 2 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 2';
+
+    if (isFmMode) {
+      if (vobc1Adu) {
+        vobc1Adu.className = 'adu2-subsys-line crossed';
+        vobc1Adu.innerHTML = 'VOBC 1';
+      }
+      if (vobc2Adu) {
+        vobc2Adu.className = 'adu2-subsys-line crossed';
+        vobc2Adu.innerHTML = 'VOBC 2';
+      }
+    } else if (isVobc1Fail || isVobc2Fail || isVobc1Comm || isVobc2Comm) {
+      if (vobc1Adu) {
+        const isFault1 = isVobc1Fail || isVobc1Comm;
+        vobc1Adu.className = isFault1 ? 'adu2-subsys-line amber' : 'adu2-subsys-line green';
+        vobc1Adu.innerHTML = (!isFault1 && !isVobc2Active) ? 'VOBC 1 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 1';
+      }
+      if (vobc2Adu) {
+        const isFault2 = isVobc2Fail || isVobc2Comm;
+        vobc2Adu.className = isFault2 ? 'adu2-subsys-line amber' : 'adu2-subsys-line green';
+        vobc2Adu.innerHTML = (!isFault2 && isVobc2Active) ? 'VOBC 2 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 2';
+      }
+    } else {
+      if (vobc1Adu) {
+        vobc1Adu.className = 'adu2-subsys-line green';
+        vobc1Adu.innerHTML = isVobc2Active ? 'VOBC 1' : 'VOBC 1 <span class="vobc-active-icon">Ⓐ</span>';
+      }
+      if (vobc2Adu) {
+        vobc2Adu.className = 'adu2-subsys-line green';
+        vobc2Adu.innerHTML = isVobc2Active ? 'VOBC 2 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 2';
+      }
     }
 
     // 10. Auxiliary Power SIV
@@ -8111,6 +8233,25 @@ function updateDuAduDisplay(driveMode, notch, now) {
     } else {
       if (log1) log1.innerText = `${hh}:34:54 HOLD`;
       if (log2) log2.innerText = `${hh}:34:08 SKIP`;
+    }
+
+    if (log4) {
+      if (isTcmsFail) {
+        log4.innerText = `${hh}:${mm}:${ss} TCMS LINK FAIL`;
+        log4.style.color = '#ff4444';
+      } else if (isVobc1Fail || isVobc2Fail) {
+        log4.innerText = `${hh}:${mm}:${ss} VOBC FAULT`;
+        log4.style.color = '#ffaa33';
+      } else if (isVobc1Comm || isVobc2Comm) {
+        log4.innerText = `${hh}:${mm}:${ss} VOBC COMM LOSS`;
+        log4.style.color = '#ffaa33';
+      } else if (isFmMode) {
+        log4.innerText = `${hh}:${mm}:${ss} VOBC PWR CUT`;
+        log4.style.color = '#ff8888';
+      } else {
+        log4.innerText = `${hh}:34:24 TCMS LINK OK`;
+        log4.style.color = '#ffffff';
+      }
     }
 
     // Draw ADU Speedo
@@ -9271,7 +9412,10 @@ const TrainRemote = {
   userName: '운전연습생 1',
   activeFaults: {
     DOOR_LOCK_FAIL: false,
-    EB_STUCK: false
+    EB_STUCK: false,
+    VOBC_FAIL: false,
+    VOBC_COMM: false,
+    TCMS_FAIL: false
   },
   _lastPhysicsBroadcast: 0,
   logCount: 0,
@@ -9709,9 +9853,28 @@ const TrainRemote = {
       if (btnEb) btnEb.classList.toggle('active', isAct);
       if (lblEb) lblEb.innerText = isAct ? '🚨 비상제동 불완해 고착 중' : '정상 (클릭 시 고장 인가)';
       this.addLog(`[비상 고장 인가] 비상제동 불완해 고착 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
+    } else if (faultType === 'VOBC_FAIL') {
+      const btnV = document.getElementById('btn-fault-vobc');
+      const lblV = document.getElementById('fault-lbl-vobc');
+      if (btnV) btnV.classList.toggle('active', isAct);
+      if (lblV) lblV.innerText = isAct ? '🚨 VOBC 고장 인가 중' : '정상 (클릭 시 고장 인가)';
+      this.addLog(`[비상 고장 인가] VOBC 장치 고장 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
+    } else if (faultType === 'VOBC_COMM') {
+      const btnVc = document.getElementById('btn-fault-vobc-comm');
+      const lblVc = document.getElementById('fault-lbl-vobc-comm');
+      if (btnVc) btnVc.classList.toggle('active', isAct);
+      if (lblVc) lblVc.innerText = isAct ? '⚠️ VOBC 통신 두절 중' : '정상 (클릭 시 고장 인가)';
+      this.addLog(`[비상 고장 인가] VOBC 통신 두절 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'amber' : 'green');
+    } else if (faultType === 'TCMS_FAIL') {
+      const btnT = document.getElementById('btn-fault-tcms');
+      const lblT = document.getElementById('fault-lbl-tcms');
+      if (btnT) btnT.classList.toggle('active', isAct);
+      if (lblT) lblT.innerText = isAct ? '🚨 TCMS 통신이상 인가 중' : '정상 (클릭 시 고장 인가)';
+      this.addLog(`[비상 고장 인가] TCMS 통신 이상 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
     }
 
-    const anyActive = this.activeFaults.DOOR_LOCK_FAIL || this.activeFaults.EB_STUCK;
+    const anyActive = this.activeFaults.DOOR_LOCK_FAIL || this.activeFaults.EB_STUCK ||
+      this.activeFaults.VOBC_FAIL || this.activeFaults.VOBC_COMM || this.activeFaults.TCMS_FAIL;
     if (statusTag) {
       statusTag.innerText = anyActive ? '⚠️ 비상 고장 주입 운용 중' : '정상 운행 중';
       statusTag.style.color = anyActive ? '#f87171' : '#94a3b8';
@@ -9758,6 +9921,21 @@ const TrainRemote = {
         currentGaugeBC = BC_EMG_BAR;
         updateGaugeUI(BC_EMG_BAR, currentGaugeMR);
         alert('🚨 [관제실 비상 통보] 비상제동 완해 불량(고착) 발생!\n비상제동 완해 절차를 수행하십시오.');
+      }
+    } else if (faultType === 'VOBC_FAIL') {
+      window.__FAULT_VOBC_FAIL = active;
+      if (active) {
+        showTemporaryHudFeedback('🚨 [신호 고장] VOBC 고장 인가 (DU 적색 / ADU 앰버)', true);
+      }
+    } else if (faultType === 'VOBC_COMM') {
+      window.__FAULT_VOBC_COMM = active;
+      if (active) {
+        showTemporaryHudFeedback('⚠️ [통신 고장] VOBC 통신 두절 (DU 황색 / ADU 앰버)', true);
+      }
+    } else if (faultType === 'TCMS_FAIL') {
+      window.__FAULT_TCMS_FAIL = active;
+      if (active) {
+        showTemporaryHudFeedback('🚨 [차량 통신] TCMS 통신 이상 발생 (ADU 적색)', true);
       }
     }
   },
