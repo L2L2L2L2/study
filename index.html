@@ -6263,10 +6263,13 @@ function updateTrainPhysics() {
     else { target = 0.0; rate = -3.5; }
   } else if (isManualMode && notch.charAt(0) === 'B') {
     target = 0.0;
-    if (notch === 'B1') rate = -1.8;
-    else if (notch === 'B2') rate = -2.6;
-    else if (notch === 'B3') rate = -3.6;
-    else rate = -5.5;
+    if (notch === 'B1') rate = -1.2;
+    else if (notch === 'B2') rate = -2.0;
+    else if (notch === 'B3') rate = -3.0;
+    else if (notch === 'B4') rate = -4.0;
+    else if (notch === 'B5') rate = -4.8;
+    else if (notch === 'B6') rate = -5.6;
+    else rate = -6.4;
   } else if (isManualMode && notch.charAt(0) === 'P') {
     if (canManualTraction) {
       // RM 모드일 때는 최대 25.0, FM/ATPM일 때는 최대 80.0
@@ -6278,10 +6281,10 @@ function updateTrainPhysics() {
       else if (notch === 'P3') { target = Math.min(65.0, maxSpeed); rate = 5.0; }
       else if (notch === 'P4') { target = Math.min(80.0, maxSpeed); rate = 6.2; }
     } else { 
-      target = 0.0; rate = -0.6; 
+      target = 0.0; rate = -0.15; 
     }
   } else {
-    target = 0.0; rate = -0.35; // 타행(N) 시 자연 감속
+    target = 0.0; rate = -0.15; // 타행(N) 시 자연 감속 (미세한 구름/공기 저항)
   }
 
   /* 구배 저항 */
@@ -6291,14 +6294,22 @@ function updateTrainPhysics() {
   trainAccelRate = rate;
   const prevSpeed = trainSpeed;
 
-  // [버그 수정 핵심] 내리막 가속 및 모드 전환 시 무제한 폭주 방지
   if (trainSpeed < target) {
     // 가속 단계: 구배 가속이 더해져도 현재 목표 속도(target)를 절대 초과하지 못하도록 고정
     trainSpeed = Math.min(target, trainSpeed + (rate + gradeAcc) * dt);
   } else if (trainSpeed > target) {
-    // 감속 단계: FM(고속)에서 RM(25km/h)으로 전환하거나 노치를 내렸을 때 확실하게 감속
-    const decel = Math.min(rate, -2.5); // 안전 감속력 보장
-    trainSpeed = Math.max(target, trainSpeed + decel * dt);
+    if (isManualMode && notch.charAt(0) === 'P') {
+      // 감단(P4->P1 등) 또는 모드 전환(FM->RM) 시 하위 목표 속도까지 안전 감속
+      trainSpeed = Math.max(target, trainSpeed - 2.2 * dt);
+    } else if (notch.charAt(0) === 'B' || isEmgActive || notch === 'EB' || isUnmannedActive) {
+      // 제동 체결 상태: 제동력 + 구배 저항 반영
+      trainSpeed = Math.max(target, trainSpeed + (rate + gradeAcc) * dt);
+    } else {
+      // 타행(N) 상태: 제동이 전혀 걸리지 않은 상태로, 자연 주행 저항(구름/공기) + 구배 저항만 적용
+      // 브레이크 체결 시(-1.2 ~ -6.4)와 확연히 구분되는 부드럽고 여유로운 타행감 (-0.15 km/h/s 수준)
+      const coastDecel = rate + gradeAcc;
+      trainSpeed = Math.max(target, trainSpeed + coastDecel * dt);
+    }
   }
 
   // [이중 안전장치] 운전 모드별 절대 최고 상한선 (RM은 25.0, FM/ATPM은 80.0)
