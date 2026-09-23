@@ -8160,19 +8160,16 @@ function updateDuAduDisplay(driveMode, notch, now) {
       tpBarEl.style.height = `${barPct.toFixed(1)}%`;
     }
 
-    // Mode Box (속도계 하단 중앙 현시)
+    // Mode Box (속도계 하단 중앙 현시: FM, RM, ATPM, OFF, Driverless)
     const aduModeBox = document.getElementById('adu2-mode-box');
     if (aduModeBox) {
       const isWirelessLit = (typeof cvCompState === 'function') && (cvCompState('SW_WIRELESS_MODE', 'OFF') === 'LIT');
       const isUnmanned = (driveMode === 'OFF' && isWirelessLit) || (typeof isUnmannedActive !== 'undefined' && isUnmannedActive);
-      const dirStr = (revNotch === 'R') ? 'Reverse' : 'Forward';
 
       if (isUnmanned) {
         aduModeBox.innerText = 'Driverless';
-      } else if (driveMode === 'OFF') {
-        aduModeBox.innerText = 'OFF';
       } else {
-        aduModeBox.innerText = `${driveMode} ${dirStr}`;
+        aduModeBox.innerText = driveMode || 'OFF';
       }
     }
 
