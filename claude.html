@@ -10790,6 +10790,15 @@ function handleComponentTouch(compId) {
       triggerHaptic([35, 25, 60]);
       showTemporaryHudFeedback("📢 [전기혼] 빵! (열차 경적 취명)", false);
     } else if (compId === 'SW_DOOR_OPEN_L' || compId === 'SW_DOOR_OPEN_R') {
+      const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+      const driveMode = modeComp ? modeComp.state : 'OFF';
+      if (driveMode === 'OFF') {
+        sound.playError();
+        triggerHaptic([50, 50]);
+        showTemporaryHudFeedback('⚠️ [출입문 인터록] 운전 모드가 OFF 상태일 때는 출입문 버튼이 동작하지 않습니다. (FM / RM / ATPM 모드 선택 필요)', true);
+        return;
+      }
+
       // 1. [인터록] 열차 주행 중(이동 중)에는 출입문 열림 버튼을 눌러도 출입문이 열리지 않음 (영속도 인터록 / Zero Speed Interlock)
       if (trainSpeed > 0.5) {
         sound.playError();
@@ -10822,6 +10831,15 @@ function handleComponentTouch(compId) {
 
       showTemporaryHudFeedback(`🚪 [출입문 열림] ${compId === 'SW_DOOR_OPEN_L' ? '좌측' : '우측'} 출입문 개방 (표시등 점멸, 역행 차단)`, false);
     } else if (compId === 'SW_DOOR_CLOSE') {
+      const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+      const driveMode = modeComp ? modeComp.state : 'OFF';
+      if (driveMode === 'OFF') {
+        sound.playError();
+        triggerHaptic([50, 50]);
+        showTemporaryHudFeedback('⚠️ [출입문 인터록] 운전 모드가 OFF 상태일 때는 출입문 버튼이 동작하지 않습니다. (FM / RM / ATPM 모드 선택 필요)', true);
+        return;
+      }
+
       sound.playAirExhaust(1.0, 900, 0.7);
       triggerHaptic([30, 40]);
 
