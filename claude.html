@@ -3311,7 +3311,7 @@
 
     .du-monitors-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
       gap: 14px;
     }
 
@@ -5901,54 +5901,134 @@
                 <span class="mmi-led red" id="adu-led-eb" title="EMG BRAKE"></span>
               </div>
             </div>
-            <div class="mmi-screen adu-screen">
-              <div class="adu-screen-top">
-                <div class="adu-station-tag">
-                  <span class="lbl">차기 정차역</span>
-                  <span class="val" id="adu-next-st">검암</span>
-                </div>
-                <div class="adu-dwell-tag">
-                  <span class="lbl">Dwell Time</span>
-                  <span class="val" id="adu-dwell-val">--</span>
-                </div>
-                <div class="adu-rotem-logo">Hyundai Rotem</div>
-              </div>
-
-              <!-- 대형 원형 아날로그 속도계 & 디지털 속도 -->
-              <div class="adu-speedo-zone">
-                <div class="adu-dial-wrap">
-                  <canvas id="adu-speedo-canvas" width="220" height="220"></canvas>
-                  <div class="adu-digital-readout">
-                    <span class="adu-digi-val" id="adu-speed-digital">0</span>
-                    <span class="adu-digi-unit">km/h</span>
+            <div class="mmi-screen adu-screen" style="padding:0; background:#000; overflow:hidden;">
+              <div class="adu2-mmi-wrapper">
+                <!-- 1. 상단 바 -->
+                <div class="adu2-top-bar">
+                  <div class="adu2-top-col">
+                    <span class="adu2-top-lbl">Docking Status</span>
+                    <span class="adu2-top-val green" id="adu2-dock-status">Docked</span>
+                  </div>
+                  <div class="adu2-top-col">
+                    <span class="adu2-top-lbl">Dwell Time</span>
+                    <span class="adu2-top-val white" id="adu2-dwell-time">27 <small>sec</small></span>
+                  </div>
+                  <div class="adu2-top-col">
+                    <span class="adu2-top-banner red" id="adu2-eb-banner">E B</span>
+                  </div>
+                  <div class="adu2-top-col">
+                    <span class="adu2-top-banner yellow" id="adu2-fsb-banner">F S B</span>
+                  </div>
+                  <div class="adu2-top-col">
+                    <span class="adu2-top-lbl">Train Length</span>
+                    <span class="adu2-top-val white" id="adu2-train-length">2-Car</span>
+                  </div>
+                  <div class="adu2-top-col">
+                    <span class="adu2-top-lbl">ATP</span>
+                    <span class="adu2-top-val yellow" id="adu2-atp-dir">Forward</span>
                   </div>
                 </div>
 
-                <div class="adu-target-zone">
-                  <div class="adu-limit-card">
-                    <span class="lbl">제한 속도 (LIMIT)</span>
-                    <span class="val" id="adu-limit-val">15 km/h</span>
+                <!-- 2. 중앙 메인 영역 -->
+                <div class="adu2-middle-area">
+                  <!-- 좌측: Target Point 컬럼 -->
+                  <div class="adu2-target-col">
+                    <div class="adu2-tp-header">
+                      <span class="lbl">Target Point</span>
+                      <span class="val" id="adu2-tp-val">200 m</span>
+                    </div>
+                    <div class="adu2-tp-gauge-wrap">
+                      <div class="adu2-tp-scale">
+                        <div>1000 <span class="tick">—</span></div>
+                        <div><span class="tick">—</span></div>
+                        <div><span class="tick">—</span></div>
+                        <div><span class="tick">—</span></div>
+                        <div><span class="tick">—</span></div>
+                        <div>500 <span class="tick">—</span></div>
+                        <div>400 <span class="tick">—</span></div>
+                        <div>300 <span class="tick">—</span></div>
+                        <div>200 <span class="tick">—</span></div>
+                        <div>100 <span class="tick">—</span></div>
+                        <div>0 <span class="tick">—</span></div>
+                      </div>
+                      <div class="adu2-tp-bar-track">
+                        <div class="adu2-tp-bar-fill" id="adu2-tp-bar-fill" style="height: 20%;"></div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="adu-mode-card">
-                    <span class="lbl">운전 모드</span>
-                    <span class="val" id="adu-mode-val">RM</span>
+
+                  <!-- 중앙: 속도계 다이얼 & 모드 박스 -->
+                  <div class="adu2-center-col">
+                    <div class="adu2-canvas-container">
+                      <canvas id="adu2-speedo-canvas" width="280" height="215"></canvas>
+                    </div>
+                    <div class="adu2-center-footer">
+                      <div class="adu2-mode-box" id="adu2-mode-box">RM Forward</div>
+                      <div class="adu2-signal-aspect yellow" id="adu2-signal-aspect">Y</div>
+                    </div>
                   </div>
-                  <div class="adu-eb-card" id="adu-eb-card" style="display:none;">
-                    <span class="adu-eb-badge">🚨 비상제동 체결</span>
-                    <span class="adu-eb-desc">RM 허용속도 초과</span>
-                  </div>
-                  <div class="adu-warn-card" id="adu-warn-card" style="display:none;">
-                    <span class="adu-warn-badge">⚠️ 과속 경고 (15~17km/h)</span>
-                    <span class="adu-warn-desc" id="adu-warn-timer">5.0초 후 비상제동</span>
+
+                  <!-- 우측: 플랫폼, 도어, VOBC -->
+                  <div class="adu2-right-col">
+                    <div class="adu2-info-block">
+                      <span class="adu2-info-lbl">Next Platform</span>
+                      <span class="adu2-info-val white" id="adu2-next-plat">201A</span>
+                    </div>
+                    <div class="adu2-info-block">
+                      <span class="adu2-info-lbl">Final Platform</span>
+                      <span class="adu2-info-val white" id="adu2-final-plat">227</span>
+                    </div>
+                    <div class="adu2-doors-block">
+                      <span class="adu2-info-lbl">PSD</span>
+                      <div class="adu2-door-boxes-row">
+                        <span class="side-lbl">L</span>
+                        <span class="adu2-sq-box yellow" id="adu2-psd-l1">■</span>
+                        <span class="adu2-sq-box yellow" id="adu2-psd-l2">■</span>
+                        <span style="flex:1;"></span>
+                        <span class="adu2-sq-box green" id="adu2-psd-r1">■</span>
+                        <span class="adu2-sq-box green" id="adu2-psd-r2">■</span>
+                        <span class="side-lbl" style="text-align:right;">R</span>
+                      </div>
+                    </div>
+                    <div class="adu2-doors-block">
+                      <span class="adu2-info-lbl">Train Door</span>
+                      <div class="adu2-door-boxes-row">
+                        <span class="side-lbl">L</span>
+                        <span class="adu2-sq-box yellow" id="adu2-tdoor-l1">■</span>
+                        <span class="adu2-sq-box yellow" id="adu2-tdoor-l2">■</span>
+                        <span style="flex:1;"></span>
+                        <span class="adu2-sq-box green" id="adu2-tdoor-r1">■</span>
+                        <span class="adu2-sq-box green" id="adu2-tdoor-r2">■</span>
+                        <span class="side-lbl" style="text-align:right;">R</span>
+                      </div>
+                    </div>
+                    <div class="adu2-info-block">
+                      <span class="adu2-info-lbl">Door Enable</span>
+                      <span class="adu2-info-val green" id="adu2-door-enable">Left</span>
+                    </div>
+                    <div class="adu2-subsys-block">
+                      <div class="adu2-subsys-line red" id="adu2-subsys-tcms">TCMS</div>
+                      <div class="adu2-subsys-line green" id="adu2-subsys-vobc1">VOBC 1 <span class="vobc-active-icon">Ⓐ</span></div>
+                      <div class="adu2-subsys-line green" id="adu2-subsys-vobc2">VOBC 2</div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- 하단 타겟 포인트 거리 게이지 바 -->
-              <div class="adu-target-bar-wrap">
-                <span class="adu-bar-lbl">Target Point: <b id="adu-target-dist">1,023 m</b></span>
-                <div class="adu-target-track">
-                  <div class="adu-target-fill" id="adu-target-fill" style="width: 72%;"></div>
+                <!-- 3. 하단 바: 시계, 터미널 로그, Setup 버튼 -->
+                <div class="adu2-bottom-bar">
+                  <div class="adu2-bottom-clock">
+                    <span class="adu2-clock-date" id="adu2-clock-date">2026.09.24</span>
+                    <span class="adu2-clock-time" id="adu2-clock-time">11:37:14</span>
+                  </div>
+                  <div class="adu2-bottom-logs" id="adu2-bottom-logs">
+                    <div id="adu2-log-1">11:34:54 HOLD</div>
+                    <div id="adu2-log-2">11:34:08 SKIP</div>
+                    <div id="adu2-log-3">11:34:40 FSB FAIL</div>
+                    <div id="adu2-log-4">11:34:24 TCMS LINK FAIL</div>
+                  </div>
+                  <div class="adu2-bottom-btn-wrap">
+                    <button type="button" class="adu2-setup-btn" onclick="showTemporaryHudFeedback('ℹ️ [ADU Setup] SelTrac MMI 환경설정 메뉴', false)">Setup</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -7375,7 +7455,7 @@ function resetRmEmergencyBrake() {
 }
 
 function drawAduSpeedoGauge(speed, driveMode) {
-  const canvas = document.getElementById('adu-speedo-canvas');
+  const canvas = document.getElementById('adu2-speedo-canvas');
   if (!canvas || !canvas.offsetParent) return;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -7383,158 +7463,120 @@ function drawAduSpeedoGauge(speed, driveMode) {
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0, 0, w, h);
 
-  const cx = w / 2, cy = h / 2, r = 85;
-  const startAng = 0.75 * Math.PI; // 135 deg
-  const endAng = 2.25 * Math.PI;   // 405 deg
-  const totalAng = 1.5 * Math.PI;  // 270 deg
+  // Dial Center & Radius (Geometry matched 1:1 to SelTrac MMI reference image)
+  const cx = 140, cy = 135, r = 100;
+  // Speed 0: 200 deg, Speed 60: 270 deg (top), Speed 120: 340 deg
+  const startDeg = 200;
+  const totalDeg = 140;
 
-  // Background Outer Ring Bezel
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r + 14, 0, Math.PI * 2);
-  ctx.fillStyle = '#0f172a';
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#334155';
-  ctx.stroke();
-
-  // Dial Inner Face
-  const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, r);
-  grad.addColorStop(0, '#1e293b');
-  grad.addColorStop(0.85, '#0b0f19');
-  grad.addColorStop(1, '#050810');
-  ctx.beginPath();
-  ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // Dial Track Arc
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, startAng, endAng);
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = '#334155';
-  ctx.stroke();
-
-  // RM or FM Limit zone Arc
-  if (driveMode === 'RM') {
-    const ang15 = startAng + (15 / 100) * totalAng;
-    // Safe arc
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, startAng, ang15);
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#22c55e';
-    ctx.stroke();
-
-    // Overspeed arc (15 to 100)
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, ang15, endAng);
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = 'rgba(239, 68, 68, 0.75)';
-    ctx.stroke();
-
-    // 15 km/h limit triangular marker
-    const tx = cx + (r - 10) * Math.cos(ang15);
-    const ty = cy + (r - 10) * Math.sin(ang15);
-    ctx.save();
-    ctx.translate(tx, ty);
-    ctx.rotate(ang15 + Math.PI / 2);
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(-4, -8);
-    ctx.lineTo(4, -8);
-    ctx.closePath();
-    ctx.fillStyle = '#f59e0b';
-    ctx.fill();
-    ctx.restore();
-  } else {
-    const ang80 = startAng + (80 / 100) * totalAng;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, startAng, ang80);
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#38bdf8';
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, ang80, endAng);
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
-    ctx.stroke();
+  function toRad(deg) {
+    return (deg * Math.PI) / 180;
+  }
+  function speedToDeg(s) {
+    const clamped = Math.max(0, Math.min(120, s));
+    return startDeg + (clamped / 120) * totalDeg;
   }
 
-  // Ticks & Numbers (0 to 100 km/h, step 10)
-  ctx.font = '9px Consolas, monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  // 1. Outer Arc Bands (Yellow, White, Red)
+  let targetLimit = 15;
+  let maxPermitted = 17;
+  if (driveMode === 'FM') {
+    targetLimit = 75;
+    maxPermitted = 80;
+  } else if (driveMode === 'ATPM') {
+    targetLimit = 65;
+    maxPermitted = 70;
+  }
 
-  for (let s = 0; s <= 100; s += 5) {
-    const ang = startAng + (s / 100) * totalAng;
-    const isMajor = (s % 10 === 0);
-    const tickLen = isMajor ? 8 : 4;
-    const x1 = cx + (r - 2) * Math.cos(ang);
-    const y1 = cy + (r - 2) * Math.sin(ang);
-    const x2 = cx + (r - 2 - tickLen) * Math.cos(ang);
-    const y2 = cy + (r - 2 - tickLen) * Math.sin(ang);
+  // Yellow band (0 to targetLimit / civil speed)
+  const yellowEndDeg = speedToDeg(targetLimit);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 4, toRad(startDeg), toRad(yellowEndDeg));
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = '#ffff00';
+  ctx.stroke();
+
+  // White band (targetLimit to maxPermitted)
+  const whiteEndDeg = speedToDeg(maxPermitted);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 6, toRad(yellowEndDeg), toRad(whiteEndDeg));
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = '#ffffff';
+  ctx.stroke();
+
+  // Red band (maxPermitted to overspeed ceiling)
+  const redEndDeg = speedToDeg(Math.min(120, maxPermitted + 12));
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 6, toRad(whiteEndDeg), toRad(redEndDeg));
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = '#ff0000';
+  ctx.stroke();
+
+  // 2. Ticks and Labels (0 to 120 km/h)
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = '#ffffff';
+
+  for (let s = 0; s <= 120; s += 10) {
+    const deg = speedToDeg(s);
+    const rad = toRad(deg);
+    const isMajor = (s % 20 === 0);
+    const tickLen = isMajor ? 13 : 8;
+
+    const x1 = cx + r * Math.cos(rad);
+    const y1 = cy + r * Math.sin(rad);
+    const x2 = cx + (r - tickLen) * Math.cos(rad);
+    const y2 = cy + (r - tickLen) * Math.sin(rad);
 
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
-    ctx.lineWidth = isMajor ? 1.5 : 1;
-    if (driveMode === 'RM' && s > 15) {
-      ctx.strokeStyle = '#ef4444';
-    } else {
-      ctx.strokeStyle = isMajor ? '#94a3b8' : '#475569';
-    }
+    ctx.lineWidth = isMajor ? 2.5 : 1.5;
     ctx.stroke();
 
     if (isMajor) {
-      const numR = r - 18;
-      const nx = cx + numR * Math.cos(ang);
-      const ny = cy + numR * Math.sin(ang);
-      ctx.fillStyle = (driveMode === 'RM' && s > 15) ? '#f87171' : '#cbd5e1';
-      ctx.fillText(s.toString(), nx, ny);
+      ctx.font = 'bold 16px Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const textR = r - 26;
+      const tx = cx + textR * Math.cos(rad);
+      const ty = cy + textR * Math.sin(rad);
+      ctx.fillText(s.toString(), tx, ty);
     }
   }
 
-  // Active Speed Arc Fill
-  const clampedSpeed = Math.max(0, Math.min(100, speed));
-  const currentAng = startAng + (clampedSpeed / 100) * totalAng;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r - 5, startAng, currentAng);
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = (driveMode === 'RM' && speed > 15) ? '#ef4444' : '#38bdf8';
-  ctx.stroke();
+  // 3. Red Speed Needle
+  const clampedSpeed = Math.max(0, Math.min(120, speed));
+  const needleDeg = speedToDeg(clampedSpeed);
+  const needleRad = toRad(needleDeg);
 
-  // Speed Needle
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.rotate(currentAng);
+  ctx.rotate(needleRad);
 
   ctx.beginPath();
-  ctx.moveTo(-3, -2);
-  ctx.lineTo(r - 12, 0);
-  ctx.lineTo(-3, 2);
+  ctx.moveTo(0, -3.5);
+  ctx.lineTo(r - 4, 0);
+  ctx.lineTo(0, 3.5);
   ctx.closePath();
-  ctx.fillStyle = (driveMode === 'RM' && speed > 15) ? '#ff3b30' : '#f97316';
-  ctx.shadowColor = (driveMode === 'RM' && speed > 15) ? 'rgba(255, 59, 48, 0.8)' : 'rgba(249, 115, 22, 0.6)';
-  ctx.shadowBlur = 6;
+  ctx.fillStyle = '#ff0000';
+  ctx.shadowColor = 'rgba(255, 0, 0, 0.6)';
+  ctx.shadowBlur = 4;
   ctx.fill();
   ctx.restore();
 
-  // Center Boss Cap
+  // 4. Center Red Circular Hub with Black Bold Digital Speed Inside
+  const hubRadius = 24;
   ctx.beginPath();
-  ctx.arc(cx, cy, 9, 0, Math.PI * 2);
-  ctx.fillStyle = '#1e293b';
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#475569';
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(cx, cy, 4, 0, Math.PI * 2);
-  ctx.fillStyle = '#38bdf8';
+  ctx.arc(cx, cy, hubRadius, 0, Math.PI * 2);
+  ctx.fillStyle = '#ff0000';
   ctx.fill();
 
-  ctx.restore();
+  // Digital Speed inside hub (Black bold text)
+  ctx.font = 'bold 19px Consolas, -apple-system, sans-serif';
+  ctx.fillStyle = '#000000';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(Math.round(clampedSpeed).toString(), cx, cy + 1);
 }
 
 function updateDuAduDisplay(driveMode, notch, now) {
@@ -7707,59 +7749,128 @@ function updateDuAduDisplay(driveMode, notch, now) {
     }
   }
 
-  // 13. ADU Updates
-  const aduNextSt = document.getElementById('adu-next-st');
-  if (aduNextSt) aduNextSt.innerText = stInfo.name;
-
-  const dwellEl = document.getElementById('adu-dwell-val');
-  if (dwellEl) dwellEl.innerText = (trainSpeed <= 0.2) ? '00:30' : '--';
-
-  const distToStation = Math.max(0, Math.round(stInfo.dStart));
-  const targetDistEl = document.getElementById('adu-target-dist');
-  const targetFillEl = document.getElementById('adu-target-fill');
-  if (targetDistEl) targetDistEl.innerText = `${distToStation.toLocaleString()} m`;
-  if (targetFillEl) {
-    const pct = Math.max(5, Math.min(100, (1 - distToStation / CV_LINE.cycle) * 100));
-    targetFillEl.style.width = `${pct.toFixed(0)}%`;
+  // 13. ADU Updates (SelTrac MMI Live Telemetry)
+  const dockEl = document.getElementById('adu2-dock-status');
+  if (dockEl) {
+    if (trainSpeed <= 0.2 && distToStation <= 5) {
+      dockEl.innerText = 'Docked';
+      dockEl.className = 'adu2-top-val green';
+    } else {
+      dockEl.innerText = '--';
+      dockEl.className = 'adu2-top-val white';
+    }
   }
 
-  const limitEl = document.getElementById('adu-limit-val');
-  if (limitEl) {
-    if (driveMode === 'RM') limitEl.innerText = '15 km/h';
-    else if (driveMode === 'FM') limitEl.innerText = '80 km/h';
-    else if (driveMode === 'ATPM') limitEl.innerText = '70 km/h';
-    else limitEl.innerText = '--';
+  const aduDwellEl = document.getElementById('adu2-dwell-time');
+  if (aduDwellEl) {
+    if (trainSpeed <= 0.2 && distToStation <= 5) {
+      const dwellSec = Math.max(0, 30 - Math.floor((now / 1000) % 30));
+      aduDwellEl.innerHTML = `${dwellSec} <small>sec</small>`;
+    } else {
+      aduDwellEl.innerHTML = `-- <small>sec</small>`;
+    }
   }
-  const modeValEl = document.getElementById('adu-mode-val');
-  if (modeValEl) modeValEl.innerText = driveMode || 'OFF';
 
-  const digiSpeedEl = document.getElementById('adu-speed-digital');
-  if (digiSpeedEl) digiSpeedEl.innerText = Math.round(trainSpeed);
+  const ebBanner = document.getElementById('adu2-eb-banner');
+  if (ebBanner) ebBanner.classList.toggle('lit', isEbActive);
 
-  const ebCard = document.getElementById('adu-eb-card');
-  const warnCard = document.getElementById('adu-warn-card');
-  const warnTimerEl = document.getElementById('adu-warn-timer');
+  const fsbBanner = document.getElementById('adu2-fsb-banner');
+  const isFsb = (notch === 'B7' || isRmEbActive || (notch === 'EB'));
+  if (fsbBanner) fsbBanner.classList.toggle('lit', isFsb);
+
+  const atpDirEl = document.getElementById('adu2-atp-dir');
+  if (atpDirEl) atpDirEl.innerText = (revNotch === 'R' ? 'Reverse' : 'Forward');
+
+  // Target Point Bar & Distance
+  const tpValEl = document.getElementById('adu2-tp-val');
+  if (tpValEl) tpValEl.innerText = `${distToStation} m`;
+
+  const tpBarEl = document.getElementById('adu2-tp-bar-fill');
+  if (tpBarEl) {
+    // 0 to 1000m scale
+    const barPct = Math.max(0, Math.min(100, (distToStation / 1000) * 100));
+    tpBarEl.style.height = `${barPct.toFixed(1)}%`;
+  }
+
+  // Mode Box & Signal Aspect
+  const aduModeBox = document.getElementById('adu2-mode-box');
+  if (aduModeBox) {
+    aduModeBox.innerText = `${driveMode || 'OFF'} ${revNotch === 'R' ? 'Reverse' : 'Forward'}`;
+  }
+
+  const aspectEl = document.getElementById('adu2-signal-aspect');
+  if (aspectEl) {
+    if (isEbActive) {
+      aspectEl.className = 'adu2-signal-aspect red';
+      aspectEl.innerText = 'R';
+    } else if (driveMode === 'RM' || (driveMode === 'FM' && trainSpeed > 70)) {
+      aspectEl.className = 'adu2-signal-aspect yellow';
+      aspectEl.innerText = 'Y';
+    } else {
+      aspectEl.className = 'adu2-signal-aspect green';
+      aspectEl.innerText = 'G';
+    }
+  }
+
+  // Platform & Station Info
+  const nextPlatEl = document.getElementById('adu2-next-plat');
+  if (nextPlatEl) {
+    const stCode = (typeof cvCurrentStationIndex !== 'undefined') ? (201 + cvCurrentStationIndex).toString() + 'A' : '201A';
+    nextPlatEl.innerText = stCode;
+  }
+
+  // Doors & PSD status
+  const psdL1 = document.getElementById('adu2-psd-l1');
+  const psdL2 = document.getElementById('adu2-psd-l2');
+  const psdR1 = document.getElementById('adu2-psd-r1');
+  const psdR2 = document.getElementById('adu2-psd-r2');
+  const tdoorL1 = document.getElementById('adu2-tdoor-l1');
+  const tdoorL2 = document.getElementById('adu2-tdoor-l2');
+  const tdoorR1 = document.getElementById('adu2-tdoor-r1');
+  const tdoorR2 = document.getElementById('adu2-tdoor-r2');
+
+  const doorSquareClass = isDoorClosed ? 'green' : 'yellow';
+  if (psdL1) psdL1.className = `adu2-sq-box ${doorSquareClass}`;
+  if (psdL2) psdL2.className = `adu2-sq-box ${doorSquareClass}`;
+  if (psdR1) psdR1.className = `adu2-sq-box ${doorSquareClass}`;
+  if (psdR2) psdR2.className = `adu2-sq-box ${doorSquareClass}`;
+  if (tdoorL1) tdoorL1.className = `adu2-sq-box ${doorSquareClass}`;
+  if (tdoorL2) tdoorL2.className = `adu2-sq-box ${doorSquareClass}`;
+  if (tdoorR1) tdoorR1.className = `adu2-sq-box ${doorSquareClass}`;
+  if (tdoorR2) tdoorR2.className = `adu2-sq-box ${doorSquareClass}`;
+
+  // Bezel LEDs
   const aduLedWarn = document.getElementById('adu-led-warn');
   const aduLedEb = document.getElementById('adu-led-eb');
+  if (aduLedEb) aduLedEb.className = isEbActive ? 'mmi-led red lit' : 'mmi-led red';
+  if (aduLedWarn) aduLedWarn.className = (driveMode === 'RM' && rmOverspeedTimer > 0) ? 'mmi-led amber lit' : 'mmi-led amber';
 
+  // Bottom Clock
+  const aduClockDate = document.getElementById('adu2-clock-date');
+  if (aduClockDate) aduClockDate.innerText = `${yr}.${mo}.${da}`;
+  const aduClockTime = document.getElementById('adu2-clock-time');
+  if (aduClockTime) aduClockTime.innerText = `${hh}:${mm}:${ss}`;
+
+  // Bottom Logs
+  const log1 = document.getElementById('adu2-log-1');
+  const log2 = document.getElementById('adu2-log-2');
+  const log3 = document.getElementById('adu2-log-3');
+  const log4 = document.getElementById('adu2-log-4');
   if (isRmEbActive) {
-    if (ebCard) ebCard.style.display = 'flex';
-    if (warnCard) warnCard.style.display = 'none';
-    if (aduLedEb) aduLedEb.className = 'mmi-led red lit';
-    if (aduLedWarn) aduLedWarn.className = 'mmi-led amber';
+    if (log1) log1.innerText = `${hh}:${mm}:${ss} RM OVERSPEED EB`;
+    if (log2) log2.innerText = `${hh}:${mm}:${ss} TRAIN EMERGENCY STOP`;
   } else if (driveMode === 'RM' && rmOverspeedTimer > 0) {
-    if (ebCard) ebCard.style.display = 'none';
-    if (warnCard) warnCard.style.display = 'flex';
-    if (warnTimerEl) warnTimerEl.innerText = `${(5.0 - rmOverspeedTimer).toFixed(1)}초 후 비상제동`;
-    if (aduLedEb) aduLedEb.className = 'mmi-led red';
-    if (aduLedWarn) aduLedWarn.className = 'mmi-led amber lit';
+    if (log1) log1.innerText = `${hh}:${mm}:${ss} OVERSPEED WARN (${(5.0 - rmOverspeedTimer).toFixed(1)}s)`;
+    if (log2) log2.innerText = `${hh}:${mm}:${ss} SPEED > 15 KM/H`;
+  } else if (!isDoorInterlockCleared) {
+    if (log1) log1.innerText = `${hh}:${mm}:${ss} TRAIN DOOR OPEN`;
+    if (log2) log2.innerText = `${hh}:${mm}:${ss} TRACTION INHIBITED`;
   } else {
-    if (ebCard) ebCard.style.display = 'none';
-    if (warnCard) warnCard.style.display = 'none';
-    if (aduLedEb) aduLedEb.className = 'mmi-led red';
-    if (aduLedWarn) aduLedWarn.className = 'mmi-led amber';
+    if (log1) log1.innerText = `${hh}:34:54 HOLD`;
+    if (log2) log2.innerText = `${hh}:34:08 SKIP`;
   }
 
+  // Draw ADU Speedo
   drawAduSpeedoGauge(trainSpeed, driveMode);
 }
 
