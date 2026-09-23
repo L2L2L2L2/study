@@ -3309,7 +3309,7 @@
       font-family: 'Consolas', monospace;
     }
 
-        /* ========================================================
+    /* ========================================================
        인천 2호선 실물 운전실 모니터 (DU 운전일반 & SelTrac ADU) 1:1 정밀 고증 스타일
     ======================================================== */
     .du-monitors-grid {
@@ -4164,6 +4164,52 @@
       border-left: 2px solid #222233;
       border-bottom: 2px solid #9999aa;
       border-right: 2px solid #9999aa;
+    }
+
+    .occ-panel-board {
+      background: radial-gradient(circle at 50% 20%, #151d2a 0%, #0a0e14 100%) !important;
+      border: 2px solid #1e3a8a !important;
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 8px 32px rgba(0,0,0,0.7) !important;
+      padding: 16px !important;
+      color: #e2e8f0;
+      overflow-y: auto;
+    }
+    .occ-board-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 100%;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .occ-top-status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0d1522;
+      border: 1px solid #1e293b;
+      border-left: 4px solid #38bdf8;
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+    .occ-train-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .occ-live-pill {
+      background: #22c55e;
+      color: #052e16;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      animation: occ-pulse 1.4s infinite;
+    }
+    @keyframes occ-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.65; transform: scale(0.96); }
     }
     .occ-train-name {
       font-size: 14px;
@@ -5738,6 +5784,7 @@
 
       <div class="du-container">
         <!-- 모니터 상단 상태바 -->
+        <!-- 모니터 상단 상태바 -->
         <div class="du-header-bar">
           <div class="du-title">
             <span class="du-badge">CAB DISPLAY</span>
@@ -5759,7 +5806,7 @@
                 <span class="mmi-led red" id="du-led-err" title="FAULT"></span>
               </div>
             </div>
-                        <div class="mmi-screen du-screen" style="padding:0; background:#000; overflow:hidden;">
+            <div class="mmi-screen du-screen" style="padding:0; background:#000; overflow:hidden;">
               <div class="du2-tcms-wrapper">
                 <!-- 1. 최상단 헤더 -->
                 <div class="du2-top-header">
@@ -6038,246 +6085,6 @@
                 </div>
               </div>
             </div>
-
-                <!-- 2. 상태 바 (HB/EB/PB/ADBS, 다음역/종착역, 속도, 가선전압, 가선전류) -->
-                <div class="du2-sub-bar">
-                  <div class="du2-chips-group">
-                    <div class="du2-chip-box" id="du2-chip-hb">HB</div>
-                    <div class="du2-chip-box" id="du2-chip-eb">EB</div>
-                    <div class="du2-chip-box" id="du2-chip-pb">PB</div>
-                    <div class="du2-chip-box" id="du2-chip-adbs">ADBS</div>
-                  </div>
-
-                  <div class="du2-st-dest-wrap">
-                    <div>다음역 : <span id="du2-next-st" class="val-green">검단사거리</span></div>
-                    <div>종착역 : <span id="du2-dest-st" class="val-green">운연</span></div>
-                  </div>
-
-                  <div class="du2-meter-item">
-                    <span id="du2-speed-val" class="du2-val-big-green">0</span>
-                    <span class="du2-meter-unit">[km/h]</span>
-                  </div>
-
-                  <div class="du2-meter-item">
-                    <span class="du2-meter-label red">가선전압</span>
-                    <span id="du2-volt-val" class="du2-val-big-red">750</span>
-                    <span class="du2-meter-unit">[V]</span>
-                  </div>
-
-                  <div class="du2-meter-item">
-                    <span class="du2-meter-label red">가선전류</span>
-                    <span id="du2-amp-val" class="du2-val-big-red">0</span>
-                    <span class="du2-meter-unit">[A]</span>
-                  </div>
-                </div>
-
-                <!-- 3. 편성 뷰 (2량 차체 그래픽 + 범례) -->
-                <div class="du2-cars-row">
-                  <div class="du2-arrow-ind active" id="du2-arrow-fwd">◀</div>
-
-                  <div class="du2-cars-visual">
-                    <!-- Mc1 -->
-                    <div class="du2-car-unit">
-                      <div class="du2-car-label">Mc1</div>
-                      <div class="du2-car-capsule">
-                        <div class="du2-cab-mark left"></div>
-                        <div class="du2-door-indicators">
-                          <div class="du2-door-block" id="du2-d1-1"></div>
-                          <div class="du2-door-block" id="du2-d1-2"></div>
-                        </div>
-                        <div class="du2-car-code">2101</div>
-                        <div class="du2-door-indicators">
-                          <div class="du2-door-block" id="du2-d1-3"></div>
-                          <div class="du2-door-block" id="du2-d1-4"></div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Mc2 -->
-                    <div class="du2-car-unit">
-                      <div class="du2-car-label">Mc2</div>
-                      <div class="du2-car-capsule">
-                        <div class="du2-door-indicators">
-                          <div class="du2-door-block" id="du2-d2-1"></div>
-                          <div class="du2-door-block" id="du2-d2-2"></div>
-                        </div>
-                        <div class="du2-car-code">2001</div>
-                        <div class="du2-door-indicators">
-                          <div class="du2-door-block" id="du2-d2-3"></div>
-                          <div class="du2-door-block" id="du2-d2-4"></div>
-                        </div>
-                        <div class="du2-cab-mark right"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="du2-arrow-ind" id="du2-arrow-rev">▶</div>
-
-                  <!-- 범례 -->
-                  <div class="du2-car-legend">
-                    <div class="du2-leg-line"><span class="du2-leg-box yellow"></span> 통신고장</div>
-                    <div class="du2-leg-line"><span class="du2-leg-box bypass">☒</span> 바이패스</div>
-                    <div class="du2-leg-line"><span class="du2-leg-box white"></span> 개</div>
-                    <div class="du2-leg-line"><span class="du2-leg-box blue"></span> 폐</div>
-                    <div class="du2-leg-line"><span class="du2-leg-box red"></span> 고장</div>
-                  </div>
-                </div>
-
-                <!-- 4. 기기 모니터링 테이블 행들 -->
-                <div class="du2-table-wrap">
-                  <!-- (1) 경보 -->
-                  <div class="du2-trow" style="grid-template-columns: 80px 1fr;">
-                    <div class="du2-th">경보</div>
-                    <div class="du2-tcol" style="justify-content: flex-start; padding-left: 12px;">
-                      <span id="du2-alarm-text" style="color: #4ade80; font-size: 11px; font-weight: 800;">● 정상 운행 중</span>
-                    </div>
-                  </div>
-
-                  <!-- (2) 견인지령 -->
-                  <div class="du2-trow">
-                    <div class="du2-th">
-                      <div class="du2-trac-gauge-cell">
-                        <div class="du2-v-track"><div class="du2-v-fill" id="du2-trac-fill"></div></div>
-                        <div style="display:flex; flex-direction:column;">
-                          <span>견인지령</span>
-                          <span class="du2-gauge-pct" id="du2-trac-pct">0%</span>
-                        </div>
-                      </div>
-                    </div>
-                    <!-- Mc1 -->
-                    <div class="du2-tcol">
-                      <div class="du2-val-box gray" id="du2-panto-3rd-1" style="font-size:10px;">3rd</div>
-                      <div class="du2-val-box gray" style="font-size:10px;">Stinger</div>
-                      <div class="du2-val-box blue" id="du2-motor-cur-1a">0</div>
-                      <div class="du2-val-box blue" id="du2-motor-cur-1b">0</div>
-                    </div>
-                    <!-- Mc2 -->
-                    <div class="du2-tcol">
-                      <div class="du2-val-box gray" id="du2-panto-3rd-2" style="font-size:10px;">3rd</div>
-                      <div class="du2-val-box gray" style="font-size:10px;">Stinger</div>
-                      <div class="du2-val-box blue" id="du2-motor-cur-2a">0</div>
-                      <div class="du2-val-box blue" id="du2-motor-cur-2b">0</div>
-                    </div>
-                    <!-- 우측 범례 -->
-                    <div class="du2-tr-side">
-                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box blue" style="width:7px; height:7px;"></span> 투입</div>
-                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box gray" style="width:7px; height:7px;"></span> 차단</div>
-                      <div style="margin-top:2px; color:#aaa;">모터전류 [A]</div>
-                    </div>
-                  </div>
-
-                  <!-- (3) 제동지령 -->
-                  <div class="du2-trow">
-                    <div class="du2-th" style="flex-direction:column; align-items:flex-start;">
-                      <span>제동지령</span>
-                      <span class="du2-gauge-pct" id="du2-brake-pct">0%</span>
-                    </div>
-                    <!-- Mc1 -->
-                    <div class="du2-tcol">
-                      <div class="du2-val-box blue" id="du2-bc-val-1a">0.00</div>
-                      <div class="du2-val-box blue" id="du2-bc-val-1b">0.00</div>
-                    </div>
-                    <!-- Mc2 -->
-                    <div class="du2-tcol">
-                      <div class="du2-val-box blue" id="du2-bc-val-2a">0.00</div>
-                      <div class="du2-val-box blue" id="du2-bc-val-2b">0.00</div>
-                    </div>
-                    <!-- 우측 라벨 -->
-                    <div class="du2-tr-side">
-                      <div style="color:#aaa;">제동압력 [Bar]</div>
-                    </div>
-                  </div>
-
-                  <!-- (4) 신호장치 -->
-                  <div class="du2-trow">
-                    <div class="du2-th">신호장치</div>
-                    <!-- Mc1 -->
-                    <div class="du2-tcol">
-                      <div class="du2-val-box red" id="du2-vobc-1">VOBC</div>
-                    </div>
-                    <!-- Mc2 -->
-                    <div class="du2-tcol">
-                      <div class="du2-val-box red" id="du2-vobc-2">VOBC</div>
-                    </div>
-                    <!-- 우측 범례 -->
-                    <div class="du2-tr-side">
-                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box blue" style="width:7px; height:7px;"></span> 정상</div>
-                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box red" style="width:7px; height:7px;"></span> 불량</div>
-                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box yellow" style="width:7px; height:7px;"></span> 통신고장</div>
-                    </div>
-                  </div>
-
-                  <!-- (5) 보조전원 -->
-                  <div class="du2-trow">
-                    <div class="du2-th">보조전원</div>
-                    <!-- Mc1 -->
-                    <div class="du2-tcol">
-                      <div class="du2-val-box blue" id="du2-siv-1">0</div>
-                    </div>
-                    <!-- Mc2 + ESK 연결 -->
-                    <div class="du2-tcol" style="grid-column: span 1; position:relative;">
-                      <div class="du2-esk-unit">
-                        <span class="du2-esk-wire"></span>
-                        <span class="du2-esk-badge">연장급전기(ESK)</span>
-                        <span class="du2-esk-wire"></span>
-                      </div>
-                      <div class="du2-val-box blue" id="du2-siv-2">0</div>
-                    </div>
-                    <div class="du2-tr-side">
-                      <div style="color:#aaa;">SIV 전압</div>
-                    </div>
-                  </div>
-
-                  <!-- (6) 공기압축기 -->
-                  <div class="du2-trow">
-                    <div class="du2-th">공기압축기</div>
-                    <!-- Mc1 -->
-                    <div class="du2-tcol">
-                      <div class="du2-val-box gray" id="du2-cmg-1">CMG</div>
-                    </div>
-                    <!-- Mc2 -->
-                    <div class="du2-tcol">
-                      <div class="du2-val-box gray" id="du2-cmg-2">CMG</div>
-                    </div>
-                    <div class="du2-tr-side">
-                      <div style="color:#aaa;">MR 9.0 Bar</div>
-                    </div>
-                  </div>
-
-                  <!-- (7) HVAC -->
-                  <div class="du2-trow">
-                    <div class="du2-th">HVAC</div>
-                    <!-- Mc1 -->
-                    <div class="du2-tcol">
-                      <div class="du2-val-box blue">22</div>
-                      <div class="du2-val-box blue">22</div>
-                    </div>
-                    <!-- Mc2 -->
-                    <div class="du2-tcol">
-                      <div class="du2-val-box blue">22</div>
-                      <div class="du2-val-box blue">22</div>
-                    </div>
-                    <div class="du2-tr-side">
-                      <div style="color:#aaa;">실내온도 [℃]</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 5. 하단 메시지 바 -->
-                <div class="du2-msg-bar">
-                  <span class="du2-msg-prefix">메시지:</span>
-                  <span class="du2-msg-body" id="du2-msg-content">정상 운행 대기 중입니다.</span>
-                </div>
-
-                <!-- 6. 하단 4개 소프트키 버튼 -->
-                <div class="du2-footer-actions">
-                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [고장정보] 현재 차량 시스템 정상, 기록된 고장 코드 없음', false)">고장정보</button>
-                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [서비스기기] 객실 냉난방 및 출입문 장치 정상 동작 중', false)">서비스기기</button>
-                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [상태정보] 가선 전압 750V, 주공기압력 9.0 bar 정상', false)">상태정보</button>
-                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [검수정보] 201편성(2101-2001) 출고 검수 완료 상태', false)">검수정보</button>
-                </div>
-              </div>
-            </div>
           </div>
 
           <!-- [우측 모니터] ADU -->
@@ -6290,7 +6097,7 @@
                 <span class="mmi-led red" id="adu-led-eb" title="EMG BRAKE"></span>
               </div>
             </div>
-                        <div class="mmi-screen adu-screen" style="padding:0; background:#000; overflow:hidden;">
+            <div class="mmi-screen adu-screen" style="padding:0; background:#000; overflow:hidden;">
               <div class="adu2-mmi-wrapper">
                 <!-- 1. 상단 바 -->
                 <div class="adu2-top-bar">
@@ -6343,83 +6150,6 @@
                         <div class="adu2-tp-bar-fill" id="adu2-tp-bar-fill" style="height: 20%;"></div>
                       </div>
                     </div>
-                  </div>
-
-                  <!-- 중앙: 속도계 다이얼 & 모드 박스 -->
-                  <div class="adu2-center-col">
-                    <div class="adu2-canvas-container">
-                      <canvas id="adu2-speedo-canvas" width="280" height="215"></canvas>
-                    </div>
-                    <div class="adu2-center-footer">
-                      <div class="adu2-mode-box" id="adu2-mode-box">RM Forward</div>
-                      <div class="adu2-signal-aspect yellow" id="adu2-signal-aspect">Y</div>
-                    </div>
-                  </div>
-
-                  <!-- 우측: 플랫폼, 도어, VOBC -->
-                  <div class="adu2-right-col">
-                    <div class="adu2-info-block">
-                      <span class="adu2-info-lbl">Next Platform</span>
-                      <span class="adu2-info-val white" id="adu2-next-plat">201A</span>
-                    </div>
-                    <div class="adu2-info-block">
-                      <span class="adu2-info-lbl">Final Platform</span>
-                      <span class="adu2-info-val white" id="adu2-final-plat">227</span>
-                    </div>
-                    <div class="adu2-doors-block">
-                      <span class="adu2-info-lbl">PSD</span>
-                      <div class="adu2-door-boxes-row">
-                        <span class="side-lbl">L</span>
-                        <span class="adu2-sq-box yellow" id="adu2-psd-l1">■</span>
-                        <span class="adu2-sq-box yellow" id="adu2-psd-l2">■</span>
-                        <span style="flex:1;"></span>
-                        <span class="adu2-sq-box green" id="adu2-psd-r1">■</span>
-                        <span class="adu2-sq-box green" id="adu2-psd-r2">■</span>
-                        <span class="side-lbl" style="text-align:right;">R</span>
-                      </div>
-                    </div>
-                    <div class="adu2-doors-block">
-                      <span class="adu2-info-lbl">Train Door</span>
-                      <div class="adu2-door-boxes-row">
-                        <span class="side-lbl">L</span>
-                        <span class="adu2-sq-box yellow" id="adu2-tdoor-l1">■</span>
-                        <span class="adu2-sq-box yellow" id="adu2-tdoor-l2">■</span>
-                        <span style="flex:1;"></span>
-                        <span class="adu2-sq-box green" id="adu2-tdoor-r1">■</span>
-                        <span class="adu2-sq-box green" id="adu2-tdoor-r2">■</span>
-                        <span class="side-lbl" style="text-align:right;">R</span>
-                      </div>
-                    </div>
-                    <div class="adu2-info-block">
-                      <span class="adu2-info-lbl">Door Enable</span>
-                      <span class="adu2-info-val green" id="adu2-door-enable">Left</span>
-                    </div>
-                    <div class="adu2-subsys-block">
-                      <div class="adu2-subsys-line red" id="adu2-subsys-tcms">TCMS</div>
-                      <div class="adu2-subsys-line green" id="adu2-subsys-vobc1">VOBC 1 <span class="vobc-active-icon">Ⓐ</span></div>
-                      <div class="adu2-subsys-line green" id="adu2-subsys-vobc2">VOBC 2</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 3. 하단 바: 시계, 터미널 로그, Setup 버튼 -->
-                <div class="adu2-bottom-bar">
-                  <div class="adu2-bottom-clock">
-                    <span class="adu2-clock-date" id="adu2-clock-date">2026.09.24</span>
-                    <span class="adu2-clock-time" id="adu2-clock-time">11:37:14</span>
-                  </div>
-                  <div class="adu2-bottom-logs" id="adu2-bottom-logs">
-                    <div id="adu2-log-1">11:34:54 HOLD</div>
-                    <div id="adu2-log-2">11:34:08 SKIP</div>
-                    <div id="adu2-log-3">11:34:40 FSB FAIL</div>
-                    <div id="adu2-log-4">11:34:24 TCMS LINK FAIL</div>
-                  </div>
-                  <div class="adu2-bottom-btn-wrap">
-                    <button type="button" class="adu2-setup-btn" onclick="showTemporaryHudFeedback('ℹ️ [ADU Setup] SelTrac MMI 환경설정 메뉴', false)">Setup</button>
-                  </div>
-                </div>
-              </div>
-            </div>
                   </div>
 
                   <!-- 중앙: 속도계 다이얼 & 모드 박스 -->
