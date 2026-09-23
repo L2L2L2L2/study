@@ -4003,19 +4003,23 @@
     .adu2-center-footer {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      width: 90%;
-      padding: 4px 10px;
+      justify-content: center;
+      width: 100%;
+      padding: 4px 0;
       box-sizing: border-box;
     }
     .adu2-mode-box {
-      border: 1px solid #0000aa;
-      padding: 4px 12px;
+      border: 1.5px solid #0000ff;
+      padding: 4px 14px;
       color: #00ff00;
       font-size: 13px;
       font-weight: 900;
       font-family: 'Consolas', monospace;
       background: #000000;
+      text-align: center;
+      box-shadow: 0 0 6px rgba(0, 0, 255, 0.4);
+      letter-spacing: 0.5px;
+      display: inline-block;
     }
     .adu2-signal-aspect {
       width: 24px;
@@ -6227,8 +6231,7 @@
                       <canvas id="adu2-speedo-canvas" width="280" height="215"></canvas>
                     </div>
                     <div class="adu2-center-footer">
-                      <div class="adu2-mode-box" id="adu2-mode-box">RM Forward</div>
-                      <div class="adu2-signal-aspect yellow" id="adu2-signal-aspect">Y</div>
+                      <div class="adu2-mode-box" id="adu2-mode-box">OFF</div>
                     </div>
                   </div>
 
@@ -8157,23 +8160,19 @@ function updateDuAduDisplay(driveMode, notch, now) {
       tpBarEl.style.height = `${barPct.toFixed(1)}%`;
     }
 
-    // Mode Box & Signal Aspect
+    // Mode Box (속도계 하단 중앙 현시)
     const aduModeBox = document.getElementById('adu2-mode-box');
     if (aduModeBox) {
-      aduModeBox.innerText = `${driveMode || 'OFF'} ${revNotch === 'R' ? 'Reverse' : 'Forward'}`;
-    }
+      const isWirelessLit = (typeof cvCompState === 'function') && (cvCompState('SW_WIRELESS_MODE', 'OFF') === 'LIT');
+      const isUnmanned = (driveMode === 'OFF' && isWirelessLit) || (typeof isUnmannedActive !== 'undefined' && isUnmannedActive);
+      const dirStr = (revNotch === 'R') ? 'Reverse' : 'Forward';
 
-    const aspectEl = document.getElementById('adu2-signal-aspect');
-    if (aspectEl) {
-      if (isEbActive) {
-        aspectEl.className = 'adu2-signal-aspect red';
-        aspectEl.innerText = 'R';
-      } else if (driveMode === 'RM' || (driveMode === 'FM' && trainSpeed > 70)) {
-        aspectEl.className = 'adu2-signal-aspect yellow';
-        aspectEl.innerText = 'Y';
+      if (isUnmanned) {
+        aduModeBox.innerText = 'Driverless';
+      } else if (driveMode === 'OFF') {
+        aduModeBox.innerText = 'OFF';
       } else {
-        aspectEl.className = 'adu2-signal-aspect green';
-        aspectEl.innerText = 'G';
+        aduModeBox.innerText = `${driveMode} ${dirStr}`;
       }
     }
 
