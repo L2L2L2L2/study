@@ -9757,6 +9757,9 @@ const ThreeCabView = {
           indices.push(row1 + j, row1 + j + 1, row2 + j + 1);
           indices.push(row1 + j, row2 + j + 1, row2 + j);
         }
+        // 바닥면 (마지막 정점 -> 첫번째 정점) 연결하여 터널 튜브 완전 밀폐
+        indices.push(row1 + (numV - 1), row1, row2 + (numV - 1));
+        indices.push(row1, row2, row2 + (numV - 1));
       }
     }
 
@@ -9807,34 +9810,44 @@ const ThreeCabView = {
     this.scene.add(lampsMesh);
   },
 
-  // 뚫려있는 터널 입구 갱구 아치 구조물
+  // 뚫려있는 터널 입구 갱구 아치 구조물 (중앙 통로는 완전히 개방)
   buildPortalArch(s, isExit) {
     const { P, T, N, B } = this.getTrackFrame(s / 1500.0);
     const pGroup = new THREE.Group();
-    const portalMat = new THREE.MeshStandardMaterial({ color: 0x4f545d, roughness: 0.88 });
+    const portalMat = new THREE.MeshStandardMaterial({ color: 0x5a6068, roughness: 0.85 });
+    const cliffMat = new THREE.MeshStandardMaterial({ color: 0x3a3834, roughness: 0.95 });
 
-    // 좌측 기둥 (선로 외측)
-    const leftPillar = new THREE.Mesh(new THREE.BoxGeometry(2.5, 6.0, 2.5), portalMat);
-    leftPillar.position.set(-4.1, 2.7, 0);
+    // 1. 좌측 콘크리트 포털 기둥 (선로 좌측 x = -4.1m, 폭 2.4m => x:-5.3m ~ -2.9m)
+    const leftPillar = new THREE.Mesh(new THREE.BoxGeometry(2.4, 6.0, 2.5), portalMat);
+    leftPillar.position.set(-4.1, 2.8, 0);
     pGroup.add(leftPillar);
 
-    // 우측 기둥 (선로 외측)
-    const rightPillar = new THREE.Mesh(new THREE.BoxGeometry(2.5, 6.0, 2.5), portalMat);
-    rightPillar.position.set(4.1, 2.7, 0);
+    // 2. 우측 콘크리트 포털 기둥 (선로 우측 x = +4.1m, 폭 2.4m => x:+2.9m ~ +5.3m)
+    const rightPillar = new THREE.Mesh(new THREE.BoxGeometry(2.4, 6.0, 2.5), portalMat);
+    rightPillar.position.set(4.1, 2.8, 0);
     pGroup.add(rightPillar);
 
-    // 상부 헤더 아치 빔 (열차 높이 위 y=5.2~7.8m 상단 가로지름)
-    const topHeader = new THREE.Mesh(new THREE.BoxGeometry(10.7, 2.6, 2.5), portalMat);
-    topHeader.position.set(0, 6.5, 0);
+    // 3. 상부 아치 헤더 빔 (열차 천장 위 y = 5.2m 이상에 가로지름)
+    const topHeader = new THREE.Mesh(new THREE.BoxGeometry(10.6, 2.2, 2.5), portalMat);
+    topHeader.position.set(0, 6.3, 0);
     pGroup.add(topHeader);
 
-    // 산악 절개지 암벽 면
-    const cliffGeo = new THREE.BoxGeometry(28.0, 16.0, 3.0);
-    cliffGeo.translate(0, 8.0, isExit ? 1.5 : -1.5);
-    const cliffMat = new THREE.MeshStandardMaterial({ color: 0x3d3a36, roughness: 0.95 });
-    const cliff = new THREE.Mesh(cliffGeo, cliffMat);
-    pGroup.add(cliff);
+    // 4. 좌측 산악 암벽 (x = -5.3m 이하 외측)
+    const leftCliff = new THREE.Mesh(new THREE.BoxGeometry(22.0, 14.0, 3.0), cliffMat);
+    leftCliff.position.set(-16.3, 6.5, isExit ? 1.5 : -1.5);
+    pGroup.add(leftCliff);
 
+    // 5. 우측 산악 암벽 (x = +5.3m 이상 외측)
+    const rightCliff = new THREE.Mesh(new THREE.BoxGeometry(22.0, 14.0, 3.0), cliffMat);
+    rightCliff.position.set(16.3, 6.5, isExit ? 1.5 : -1.5);
+    pGroup.add(rightCliff);
+
+    // 6. 상부 산악 능선 암벽 (y = 7.4m 이상 상단)
+    const topCliff = new THREE.Mesh(new THREE.BoxGeometry(54.0, 8.0, 3.0), cliffMat);
+    topCliff.position.set(0, 11.4, isExit ? 1.5 : -1.5);
+    pGroup.add(topCliff);
+
+    // ★ 중앙 통로(x: -2.9m ~ +2.9m, y: -0.5m ~ +5.2m)는 100% 뚫려있어 열차가 터널 내부 튜브로 직통 진입함!
     const m = new THREE.Matrix4().makeBasis(N, B, T);
     pGroup.applyMatrix4(m);
     pGroup.position.copy(P);
