@@ -3380,128 +3380,447 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 'Consolas', monospace;
     }
 
-    /* DU 화면 내부 요소 */
-    .du-scr-header {
+    /* ========================================================
+       인천 2호선 실물 TCMS "운전일반" DU 화면 스타일링 (이미지 완벽 고증)
+    ======================================================== */
+    .du2-tcms-wrapper {
+      background: #000000;
+      color: #ffffff;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, 'Consolas', sans-serif;
+      min-width: 480px;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    /* 1. 상단 헤더 (Fly Incheon 로고, 운전일반, 날짜/시각) */
+    .du2-top-header {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      padding: 2px 4px 6px 4px;
+      border-bottom: 2px solid #333333;
+    }
+    .du2-logo-badge {
+      background: #ffffff;
+      border-radius: 3px;
+      padding: 2px 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .du2-header-title {
+      font-size: 20px;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 6px;
+      text-align: center;
+      text-shadow: 0 0 4px rgba(255,255,255,0.4);
+    }
+    .du2-datetime-wrap {
+      text-align: right;
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.15;
+    }
+
+    /* 2. 상태 바 (HB/EB/PB/ADBS, 다음역/종착역, 속도, 가선전압, 가선전류) */
+    .du2-sub-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #0e1520;
-      border: 1px solid #1e2634;
-      border-radius: 6px;
-      padding: 6px 10px;
-    }
-    .du-train-id {
-      font-weight: 800;
-      font-size: 12px;
-      color: #38bdf8;
-    }
-    .du-time {
-      font-family: 'Consolas', monospace;
-      font-size: 13px;
-      font-weight: 800;
-      color: #f1f5f9;
-    }
-    .du-mode-badge {
-      background: #1e3a8a;
-      color: #93c5fd;
-      font-weight: 900;
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 4px;
-      border: 1px solid #3b82f6;
-    }
-
-    /* 차량 2량 편성 비주얼 */
-    .du-train-cars-visual {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .du-car-box {
-      background: #0c111a;
-      border: 1px solid #1e2634;
-      border-radius: 6px;
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
+      background: #000000;
+      border-bottom: 1px solid #333333;
+      padding: 4px 4px 6px 4px;
       gap: 6px;
     }
-    .du-car-name {
-      font-size: 11px;
-      font-weight: 800;
-      color: #94a3b8;
-      border-bottom: 1px solid #1e2634;
-      padding-bottom: 4px;
-      text-align: center;
+    .du2-chips-group {
+      display: flex;
+      gap: 2px;
     }
-    .du-car-items {
+    .du2-chip-box {
+      font-size: 11px;
+      font-weight: 900;
+      padding: 3px 6px;
+      border: 1px solid #444444;
+      background: #181818;
+      color: #666666;
+      min-width: 24px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    .du2-chip-box.active-red {
+      background: #ff0000 !important;
+      color: #ffffff !important;
+      border-color: #ff4444 !important;
+      box-shadow: 0 0 6px #ff0000;
+    }
+    .du2-chip-box.active-blue {
+      background: #0022ff !important;
+      color: #ffffff !important;
+      border-color: #4466ff !important;
+    }
+    .du2-chip-box.active-green {
+      background: #00cc00 !important;
+      color: #ffffff !important;
+      border-color: #22ee22 !important;
+    }
+
+    .du2-st-dest-wrap {
       display: flex;
       flex-direction: column;
+      font-size: 11px;
+      font-weight: 700;
+      color: #aaaaaa;
+      line-height: 1.25;
+    }
+    .du2-st-dest-wrap .val-green {
+      color: #00ff00;
+      font-weight: 900;
+    }
+
+    .du2-meter-item {
+      display: flex;
+      align-items: baseline;
+      gap: 3px;
+    }
+    .du2-meter-label {
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .du2-meter-label.red {
+      color: #ff3333;
+    }
+    .du2-val-big-green {
+      color: #00ff00;
+      font-size: 22px;
+      font-weight: 900;
+      font-family: 'Consolas', monospace;
+    }
+    .du2-val-big-red {
+      color: #ff0000;
+      font-size: 20px;
+      font-weight: 900;
+      font-family: 'Consolas', monospace;
+    }
+    .du2-meter-unit {
+      color: #ffffff;
+      font-size: 10.5px;
+      font-weight: 700;
+    }
+
+    /* 3. 편성 뷰 (2량 차체 그래픽 + 범례) */
+    .du2-cars-row {
+      display: grid;
+      grid-template-columns: 28px 1fr 28px auto;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 0;
+      border-bottom: 1px solid #333333;
+    }
+    .du2-arrow-ind {
+      font-size: 20px;
+      font-weight: 900;
+      color: #222222;
+      text-align: center;
+      transition: color 0.2s;
+    }
+    .du2-arrow-ind.active {
+      color: #00ff00;
+      text-shadow: 0 0 8px #00ff00;
+    }
+
+    .du2-cars-visual {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       gap: 4px;
     }
-    .du-item {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10.5px;
-    }
-    .du-item .lbl {
-      color: #64748b;
-    }
-    .du-item .val {
-      font-weight: 800;
-      color: #cbd5e1;
-      font-family: 'Consolas', monospace;
-    }
-    .du-item .val.green { color: #4ade80; }
-    .du-item .val.red { color: #f87171; }
-    .du-item .val.amber { color: #fbbf24; }
-
-    /* 공압 및 제동 요약 */
-    .du-pneumatic-summary {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-    }
-    .du-gauge-box {
-      background: #0a0e16;
-      border: 1px solid #1e2634;
-      border-radius: 6px;
-      padding: 6px 8px;
+    .du2-car-unit {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 2px;
     }
-    .du-gauge-box .lbl {
-      font-size: 10px;
-      color: #64748b;
+    .du2-car-label {
+      color: #00ff00;
+      font-size: 12px;
+      font-weight: 900;
     }
-    .du-gauge-box .val {
-      font-size: 13px;
-      font-weight: 800;
-      color: #38bdf8;
-      font-family: 'Consolas', monospace;
+    .du2-car-capsule {
+      background: #000000;
+      border: 2px solid #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      width: 140px;
+      height: 48px;
+      position: relative;
+      padding: 3px 6px;
+      box-sizing: border-box;
     }
-    .du-gauge-box .val.green { color: #4ade80; }
+    .du2-car-unit:first-child .du2-car-capsule {
+      border-radius: 20px 4px 4px 20px;
+    }
+    .du2-car-unit:last-child .du2-car-capsule {
+      border-radius: 4px 20px 20px 4px;
+    }
 
-    /* DU 진단 로그 박스 */
-    .du-log-panel {
-      background: #06090e;
-      border: 1px solid #18202c;
-      border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 11px;
-      min-height: 38px;
+    .du2-cab-mark {
+      position: absolute;
+      top: 6px;
+      bottom: 6px;
+      width: 10px;
+      background: #ffffff;
+      border-radius: 2px;
+    }
+    .du2-cab-mark.left { left: 6px; }
+    .du2-cab-mark.right { right: 6px; }
+
+    .du2-door-indicators {
+      display: flex;
+      justify-content: space-around;
+      width: 65%;
+      gap: 8px;
+    }
+    .du2-door-block {
+      width: 22px;
+      height: 7px;
+      background: #0000ff; /* 기본 닫힘 파랑 */
+      border: 1px solid #111111;
+      transition: background-color 0.2s;
+    }
+    .du2-door-block.open {
+      background: #ffffff !important; /* 개방 흰색 */
+    }
+    .du2-door-block.fault {
+      background: #ff0000 !important; /* 고장 빨강 */
+    }
+
+    .du2-car-code {
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .du2-car-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 9.5px;
+      color: #ffffff;
+      border: 1px solid #333333;
+      padding: 3px 6px;
+      background: #080808;
+    }
+    .du2-leg-line {
       display: flex;
       align-items: center;
+      gap: 4px;
+      white-space: nowrap;
     }
-    .du-log-line {
+    .du2-leg-box {
+      width: 9px;
+      height: 9px;
+      display: inline-block;
+      border: 1px solid #555;
+    }
+    .du2-leg-box.yellow { background: #ffff00; }
+    .du2-leg-box.white { background: #ffffff; }
+    .du2-leg-box.blue { background: #0000ff; }
+    .du2-leg-box.red { background: #ff0000; }
+    .du2-leg-box.bypass {
+      background: #005500;
+      color: #ffffff;
+      font-size: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    /* 4. 기기 모니터링 테이블 행 */
+    .du2-table-wrap {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #333333;
+      background: #000000;
+    }
+    .du2-trow {
+      display: grid;
+      grid-template-columns: 80px 1fr 1fr 115px;
+      border-bottom: 1px solid #282828;
+      min-height: 28px;
+      align-items: center;
+    }
+    .du2-trow:last-child {
+      border-bottom: none;
+    }
+    .du2-th {
+      font-size: 11px;
+      font-weight: 800;
+      color: #ffffff;
+      border-right: 1px solid #333333;
+      padding: 4px 6px;
+      display: flex;
+      align-items: center;
+      background: #0c0c0c;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    .du2-tcol {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 3px 6px;
+      border-right: 1px solid #222222;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    .du2-tr-side {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 2px 6px;
+      font-size: 9.5px;
+      color: #888888;
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    /* 박스 공통 */
+    .du2-val-box {
       font-family: 'Consolas', monospace;
+      font-size: 11px;
+      font-weight: 900;
+      text-align: center;
+      padding: 2px 8px;
+      border-radius: 1px;
+      min-width: 38px;
+      box-sizing: border-box;
+    }
+    .du2-val-box.blue {
+      background: #0000ff;
+      color: #ffffff;
+      border: 1px solid #1a1aff;
+    }
+    .du2-val-box.gray {
+      background: #555555;
+      color: #ffffff;
+      border: 1px solid #666666;
+    }
+    .du2-val-box.red {
+      background: #ff0000;
+      color: #ffffff;
+      border: 1px solid #ff3333;
+    }
+
+    /* 견인지령 게이지 */
+    .du2-trac-gauge-cell {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .du2-v-track {
+      width: 7px;
+      height: 22px;
+      background: #333333;
+      border-radius: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+    .du2-v-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background: #ffbb00;
+      transition: height 0.2s;
+    }
+    .du2-gauge-pct {
+      font-size: 15px;
+      font-weight: 900;
+      color: #ffffff;
+      font-family: 'Consolas', monospace;
+    }
+
+    /* 보조전원 ESK 브리지 */
+    .du2-esk-unit {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      gap: 4px;
+    }
+    .du2-esk-wire {
+      flex: 1;
+      height: 2px;
+      background: #888888;
+    }
+    .du2-esk-badge {
+      font-size: 9px;
+      font-weight: 800;
+      background: #555555;
+      color: #ffffff;
+      padding: 1px 4px;
+      border: 1px solid #777777;
+    }
+
+    /* 5. 하단 메시지 바 */
+    .du2-msg-bar {
+      background: #c6dfc3;
+      color: #000000;
+      border: 1px solid #9bb598;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .du2-msg-prefix {
+      color: #0000cc;
+      font-weight: 900;
+    }
+    .du2-msg-body {
+      color: #111111;
       font-weight: 700;
     }
-    .du-log-line.info { color: #38bdf8; }
-    .du-log-line.warn { color: #fbbf24; }
-    .du-log-line.danger { color: #f87171; font-weight: 900; animation: led-blink 0.7s infinite; }
+
+    /* 6. 하단 4개 소프트키 버튼 */
+    .du2-footer-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      padding-top: 2px;
+    }
+    .du2-soft-btn {
+      background: #001155;
+      border: 1.5px solid #ffffff;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 6px 4px;
+      cursor: pointer;
+      transition: all 0.1s;
+      text-align: center;
+    }
+    .du2-soft-btn:hover {
+      background: #002288;
+    }
+    .du2-soft-btn:active {
+      background: #ffffff;
+      color: #001155;
+    }
 
     /* ADU (속도계/신호) 화면 */
     .adu-screen-top {
@@ -5303,72 +5622,279 @@
         <!-- 2대 모니터 나란히 배치 그리드 -->
         <div class="du-monitors-grid">
 
-          <!-- [좌측 모니터] DU (Display Unit - 차량 모니터링 / TCMS) -->
+          <!-- [좌측 모니터] DU -->
           <div class="mmi-monitor-frame du-frame">
             <div class="mmi-bezel-header">
-              <span class="mmi-model">DU-201 (TCMS DISPLAY UNIT)</span>
+              <span class="mmi-model">DU</span>
               <div class="mmi-leds">
                 <span class="mmi-led green lit" title="POWER"></span>
                 <span class="mmi-led green lit" title="RUN"></span>
                 <span class="mmi-led red" id="du-led-err" title="FAULT"></span>
               </div>
             </div>
-            <div class="mmi-screen du-screen">
-              <div class="du-scr-header">
-                <span class="du-train-id">201편성 [2011-2012]</span>
-                <span class="du-time" id="du-live-clock">12:00:00</span>
-                <span class="du-mode-badge" id="du-drive-mode">RM 모드</span>
-              </div>
-
-              <!-- 2량 1편성 차량 상태 그래픽 -->
-              <div class="du-train-cars-visual">
-                <div class="du-car-box" id="du-car-1">
-                  <div class="du-car-name">2011 (Mc1 선두차)</div>
-                  <div class="du-car-items">
-                    <div class="du-item"><span class="lbl">팬터/집전</span><span class="val green" id="du-panto-1">인가(ON)</span></div>
-                    <div class="du-item"><span class="lbl">모터VVVF</span><span class="val" id="du-motor-1">0% (N)</span></div>
-                    <div class="du-item"><span class="lbl">축전지</span><span class="val green">DC 100V</span></div>
-                    <div class="du-item"><span class="lbl">출입문 1~4</span><span class="val green" id="du-doors-1">닫힘(LOCKED)</span></div>
+            <div class="mmi-screen du-screen" style="padding: 4px; background: #000000; overflow-x: auto;">
+              <div class="du2-tcms-wrapper">
+                <!-- 1. 상단 헤더 (Fly Incheon 로고, 운전일반, 날짜/시각) -->
+                <div class="du2-top-header">
+                  <div class="du2-logo-badge">
+                    <svg width="34" height="18" viewBox="0 0 60 30" style="vertical-align:middle;">
+                      <path d="M5 25 C15 5, 35 5, 55 10 C40 18, 25 22, 5 25 Z" fill="#1b4996"/>
+                      <path d="M12 25 C20 12, 35 14, 45 20 C32 23, 20 24, 12 25 Z" fill="#eb6100"/>
+                    </svg>
+                    <span style="font-style:italic; font-weight:900; font-size:11px; color:#1b4996; font-family:sans-serif;">Fly <small style="color:#222; font-style:normal;">Incheon</small></span>
+                  </div>
+                  <div class="du2-header-title">운전일반</div>
+                  <div class="du2-datetime-wrap">
+                    <div id="du2-live-date">2026-09-24</div>
+                    <div id="du2-live-time">00:00:00</div>
                   </div>
                 </div>
-                <div class="du-car-box" id="du-car-2">
-                  <div class="du-car-name">2012 (Mc2 후미차)</div>
-                  <div class="du-car-items">
-                    <div class="du-item"><span class="lbl">팬터/집전</span><span class="val green" id="du-panto-2">인가(ON)</span></div>
-                    <div class="du-item"><span class="lbl">모터VVVF</span><span class="val" id="du-motor-2">0% (N)</span></div>
-                    <div class="du-item"><span class="lbl">축전지</span><span class="val green">DC 100V</span></div>
-                    <div class="du-item"><span class="lbl">출입문 1~4</span><span class="val green" id="du-doors-2">닫힘(LOCKED)</span></div>
+
+                <!-- 2. 상태 바 (HB/EB/PB/ADBS, 다음역/종착역, 속도, 가선전압, 가선전류) -->
+                <div class="du2-sub-bar">
+                  <div class="du2-chips-group">
+                    <div class="du2-chip-box" id="du2-chip-hb">HB</div>
+                    <div class="du2-chip-box" id="du2-chip-eb">EB</div>
+                    <div class="du2-chip-box" id="du2-chip-pb">PB</div>
+                    <div class="du2-chip-box" id="du2-chip-adbs">ADBS</div>
+                  </div>
+
+                  <div class="du2-st-dest-wrap">
+                    <div>다음역 : <span id="du2-next-st" class="val-green">검단사거리</span></div>
+                    <div>종착역 : <span id="du2-dest-st" class="val-green">운연</span></div>
+                  </div>
+
+                  <div class="du2-meter-item">
+                    <span id="du2-speed-val" class="du2-val-big-green">0</span>
+                    <span class="du2-meter-unit">[km/h]</span>
+                  </div>
+
+                  <div class="du2-meter-item">
+                    <span class="du2-meter-label red">가선전압</span>
+                    <span id="du2-volt-val" class="du2-val-big-red">750</span>
+                    <span class="du2-meter-unit">[V]</span>
+                  </div>
+
+                  <div class="du2-meter-item">
+                    <span class="du2-meter-label red">가선전류</span>
+                    <span id="du2-amp-val" class="du2-val-big-red">0</span>
+                    <span class="du2-meter-unit">[A]</span>
                   </div>
                 </div>
-              </div>
 
-              <!-- 공압 및 보조전원 요약 -->
-              <div class="du-pneumatic-summary">
-                <div class="du-gauge-box">
-                  <span class="lbl">MR (주공기)</span>
-                  <span class="val" id="du-mr-val">9.0 bar</span>
-                </div>
-                <div class="du-gauge-box">
-                  <span class="lbl">BC (제동통)</span>
-                  <span class="val" id="du-bc-val">0.0 bar</span>
-                </div>
-                <div class="du-gauge-box">
-                  <span class="lbl">보조전원 SIV</span>
-                  <span class="val green">정상 (ON)</span>
-                </div>
-              </div>
+                <!-- 3. 편성 뷰 (2량 차체 그래픽 + 범례) -->
+                <div class="du2-cars-row">
+                  <div class="du2-arrow-ind active" id="du2-arrow-fwd">◀</div>
 
-              <!-- 진단 상태 로그 메시지 -->
-              <div class="du-log-panel">
-                <span class="du-log-line info" id="du-status-msg">● TCMS 시스템 정상 가동 중 - 이상 없음</span>
+                  <div class="du2-cars-visual">
+                    <!-- Mc1 -->
+                    <div class="du2-car-unit">
+                      <div class="du2-car-label">Mc1</div>
+                      <div class="du2-car-capsule">
+                        <div class="du2-cab-mark left"></div>
+                        <div class="du2-door-indicators">
+                          <div class="du2-door-block" id="du2-d1-1"></div>
+                          <div class="du2-door-block" id="du2-d1-2"></div>
+                        </div>
+                        <div class="du2-car-code">2101</div>
+                        <div class="du2-door-indicators">
+                          <div class="du2-door-block" id="du2-d1-3"></div>
+                          <div class="du2-door-block" id="du2-d1-4"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Mc2 -->
+                    <div class="du2-car-unit">
+                      <div class="du2-car-label">Mc2</div>
+                      <div class="du2-car-capsule">
+                        <div class="du2-door-indicators">
+                          <div class="du2-door-block" id="du2-d2-1"></div>
+                          <div class="du2-door-block" id="du2-d2-2"></div>
+                        </div>
+                        <div class="du2-car-code">2001</div>
+                        <div class="du2-door-indicators">
+                          <div class="du2-door-block" id="du2-d2-3"></div>
+                          <div class="du2-door-block" id="du2-d2-4"></div>
+                        </div>
+                        <div class="du2-cab-mark right"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="du2-arrow-ind" id="du2-arrow-rev">▶</div>
+
+                  <!-- 범례 -->
+                  <div class="du2-car-legend">
+                    <div class="du2-leg-line"><span class="du2-leg-box yellow"></span> 통신고장</div>
+                    <div class="du2-leg-line"><span class="du2-leg-box bypass">☒</span> 바이패스</div>
+                    <div class="du2-leg-line"><span class="du2-leg-box white"></span> 개</div>
+                    <div class="du2-leg-line"><span class="du2-leg-box blue"></span> 폐</div>
+                    <div class="du2-leg-line"><span class="du2-leg-box red"></span> 고장</div>
+                  </div>
+                </div>
+
+                <!-- 4. 기기 모니터링 테이블 행들 -->
+                <div class="du2-table-wrap">
+                  <!-- (1) 경보 -->
+                  <div class="du2-trow" style="grid-template-columns: 80px 1fr;">
+                    <div class="du2-th">경보</div>
+                    <div class="du2-tcol" style="justify-content: flex-start; padding-left: 12px;">
+                      <span id="du2-alarm-text" style="color: #4ade80; font-size: 11px; font-weight: 800;">● 정상 운행 중</span>
+                    </div>
+                  </div>
+
+                  <!-- (2) 견인지령 -->
+                  <div class="du2-trow">
+                    <div class="du2-th">
+                      <div class="du2-trac-gauge-cell">
+                        <div class="du2-v-track"><div class="du2-v-fill" id="du2-trac-fill"></div></div>
+                        <div style="display:flex; flex-direction:column;">
+                          <span>견인지령</span>
+                          <span class="du2-gauge-pct" id="du2-trac-pct">0%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Mc1 -->
+                    <div class="du2-tcol">
+                      <div class="du2-val-box gray" id="du2-panto-3rd-1" style="font-size:10px;">3rd</div>
+                      <div class="du2-val-box gray" style="font-size:10px;">Stinger</div>
+                      <div class="du2-val-box blue" id="du2-motor-cur-1a">0</div>
+                      <div class="du2-val-box blue" id="du2-motor-cur-1b">0</div>
+                    </div>
+                    <!-- Mc2 -->
+                    <div class="du2-tcol">
+                      <div class="du2-val-box gray" id="du2-panto-3rd-2" style="font-size:10px;">3rd</div>
+                      <div class="du2-val-box gray" style="font-size:10px;">Stinger</div>
+                      <div class="du2-val-box blue" id="du2-motor-cur-2a">0</div>
+                      <div class="du2-val-box blue" id="du2-motor-cur-2b">0</div>
+                    </div>
+                    <!-- 우측 범례 -->
+                    <div class="du2-tr-side">
+                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box blue" style="width:7px; height:7px;"></span> 투입</div>
+                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box gray" style="width:7px; height:7px;"></span> 차단</div>
+                      <div style="margin-top:2px; color:#aaa;">모터전류 [A]</div>
+                    </div>
+                  </div>
+
+                  <!-- (3) 제동지령 -->
+                  <div class="du2-trow">
+                    <div class="du2-th" style="flex-direction:column; align-items:flex-start;">
+                      <span>제동지령</span>
+                      <span class="du2-gauge-pct" id="du2-brake-pct">0%</span>
+                    </div>
+                    <!-- Mc1 -->
+                    <div class="du2-tcol">
+                      <div class="du2-val-box blue" id="du2-bc-val-1a">0.00</div>
+                      <div class="du2-val-box blue" id="du2-bc-val-1b">0.00</div>
+                    </div>
+                    <!-- Mc2 -->
+                    <div class="du2-tcol">
+                      <div class="du2-val-box blue" id="du2-bc-val-2a">0.00</div>
+                      <div class="du2-val-box blue" id="du2-bc-val-2b">0.00</div>
+                    </div>
+                    <!-- 우측 라벨 -->
+                    <div class="du2-tr-side">
+                      <div style="color:#aaa;">제동압력 [Bar]</div>
+                    </div>
+                  </div>
+
+                  <!-- (4) 신호장치 -->
+                  <div class="du2-trow">
+                    <div class="du2-th">신호장치</div>
+                    <!-- Mc1 -->
+                    <div class="du2-tcol">
+                      <div class="du2-val-box red" id="du2-vobc-1">VOBC</div>
+                    </div>
+                    <!-- Mc2 -->
+                    <div class="du2-tcol">
+                      <div class="du2-val-box red" id="du2-vobc-2">VOBC</div>
+                    </div>
+                    <!-- 우측 범례 -->
+                    <div class="du2-tr-side">
+                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box blue" style="width:7px; height:7px;"></span> 정상</div>
+                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box red" style="width:7px; height:7px;"></span> 불량</div>
+                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box yellow" style="width:7px; height:7px;"></span> 통신고장</div>
+                    </div>
+                  </div>
+
+                  <!-- (5) 보조전원 -->
+                  <div class="du2-trow">
+                    <div class="du2-th">보조전원</div>
+                    <!-- Mc1 -->
+                    <div class="du2-tcol">
+                      <div class="du2-val-box blue" id="du2-siv-1">0</div>
+                    </div>
+                    <!-- Mc2 + ESK 연결 -->
+                    <div class="du2-tcol" style="grid-column: span 1; position:relative;">
+                      <div class="du2-esk-unit">
+                        <span class="du2-esk-wire"></span>
+                        <span class="du2-esk-badge">연장급전기(ESK)</span>
+                        <span class="du2-esk-wire"></span>
+                      </div>
+                      <div class="du2-val-box blue" id="du2-siv-2">0</div>
+                    </div>
+                    <div class="du2-tr-side">
+                      <div style="color:#aaa;">SIV 전압</div>
+                    </div>
+                  </div>
+
+                  <!-- (6) 공기압축기 -->
+                  <div class="du2-trow">
+                    <div class="du2-th">공기압축기</div>
+                    <!-- Mc1 -->
+                    <div class="du2-tcol">
+                      <div class="du2-val-box gray" id="du2-cmg-1">CMG</div>
+                    </div>
+                    <!-- Mc2 -->
+                    <div class="du2-tcol">
+                      <div class="du2-val-box gray" id="du2-cmg-2">CMG</div>
+                    </div>
+                    <div class="du2-tr-side">
+                      <div style="color:#aaa;">MR 9.0 Bar</div>
+                    </div>
+                  </div>
+
+                  <!-- (7) HVAC -->
+                  <div class="du2-trow">
+                    <div class="du2-th">HVAC</div>
+                    <!-- Mc1 -->
+                    <div class="du2-tcol">
+                      <div class="du2-val-box blue">22</div>
+                      <div class="du2-val-box blue">22</div>
+                    </div>
+                    <!-- Mc2 -->
+                    <div class="du2-tcol">
+                      <div class="du2-val-box blue">22</div>
+                      <div class="du2-val-box blue">22</div>
+                    </div>
+                    <div class="du2-tr-side">
+                      <div style="color:#aaa;">실내온도 [℃]</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 5. 하단 메시지 바 -->
+                <div class="du2-msg-bar">
+                  <span class="du2-msg-prefix">메시지:</span>
+                  <span class="du2-msg-body" id="du2-msg-content">정상 운행 대기 중입니다.</span>
+                </div>
+
+                <!-- 6. 하단 4개 소프트키 버튼 -->
+                <div class="du2-footer-actions">
+                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [고장정보] 현재 차량 시스템 정상, 기록된 고장 코드 없음', false)">고장정보</button>
+                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [서비스기기] 객실 냉난방 및 출입문 장치 정상 동작 중', false)">서비스기기</button>
+                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [상태정보] 가선 전압 750V, 주공기압력 9.0 bar 정상', false)">상태정보</button>
+                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [검수정보] 201편성(2101-2001) 출고 검수 완료 상태', false)">검수정보</button>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- [우측 모니터] ADU (ATC/ATO Display Unit - 운전정보 및 신호 속도계) -->
+          <!-- [우측 모니터] ADU -->
           <div class="mmi-monitor-frame adu-frame">
             <div class="mmi-bezel-header">
-              <span class="mmi-model">ADU-201 (ATC/ATO DRIVER DISPLAY)</span>
+              <span class="mmi-model">ADU</span>
               <div class="mmi-leds">
                 <span class="mmi-led green lit" title="SIGNAL"></span>
                 <span class="mmi-led amber" id="adu-led-warn" title="OVERSPEED"></span>
@@ -7012,82 +7538,178 @@ function drawAduSpeedoGauge(speed, driveMode) {
 }
 
 function updateDuAduDisplay(driveMode, notch, now) {
-  // 1. DU Live Clock
-  const clockEl = document.getElementById('du-live-clock');
-  if (clockEl) {
-    const d = new Date();
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    const ss = String(d.getSeconds()).padStart(2, '0');
-    clockEl.innerText = `${hh}:${mm}:${ss}`;
-  }
+  // 1. DU Live Date & Time
+  const d = new Date();
+  const yr = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const da = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const ss = String(d.getSeconds()).padStart(2, '0');
 
-  // 2. DU Drive Mode Badge
-  const modeBadge = document.getElementById('du-drive-mode');
-  if (modeBadge) {
-    modeBadge.innerText = `${driveMode || 'OFF'} 모드`;
-  }
+  const dateEl = document.getElementById('du2-live-date');
+  if (dateEl) dateEl.innerText = `${yr}-${mo}-${da}`;
+  const timeEl = document.getElementById('du2-live-time');
+  if (timeEl) timeEl.innerText = `${hh}:${mm}:${ss}`;
 
-  // 3. DU Motor / VVVF
-  const m1 = document.getElementById('du-motor-1');
-  const m2 = document.getElementById('du-motor-2');
-  let motorStr = '0% (N)';
-  if (isRmEbActive) {
-    motorStr = 'EB 비상제동';
-  } else if (notch.startsWith('P')) {
-    const pct = notch === 'P1' ? '25%' : notch === 'P2' ? '50%' : notch === 'P3' ? '75%' : '100%';
-    motorStr = `${pct} (${notch})`;
-  } else if (notch.startsWith('B')) {
-    motorStr = `회생제동 (${notch})`;
-  } else if (notch === 'EB') {
-    motorStr = 'EB 제동';
-  }
-  if (m1) m1.innerText = motorStr;
-  if (m2) m2.innerText = motorStr;
+  // 2. Status Chips (HB, EB, PB, ADBS)
+  const isEmgStopLatched = (cvCompState('SW_EMG_STOP', 'RELEASED') === 'LATCHED');
+  const isEmgReleaseLatched = (cvCompState('SW_EMG_RELEASE', 'RELEASED') === 'LATCHED');
+  const isEmgActive = (isEmgStopLatched && !isEmgReleaseLatched);
+  const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB');
 
-  // 4. DU Doors
-  const d1 = document.getElementById('du-doors-1');
-  const d2 = document.getElementById('du-doors-2');
+  const chipEb = document.getElementById('du2-chip-eb');
+  if (chipEb) chipEb.classList.toggle('active-red', isEbActive);
+
+  const chipPb = document.getElementById('du2-chip-pb');
+  const isPbActive = (cvCompState('SW_PARK_SET') === 'LATCHED') || (trainSpeed <= 0.2 && cvBC() >= 3.5);
+  if (chipPb) chipPb.classList.toggle('active-blue', isPbActive);
+
+  const chipAdbs = document.getElementById('du2-chip-adbs');
+  const isAdbsActive = (cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
+  if (chipAdbs) chipAdbs.classList.toggle('active-green', isAdbsActive);
+
+  // 3. Stations & Speed & Catenary
+  const stInfo = cvStationInfo(trainDistance);
+  const nextStEl = document.getElementById('du2-next-st');
+  if (nextStEl) nextStEl.innerText = stInfo.name;
+
+  const spdEl = document.getElementById('du2-speed-val');
+  if (spdEl) spdEl.innerText = Math.round(trainSpeed);
+
+  const isPantoUp = (cvCompState('SW_PANTO_UP', 'NORMAL') === 'LATCHED') || (cvCompState('SW_PANTO_DOWN', 'NORMAL') !== 'LATCHED');
+  const voltEl = document.getElementById('du2-volt-val');
+  if (voltEl) voltEl.innerText = isPantoUp ? (750 + Math.round((Math.sin(now * 0.003) * 4))).toString() : '0';
+
+  const ampEl = document.getElementById('du2-amp-val');
+  let currentAmp = 0;
+  if (notch.startsWith('P')) {
+    const notchMult = notch === 'P1' ? 1.0 : notch === 'P2' ? 2.0 : notch === 'P3' ? 3.0 : 4.0;
+    currentAmp = Math.round(Math.min(320, trainSpeed * 3 + notchMult * 45));
+  } else if (notch.startsWith('B') || isEbActive) {
+    currentAmp = Math.round(Math.min(180, trainSpeed * 2.5));
+  }
+  if (ampEl) ampEl.innerText = currentAmp.toString();
+
+  // 4. Direction Arrows
+  const revNotch = cvCompState('SW_REVERSER', 'N');
+  const fwdArrow = document.getElementById('du2-arrow-fwd');
+  const revArrow = document.getElementById('du2-arrow-rev');
+  if (fwdArrow) fwdArrow.classList.toggle('active', revNotch === 'F');
+  if (revArrow) revArrow.classList.toggle('active', revNotch === 'R');
+
+  // 5. Doors on Cars
   const lampDoor = document.getElementById('lamp-door');
   const isDoorClosed = !isDoorOpen && (!window.__FAULT_DOOR_FAIL) && (lampDoor ? lampDoor.classList.contains('lit') : true);
-  const doorText = isDoorClosed ? '닫힘 (LOCKED)' : '개방 (OPEN)';
-  const doorColorClass = isDoorClosed ? 'val green' : 'val red';
-  if (d1) { d1.innerText = doorText; d1.className = doorColorClass; }
-  if (d2) { d2.innerText = doorText; d2.className = doorColorClass; }
+  const doorStateClass = window.__FAULT_DOOR_FAIL ? 'fault' : (!isDoorClosed ? 'open' : '');
 
-  // 5. DU Pressures
-  const mrEl = document.getElementById('du-mr-val');
-  const bcEl = document.getElementById('du-bc-val');
-  if (mrEl) mrEl.innerText = `${(typeof currentGaugeMR !== 'undefined' ? currentGaugeMR : 9.0).toFixed(1)} bar`;
-  if (bcEl) bcEl.innerText = `${cvBC().toFixed(1)} bar`;
+  ['du2-d1-1', 'du2-d1-2', 'du2-d1-3', 'du2-d1-4', 'du2-d2-1', 'du2-d2-2', 'du2-d2-3', 'du2-d2-4'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.className = 'du2-door-block ' + doorStateClass;
+    }
+  });
 
-  // 6. DU Fault / Status Message & LED
-  const errLed = document.getElementById('du-led-err');
-  const statusMsg = document.getElementById('du-status-msg');
-  if (isRmEbActive) {
-    if (errLed) errLed.className = 'mmi-led red lit';
-    if (statusMsg) {
-      statusMsg.className = 'du-log-line error';
-      statusMsg.innerText = '🚨 [경고] RM 운전모드 허용속도 초과 - 비상제동 체결 중 (정차 후 복구 요망)';
-    }
-  } else if (driveMode === 'RM' && rmOverspeedTimer > 0) {
-    if (errLed) errLed.className = 'mmi-led red';
-    if (statusMsg) {
-      statusMsg.className = 'du-log-line warn';
-      statusMsg.innerText = `⚠️ [주의] RM 허용속도(15km/h) 초과 감지 - ${(5.0 - rmOverspeedTimer).toFixed(1)}초 후 비상제동`;
-    }
-  } else {
-    if (errLed) errLed.className = 'mmi-led red';
-    if (statusMsg) {
-      statusMsg.className = 'du-log-line info';
-      statusMsg.innerText = '● TCMS 시스템 정상 가동 중 - 전체 기기 정상';
+  // 6. Alarm Message Row
+  const alarmEl = document.getElementById('du2-alarm-text');
+  if (alarmEl) {
+    if (isEbActive) {
+      alarmEl.style.color = '#ff3333';
+      alarmEl.innerText = '🚨 [비상제동] 비상제동 체결 중 (정차 후 복구 요망)';
+    } else if (driveMode === 'RM' && rmOverspeedTimer > 0) {
+      alarmEl.style.color = '#ffbb00';
+      alarmEl.innerText = `⚠️ [과속주의] RM 허용속도(15km/h) 초과 - ${(5.0 - rmOverspeedTimer).toFixed(1)}초 후 비상제동`;
+    } else if (window.__FAULT_DOOR_FAIL || isDoorOpen) {
+      alarmEl.style.color = '#ffbb00';
+      alarmEl.innerText = '⚠️ [출입문] 출입문 열림 감지 (출발 방지 인터록)';
+    } else {
+      alarmEl.style.color = '#4ade80';
+      alarmEl.innerText = '● 정상 운행 중';
     }
   }
 
-  // 7. ADU Station & Target
-  const stInfo = cvStationInfo(trainDistance);
-  const nextStEl = document.getElementById('adu-next-st');
-  if (nextStEl) nextStEl.innerText = stInfo.name;
+  // 7. Traction Pct & Motor Currents
+  let tracPct = 0;
+  if (notch.startsWith('P') && !isEbActive) {
+    tracPct = notch === 'P1' ? 25 : notch === 'P2' ? 50 : notch === 'P3' ? 75 : 100;
+  }
+  const tracPctEl = document.getElementById('du2-trac-pct');
+  const tracFillEl = document.getElementById('du2-trac-fill');
+  if (tracPctEl) tracPctEl.innerText = `${tracPct}%`;
+  if (tracFillEl) tracFillEl.style.height = `${tracPct}%`;
+
+  const panto1 = document.getElementById('du2-panto-3rd-1');
+  const panto2 = document.getElementById('du2-panto-3rd-2');
+  if (panto1) panto1.className = isPantoUp ? 'du2-val-box blue' : 'du2-val-box gray';
+  if (panto2) panto2.className = isPantoUp ? 'du2-val-box blue' : 'du2-val-box gray';
+
+  const m1a = document.getElementById('du2-motor-cur-1a');
+  const m1b = document.getElementById('du2-motor-cur-1b');
+  const m2a = document.getElementById('du2-motor-cur-2a');
+  const m2b = document.getElementById('du2-motor-cur-2b');
+  const singleMotorAmp = Math.round(currentAmp / 2);
+  if (m1a) m1a.innerText = singleMotorAmp.toString();
+  if (m1b) m1b.innerText = singleMotorAmp.toString();
+  if (m2a) m2a.innerText = singleMotorAmp.toString();
+  if (m2b) m2b.innerText = singleMotorAmp.toString();
+
+  // 8. Brake Pct & Pressures
+  let brakePct = 0;
+  if (notch.startsWith('B')) {
+    const bNum = parseInt(notch.charAt(1), 10) || 1;
+    brakePct = Math.round((bNum / 7) * 100);
+  } else if (isEbActive) {
+    brakePct = 100;
+  }
+  const brakePctEl = document.getElementById('du2-brake-pct');
+  if (brakePctEl) brakePctEl.innerText = `${brakePct}%`;
+
+  const bcStr = cvBC().toFixed(2);
+  const bc1a = document.getElementById('du2-bc-val-1a');
+  const bc1b = document.getElementById('du2-bc-val-1b');
+  const bc2a = document.getElementById('du2-bc-val-2a');
+  const bc2b = document.getElementById('du2-bc-val-2b');
+  if (bc1a) bc1a.innerText = bcStr;
+  if (bc1b) bc1b.innerText = bcStr;
+  if (bc2a) bc2a.innerText = bcStr;
+  if (bc2b) bc2b.innerText = bcStr;
+
+  // 9. VOBC Signaling Status
+  const vobc1 = document.getElementById('du2-vobc-1');
+  const vobc2 = document.getElementById('du2-vobc-2');
+  if (vobc1) vobc1.className = isEbActive ? 'du2-val-box red' : 'du2-val-box blue';
+  if (vobc2) vobc2.className = isEbActive ? 'du2-val-box red' : 'du2-val-box blue';
+
+  // 10. Auxiliary Power SIV
+  const siv1 = document.getElementById('du2-siv-1');
+  const siv2 = document.getElementById('du2-siv-2');
+  if (siv1) siv1.innerText = isPantoUp ? '100' : '0';
+  if (siv2) siv2.innerText = isPantoUp ? '100' : '0';
+
+  // 11. Compressor CMG
+  const cmg1 = document.getElementById('du2-cmg-1');
+  const cmg2 = document.getElementById('du2-cmg-2');
+  const isCmgRunning = (typeof currentGaugeMR !== 'undefined' && currentGaugeMR < 8.2);
+  if (cmg1) cmg1.className = isCmgRunning ? 'du2-val-box blue' : 'du2-val-box gray';
+  if (cmg2) cmg2.className = isCmgRunning ? 'du2-val-box blue' : 'du2-val-box gray';
+
+  // 12. Bottom Message Box
+  const msgEl = document.getElementById('du2-msg-content');
+  if (msgEl) {
+    if (isRmEbActive) {
+      msgEl.innerText = '[비상제동] RM 허용속도 초과로 비상제동 체결 중 (완전 정차 후 복구 요망)';
+    } else if (driveMode === 'RM' && rmOverspeedTimer > 0) {
+      msgEl.innerText = `[과속주의] RM 허용속도(15km/h) 초과 감지 - ${(5.0 - rmOverspeedTimer).toFixed(1)}초 후 비상제동`;
+    } else if (isDoorOpen || window.__FAULT_DOOR_FAIL) {
+      msgEl.innerText = '[출입문] 출입문 개방 상태 - 역행 차단 중';
+    } else {
+      msgEl.innerText = '정상 운행 대기 중입니다.';
+    }
+  }
+
+  // 13. ADU Updates
+  const aduNextSt = document.getElementById('adu-next-st');
+  if (aduNextSt) aduNextSt.innerText = stInfo.name;
 
   const dwellEl = document.getElementById('adu-dwell-val');
   if (dwellEl) dwellEl.innerText = (trainSpeed <= 0.2) ? '00:30' : '--';
@@ -7101,7 +7723,6 @@ function updateDuAduDisplay(driveMode, notch, now) {
     targetFillEl.style.width = `${pct.toFixed(0)}%`;
   }
 
-  // 8. ADU Limit & Mode
   const limitEl = document.getElementById('adu-limit-val');
   if (limitEl) {
     if (driveMode === 'RM') limitEl.innerText = '15 km/h';
@@ -7112,11 +7733,9 @@ function updateDuAduDisplay(driveMode, notch, now) {
   const modeValEl = document.getElementById('adu-mode-val');
   if (modeValEl) modeValEl.innerText = driveMode || 'OFF';
 
-  // 9. ADU Digital Speed
   const digiSpeedEl = document.getElementById('adu-speed-digital');
   if (digiSpeedEl) digiSpeedEl.innerText = Math.round(trainSpeed);
 
-  // 10. ADU Warnings & LEDs
   const ebCard = document.getElementById('adu-eb-card');
   const warnCard = document.getElementById('adu-warn-card');
   const warnTimerEl = document.getElementById('adu-warn-timer');
@@ -7141,7 +7760,6 @@ function updateDuAduDisplay(driveMode, notch, now) {
     if (aduLedWarn) aduLedWarn.className = 'mmi-led amber';
   }
 
-  // 11. ADU Speedometer Canvas
   drawAduSpeedoGauge(trainSpeed, driveMode);
 }
 
