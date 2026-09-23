@@ -3713,6 +3713,12 @@
       color: #ffffff;
       border: 1px solid #666666;
     }
+        .du2-val-box.active-vobc {
+      background: #0000ff !important;
+      color: #00ff00 !important;
+      font-weight: 900 !important;
+      text-shadow: 0 0 6px rgba(0, 255, 0, 0.6);
+    }
     .du2-val-box.red {
       background: #ff0000;
       color: #ffffff;
@@ -5966,9 +5972,14 @@
 
                   <!-- (3) 제동지령 -->
                   <div class="du2-trow" style="min-height: 42px;">
-                    <div class="du2-th" style="flex-direction:column; align-items:flex-start; justify-content:center;">
-                      <span>제동지령</span>
-                      <span class="du2-gauge-pct" id="du2-brake-pct">0%</span>
+                    <div class="du2-th">
+                      <div class="du2-trac-gauge-cell">
+                        <div class="du2-v-track"><div class="du2-v-fill" id="du2-brake-fill"></div></div>
+                        <div style="display:flex; flex-direction:column;">
+                          <span>제동지령</span>
+                          <span class="du2-gauge-pct" id="du2-brake-pct">0%</span>
+                        </div>
+                      </div>
                     </div>
                     <!-- Mc1: 2개 박스 수직 스택 -->
                     <div class="du2-tcol-eq">
@@ -7908,6 +7919,8 @@ function updateDuAduDisplay(driveMode, notch, now) {
     }
     const brakePctEl = document.getElementById('du2-brake-pct');
     if (brakePctEl) brakePctEl.innerText = `${brakePct}%`;
+    const brakeFillEl = document.getElementById('du2-brake-fill');
+    if (brakeFillEl) brakeFillEl.style.height = `${brakePct}%`;
 
     const bcStr = cvBC().toFixed(2);
     const bc1a = document.getElementById('du2-bc-val-1a');
@@ -7919,11 +7932,38 @@ function updateDuAduDisplay(driveMode, notch, now) {
     if (bc2a) bc2a.innerText = bcStr;
     if (bc2b) bc2b.innerText = bcStr;
 
-    // 9. VOBC Signaling Status
-    const vobc1 = document.getElementById('du2-vobc-1');
-    const vobc2 = document.getElementById('du2-vobc-2');
-    if (vobc1) vobc1.className = isEbActive ? 'du2-val-box red' : 'du2-val-box blue';
-    if (vobc2) vobc2.className = isEbActive ? 'du2-val-box red' : 'du2-val-box blue';
+    // 9. VOBC Signaling Status & Active (A) Indication
+    const isVobc2Active = (revNotch === 'R') || (window.__ACTIVE_VOBC === 2);
+    const vobc1Du = document.getElementById('du2-vobc-1');
+    const vobc2Du = document.getElementById('du2-vobc-2');
+    if (vobc1Du) {
+      if (isEbActive) {
+        vobc1Du.className = 'du2-val-box red';
+      } else if (!isVobc2Active) {
+        vobc1Du.className = 'du2-val-box blue active-vobc';
+      } else {
+        vobc1Du.className = 'du2-val-box blue';
+      }
+    }
+    if (vobc2Du) {
+      if (isEbActive) {
+        vobc2Du.className = 'du2-val-box red';
+      } else if (isVobc2Active) {
+        vobc2Du.className = 'du2-val-box blue active-vobc';
+      } else {
+        vobc2Du.className = 'du2-val-box blue';
+      }
+    }
+
+    // ADU VOBC 1 / 2 Active (A) Icon Sync
+    const vobc1Adu = document.getElementById('adu2-subsys-vobc1');
+    const vobc2Adu = document.getElementById('adu2-subsys-vobc2');
+    if (vobc1Adu) {
+      vobc1Adu.innerHTML = isVobc2Active ? 'VOBC 1' : 'VOBC 1 <span class="vobc-active-icon">Ⓐ</span>';
+    }
+    if (vobc2Adu) {
+      vobc2Adu.innerHTML = isVobc2Active ? 'VOBC 2 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 2';
+    }
 
     // 10. Auxiliary Power SIV
     const siv1 = document.getElementById('du2-siv-1');
