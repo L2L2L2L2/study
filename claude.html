@@ -7503,10 +7503,45 @@ const CV = {
 /* 노선 형상 주기 (m) */
 const CV_LINE = {
   cycle: 1500,
-  tunnelAt: 780, tunnelLen: 330,   //  780 ~ 1110 m 구간이 터널
-  stationAt: 250, stationLen: 130  //  250 ~  380 m 구간이 역 승강장
+  tunnelAt: 776, tunnelLen: 338,   // 776m 기준 터널 갱구 전환
+  stationAt: 248, stationLen: 134  // 248 ~ 382m 구간 승강장 (정차점 305m)
 };
-const CV_STATIONS = ['검단오류', '왕길', '검단사거리', '마전', '완정', '독정', '검암', '주안국가산단'];
+
+// 인천 2호선 전구간 27개 역 정보 (지상/지하 구분, 전구간 PSD 완비)
+// 지상구간: 검단오류, 왕길, 인천대공원, 운연
+// 왕길 -> 검단사거리: 지상 -> 터널 진입
+// 지하구간: 검단사거리 ~ 남동구청
+// 남동구청 -> 인천대공원: 터널 -> 지상 진출
+const INCHEON2_STATIONS = [
+  { name: '검단오류', eng: 'Geomdan Oryu', type: 'GROUND', platformSide: 'R' },
+  { name: '왕길', eng: 'Wanggil', type: 'GROUND', platformSide: 'R' },
+  { name: '검단사거리', eng: 'Geomdan Sageori', type: 'TUNNEL', platformSide: 'R' },
+  { name: '마전', eng: 'Majeon', type: 'TUNNEL', platformSide: 'R' },
+  { name: '완정', eng: 'Wanjeong', type: 'TUNNEL', platformSide: 'R' },
+  { name: '독정', eng: 'Dokjeong', type: 'TUNNEL', platformSide: 'R' },
+  { name: '검암', eng: 'Geomam', type: 'TUNNEL', platformSide: 'R' },
+  { name: '검바위', eng: 'Geombawi', type: 'TUNNEL', platformSide: 'R' },
+  { name: '아시아드경기장', eng: 'Asiad Stadium', type: 'TUNNEL', platformSide: 'R' },
+  { name: '서구청', eng: 'Seo-gu Office', type: 'TUNNEL', platformSide: 'R' },
+  { name: '가정', eng: 'Gajeong', type: 'TUNNEL', platformSide: 'R' },
+  { name: '가정중앙시장', eng: 'Gajeong Jungang Market', type: 'TUNNEL', platformSide: 'R' },
+  { name: '석남', eng: 'Seongnam', type: 'TUNNEL', platformSide: 'R' },
+  { name: '서부여성회관', eng: "West Woman's CC", type: 'TUNNEL', platformSide: 'R' },
+  { name: '인천가좌', eng: 'Incheon Gajwa', type: 'TUNNEL', platformSide: 'R' },
+  { name: '가재울', eng: 'Gajaeul', type: 'TUNNEL', platformSide: 'R' },
+  { name: '주안국가산단', eng: 'Juan Ind. Complex', type: 'TUNNEL', platformSide: 'R' },
+  { name: '주안', eng: 'Juan', type: 'TUNNEL', platformSide: 'R' },
+  { name: '시민공원', eng: 'Citizens Park', type: 'TUNNEL', platformSide: 'R' },
+  { name: '석바위시장', eng: 'Seokbawi Market', type: 'TUNNEL', platformSide: 'R' },
+  { name: '인천시청', eng: 'Incheon City Hall', type: 'TUNNEL', platformSide: 'R' },
+  { name: '석천사거리', eng: 'Seokcheon Sageori', type: 'TUNNEL', platformSide: 'R' },
+  { name: '모래내시장', eng: 'Moraenae Market', type: 'TUNNEL', platformSide: 'R' },
+  { name: '만수', eng: 'Mansu', type: 'TUNNEL', platformSide: 'R' },
+  { name: '남동구청', eng: 'Namdong-gu Office', type: 'TUNNEL', platformSide: 'R' },
+  { name: '인천대공원', eng: 'Incheon Grand Park', type: 'GROUND', platformSide: 'R' },
+  { name: '운연', eng: 'Unyeon', type: 'GROUND', platformSide: 'R' }
+];
+const CV_STATIONS = INCHEON2_STATIONS.map(s => s.name);
 
 /* 기존 파일과 동일한 이름의 전역 상태 (다른 로직이 참조하므로 유지) */
 let trainSpeed = 0.0;
@@ -7520,6 +7555,223 @@ let isDoorOpen = false;
 let doorOpenSide = 'R'; // 기본 개방 측 (L 또는 R)
 let isRmEbActive = false;
 let rmOverspeedTimer = 0.0;
+
+// 전역 출입문 및 PSD 제어 헬퍼 함수
+function openTrainDoors(side = 'R', isAuto = false) {
+  isDoorOpen = true;
+  doorOpenSide = side;
+  window.doorOpenSide = side;
+  if (typeof sound !== 'undefined' && sound && typeof sound.playAirExhaust === 'function') {
+    sound.playAirExhaust(0.8, 1200, 0.6);
+  }
+  if (typeof triggerHaptic === 'function') triggerHaptic([30, 40]);
+
+  const lampDoor = document.getElementById('lamp-door');
+  if (lampDoor) {
+    lampDoor.classList.remove('lit');
+    lampDoor.classList.add('blinking');
+  }
+  const occLampDoor = document.getElementById('occ-lamp-door');
+  if (occLampDoor) {
+    occLampDoor.classList.remove('lit-green');
+    occLampDoor.classList.add('blink-amber');
+    occLampDoor.innerText = '🚪 출입문 열림 (점멸)';
+  }
+  if (typeof showTemporaryHudFeedback === 'function') {
+    showTemporaryHudFeedback(`🚪 [출입문 ${isAuto ? '자동' : ''}열림] ${side === 'L' ? '좌측' : '우측'} 출입문 및 PSD 개방 (승객 승하차)`, false);
+  }
+}
+
+function closeTrainDoors(isAuto = false) {
+  if (typeof sound !== 'undefined' && sound && typeof sound.playAirExhaust === 'function') {
+    sound.playAirExhaust(1.0, 900, 0.7);
+  }
+  if (typeof triggerHaptic === 'function') triggerHaptic([30, 40]);
+
+  if (window.__FAULT_DOOR_FAIL) {
+    isDoorOpen = true;
+    const lampDoor = document.getElementById('lamp-door');
+    if (lampDoor) {
+      lampDoor.classList.remove('lit');
+      lampDoor.classList.add('blinking');
+    }
+    if (typeof showTemporaryHudFeedback === 'function') {
+      showTemporaryHudFeedback(`🚨 [출입문 고장] 출입문 닫힘 신호 루프 불량! (완폐 불가, 점멸 지속 / OP4 출입문 바이패스 취급 필요)`, true);
+    }
+  } else {
+    isDoorOpen = false;
+    doorOpenSide = null;
+    window.doorOpenSide = null;
+    const lampDoor = document.getElementById('lamp-door');
+    if (lampDoor) {
+      lampDoor.classList.remove('blinking');
+      lampDoor.classList.add('lit');
+    }
+    const occLampDoor = document.getElementById('occ-lamp-door');
+    if (occLampDoor) {
+      occLampDoor.classList.remove('blink-amber');
+      occLampDoor.classList.add('lit-green');
+      occLampDoor.innerText = '🚪 출입문 닫힘';
+    }
+    if (typeof showTemporaryHudFeedback === 'function') {
+      showTemporaryHudFeedback(`🔒 [출입문 ${isAuto ? '자동' : ''}닫힘] 전체 출입문 및 PSD 완폐 체결 (표시등 점등, 역행 인터록 해제)`, false);
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   무인운전(ATO / Driverless) 전자동 역간 운행 및 PSD 연동 제어기
+--------------------------------------------------------------------------- */
+const AtoDriverless = {
+  state: 'CRUISING', // 'CRUISING', 'BRAKING', 'STOPPED', 'DWELLING', 'DOOR_CLOSING', 'DEPARTING'
+  targetSpeed: 0.0,
+  accelRate: 0.0,
+  stationIdx: 0,
+  targetStopDist: 305.0,
+  dwellTimeRemaining: 0.0,
+  stateTimer: 0.0,
+
+  reset(dist) {
+    this.state = 'CRUISING';
+    this.targetSpeed = 0.0;
+    this.accelRate = 0.0;
+    this.dwellTimeRemaining = 0.0;
+    this.stateTimer = 0.0;
+    if (dist !== undefined) {
+      this.initStopTarget(dist);
+    }
+  },
+
+  initStopTarget(s) {
+    const CYCLE = 1500.0;
+    const STOP_P = 305.0;
+    const n = Math.floor(s / CYCLE);
+    const p = ((s % CYCLE) + CYCLE) % CYCLE;
+    if (p <= STOP_P + 3.0) {
+      this.stationIdx = ((n % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
+      this.targetStopDist = n * CYCLE + STOP_P;
+    } else {
+      this.stationIdx = (((n + 1) % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
+      this.targetStopDist = (n + 1) * CYCLE + STOP_P;
+    }
+  },
+
+  update(dt, dist, speed) {
+    if (!this.targetStopDist || this.targetStopDist < dist - 10.0) {
+      this.initStopTarget(dist);
+    }
+
+    const distToStop = this.targetStopDist - dist;
+    const currSt = INCHEON2_STATIONS[this.stationIdx % INCHEON2_STATIONS.length];
+
+    if (this.state === 'CRUISING') {
+      const cruiseSpeed = 65.0;
+      const vMs = speed / 3.6;
+      // 0.78 m/s^2 기준 감속 여유거리
+      const reqBrakeDist = (vMs * vMs) / (2.0 * 0.78) + 14.0;
+
+      if (distToStop <= reqBrakeDist && distToStop > -5.0) {
+        this.state = 'BRAKING';
+        if (typeof showTemporaryHudFeedback === 'function') {
+          showTemporaryHudFeedback(`🚊 [무인운전 ATO] 이번 역은 ${currSt.name} (${currSt.eng}) 역입니다. 감속 제동을 시작합니다.`, false);
+        }
+      } else {
+        this.targetSpeed = cruiseSpeed;
+        this.accelRate = 2.6;
+        if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
+      }
+    }
+
+    if (this.state === 'BRAKING') {
+      const d = Math.max(0.0, distToStop);
+      // TASC 포물선 제동 감속 프로파일
+      const vProfile = Math.sqrt(2.0 * 0.72 * d) * 3.6;
+      const tSpeed = Math.min(65.0, vProfile);
+
+      if (d <= 0.6 && speed < 3.5) {
+        this.targetSpeed = 0.0;
+        this.accelRate = -3.8;
+        if (speed <= 0.15) {
+          trainSpeed = 0.0;
+          this.state = 'STOPPED';
+          this.stateTimer = 0.8;
+          if (typeof updateGaugeUI === 'function') updateGaugeUI(4.0);
+          if (typeof showTemporaryHudFeedback === 'function') {
+            showTemporaryHudFeedback(`🚊 [무인운전 ATO] ${currSt.name}역 정위치 정차 완료 (정차 오차 0.0m)`, false);
+          }
+        }
+      } else {
+        this.targetSpeed = Math.max(0.0, tSpeed);
+        if (speed > tSpeed) {
+          this.accelRate = -Math.min(4.2, (speed - tSpeed) * 1.5 + 0.6);
+        } else {
+          this.accelRate = Math.min(2.0, (tSpeed - speed) * 1.2);
+        }
+        const bcPres = Math.min(4.0, Math.max(0.0, (-this.accelRate / 4.0) * 3.6));
+        if (typeof updateGaugeUI === 'function') updateGaugeUI(bcPres);
+      }
+    } else if (this.state === 'STOPPED') {
+      this.targetSpeed = 0.0;
+      this.accelRate = -4.0;
+      if (typeof updateGaugeUI === 'function') updateGaugeUI(4.0);
+      this.stateTimer -= dt;
+      if (this.stateTimer <= 0) {
+        openTrainDoors(currSt.platformSide || 'R', true);
+        this.state = 'DWELLING';
+        this.dwellTimeRemaining = 8.0;
+        if (typeof showTemporaryHudFeedback === 'function') {
+          showTemporaryHudFeedback(`🚪 [무인운전 ATO] ${currSt.name}역 출입문 및 PSD 개방 (승객 승하차, 출발까지 8초)`, false);
+        }
+      }
+    } else if (this.state === 'DWELLING') {
+      this.targetSpeed = 0.0;
+      this.accelRate = -4.0;
+      if (typeof updateGaugeUI === 'function') updateGaugeUI(4.0);
+      this.dwellTimeRemaining -= dt;
+      if (this.dwellTimeRemaining <= 0) {
+        closeTrainDoors(true);
+        this.state = 'DOOR_CLOSING';
+        this.stateTimer = 2.8;
+        if (typeof showTemporaryHudFeedback === 'function') {
+          showTemporaryHudFeedback(`🔔 [무인운전 ATO] 출입문 닫힘 경고음 취명 및 PSD 닫힘`, false);
+        }
+      }
+    } else if (this.state === 'DOOR_CLOSING') {
+      this.targetSpeed = 0.0;
+      this.accelRate = -4.0;
+      if (typeof updateGaugeUI === 'function') updateGaugeUI(4.0);
+      this.stateTimer -= dt;
+      const lampDoor = document.getElementById('lamp-door');
+      const isDoorClosed = !isDoorOpen && (!window.__FAULT_DOOR_FAIL) && (lampDoor ? lampDoor.classList.contains('lit') : true);
+
+      if (this.stateTimer <= 0 && isDoorClosed) {
+        const nextIdx = (this.stationIdx + 1) % INCHEON2_STATIONS.length;
+        this.stationIdx = nextIdx;
+        const nextSt = INCHEON2_STATIONS[nextIdx];
+        const CYCLE = 1500.0;
+        const n = Math.floor(dist / CYCLE);
+        this.targetStopDist = (n + 1) * CYCLE + 305.0;
+        this.state = 'DEPARTING';
+        this.stateTimer = 2.0;
+        if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
+        if (typeof sound !== 'undefined' && sound && typeof sound.playAirExhaust === 'function') {
+          sound.playAirExhaust(0.6, 1200, 0.4);
+        }
+        if (typeof showTemporaryHudFeedback === 'function') {
+          showTemporaryHudFeedback(`🟢 [무인운전 ATO] 출입문 완폐 확인 - 다음 역(${nextSt.name})으로 자동 출발합니다!`, false);
+        }
+      }
+    } else if (this.state === 'DEPARTING') {
+      this.targetSpeed = 65.0;
+      this.accelRate = 2.6;
+      if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
+      this.stateTimer -= dt;
+      if (this.stateTimer <= 0 && speed > 5.0) {
+        this.state = 'CRUISING';
+      }
+    }
+  }
+};
 
 /* 내부 상태 */
 const cvState = {
@@ -7556,18 +7808,56 @@ function cvHash(a, b) {
   return h - Math.floor(h);
 }
 function cvTunnelInfo(s) {
-  const p = ((s % CV_LINE.cycle) + CV_LINE.cycle) % CV_LINE.cycle;
-  const a = CV_LINE.tunnelAt, b = a + CV_LINE.tunnelLen;
-  if (p >= a && p < b) return { inside: true, exit: b - p, entry: 0 };
-  const entry = (p < a) ? (a - p) : (CV_LINE.cycle - p + a);
-  return { inside: false, exit: 0, entry: entry };
+  const CYCLE = 1500.0;
+  const p = ((s % CYCLE) + CYCLE) % CYCLE;
+  const n = Math.floor(s / CYCLE);
+  const curIdx = ((n % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
+  const nextIdx = (curIdx + 1) % INCHEON2_STATIONS.length;
+
+  const curType = INCHEON2_STATIONS[curIdx].type;
+  const nextType = INCHEON2_STATIONS[nextIdx].type;
+  const portalAt = 776.0;
+
+  if (curType === 'GROUND' && nextType === 'GROUND') {
+    return { inside: false, exit: 0, entry: 9999, mode: 'GROUND_GROUND' };
+  }
+  if (curType === 'TUNNEL' && nextType === 'TUNNEL') {
+    return { inside: true, exit: 9999, entry: 0, mode: 'TUNNEL_TUNNEL' };
+  }
+  if (curType === 'GROUND' && nextType === 'TUNNEL') {
+    // 왕길 -> 검단사거리: 지상에서 터널로 진입
+    if (p < portalAt) {
+      return { inside: false, exit: 0, entry: portalAt - p, mode: 'GROUND_TO_TUNNEL' };
+    } else {
+      return { inside: true, exit: 9999, entry: 0, mode: 'GROUND_TO_TUNNEL' };
+    }
+  }
+  if (curType === 'TUNNEL' && nextType === 'GROUND') {
+    // 남동구청 -> 인천대공원: 터널에서 지상으로 진출
+    if (p < portalAt) {
+      return { inside: true, exit: portalAt - p, entry: 0, mode: 'TUNNEL_TO_GROUND' };
+    } else {
+      return { inside: false, exit: 0, entry: 9999, mode: 'TUNNEL_TO_GROUND' };
+    }
+  }
+  return { inside: false, exit: 0, entry: 9999, mode: 'GROUND_GROUND' };
 }
 function cvStationInfo(s) {
   const p = ((s % CV_LINE.cycle) + CV_LINE.cycle) % CV_LINE.cycle;
   const a = CV_LINE.stationAt, b = a + CV_LINE.stationLen;
   let dStart, n = Math.floor(s / CV_LINE.cycle);
   if (p < b) { dStart = a - p; } else { dStart = CV_LINE.cycle - p + a; n += 1; }
-  return { dStart: dStart, dEnd: dStart + CV_LINE.stationLen, name: CV_STATIONS[((n % CV_STATIONS.length) + CV_STATIONS.length) % CV_STATIONS.length] };
+  const idx = ((n % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
+  const st = INCHEON2_STATIONS[idx];
+  return {
+    dStart: dStart,
+    dEnd: dStart + CV_LINE.stationLen,
+    name: st.name,
+    eng: st.eng,
+    type: st.type,
+    platformSide: st.platformSide || 'R',
+    index: idx
+  };
 }
 function cvRainAt(s) {
   if (typeof window !== 'undefined' && window.cvForceRain !== undefined && window.cvForceRain !== null) {
@@ -8407,8 +8697,20 @@ function updateTrainPhysics() {
   if (isEmgActive || notch === 'EB' || isRmEbActive) {
     target = 0.0; rate = -5.0; // 비상제동 체결되어 서서히 멈춤
   } else if (isUnmannedActive) {
-    if (isDoorInterlockCleared && cvBC() < 0.5) { target = 60.0; rate = 2.8; }
-    else { target = 0.0; rate = -3.5; }
+    // 무인운전(ATO) 모드: AtoDriverless 제어기가 역간 주행, TASC 감속, 역 정차, 출입문/PSD 개폐, 자동 출발 총괄
+    if (isDoorInterlockCleared && cvBC() < 0.5) {
+      AtoDriverless.update(dt, trainDistance, trainSpeed);
+      target = AtoDriverless.targetSpeed;
+      rate = AtoDriverless.accelRate;
+    } else {
+      if (AtoDriverless.state === 'STOPPED' || AtoDriverless.state === 'DWELLING' || AtoDriverless.state === 'DOOR_CLOSING') {
+        AtoDriverless.update(dt, trainDistance, trainSpeed);
+        target = AtoDriverless.targetSpeed;
+        rate = AtoDriverless.accelRate;
+      } else {
+        target = 0.0; rate = -3.5;
+      }
+    }
   } else if (isManualMode && notch.charAt(0) === 'B') {
     target = 0.0;
     if (notch === 'B1') rate = -1.2;
@@ -8453,9 +8755,9 @@ function updateTrainPhysics() {
     } else if (notch.charAt(0) === 'B' || isUnmannedActive) {
       // 상용 제동 체결 상태: 제동력 + 구배 저항 반영
       trainSpeed = Math.max(target, trainSpeed + (rate + gradeAcc) * dt);
+      if (isUnmannedActive && target === 0.0 && trainSpeed <= 0.08) trainSpeed = 0.0;
     } else {
       // 타행(N) 상태: 제동이 전혀 걸리지 않은 상태로, 자연 주행 저항(구름/공기) + 구배 저항만 적용
-      // 브레이크 체결 시(-1.2 ~ -6.4)와 확연히 구분되는 부드럽고 여유로운 타행감 (-0.04 km/h/s 수준)
       const coastDecel = rate + gradeAcc;
       trainSpeed = Math.max(target, trainSpeed + coastDecel * dt);
     }
@@ -9367,8 +9669,31 @@ function updateCabOSD(notch, revNotch, isUnmannedActive, driveMode) {
     badge.classList.add('braking'); badge.innerText = `⚠️ 과속 ${(5.0 - rmOverspeedTimer).toFixed(1)}s`;
     if (dot) dot.classList.add('moving');
   } else if (isUnmannedActive) {
-    badge.classList.add('driving'); badge.innerText = '무인운전 (ATO)';
-    if (dot) dot.classList.add('moving');
+    badge.classList.add('driving');
+    if (typeof AtoDriverless !== 'undefined') {
+      if (AtoDriverless.state === 'DWELLING') {
+        badge.innerText = `ATO 승하차 (${Math.ceil(AtoDriverless.dwellTimeRemaining)}s)`;
+        if (dot) dot.classList.remove('moving');
+      } else if (AtoDriverless.state === 'STOPPED') {
+        badge.innerText = 'ATO 정위치 정차';
+        if (dot) dot.classList.remove('moving');
+      } else if (AtoDriverless.state === 'DOOR_CLOSING') {
+        badge.innerText = 'ATO 출입문 닫힘';
+        if (dot) dot.classList.remove('moving');
+      } else if (AtoDriverless.state === 'BRAKING') {
+        badge.innerText = 'ATO 감속정차';
+        if (dot) dot.classList.add('moving');
+      } else if (AtoDriverless.state === 'DEPARTING') {
+        badge.innerText = 'ATO 출발 가속';
+        if (dot) dot.classList.add('moving');
+      } else {
+        badge.innerText = '무인운전 (ATO 주행)';
+        if (dot) dot.classList.add('moving');
+      }
+    } else {
+      badge.innerText = '무인운전 (ATO)';
+      if (dot) dot.classList.add('moving');
+    }
   } else if (trainSpeed <= 0.2) {
     badge.classList.add('stopped'); badge.innerText = '정차중';
     if (dot) dot.classList.remove('moving');
@@ -9665,6 +9990,7 @@ const ThreeCabView = {
 
   // 지상/고가 구간 측면 콘크리트 방음/난간벽 (Parapets)
   buildViaductParapets() {
+    this.viaductGroup = new THREE.Group();
     const numSlices = 500;
     const leftWallPos = [];
     const leftWallInd = [];
@@ -9676,9 +10002,8 @@ const ThreeCabView = {
       const s = u * 1500.0;
       const { P, N, B } = this.getTrackFrame(u);
 
-      const inTunnel = (s >= 772 && s <= 1118);
       const inStation = (s >= 246 && s <= 384);
-      const isVisible = !inTunnel && !inStation;
+      const isVisible = !inStation;
 
       const pL0 = P.clone().addScaledVector(N, -2.3).addScaledVector(B, -0.2);
       const pL1 = P.clone().addScaledVector(N, -2.3).addScaledVector(B, 0.95);
@@ -9702,17 +10027,20 @@ const ThreeCabView = {
     lGeo.setAttribute('position', new THREE.Float32BufferAttribute(leftWallPos, 3));
     lGeo.setIndex(leftWallInd);
     lGeo.computeVertexNormals();
-    this.scene.add(new THREE.Mesh(lGeo, wallMat));
+    this.viaductGroup.add(new THREE.Mesh(lGeo, wallMat));
 
     const rGeo = new THREE.BufferGeometry();
     rGeo.setAttribute('position', new THREE.Float32BufferAttribute(rightWallPos, 3));
     rGeo.setIndex(rightWallInd);
     rGeo.computeVertexNormals();
-    this.scene.add(new THREE.Mesh(rGeo, wallMat));
+    this.viaductGroup.add(new THREE.Mesh(rGeo, wallMat));
+
+    this.scene.add(this.viaductGroup);
   },
 
   // 현실적 지하 마제형 콘크리트 터널 (바닥, 좌우벽체, 아치 천장, 케이블 트레이, 대피로 완비)
   buildTunnel() {
+    this.tunnelGroup = new THREE.Group();
     const sStart = 776.0;
     const sEnd = 1114.0;
     const step = 2.5;
@@ -9774,7 +10102,7 @@ const ThreeCabView = {
       side: THREE.DoubleSide
     });
     const tunnelMesh = new THREE.Mesh(tunnelGeo, tunnelMat);
-    this.scene.add(tunnelMesh);
+    this.tunnelGroup.add(tunnelMesh);
 
     // 터널 좌측 벽면 케이블 덕트 라인
     const cablePts = [];
@@ -9786,11 +10114,7 @@ const ThreeCabView = {
     const cableCurve = new THREE.CatmullRomCurve3(cablePts, false, 'centripetal');
     const cableGeo = new THREE.TubeGeometry(cableCurve, 200, 0.03, 5, false);
     const cableMat = new THREE.MeshBasicMaterial({ color: 0x111317 });
-    this.scene.add(new THREE.Mesh(cableGeo, cableMat));
-
-    // 터널 입구 및 출구 개구부 아치 갱구 (중앙이 뚫려 열차가 통과하는 정상 갱구)
-    this.buildPortalArch(sStart, false);
-    this.buildPortalArch(sEnd, true);
+    this.tunnelGroup.add(new THREE.Mesh(cableGeo, cableMat));
 
     // 천장 중앙 형광등 조명
     const lampGeo = new THREE.BoxGeometry(1.6, 0.12, 0.25);
@@ -9807,7 +10131,13 @@ const ThreeCabView = {
       lampsMesh.setMatrixAt(k, lm);
     }
     lampsMesh.instanceMatrix.needsUpdate = true;
-    this.scene.add(lampsMesh);
+    this.tunnelGroup.add(lampsMesh);
+
+    this.scene.add(this.tunnelGroup);
+
+    // 터널 입구(왕길->검단사거리) 및 출구(남동구청->인천대공원) 아치 갱구
+    this.portalEntryGroup = this.buildPortalArch(sStart, false);
+    this.portalExitGroup = this.buildPortalArch(sEnd, true);
   },
 
   // 뚫려있는 터널 입구 갱구 아치 구조물 (중앙 통로는 완전히 개방)
@@ -9817,41 +10147,42 @@ const ThreeCabView = {
     const portalMat = new THREE.MeshStandardMaterial({ color: 0x5a6068, roughness: 0.85 });
     const cliffMat = new THREE.MeshStandardMaterial({ color: 0x3a3834, roughness: 0.95 });
 
-    // 1. 좌측 콘크리트 포털 기둥 (선로 좌측 x = -4.1m, 폭 2.4m => x:-5.3m ~ -2.9m)
+    // 1. 좌측 콘크리트 포털 기둥
     const leftPillar = new THREE.Mesh(new THREE.BoxGeometry(2.4, 6.0, 2.5), portalMat);
     leftPillar.position.set(-4.1, 2.8, 0);
     pGroup.add(leftPillar);
 
-    // 2. 우측 콘크리트 포털 기둥 (선로 우측 x = +4.1m, 폭 2.4m => x:+2.9m ~ +5.3m)
+    // 2. 우측 콘크리트 포털 기둥
     const rightPillar = new THREE.Mesh(new THREE.BoxGeometry(2.4, 6.0, 2.5), portalMat);
     rightPillar.position.set(4.1, 2.8, 0);
     pGroup.add(rightPillar);
 
-    // 3. 상부 아치 헤더 빔 (열차 천장 위 y = 5.2m 이상에 가로지름)
+    // 3. 상부 아치 헤더 빔
     const topHeader = new THREE.Mesh(new THREE.BoxGeometry(10.6, 2.2, 2.5), portalMat);
     topHeader.position.set(0, 6.3, 0);
     pGroup.add(topHeader);
 
-    // 4. 좌측 산악 암벽 (x = -5.3m 이하 외측)
+    // 4. 좌측 산악 암벽
     const leftCliff = new THREE.Mesh(new THREE.BoxGeometry(22.0, 14.0, 3.0), cliffMat);
     leftCliff.position.set(-16.3, 6.5, isExit ? 1.5 : -1.5);
     pGroup.add(leftCliff);
 
-    // 5. 우측 산악 암벽 (x = +5.3m 이상 외측)
+    // 5. 우측 산악 암벽
     const rightCliff = new THREE.Mesh(new THREE.BoxGeometry(22.0, 14.0, 3.0), cliffMat);
     rightCliff.position.set(16.3, 6.5, isExit ? 1.5 : -1.5);
     pGroup.add(rightCliff);
 
-    // 6. 상부 산악 능선 암벽 (y = 7.4m 이상 상단)
+    // 6. 상부 산악 능선 암벽
     const topCliff = new THREE.Mesh(new THREE.BoxGeometry(54.0, 8.0, 3.0), cliffMat);
     topCliff.position.set(0, 11.4, isExit ? 1.5 : -1.5);
     pGroup.add(topCliff);
 
-    // ★ 중앙 통로(x: -2.9m ~ +2.9m, y: -0.5m ~ +5.2m)는 100% 뚫려있어 열차가 터널 내부 튜브로 직통 진입함!
+    // ★ 중앙 통로는 100% 뚫려있어 열차가 안전하게 통과함!
     const m = new THREE.Matrix4().makeBasis(N, B, T);
     pGroup.applyMatrix4(m);
     pGroup.position.copy(P);
     this.scene.add(pGroup);
+    return pGroup;
   },
 
   buildStation() {
@@ -9915,6 +10246,8 @@ const ThreeCabView = {
     const yelMat = new THREE.MeshBasicMaterial({ color: 0xf5b000 });
     stGroup.add(new THREE.Mesh(yelGeo, yelMat));
 
+    // 지상 역사용 기둥 및 캐노피 지붕
+    this.stationCanopyGroup = new THREE.Group();
     const pillarGeo = new THREE.BoxGeometry(0.25, 4.0, 0.25);
     const pillarMat = new THREE.MeshStandardMaterial({ color: 0x4a525d, metalness: 0.5 });
     const canopyGeo = new THREE.BoxGeometry(4.2, 0.2, 11.5);
@@ -9926,14 +10259,34 @@ const ThreeCabView = {
       const pillar = new THREE.Mesh(pillarGeo, pillarMat);
       pillar.applyMatrix4(m);
       pillar.position.copy(P).addScaledVector(N, 4.5).addScaledVector(B, 3.15);
-      stGroup.add(pillar);
+      this.stationCanopyGroup.add(pillar);
 
       const canopy = new THREE.Mesh(canopyGeo, canopyMat);
       canopy.applyMatrix4(m);
       canopy.position.copy(P).addScaledVector(N, 3.2).addScaledVector(B, 5.15);
-      stGroup.add(canopy);
+      this.stationCanopyGroup.add(canopy);
     }
+    this.scene.add(this.stationCanopyGroup);
 
+    // 지하 역사용 터널 천장/아치 볼트 (지하 역사 도착 시 표시)
+    this.stationVaultGroup = new THREE.Group();
+    const vaultMat = new THREE.MeshStandardMaterial({ color: 0x2e333b, roughness: 0.88, side: THREE.DoubleSide });
+    for (let s = sStart + 5; s <= sEnd - 5; s += 14) {
+      const { P, T, N, B } = this.getTrackFrame(s / 1500.0);
+      const m = new THREE.Matrix4().makeBasis(N, B, T);
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(11.0, 0.35, 13.8), vaultMat);
+      roof.applyMatrix4(m);
+      roof.position.copy(P).addScaledVector(N, 1.8).addScaledVector(B, 5.2);
+      this.stationVaultGroup.add(roof);
+
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 5.8, 13.8), vaultMat);
+      wall.applyMatrix4(m);
+      wall.position.copy(P).addScaledVector(N, 6.2).addScaledVector(B, 2.5);
+      this.stationVaultGroup.add(wall);
+    }
+    this.scene.add(this.stationVaultGroup);
+
+    // 전구간 100% 설치된 스크린도어 (PSD)
     const psdGlassMat = new THREE.MeshStandardMaterial({
       color: 0x3a6073,
       transparent: true,
@@ -9982,7 +10335,7 @@ const ThreeCabView = {
     signCanvas.height = 128;
     this.signTextCanvas = signCanvas;
     this.signTexture = new THREE.CanvasTexture(signCanvas);
-    this.updateStationSignTexture('검단오류');
+    this.updateStationSignTexture('검단오류', 'Geomdan Oryu');
 
     const signMat = new THREE.MeshBasicMaterial({ map: this.signTexture });
     const signGeo = new THREE.BoxGeometry(0.1, 0.8, 3.2);
@@ -9998,7 +10351,7 @@ const ThreeCabView = {
     this.scene.add(stGroup);
   },
 
-  updateStationSignTexture(name) {
+  updateStationSignTexture(name, eng) {
     if (!this.signTextCanvas || !this.signTexture) return;
     const ctx = this.signTextCanvas.getContext('2d');
     ctx.fillStyle = '#101721';
@@ -10006,13 +10359,13 @@ const ThreeCabView = {
     ctx.fillStyle = '#ffcc00';
     ctx.fillRect(0, 0, 512, 16);
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 50px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+    ctx.font = 'bold 46px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(name, 256, 68);
-    ctx.font = 'bold 20px Consolas, monospace';
+    ctx.fillText(name, 256, 62);
+    ctx.font = 'bold 18px Consolas, monospace';
     ctx.fillStyle = '#a0aec0';
-    ctx.fillText('Incheon Line 2', 256, 108);
+    ctx.fillText(eng || 'Incheon Line 2', 256, 102);
     this.signTexture.needsUpdate = true;
   },
 
@@ -10067,7 +10420,8 @@ const ThreeCabView = {
       vertexColors: true,
       roughness: 0.95
     });
-    this.scene.add(new THREE.Mesh(terrGeo, terrMat));
+    this.terrainMesh = new THREE.Mesh(terrGeo, terrMat);
+    this.scene.add(this.terrainMesh);
 
     const numTrees = 400;
     const trunkGeo = new THREE.CylinderGeometry(0.3, 0.45, 3.5, 6);
@@ -10107,8 +10461,10 @@ const ThreeCabView = {
 
     trunkMesh.instanceMatrix.needsUpdate = true;
     foliageMesh.instanceMatrix.needsUpdate = true;
-    this.scene.add(trunkMesh);
-    this.scene.add(foliageMesh);
+    this.treesGroup = new THREE.Group();
+    this.treesGroup.add(trunkMesh);
+    this.treesGroup.add(foliageMesh);
+    this.scene.add(this.treesGroup);
   },
 
   update(trainDist, speed, dt, roll, pitch, shakeX, shakeY, headlightPower, isDoorOpen, tun, st) {
@@ -10116,8 +10472,45 @@ const ThreeCabView = {
 
     if (st && st.name && st.name !== this.lastStationName) {
       this.lastStationName = st.name;
-      this.updateStationSignTexture(st.name);
+      this.updateStationSignTexture(st.name, st.eng);
     }
+
+    // 터널 및 고가교 환경 요소 적응형 가시성 제어
+    if (tun) {
+      if (tun.mode === 'GROUND_GROUND') {
+        if (this.viaductGroup) this.viaductGroup.visible = true;
+        if (this.tunnelGroup) this.tunnelGroup.visible = false;
+        if (this.portalEntryGroup) this.portalEntryGroup.visible = false;
+        if (this.portalExitGroup) this.portalExitGroup.visible = false;
+        if (this.terrainMesh) this.terrainMesh.visible = true;
+        if (this.treesGroup) this.treesGroup.visible = true;
+      } else if (tun.mode === 'TUNNEL_TUNNEL') {
+        if (this.viaductGroup) this.viaductGroup.visible = false;
+        if (this.tunnelGroup) this.tunnelGroup.visible = true;
+        if (this.portalEntryGroup) this.portalEntryGroup.visible = false;
+        if (this.portalExitGroup) this.portalExitGroup.visible = false;
+        if (this.terrainMesh) this.terrainMesh.visible = false;
+        if (this.treesGroup) this.treesGroup.visible = false;
+      } else if (tun.mode === 'GROUND_TO_TUNNEL') {
+        if (this.viaductGroup) this.viaductGroup.visible = true;
+        if (this.tunnelGroup) this.tunnelGroup.visible = true;
+        if (this.portalEntryGroup) this.portalEntryGroup.visible = true;
+        if (this.portalExitGroup) this.portalExitGroup.visible = false;
+        if (this.terrainMesh) this.terrainMesh.visible = true;
+        if (this.treesGroup) this.treesGroup.visible = true;
+      } else if (tun.mode === 'TUNNEL_TO_GROUND') {
+        if (this.viaductGroup) this.viaductGroup.visible = true;
+        if (this.tunnelGroup) this.tunnelGroup.visible = true;
+        if (this.portalEntryGroup) this.portalEntryGroup.visible = false;
+        if (this.portalExitGroup) this.portalExitGroup.visible = true;
+        if (this.terrainMesh) this.terrainMesh.visible = true;
+        if (this.treesGroup) this.treesGroup.visible = true;
+      }
+    }
+
+    const isStationUnderground = (st && st.type === 'TUNNEL');
+    if (this.stationVaultGroup) this.stationVaultGroup.visible = isStationUnderground;
+    if (this.stationCanopyGroup) this.stationCanopyGroup.visible = !isStationUnderground;
 
     const u = ((trainDist % 1500.0) + 1500.0) % 1500.0 / 1500.0;
     const { P, T, N, B } = this.getTrackFrame(u);
@@ -10145,16 +10538,20 @@ const ThreeCabView = {
     const hlMult = (tun && tun.inside) ? 4.5 : 3.0;
     this.headlight.intensity = headlightPower * hlMult;
 
-    // 터널 내부 환경 전환 (Daylight <-> Tunnel Blackness)
+    // 터널 내부 환경 전환 (Daylight <-> Tunnel Deep Darkness)
     let tunBlend = 0.0;
     if (tun && tun.inside) {
-      tunBlend = Math.min(1.0, 0.7 + (1 - Math.min(tun.exit, 30) / 30) * 0.3);
-    } else if (tun && tun.entry < 20) {
-      tunBlend = (1.0 - tun.entry / 20) * 0.7;
+      if (tun.exit < 35.0) {
+        tunBlend = Math.max(0.0, tun.exit / 35.0);
+      } else {
+        tunBlend = 1.0;
+      }
+    } else if (tun && tun.entry < 35.0) {
+      tunBlend = Math.max(0.0, (35.0 - tun.entry) / 35.0);
     }
 
     const dayBg = new THREE.Color(0x8cb8eb);
-    const tunBg = new THREE.Color(0x030406); // 터널 내부는 칠흑 같은 암전
+    const tunBg = new THREE.Color(0x020305); // 터널 내부는 칠흑 같은 암전
     this.scene.background.copy(dayBg).lerp(tunBg, tunBlend);
     this.scene.fog.color.copy(this.scene.background);
     this.scene.fog.density = 0.0022 + tunBlend * 0.022;
@@ -10177,6 +10574,7 @@ const ThreeCabView = {
       }
     }
 
+    // 전구간 PSD 개폐 애니메이션 (출입문 상태와 100% 동기화)
     if (isDoorOpen) {
       this.psdOpenProgress = Math.min(1.0, this.psdOpenProgress + dt * 0.7);
     } else {
@@ -11228,12 +11626,19 @@ function completeUnmannedModeToggle() {
     btnEl.classList.add('lit');
     sound.playSuccess();
     triggerHaptic([50, 40, 70]);
-    showTemporaryHudFeedback("🟢 [무인운전모드 ATO] 3초 인가 완료 - 열차가 자동으로 주행합니다!", false);
+    if (typeof AtoDriverless !== 'undefined') {
+      AtoDriverless.reset(trainDistance);
+    }
+    setMasconNotch('N', true);
+    showTemporaryHudFeedback("🟢 [무인운전모드 ATO] 3초 인가 완료 - 역별 자동 정차/출발 운행을 시작합니다. (수동 마스콘 조작 차단)", false);
   } else {
     btnEl.classList.remove('lit');
     sound.playClick();
     triggerHaptic(30);
-    showTemporaryHudFeedback("⚪ [무인운전모드 ATO] 무인운전 해제 - 열차가 정지합니다.", false);
+    if (typeof AtoDriverless !== 'undefined') {
+      AtoDriverless.reset();
+    }
+    showTemporaryHudFeedback("⚪ [무인운전모드 ATO] 무인운전 해제 - 수동 운전으로 전환됩니다.", false);
   }
 
   if (currentMode === 'REC') {
@@ -11675,7 +12080,7 @@ function handleComponentTouch(compId) {
       if (driveMode === 'OFF') {
         sound.playError();
         triggerHaptic([50, 50]);
-        showTemporaryHudFeedback('⚠️ [출입문 인터록] 운전 모드가 OFF 상태일 때는 출입문 버튼이 동작하지 않습니다. (FM / RM / ATPM 모드 선택 필요)', true);
+        showTemporaryHudFeedback('⚠️ [출입문 인터록] 운전 모드가 OFF 상태일 때는 수동 출입문 버튼이 동작하지 않습니다. (FM / RM / ATPM 모드 선택 필요)', true);
         return;
       }
 
@@ -11688,66 +12093,18 @@ function handleComponentTouch(compId) {
       }
 
       // 2. 정차 중 정상 개방 동작
-      isDoorOpen = true;
-      doorOpenSide = (compId === 'SW_DOOR_OPEN_L' ? 'L' : 'R');
-      window.doorOpenSide = doorOpenSide;
-      sound.playAirExhaust(0.8, 1200, 0.6);
-      triggerHaptic([30, 40]);
-
-      // OP2 출입문 표시등: 점등(lit) 해제 및 점멸(blinking) 활성화
-      const lampDoor = document.getElementById('lamp-door');
-      if (lampDoor) {
-        lampDoor.classList.remove('lit');
-        lampDoor.classList.add('blinking');
-      }
-
-      // OCC 관제 출입문 표시등 상태 업데이트 (황색 점멸)
-      const occLampDoor = document.getElementById('occ-lamp-door');
-      if (occLampDoor) {
-        occLampDoor.classList.remove('lit-green');
-        occLampDoor.classList.add('blink-amber');
-        occLampDoor.innerText = '🚪 출입문 열림 (점멸)';
-      }
-
-      showTemporaryHudFeedback(`🚪 [출입문 열림] ${compId === 'SW_DOOR_OPEN_L' ? '좌측' : '우측'} 출입문 개방 (표시등 점멸, 역행 차단)`, false);
+      openTrainDoors(compId === 'SW_DOOR_OPEN_L' ? 'L' : 'R', false);
     } else if (compId === 'SW_DOOR_CLOSE') {
       const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
       const driveMode = modeComp ? modeComp.state : 'OFF';
       if (driveMode === 'OFF') {
         sound.playError();
         triggerHaptic([50, 50]);
-        showTemporaryHudFeedback('⚠️ [출입문 인터록] 운전 모드가 OFF 상태일 때는 출입문 버튼이 동작하지 않습니다. (FM / RM / ATPM 모드 선택 필요)', true);
+        showTemporaryHudFeedback('⚠️ [출입문 인터록] 운전 모드가 OFF 상태일 때는 수동 출입문 버튼이 동작하지 않습니다. (FM / RM / ATPM 모드 선택 필요)', true);
         return;
       }
 
-      sound.playAirExhaust(1.0, 900, 0.7);
-      triggerHaptic([30, 40]);
-
-      if (window.__FAULT_DOOR_FAIL) {
-        isDoorOpen = true;
-        const lampDoor = document.getElementById('lamp-door');
-        if (lampDoor) {
-          lampDoor.classList.remove('lit');
-          lampDoor.classList.add('blinking');
-        }
-        showTemporaryHudFeedback(`🚨 [출입문 고장] 출입문 닫힘 신호 루프 불량! (완폐 불가, 점멸 지속 / OP4 출입문 바이패스 취급 필요)`, true);
-      } else {
-        isDoorOpen = false;
-        doorOpenSide = null;
-        window.doorOpenSide = null;
-        const lampDoor = document.getElementById('lamp-door');
-        if (lampDoor) {
-          lampDoor.classList.remove('blinking');
-          lampDoor.classList.add('lit');
-        }
-        const occLampDoor = document.getElementById('occ-lamp-door');
-        if (occLampDoor) {
-          occLampDoor.classList.remove('blink-amber');
-          occLampDoor.classList.add('lit-green');
-          occLampDoor.innerText = '🚪 출입문 닫힘';
-        }
-        showTemporaryHudFeedback(`🚪 [출입문 닫힘] 전체 출입문 닫힘 체결 (표시등 점등, 역행 가능)`, false);
-      }
+      closeTrainDoors(false);
     } else if (compId === 'SW_BATT_ON') {
       sound.playHeavyLatch();
       triggerHaptic([40, 50]);
@@ -12458,6 +12815,23 @@ function setMasconNotch(notch, silent = false) {
   const comp = COMPONENT_REGISTRY['SW_MASCON'];
   if (!comp) return false;
 
+  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+  const driveMode = modeComp ? modeComp.state : 'OFF';
+  const wirelessComp = COMPONENT_REGISTRY['SW_WIRELESS_MODE'];
+  const isUnmannedActive = (wirelessComp && wirelessComp.state === 'LIT') && (driveMode === 'OFF');
+
+  // [인터록] 무인운전(ATO) 모드 중에는 수동 마스콘 조작 차단 (동작 금지)
+  if (isUnmannedActive) {
+    if (!silent) {
+      if (typeof sound !== 'undefined' && sound && typeof sound.playError === 'function') sound.playError();
+      if (typeof triggerHaptic === 'function') triggerHaptic(40);
+      if (typeof showTemporaryHudFeedback === 'function') {
+        showTemporaryHudFeedback('⚠️ [무인운전 인터록] 무인운전(Driverless/ATO) 중에는 수동 마스콘 조작이 비활성화됩니다.', true);
+      }
+    }
+    return false;
+  }
+
   const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
   const revPos = revComp ? revComp.state : 'N';
   const currentNotch = comp.notch || comp.state || 'N';
@@ -12475,9 +12849,6 @@ function setMasconNotch(notch, silent = false) {
     }
     return false;
   }
-
-  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
-  const driveMode = modeComp ? modeComp.state : 'OFF';
 
   const topPos = MASCON_POS_MAP[notch];
   if (topPos === undefined) return;
@@ -12598,6 +12969,19 @@ function setMasconNotch(notch, silent = false) {
 // 마스콘 트랙 클릭 위치로 이동
 function handleMasconTrackClick(event) {
   if (event) event.stopPropagation();
+  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+  const driveMode = modeComp ? modeComp.state : 'OFF';
+  const wirelessComp = COMPONENT_REGISTRY['SW_WIRELESS_MODE'];
+  const isUnmannedActive = (wirelessComp && wirelessComp.state === 'LIT') && (driveMode === 'OFF');
+  if (isUnmannedActive) {
+    if (typeof sound !== 'undefined' && sound && typeof sound.playError === 'function') sound.playError();
+    if (typeof triggerHaptic === 'function') triggerHaptic(40);
+    if (typeof showTemporaryHudFeedback === 'function') {
+      showTemporaryHudFeedback('⚠️ [무인운전 인터록] 무인운전(Driverless/ATO) 중에는 수동 마스콘 조작이 비활성화됩니다.', true);
+    }
+    return;
+  }
+
   const track = document.getElementById('tbar-track');
   if (!track) return;
   const rect = track.getBoundingClientRect();
@@ -12714,6 +13098,20 @@ function initMasconDraggable() {
 
   function onPointerDown(e) {
     if (e.button !== undefined && e.button !== 0) return;
+    const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+    const driveMode = modeComp ? modeComp.state : 'OFF';
+    const wirelessComp = COMPONENT_REGISTRY['SW_WIRELESS_MODE'];
+    const isUnmannedActive = (wirelessComp && wirelessComp.state === 'LIT') && (driveMode === 'OFF');
+    if (isUnmannedActive) {
+      if (typeof sound !== 'undefined' && sound && typeof sound.playError === 'function') sound.playError();
+      if (typeof triggerHaptic === 'function') triggerHaptic(40);
+      if (typeof showTemporaryHudFeedback === 'function') {
+        showTemporaryHudFeedback('⚠️ [무인운전 인터록] 무인운전(Driverless/ATO) 중에는 수동 마스콘 조작이 비활성화됩니다.', true);
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     isMasconDragging = true;
     masconDragPointerId = e.pointerId;
     try { handle.setPointerCapture(e.pointerId); } catch (_) {}
