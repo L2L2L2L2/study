@@ -5359,7 +5359,7 @@
             <span class="wiper-lbl wiper-lbl-fast" id="wiper-lbl-FAST" onclick="setWiperPosition('FAST', event)">FAST</span>
 
             <div class="wiper-dial-plate"></div>
-            <div id="comp-SW_WIPER" class="wiper-bar-knob" style="transform: rotate(0deg);">
+            <div id="comp-SW_WIPER" class="wiper-bar-knob" style="transform: rotate(-65deg);">
               <div class="wiper-knob-indicator"></div>
               <div class="wiper-screw-hole"></div>
             </div>
@@ -7019,7 +7019,7 @@ const COMPONENT_REGISTRY = {
 
   // [OP4] 좌측 메인 패널 부품군 (실물 사진 100% 반영 3열 배치)
   SW_RESERVE_ROTARY: { name: '예비(로터리)', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP4' },
-  SW_WIPER: { name: '와이퍼', type: 'ROTARY_5', state: 'OFF', panel: 'OP4' },
+  SW_WIPER: { name: '와이퍼', type: 'ROTARY_5', state: 'AUTO', panel: 'OP4' },
   SW_RESERVE_BTN: { name: '예비(버튼)', type: 'MOMENTARY', state: 'IDLE', panel: 'OP4' },
   SW_OBSTACLE_BYPASS: { name: '장애물 감지', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP4' },
   SW_DOOR_BYPASS: { name: '출입문', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP4' },
@@ -10030,32 +10030,79 @@ const ThreeCabView = {
     const leftWallInd = [];
     const rightWallPos = [];
     const rightWallInd = [];
+    const deckPos = [];
+    const deckInd = [];
+
+    // Materials
+    const wallMat = new THREE.MeshStandardMaterial({
+      color: 0x6e737c,
+      roughness: 0.85,
+      side: THREE.DoubleSide
+    });
+    const deckMat = new THREE.MeshStandardMaterial({
+      color: 0x484d56,
+      roughness: 0.90,
+      side: THREE.DoubleSide
+    });
+    const pierMat = new THREE.MeshStandardMaterial({
+      color: 0x5a606a,
+      roughness: 0.85
+    });
+
+    const pierGeo = new THREE.CylinderGeometry(1.2, 1.4, 14.0, 12);
 
     for (let i = 0; i <= numSlices; i++) {
       const u = (i % numSlices) / numSlices;
       const s = u * 1500.0;
       const { P, N, B } = this.getTrackFrame(u);
 
-      const inStation = (s >= 246 && s <= 384);
+      // In station area, parapets are replaced by station platform & facade
+      const inStation = (s >= 244 && s <= 346);
       const isVisible = !inStation;
 
-      const pL0 = P.clone().addScaledVector(N, -6.3).addScaledVector(B, -0.2);
-      const pL1 = P.clone().addScaledVector(N, -6.3).addScaledVector(B, 0.95);
-      const pR0 = P.clone().addScaledVector(N, 2.3).addScaledVector(B, -0.2);
-      const pR1 = P.clone().addScaledVector(N, 2.3).addScaledVector(B, 0.95);
+      // Wall vertices
+      // Left Parapet Wall (N = -6.4m, height -0.3m to 1.10m)
+      const pL0 = P.clone().addScaledVector(N, -6.4).addScaledVector(B, -0.3);
+      const pL1 = P.clone().addScaledVector(N, -6.4).addScaledVector(B, 1.10);
+
+      // Right Parapet Wall (N = 2.4m, height -0.3m to 1.10m)
+      const pR0 = P.clone().addScaledVector(N, 2.4).addScaledVector(B, -0.3);
+      const pR1 = P.clone().addScaledVector(N, 2.4).addScaledVector(B, 1.10);
 
       leftWallPos.push(pL0.x, pL0.y, pL0.z, pL1.x, pL1.y, pL1.z);
       rightWallPos.push(pR0.x, pR0.y, pR0.z, pR1.x, pR1.y, pR1.z);
 
+      // Solid Viaduct Deck Slab spanning from left wall to right wall under both tracks
+      // Bottom of deck at B = -0.6m
+      const pDeckL = P.clone().addScaledVector(N, -6.4).addScaledVector(B, -0.35);
+      const pDeckR = P.clone().addScaledVector(N, 2.4).addScaledVector(B, -0.35);
+      deckPos.push(pDeckL.x, pDeckL.y, pDeckL.z, pDeckR.x, pDeckR.y, pDeckR.z);
+
       if (i < numSlices && isVisible) {
         const r1 = i * 2;
         const r2 = (i + 1) * 2;
-        leftWallInd.push(r1, r1 + 1, r2 + 1, r1, r2 + 1, r2);
-        rightWallInd.push(r1, r1 + 1, r2 + 1, r1, r2 + 1, r2);
+
+        // Left wall winding facing inward towards track (+N)
+        leftWallInd.push(r1, r2 + 1, r1 + 1);
+        leftWallInd.push(r1, r2, r2 + 1);
+
+        // Right wall winding facing inward towards track (-N)
+        rightWallInd.push(r1, r1 + 1, r2 + 1);
+        rightWallInd.push(r1, r2 + 1, r2);
+
+        // Deck slab facing UP
+        deckInd.push(r1, r1 + 1, r2 + 1);
+        deckInd.push(r1, r2 + 1, r2);
+      }
+
+      // Concrete Bridge Piers spaced every 30m under viaduct
+      if (i % 10 === 0 && !inStation) {
+        const pier = new THREE.Mesh(pierGeo, pierMat);
+        const pierPos = P.clone().addScaledVector(N, -2.0).addScaledVector(B, -7.2);
+        pier.position.copy(pierPos);
+        this.viaductGroup.add(pier);
       }
     }
-
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x6e737c, roughness: 0.9 });
 
     const lGeo = new THREE.BufferGeometry();
     lGeo.setAttribute('position', new THREE.Float32BufferAttribute(leftWallPos, 3));
@@ -10069,10 +10116,15 @@ const ThreeCabView = {
     rGeo.computeVertexNormals();
     this.viaductGroup.add(new THREE.Mesh(rGeo, wallMat));
 
+    const dGeo = new THREE.BufferGeometry();
+    dGeo.setAttribute('position', new THREE.Float32BufferAttribute(deckPos, 3));
+    dGeo.setIndex(deckInd);
+    dGeo.computeVertexNormals();
+    this.viaductGroup.add(new THREE.Mesh(dGeo, deckMat));
+
     this.scene.add(this.viaductGroup);
   },
 
-  // 현실적 지하 마제형 콘크리트 터널 (바닥, 좌우벽체, 아치 천장, 케이블 트레이, 대피로 완비)
   buildTunnel() {
     this.tunnelGroup = new THREE.Group();
 
@@ -10365,6 +10417,25 @@ const ThreeCabView = {
               roofIndices.push(w1, w2 + 1, w1 + 1); roofIndices.push(w1, w2, w2 + 1);
             }
           }
+        }
+
+        // Station Front & Back Facade Portal Gables (close off hollow slice)
+        if (st.sStart === 245) {
+          // Ground station front & rear entrance portals
+          [st.sStart, st.sEnd].forEach((gableS, gIdx) => {
+            const { P, T, N, B } = this.getTrackFrame(gableS / 1500.0);
+            const Pc = P.clone().addScaledVector(N, trackOffset);
+            const gableMesh = new THREE.Mesh(new THREE.BoxGeometry(0.3, 4.4, 4.4), wallMat);
+            const gablePos = Pc.clone().addScaledVector(N, sideSign * 3.35).addScaledVector(B, 3.35);
+            gableMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(gablePos));
+            platGroup.add(gableMesh);
+
+            // Concrete bridge support deck underneath station platform
+            const underDeckMesh = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.8, 10.0), wallMat);
+            const uPos = Pc.clone().addScaledVector(N, sideSign * 3.35).addScaledVector(B, 0.6);
+            underDeckMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(uPos));
+            platGroup.add(underDeckMesh);
+          });
         }
 
         // Platform meshes
@@ -10757,32 +10828,22 @@ const ThreeCabView = {
 
     // 터널 및 고가교 환경 요소 적응형 가시성 제어
     if (tun) {
-      if (tun.mode === 'GROUND_GROUND') {
-        if (this.viaductGroup) this.viaductGroup.visible = true;
-        if (this.tunnelGroup) this.tunnelGroup.visible = false;
-        if (this.portalEntryGroup) this.portalEntryGroup.visible = false;
-        if (this.portalExitGroup) this.portalExitGroup.visible = false;
-        if (this.terrainMesh) this.terrainMesh.visible = true;
-        if (this.treesGroup) this.treesGroup.visible = true;
-      } else if (tun.mode === 'TUNNEL_TUNNEL') {
+      // 터널 내부에 있을 때는 나무, 지형, 고가교를 100% 숨겨서 터널 안에 나무가 보이는 현상을 완벽 방지!
+      const isInsideTunnel = tun.inside || tun.mode === 'TUNNEL_TUNNEL';
+
+      if (isInsideTunnel) {
         if (this.viaductGroup) this.viaductGroup.visible = false;
         if (this.tunnelGroup) this.tunnelGroup.visible = true;
-        if (this.portalEntryGroup) this.portalEntryGroup.visible = false;
-        if (this.portalExitGroup) this.portalExitGroup.visible = false;
+        if (this.portalEntryGroup) this.portalEntryGroup.visible = (tun.mode === 'GROUND_TO_TUNNEL');
+        if (this.portalExitGroup) this.portalExitGroup.visible = (tun.mode === 'TUNNEL_TO_GROUND');
         if (this.terrainMesh) this.terrainMesh.visible = false;
         if (this.treesGroup) this.treesGroup.visible = false;
-      } else if (tun.mode === 'GROUND_TO_TUNNEL') {
+      } else {
+        // 지상 구간에서는 고가교 난간, 상판, 지형, 수목 표시
         if (this.viaductGroup) this.viaductGroup.visible = true;
-        if (this.tunnelGroup) this.tunnelGroup.visible = true;
-        if (this.portalEntryGroup) this.portalEntryGroup.visible = true;
-        if (this.portalExitGroup) this.portalExitGroup.visible = false;
-        if (this.terrainMesh) this.terrainMesh.visible = true;
-        if (this.treesGroup) this.treesGroup.visible = true;
-      } else if (tun.mode === 'TUNNEL_TO_GROUND') {
-        if (this.viaductGroup) this.viaductGroup.visible = true;
-        if (this.tunnelGroup) this.tunnelGroup.visible = true;
-        if (this.portalEntryGroup) this.portalEntryGroup.visible = false;
-        if (this.portalExitGroup) this.portalExitGroup.visible = true;
+        if (this.tunnelGroup) this.tunnelGroup.visible = (tun.mode === 'GROUND_TO_TUNNEL' && tun.entry < 200.0);
+        if (this.portalEntryGroup) this.portalEntryGroup.visible = (tun.mode === 'GROUND_TO_TUNNEL');
+        if (this.portalExitGroup) this.portalExitGroup.visible = (tun.mode === 'TUNNEL_TO_GROUND');
         if (this.terrainMesh) this.terrainMesh.visible = true;
         if (this.treesGroup) this.treesGroup.visible = true;
       }
@@ -13873,8 +13934,8 @@ function resetCurrentScenario() {
       } else if (id === 'SW_AIR_CLEAN') {
         comp.state = 'AUTO';
       } else if (id === 'SW_WIPER') {
-        comp.state = 'OFF';
-        updateWiperActiveLabel('OFF');
+        comp.state = 'AUTO';
+        updateWiperActiveLabel('AUTO');
       } else if (id === 'SW_DRIVE_MODE') {
         comp.state = 'OFF';
         ROTARY3_BOUNCE.SW_DRIVE_MODE.dir = 1;
@@ -13898,7 +13959,9 @@ function resetCurrentScenario() {
           el.classList.remove('on');
         } else if (id === 'SW_HEADLIGHT') {
           el.style.transform = 'rotate(-90deg)'; // 9시 REMOTE
-        } else if (id === 'SW_ATP_REV' || id === 'SW_WIPER' || id === 'SW_DRIVE_MODE') {
+        } else if (id === 'SW_WIPER') {
+          el.style.transform = 'rotate(-65deg)'; // 10시 AUTO
+        } else if (id === 'SW_ATP_REV' || id === 'SW_DRIVE_MODE') {
           el.style.transform = 'rotate(0deg)'; // 12시 OFF
         } else if (id === 'SW_WINDOW_HEATER' || id === 'SW_LOW_SPEED' || id === 'SW_RESERVE_ROTARY' ||
             id === 'SW_OBSTACLE_BYPASS' || id === 'SW_DOOR_BYPASS' || id === 'SW_AIR_CLEAN' ||
