@@ -10075,119 +10075,118 @@ const ThreeCabView = {
   // 현실적 지하 마제형 콘크리트 터널 (바닥, 좌우벽체, 아치 천장, 케이블 트레이, 대피로 완비)
   buildTunnel() {
     this.tunnelGroup = new THREE.Group();
-    const sStart = 776.0;
-    const sEnd = 1114.0;
-    const step = 2.5;
-    const numSlices = Math.floor((sEnd - sStart) / step);
 
-    // 열차를 완전히 감싸는 터널 단면 프로파일 (DoubleSide 렌더링)
+    // 14-vertex horseshoe / cut-and-cover double-track tunnel profile
     const profile = [
       [-6.8, -0.3], // 0: 바닥 좌측
-      [-6.8, 0.4],  // 1: 좌측 턱
-      [-6.8, 1.8],  // 2: 좌측 하부 벽
-      [-6.7, 3.0],  // 3: 좌측 상부 벽
+      [-6.8, 0.4],  // 1: 좌측 벽
+      [-6.8, 1.8],  // 2: 좌측 중단 벽
+      [-6.7, 3.0],  // 3: 좌측 상단 벽
       [-6.2, 4.0],  // 4: 좌측 아치
       [-5.3, 4.7],  // 5: 좌측 천장
       [-2.0, 5.0],  // 6: 천장 중앙 최고점
       [ 1.3, 4.7],  // 7: 우측 천장
       [ 2.2, 4.0],  // 8: 우측 아치
-      [ 2.7, 3.0],  // 9: 우측 상부 벽
-      [ 2.8, 1.8],  // 10: 우측 하부 벽
+      [ 2.7, 3.0],  // 9: 우측 상단 벽
+      [ 2.8, 1.8],  // 10: 우측 중단 벽
       [ 2.8, 0.7],  // 11: 우측 대피로 외벽
       [ 2.2, 0.7],  // 12: 우측 대피로 발판
       [ 2.2, -0.3]  // 13: 바닥 우측
     ];
     const numV = profile.length;
 
-    const positions = [];
-    const indices = [];
+    const tunnelMat = new THREE.MeshStandardMaterial({
+      color: 0x22262c,
+      roughness: 0.90,
+      side: THREE.DoubleSide
+    });
+    const cableMat = new THREE.MeshBasicMaterial({ color: 0x111317 });
+    const lampMat = new THREE.MeshBasicMaterial({ color: 0xfffae0 });
+    const lampGeo = new THREE.BoxGeometry(1.6, 0.12, 0.25);
 
-    for (let i = 0; i <= numSlices; i++) {
-      const s = sStart + i * step;
-      const u = s / 1500.0;
-      const { P, N, B } = this.getTrackFrame(u);
+    // Two inter-station tunnel segments spanning the entire loop between Station 1 (245~345) and Station 2 (960~1060):
+    // Segment A: Station 1 exit (345m) -> Station 2 entrance (960m) [Length: 615m]
+    // Segment B: Station 2 exit (1060m) -> Station 1 entrance (245m of next loop, 1745m) [Length: 685m]
+    const segments = [
+      { sStart: 345.0, sEnd: 960.0 },
+      { sStart: 1060.0, sEnd: 1745.0 }
+    ];
 
-      for (let j = 0; j < numV; j++) {
-        const pt = P.clone().addScaledVector(N, profile[j][0]).addScaledVector(B, profile[j][1]);
-        positions.push(pt.x, pt.y, pt.z);
-      }
+    const step = 2.5;
 
-      if (i < numSlices) {
-        const nextS = s + step;
-        // 지하역사 구간(948m ~ 1068m)에서는 좁은 원형 터널 튜브를 생성하지 않고 광폭 지하 역사로 시원하게 개방!
-        const inStationZone = (s >= 948.0 && s <= 1068.0) || (nextS >= 948.0 && nextS <= 1068.0);
+    segments.forEach((seg, segIdx) => {
+      const segLen = seg.sEnd - seg.sStart;
+      const numSlices = Math.floor(segLen / step);
 
-        if (!inStationZone) {
+      const positions = [];
+      const indices = [];
+      const cablePts = [];
+
+      for (let i = 0; i <= numSlices; i++) {
+        const s = seg.sStart + i * step;
+        const u = ((s % 1500.0) + 1500.0) % 1500.0 / 1500.0;
+        const { P, N, B } = this.getTrackFrame(u);
+
+        for (let j = 0; j < numV; j++) {
+          const pt = P.clone().addScaledVector(N, profile[j][0]).addScaledVector(B, profile[j][1]);
+          positions.push(pt.x, pt.y, pt.z);
+        }
+
+        cablePts.push(P.clone().addScaledVector(N, -2.75).addScaledVector(B, 1.9));
+
+        if (i < numSlices) {
           const row1 = i * numV;
           const row2 = (i + 1) * numV;
           for (let j = 0; j < numV - 1; j++) {
             indices.push(row1 + j, row1 + j + 1, row2 + j + 1);
             indices.push(row1 + j, row2 + j + 1, row2 + j);
           }
-          // 바닥면 연결
+          // Floor face connection
           indices.push(row1 + (numV - 1), row1, row2 + (numV - 1));
           indices.push(row1, row2, row2 + (numV - 1));
         }
       }
-    }
 
-    const tunnelGeo = new THREE.BufferGeometry();
-    tunnelGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    tunnelGeo.setIndex(indices);
-    tunnelGeo.computeVertexNormals();
+      // Tunnel tube mesh
+      const tunnelGeo = new THREE.BufferGeometry();
+      tunnelGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      tunnelGeo.setIndex(indices);
+      tunnelGeo.computeVertexNormals();
+      const tMesh = new THREE.Mesh(tunnelGeo, tunnelMat);
+      this.tunnelGroup.add(tMesh);
 
-    const tunnelMat = new THREE.MeshStandardMaterial({
-      color: 0x22262c,
-      roughness: 0.90,
-      side: THREE.DoubleSide
-    });
-    const tunnelMesh = new THREE.Mesh(tunnelGeo, tunnelMat);
-    this.tunnelGroup.add(tunnelMesh);
-
-    // 터널 좌측 벽면 케이블 덕트 라인
-    const cablePts = [];
-    for (let i = 0; i <= numSlices; i++) {
-      const s = sStart + i * step;
-      if (s >= 948.0 && s <= 1068.0) continue; // Skip subway station zone
-      const { P, N, B } = this.getTrackFrame(s / 1500.0);
-      cablePts.push(P.clone().addScaledVector(N, -2.75).addScaledVector(B, 1.9));
-    }
-    const cableCurve = new THREE.CatmullRomCurve3(cablePts, false, 'centripetal');
-    const cableGeo = new THREE.TubeGeometry(cableCurve, 200, 0.03, 5, false);
-    const cableMat = new THREE.MeshBasicMaterial({ color: 0x111317 });
-    this.tunnelGroup.add(new THREE.Mesh(cableGeo, cableMat));
-
-    // 천장 중앙 형광등 조명
-    const lampGeo = new THREE.BoxGeometry(1.6, 0.12, 0.25);
-    const lampMat = new THREE.MeshBasicMaterial({ color: 0xfffae0 });
-    const numLamps = Math.floor((sEnd - sStart) / 14.0);
-    const lampsMesh = new THREE.InstancedMesh(lampGeo, lampMat, numLamps);
-    const lm = new THREE.Matrix4();
-
-    for (let k = 0; k < numLamps; k++) {
-      const s = sStart + 7.0 + k * 14.0;
-      if (s >= 948.0 && s <= 1068.0) {
-        // Hide tunnel lamp in station zone (station has its own bright LED lighting)
-        lm.makeScale(0, 0, 0);
-        lampsMesh.setMatrixAt(k, lm);
-        continue;
+      // Left-side cable tray tube
+      if (cablePts.length > 2) {
+        const cableCurve = new THREE.CatmullRomCurve3(cablePts, false, 'centripetal');
+        const cableGeo = new THREE.TubeGeometry(cableCurve, Math.min(250, numSlices), 0.03, 5, false);
+        this.tunnelGroup.add(new THREE.Mesh(cableGeo, cableMat));
       }
-      const { P, T, N, B } = this.getTrackFrame(s / 1500.0);
-      lm.makeBasis(N, B, T);
-      lm.setPosition(P.clone().addScaledVector(B, 4.85));
-      lampsMesh.setMatrixAt(k, lm);
-    }
-    lampsMesh.instanceMatrix.needsUpdate = true;
-    this.tunnelGroup.add(lampsMesh);
+
+      // Ceiling fluorescent lamps spaced every 15 meters
+      const numLamps = Math.floor(segLen / 15.0);
+      if (numLamps > 0) {
+        const lampsMesh = new THREE.InstancedMesh(lampGeo, lampMat, numLamps);
+        const lm = new THREE.Matrix4();
+        for (let k = 0; k < numLamps; k++) {
+          const ls = seg.sStart + 7.5 + k * 15.0;
+          const lu = ((ls % 1500.0) + 1500.0) % 1500.0 / 1500.0;
+          const { P, T, N, B } = this.getTrackFrame(lu);
+          lm.makeBasis(N, B, T);
+          lm.setPosition(P.clone().addScaledVector(B, 4.85));
+          lampsMesh.setMatrixAt(k, lm);
+        }
+        lampsMesh.instanceMatrix.needsUpdate = true;
+        this.tunnelGroup.add(lampsMesh);
+      }
+    });
 
     this.scene.add(this.tunnelGroup);
 
-    // 터널 입구(왕길->검단사거리) 및 출구(남동구청->인천대공원) 아치 갱구
-    this.portalEntryGroup = this.buildPortalArch(sStart, false);
-    this.portalExitGroup = this.buildPortalArch(sEnd, true);
+    // Tunnel portals for ground-to-tunnel and tunnel-to-ground transitions
+    this.portalEntryGroup = this.buildPortalArch(776.0, false);
+    this.portalExitGroup = this.buildPortalArch(1114.0, true);
   },
 
-  // 뚫려있는 터널 입구 갱구 아치 구조물 (중앙 통로는 완전히 개방)
   buildPortalArch(s, isExit) {
     const { P, T, N, B } = this.getTrackFrame(s / 1500.0);
     const pGroup = new THREE.Group();
