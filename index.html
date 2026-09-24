@@ -6,6 +6,8 @@
   <title>열차 운전실 모바일 훈련 시뮬레이터</title>
   <!-- Supabase JS SDK v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Three.js 3D WebGL Library for Realistic Cab View -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     :root {
       --bg-dark: #121519;
@@ -2399,12 +2401,29 @@
       border: 1px solid #1e293b;
       box-shadow: inset 0 0 12px rgba(0,0,0,0.85);
     }
+    #cab-3d-stage {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+    }
+    #cab-3d-stage canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
     #cab-view-canvas {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       display: block;
       object-fit: cover;
       will-change: transform;
+      z-index: 1;
+      pointer-events: none;
     }
 
     /* OSD 오버레이 (실물 계기 100% 매칭) */
@@ -4779,6 +4798,7 @@
             </div>
 
             <div class="cab-screen-viewport" id="cab-screen-viewport">
+              <div id="cab-3d-stage"></div>
               <canvas id="cab-view-canvas" width="1024" height="473"></canvas>
               
               <!-- 실물 OSD 오버레이 (노치 및 속도 인디케이터) -->
@@ -7501,10 +7521,45 @@ const CV = {
 /* 노선 형상 주기 (m) */
 const CV_LINE = {
   cycle: 1500,
-  tunnelAt: 780, tunnelLen: 330,   //  780 ~ 1110 m 구간이 터널
-  stationAt: 250, stationLen: 130  //  250 ~  380 m 구간이 역 승강장
+  tunnelAt: 776, tunnelLen: 338,   // 776m 기준 터널 갱구 전환
+  stationAt: 248, stationLen: 134  // 248 ~ 382m 구간 승강장 (정차점 305m)
 };
-const CV_STATIONS = ['검단오류', '왕길', '검단사거리', '마전', '완정', '독정', '검암', '주안국가산단'];
+
+// 인천 2호선 전구간 27개 역 정보 (지상/지하 구분, 전구간 PSD 완비)
+// 지상구간: 검단오류, 왕길, 인천대공원, 운연
+// 왕길 -> 검단사거리: 지상 -> 터널 진입
+// 지하구간: 검단사거리 ~ 남동구청
+// 남동구청 -> 인천대공원: 터널 -> 지상 진출
+const INCHEON2_STATIONS = [
+  { id: '201', name: '검단오류', eng: 'Geomdan Oryu', type: 'GROUND', platformSide: 'R' },
+  { id: '202', name: '왕길', eng: 'Wanggil', type: 'GROUND', platformSide: 'R' },
+  { id: '203', name: '검단사거리', eng: 'Geomdan Sageori', type: 'TUNNEL', platformSide: 'R' },
+  { id: '204', name: '마전', eng: 'Majeon', type: 'TUNNEL', platformSide: 'R' },
+  { id: '205', name: '완정', eng: 'Wanjeong', type: 'TUNNEL', platformSide: 'R' },
+  { id: '206', name: '독정', eng: 'Dokjeong', type: 'TUNNEL', platformSide: 'R' },
+  { id: '207', name: '검암', eng: 'Geomam', type: 'TUNNEL', platformSide: 'R' },
+  { id: '208', name: '검바위', eng: 'Geombawi', type: 'TUNNEL', platformSide: 'R' },
+  { id: '209', name: '아시아드경기장', eng: 'Asiad Stadium', type: 'TUNNEL', platformSide: 'R' },
+  { id: '210', name: '서구청', eng: 'Seo-gu Office', type: 'TUNNEL', platformSide: 'R' },
+  { id: '211', name: '가정', eng: 'Gajeong', type: 'TUNNEL', platformSide: 'R' },
+  { id: '212', name: '가정중앙시장', eng: 'Gajeong Jungang Market', type: 'TUNNEL', platformSide: 'R' },
+  { id: '213', name: '석남', eng: 'Seongnam', type: 'TUNNEL', platformSide: 'R' },
+  { id: '214', name: '서부여성회관', eng: 'Seobu Yeoseong Hoegwan', type: 'TUNNEL', platformSide: 'R' },
+  { id: '215', name: '인천가좌', eng: 'Incheon Gajwa', type: 'TUNNEL', platformSide: 'R' },
+  { id: '216', name: '가재울', eng: 'Gajaeul', type: 'TUNNEL', platformSide: 'R' },
+  { id: '217', name: '주안국가산단', eng: 'Juan National Industrial Complex', type: 'TUNNEL', platformSide: 'R' },
+  { id: '218', name: '주안', eng: 'Juan', type: 'TUNNEL', platformSide: 'R' },
+  { id: '219', name: '시민공원', eng: 'Citizens Park', type: 'TUNNEL', platformSide: 'R' },
+  { id: '220', name: '석바위시장', eng: 'Seokbawi Market', type: 'TUNNEL', platformSide: 'R' },
+  { id: '221', name: '인천시청', eng: 'Incheon City Hall', type: 'TUNNEL', platformSide: 'R' },
+  { id: '222', name: '석천사거리', eng: 'Seokcheon Sageori', type: 'TUNNEL', platformSide: 'R' },
+  { id: '223', name: '모래내시장', eng: 'Moraenae Market', type: 'TUNNEL', platformSide: 'R' },
+  { id: '224', name: '만수', eng: 'Mansu', type: 'TUNNEL', platformSide: 'R' },
+  { id: '225', name: '남동구청', eng: 'Namdong-gu Office', type: 'GROUND', platformSide: 'R' },
+  { id: '226', name: '인천대공원', eng: 'Incheon Grand Park', type: 'GROUND', platformSide: 'R' },
+  { id: '227', name: '운연', eng: 'Unyeon', type: 'GROUND', platformSide: 'R' }
+];
+const CV_STATIONS = INCHEON2_STATIONS.map(s => s.name);
 
 /* 기존 파일과 동일한 이름의 전역 상태 (다른 로직이 참조하므로 유지) */
 let trainSpeed = 0.0;
@@ -7518,6 +7573,233 @@ let isDoorOpen = false;
 let doorOpenSide = 'R'; // 기본 개방 측 (L 또는 R)
 let isRmEbActive = false;
 let rmOverspeedTimer = 0.0;
+
+// 전역 출입문 및 PSD 제어 헬퍼 함수
+function openTrainDoors(side = 'R', isAuto = false) {
+  isDoorOpen = true;
+  doorOpenSide = side;
+  window.doorOpenSide = side;
+  if (typeof sound !== 'undefined' && sound && typeof sound.playAirExhaust === 'function') {
+    sound.playAirExhaust(0.8, 1200, 0.6);
+  }
+  if (typeof triggerHaptic === 'function') triggerHaptic([30, 40]);
+
+  const lampDoor = document.getElementById('lamp-door');
+  if (lampDoor) {
+    lampDoor.classList.remove('lit');
+    lampDoor.classList.add('blinking');
+  }
+  const occLampDoor = document.getElementById('occ-lamp-door');
+  if (occLampDoor) {
+    occLampDoor.classList.remove('lit-green');
+    occLampDoor.classList.add('blink-amber');
+    occLampDoor.innerText = '🚪 출입문 열림 (점멸)';
+  }
+  if (typeof showTemporaryHudFeedback === 'function') {
+    showTemporaryHudFeedback(`🚪 [출입문 ${isAuto ? '자동' : ''}열림] ${side === 'L' ? '좌측' : '우측'} 출입문 및 PSD 개방 (승객 승하차)`, false);
+  }
+}
+
+function closeTrainDoors(isAuto = false) {
+  if (typeof sound !== 'undefined' && sound && typeof sound.playAirExhaust === 'function') {
+    sound.playAirExhaust(1.0, 900, 0.7);
+  }
+  if (typeof triggerHaptic === 'function') triggerHaptic([30, 40]);
+
+  if (window.__FAULT_DOOR_FAIL) {
+    isDoorOpen = true;
+    const lampDoor = document.getElementById('lamp-door');
+    if (lampDoor) {
+      lampDoor.classList.remove('lit');
+      lampDoor.classList.add('blinking');
+    }
+    if (typeof showTemporaryHudFeedback === 'function') {
+      showTemporaryHudFeedback(`🚨 [출입문 고장] 출입문 닫힘 신호 루프 불량! (완폐 불가, 점멸 지속 / OP4 출입문 바이패스 취급 필요)`, true);
+    }
+  } else {
+    isDoorOpen = false;
+    doorOpenSide = null;
+    window.doorOpenSide = null;
+    const lampDoor = document.getElementById('lamp-door');
+    if (lampDoor) {
+      lampDoor.classList.remove('blinking');
+      lampDoor.classList.add('lit');
+    }
+    const occLampDoor = document.getElementById('occ-lamp-door');
+    if (occLampDoor) {
+      occLampDoor.classList.remove('blink-amber');
+      occLampDoor.classList.add('lit-green');
+      occLampDoor.innerText = '🚪 출입문 닫힘';
+    }
+    if (typeof showTemporaryHudFeedback === 'function') {
+      showTemporaryHudFeedback(`🔒 [출입문 ${isAuto ? '자동' : ''}닫힘] 전체 출입문 및 PSD 완폐 체결 (표시등 점등, 역행 인터록 해제)`, false);
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   무인운전(ATO / Driverless) 전자동 역간 운행 및 PSD 연동 제어기
+--------------------------------------------------------------------------- */
+const AtoDriverless = {
+  state: 'CRUISING', // 'CRUISING', 'BRAKING', 'STOPPED', 'DWELLING', 'DOOR_CLOSING', 'DEPARTING'
+  targetSpeed: 0.0,
+  accelRate: 0.0,
+  stationIdx: 0,
+  targetStopDist: 305.0,
+  dwellTimeRemaining: 0.0,
+  stateTimer: 0.0,
+
+  reset(dist) {
+    this.state = 'CRUISING';
+    this.targetSpeed = 0.0;
+    this.accelRate = 0.0;
+    this.dwellTimeRemaining = 0.0;
+    this.stateTimer = 0.0;
+    if (dist !== undefined) {
+      this.initStopTarget(dist);
+    }
+  },
+
+  initStopTarget(s) {
+    const CYCLE = 1500.0;
+    const n = Math.floor(s / CYCLE);
+    const p = ((s % CYCLE) + CYCLE) % CYCLE;
+
+    // 1500m 1주기당 2개 역 (지상역 305m, 지하역 1020m)
+    if (p <= 305.0 + 5.0) {
+      this.targetStopDist = n * CYCLE + 305.0;
+      this.stationIdx = (n * 2) % INCHEON2_STATIONS.length;
+    } else if (p <= 1020.0 + 5.0) {
+      this.targetStopDist = n * CYCLE + 1020.0;
+      this.stationIdx = (n * 2 + 1) % INCHEON2_STATIONS.length;
+    } else {
+      this.targetStopDist = (n + 1) * CYCLE + 305.0;
+      this.stationIdx = ((n + 1) * 2) % INCHEON2_STATIONS.length;
+    }
+  },
+
+  update(dt, dist, speed) {
+    if (!this.targetStopDist || this.targetStopDist < dist - 10.0) {
+      this.initStopTarget(dist);
+    }
+
+    const distToStop = this.targetStopDist - dist;
+    const currSt = INCHEON2_STATIONS[this.stationIdx % INCHEON2_STATIONS.length];
+
+    if (this.state === 'CRUISING') {
+      const cruiseSpeed = 65.0;
+      const vMs = speed / 3.6;
+      // 0.78 m/s^2 기준 감속 여유거리
+      const reqBrakeDist = (vMs * vMs) / (2.0 * 0.78) + 14.0;
+
+      if (distToStop <= reqBrakeDist && distToStop > -5.0) {
+        this.state = 'BRAKING';
+        if (typeof showTemporaryHudFeedback === 'function') {
+          showTemporaryHudFeedback(`🚊 [무인운전 ATO] 이번 역은 ${currSt.name} (${currSt.eng}) 역입니다. 감속 제동을 시작합니다.`, false);
+        }
+      } else {
+        this.targetSpeed = cruiseSpeed;
+        this.accelRate = 2.6;
+        if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
+      }
+    }
+
+    if (this.state === 'BRAKING') {
+      const d = Math.max(0.0, distToStop);
+      // TASC 포물선 제동 감속 프로파일
+      const vProfile = Math.sqrt(2.0 * 0.72 * d) * 3.6;
+      const tSpeed = Math.min(65.0, vProfile);
+
+      if (d <= 0.6 && speed < 3.5) {
+        this.targetSpeed = 0.0;
+        this.accelRate = -3.8;
+        if (speed <= 0.15) {
+          trainSpeed = 0.0;
+          this.state = 'STOPPED';
+          this.stateTimer = 0.8;
+          if (typeof updateGaugeUI === 'function') updateGaugeUI(4.0);
+          if (typeof showTemporaryHudFeedback === 'function') {
+            showTemporaryHudFeedback(`🚊 [무인운전 ATO] ${currSt.name}역 정위치 정차 완료 (정차 오차 0.0m)`, false);
+          }
+        }
+      } else {
+        this.targetSpeed = Math.max(0.0, tSpeed);
+        if (speed > tSpeed) {
+          this.accelRate = -Math.min(4.2, (speed - tSpeed) * 1.5 + 0.6);
+        } else {
+          this.accelRate = Math.min(2.0, (tSpeed - speed) * 1.2);
+        }
+        const bcPres = Math.min(4.0, Math.max(0.0, (-this.accelRate / 4.0) * 3.6));
+        if (typeof updateGaugeUI === 'function') updateGaugeUI(bcPres);
+      }
+    } else if (this.state === 'STOPPED') {
+      this.targetSpeed = 0.0;
+      this.accelRate = -4.0;
+      if (typeof updateGaugeUI === 'function') updateGaugeUI(4.0);
+      this.stateTimer -= dt;
+      if (this.stateTimer <= 0) {
+        openTrainDoors(currSt.platformSide || 'R', true);
+        this.state = 'DWELLING';
+        this.dwellTimeRemaining = 8.0;
+        if (typeof showTemporaryHudFeedback === 'function') {
+          showTemporaryHudFeedback(`🚪 [무인운전 ATO] ${currSt.name}역 출입문 및 PSD 개방 (승객 승하차, 출발까지 8초)`, false);
+        }
+      }
+    } else if (this.state === 'DWELLING') {
+      this.targetSpeed = 0.0;
+      this.accelRate = -4.0;
+      if (typeof updateGaugeUI === 'function') updateGaugeUI(4.0);
+      this.dwellTimeRemaining -= dt;
+      if (this.dwellTimeRemaining <= 0) {
+        closeTrainDoors(true);
+        this.state = 'DOOR_CLOSING';
+        this.stateTimer = 2.8;
+        if (typeof showTemporaryHudFeedback === 'function') {
+          showTemporaryHudFeedback(`🔔 [무인운전 ATO] 출입문 닫힘 경고음 취명 및 PSD 닫힘`, false);
+        }
+      }
+    } else if (this.state === 'DOOR_CLOSING') {
+      this.targetSpeed = 0.0;
+      this.accelRate = -4.0;
+      if (typeof updateGaugeUI === 'function') updateGaugeUI(4.0);
+      this.stateTimer -= dt;
+      const lampDoor = document.getElementById('lamp-door');
+      const isDoorClosed = !isDoorOpen && (!window.__FAULT_DOOR_FAIL) && (lampDoor ? lampDoor.classList.contains('lit') : true);
+
+      if (this.stateTimer <= 0 && isDoorClosed) {
+        const nextIdx = (this.stationIdx + 1) % INCHEON2_STATIONS.length;
+        this.stationIdx = nextIdx;
+        const nextSt = INCHEON2_STATIONS[nextIdx];
+        const CYCLE = 1500.0;
+        const n = Math.floor(dist / CYCLE);
+        const p = ((dist % CYCLE) + CYCLE) % CYCLE;
+        // 305m 역 출발 후에는 1020m 역으로, 1020m 역 출발 후에는 다음 주기 305m 역으로
+        if (p < 600.0) {
+          this.targetStopDist = n * CYCLE + 1020.0;
+        } else {
+          this.targetStopDist = (n + 1) * CYCLE + 305.0;
+        }
+        this.state = 'DEPARTING';
+        this.stateTimer = 2.0;
+        if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
+        if (typeof sound !== 'undefined' && sound && typeof sound.playAirExhaust === 'function') {
+          sound.playAirExhaust(0.6, 1200, 0.4);
+        }
+        if (typeof showTemporaryHudFeedback === 'function') {
+          showTemporaryHudFeedback(`🟢 [무인운전 ATO] 출입문 완폐 확인 - 다음 역(${nextSt.name})으로 자동 출발합니다!`, false);
+        }
+      }
+    } else if (this.state === 'DEPARTING') {
+      this.targetSpeed = 65.0;
+      this.accelRate = 2.6;
+      if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
+      this.stateTimer -= dt;
+      if (this.stateTimer <= 0 && speed > 5.0) {
+        this.state = 'CRUISING';
+      }
+    }
+  }
+};
 
 /* 내부 상태 */
 const cvState = {
@@ -7554,18 +7836,56 @@ function cvHash(a, b) {
   return h - Math.floor(h);
 }
 function cvTunnelInfo(s) {
-  const p = ((s % CV_LINE.cycle) + CV_LINE.cycle) % CV_LINE.cycle;
-  const a = CV_LINE.tunnelAt, b = a + CV_LINE.tunnelLen;
-  if (p >= a && p < b) return { inside: true, exit: b - p, entry: 0 };
-  const entry = (p < a) ? (a - p) : (CV_LINE.cycle - p + a);
-  return { inside: false, exit: 0, entry: entry };
+  const CYCLE = 1500.0;
+  const p = ((s % CYCLE) + CYCLE) % CYCLE;
+  const n = Math.floor(s / CYCLE);
+  const curIdx = ((n % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
+  const nextIdx = (curIdx + 1) % INCHEON2_STATIONS.length;
+
+  const curType = INCHEON2_STATIONS[curIdx].type;
+  const nextType = INCHEON2_STATIONS[nextIdx].type;
+  const portalAt = 776.0;
+
+  if (curType === 'GROUND' && nextType === 'GROUND') {
+    return { inside: false, exit: 0, entry: 9999, mode: 'GROUND_GROUND' };
+  }
+  if (curType === 'TUNNEL' && nextType === 'TUNNEL') {
+    return { inside: true, exit: 9999, entry: 0, mode: 'TUNNEL_TUNNEL' };
+  }
+  if (curType === 'GROUND' && nextType === 'TUNNEL') {
+    // 왕길 -> 검단사거리: 지상에서 터널로 진입
+    if (p < portalAt) {
+      return { inside: false, exit: 0, entry: portalAt - p, mode: 'GROUND_TO_TUNNEL' };
+    } else {
+      return { inside: true, exit: 9999, entry: 0, mode: 'GROUND_TO_TUNNEL' };
+    }
+  }
+  if (curType === 'TUNNEL' && nextType === 'GROUND') {
+    // 남동구청 -> 인천대공원: 터널에서 지상으로 진출
+    if (p < portalAt) {
+      return { inside: true, exit: portalAt - p, entry: 0, mode: 'TUNNEL_TO_GROUND' };
+    } else {
+      return { inside: false, exit: 0, entry: 9999, mode: 'TUNNEL_TO_GROUND' };
+    }
+  }
+  return { inside: false, exit: 0, entry: 9999, mode: 'GROUND_GROUND' };
 }
 function cvStationInfo(s) {
   const p = ((s % CV_LINE.cycle) + CV_LINE.cycle) % CV_LINE.cycle;
   const a = CV_LINE.stationAt, b = a + CV_LINE.stationLen;
   let dStart, n = Math.floor(s / CV_LINE.cycle);
   if (p < b) { dStart = a - p; } else { dStart = CV_LINE.cycle - p + a; n += 1; }
-  return { dStart: dStart, dEnd: dStart + CV_LINE.stationLen, name: CV_STATIONS[((n % CV_STATIONS.length) + CV_STATIONS.length) % CV_STATIONS.length] };
+  const idx = ((n % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
+  const st = INCHEON2_STATIONS[idx];
+  return {
+    dStart: dStart,
+    dEnd: dStart + CV_LINE.stationLen,
+    name: st.name,
+    eng: st.eng,
+    type: st.type,
+    platformSide: st.platformSide || 'R',
+    index: idx
+  };
 }
 function cvRainAt(s) {
   if (typeof window !== 'undefined' && window.cvForceRain !== undefined && window.cvForceRain !== null) {
@@ -8405,8 +8725,20 @@ function updateTrainPhysics() {
   if (isEmgActive || notch === 'EB' || isRmEbActive) {
     target = 0.0; rate = -5.0; // 비상제동 체결되어 서서히 멈춤
   } else if (isUnmannedActive) {
-    if (isDoorInterlockCleared && cvBC() < 0.5) { target = 60.0; rate = 2.8; }
-    else { target = 0.0; rate = -3.5; }
+    // 무인운전(ATO) 모드: AtoDriverless 제어기가 역간 주행, TASC 감속, 역 정차, 출입문/PSD 개폐, 자동 출발 총괄
+    if (isDoorInterlockCleared && (cvBC() < 0.5 || isUnmannedActive)) {
+      AtoDriverless.update(dt, trainDistance, trainSpeed);
+      target = AtoDriverless.targetSpeed;
+      rate = AtoDriverless.accelRate;
+    } else {
+      if (AtoDriverless.state === 'STOPPED' || AtoDriverless.state === 'DWELLING' || AtoDriverless.state === 'DOOR_CLOSING') {
+        AtoDriverless.update(dt, trainDistance, trainSpeed);
+        target = AtoDriverless.targetSpeed;
+        rate = AtoDriverless.accelRate;
+      } else {
+        target = 0.0; rate = -3.5;
+      }
+    }
   } else if (isManualMode && notch.charAt(0) === 'B') {
     target = 0.0;
     if (notch === 'B1') rate = -1.2;
@@ -8451,9 +8783,9 @@ function updateTrainPhysics() {
     } else if (notch.charAt(0) === 'B' || isUnmannedActive) {
       // 상용 제동 체결 상태: 제동력 + 구배 저항 반영
       trainSpeed = Math.max(target, trainSpeed + (rate + gradeAcc) * dt);
+      if (isUnmannedActive && target === 0.0 && trainSpeed <= 0.08) trainSpeed = 0.0;
     } else {
       // 타행(N) 상태: 제동이 전혀 걸리지 않은 상태로, 자연 주행 저항(구름/공기) + 구배 저항만 적용
-      // 브레이크 체결 시(-1.2 ~ -6.4)와 확연히 구분되는 부드럽고 여유로운 타행감 (-0.04 km/h/s 수준)
       const coastDecel = rate + gradeAcc;
       trainSpeed = Math.max(target, trainSpeed + coastDecel * dt);
     }
@@ -9343,6 +9675,9 @@ function toggleCabZoom(event) {
   const monitor = document.getElementById('wrap-CAB_VIEW');
   if (monitor) monitor.classList.toggle('zoomed', isCabZoomed);
   if (typeof triggerHaptic === 'function') triggerHaptic(25);
+  setTimeout(() => {
+    if (typeof ThreeCabView !== 'undefined' && ThreeCabView.active) ThreeCabView.onResize();
+  }, 60);
 }
 
 function updateCabOSD(notch, revNotch, isUnmannedActive, driveMode) {
@@ -9362,8 +9697,31 @@ function updateCabOSD(notch, revNotch, isUnmannedActive, driveMode) {
     badge.classList.add('braking'); badge.innerText = `⚠️ 과속 ${(5.0 - rmOverspeedTimer).toFixed(1)}s`;
     if (dot) dot.classList.add('moving');
   } else if (isUnmannedActive) {
-    badge.classList.add('driving'); badge.innerText = '무인운전 (ATO)';
-    if (dot) dot.classList.add('moving');
+    badge.classList.add('driving');
+    if (typeof AtoDriverless !== 'undefined') {
+      if (AtoDriverless.state === 'DWELLING') {
+        badge.innerText = `ATO 승하차 (${Math.ceil(AtoDriverless.dwellTimeRemaining)}s)`;
+        if (dot) dot.classList.remove('moving');
+      } else if (AtoDriverless.state === 'STOPPED') {
+        badge.innerText = 'ATO 정위치 정차';
+        if (dot) dot.classList.remove('moving');
+      } else if (AtoDriverless.state === 'DOOR_CLOSING') {
+        badge.innerText = 'ATO 출입문 닫힘';
+        if (dot) dot.classList.remove('moving');
+      } else if (AtoDriverless.state === 'BRAKING') {
+        badge.innerText = 'ATO 감속정차';
+        if (dot) dot.classList.add('moving');
+      } else if (AtoDriverless.state === 'DEPARTING') {
+        badge.innerText = 'ATO 출발 가속';
+        if (dot) dot.classList.add('moving');
+      } else {
+        badge.innerText = '무인운전 (ATO 주행)';
+        if (dot) dot.classList.add('moving');
+      }
+    } else {
+      badge.innerText = '무인운전 (ATO)';
+      if (dot) dot.classList.add('moving');
+    }
   } else if (trainSpeed <= 0.2) {
     badge.classList.add('stopped'); badge.innerText = '정차중';
     if (dot) dot.classList.remove('moving');
@@ -9378,6 +9736,1130 @@ function updateCabOSD(notch, revNotch, isUnmannedActive, driveMode) {
     if (dot) dot.classList.add('moving');
   }
 }
+
+/* ===========================================================================
+   3D Realistic Cab View Engine (Three.js WebGL)
+   - Inspired by Thunder Crest 3D simulation
+   - Photorealistic 3D dual steel rails, concrete ties, ballast, catenary
+   - Realistic 3D mountain tunnel with vault ribs and overhead illumination
+   - Realistic 3D station platform with animated PSD (Platform Screen Doors)
+   - Natural terrain, rolling hills, lush 3D vegetation
+   - Dynamic directional lighting, tunnel darkness transition, train headlight spot
+   - Physics-based camera sway, cant banking roll, acceleration/braking pitch
+=========================================================================== */
+const ThreeCabView = {
+  initialized: false,
+  active: false,
+  container: null,
+  renderer: null,
+  scene: null,
+  camera: null,
+  trackCurve: null,
+  curveLength: 1500.0,
+
+  // Lighting
+  dirLight: null,
+  hemiLight: null,
+  headlight: null,
+  headlightTarget: null,
+  tunnelLights: [],
+
+  // Dynamic Elements
+  psdDoors: [],
+  psdOpenProgress: 0.0,
+  signTextCanvas: null,
+  signTexture: null,
+  lastStationName: '',
+
+  init() {
+    if (this.initialized) return;
+    if (typeof THREE === 'undefined') return;
+
+    this.container = document.getElementById('cab-3d-stage');
+    if (!this.container) return;
+
+    const width = this.container.clientWidth || 1024;
+    const height = this.container.clientHeight || 473;
+
+    // 1. Scene
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x8cb8eb);
+    this.scene.fog = new THREE.FogExp2(0x8cb8eb, 0.0022);
+
+    // 2. Camera (cab driver perspective, FOV 62)
+    this.camera = new THREE.PerspectiveCamera(62, width / height, 0.2, 900);
+
+    // 3. WebGL Renderer
+    try {
+      this.renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: false,
+        powerPreference: 'high-performance'
+      });
+      this.renderer.setSize(width, height);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      this.renderer.toneMappingExposure = 1.05;
+      if (THREE.sRGBEncoding) this.renderer.outputEncoding = THREE.sRGBEncoding;
+      this.container.appendChild(this.renderer.domElement);
+    } catch (e) {
+      console.warn('WebGL init failed:', e);
+      return;
+    }
+
+    // Resize handling
+    if (window.ResizeObserver) {
+      new ResizeObserver(() => this.onResize()).observe(this.container);
+    }
+    window.addEventListener('resize', () => this.onResize());
+
+    // 4. Build world
+    this.initLights();
+    this.buildTrackCurve();
+    this.buildRailsAndBallast();
+    this.buildThirdRail();
+    this.buildSleepers();
+    this.buildViaductParapets();
+    this.buildTunnel();
+    this.buildStation();
+    this.buildTerrainAndTrees();
+
+    this.initialized = true;
+    this.active = true;
+  },
+
+  onResize() {
+    if (!this.renderer || !this.camera || !this.container) return;
+    const w = this.container.clientWidth;
+    const h = this.container.clientHeight;
+    if (w === 0 || h === 0) return;
+    this.camera.aspect = w / h;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(w, h);
+  },
+
+  initLights() {
+    // Ambient / Sky
+    this.hemiLight = new THREE.HemisphereLight(0xa5cbfa, 0x425238, 0.60);
+    this.scene.add(this.hemiLight);
+
+    // Sun directional light
+    this.dirLight = new THREE.DirectionalLight(0xfffaec, 1.25);
+    this.dirLight.position.set(130, 190, 85);
+    this.scene.add(this.dirLight);
+
+    // Train Headlight SpotLight
+    this.headlight = new THREE.SpotLight(0xfffae0, 3.5, 180, Math.PI / 6, 0.45, 1.2);
+    this.headlightTarget = new THREE.Object3D();
+    this.scene.add(this.headlight);
+    this.scene.add(this.headlightTarget);
+    this.headlight.target = this.headlightTarget;
+
+    // Tunnel dynamic point lights
+    for (let i = 0; i < 4; i++) {
+      const pl = new THREE.PointLight(0xfffae0, 0, 32, 1.6);
+      this.tunnelLights.push(pl);
+      this.scene.add(pl);
+    }
+  },
+
+  buildTrackCurve() {
+    const rawPts = [
+      new THREE.Vector3(0, 0, -250),
+      new THREE.Vector3(0, 0, -100),
+      new THREE.Vector3(0, 0, 30),
+      new THREE.Vector3(15, 0.5, 150),
+      new THREE.Vector3(60, 2.0, 260),
+      new THREE.Vector3(140, 3.8, 330),
+      new THREE.Vector3(230, 5.2, 310),
+      new THREE.Vector3(300, 6.5, 220),
+      new THREE.Vector3(320, 6.8, 120),
+      new THREE.Vector3(320, 6.8, 40),
+      new THREE.Vector3(300, 5.5, -60),
+      new THREE.Vector3(240, 4.0, -160),
+      new THREE.Vector3(160, 2.5, -250),
+      new THREE.Vector3(90, 1.2, -310),
+      new THREE.Vector3(20, 0.4, -330),
+      new THREE.Vector3(-10, 0.0, -300)
+    ];
+    const tempCurve = new THREE.CatmullRomCurve3(rawPts, true, 'centripetal');
+    const rawLen = tempCurve.getLength();
+    const scale = 1500.0 / rawLen;
+    const scaledPts = rawPts.map(p => p.clone().multiplyScalar(scale));
+    this.trackCurve = new THREE.CatmullRomCurve3(scaledPts, true, 'centripetal');
+    this.curveLength = 1500.0;
+  },
+
+  getTrackFrame(u) {
+    const P = this.trackCurve.getPointAt(((u % 1.0) + 1.0) % 1.0);
+    const T = this.trackCurve.getTangentAt(((u % 1.0) + 1.0) % 1.0);
+    const up = new THREE.Vector3(0, 1, 0);
+    const N = new THREE.Vector3().crossVectors(T, up).normalize();
+    const B = new THREE.Vector3().crossVectors(N, T).normalize();
+    return { P, T, N, B };
+  },
+
+  buildRailsAndBallast() {
+    const numSlices = 750;
+    
+    for (let trackOffset of [0, -4.0]) {
+      const leftPts = [];
+      const rightPts = [];
+      const ballastPositions = [];
+      const ballastIndices = [];
+
+      for (let i = 0; i <= numSlices; i++) {
+        const u = (i % numSlices) / numSlices;
+        const { P, N, B } = this.getTrackFrame(u);
+        const Pc = P.clone().addScaledVector(N, trackOffset);
+
+        if (i < numSlices) {
+          leftPts.push(Pc.clone().addScaledVector(N, -0.7175).addScaledVector(B, 0.10));
+          rightPts.push(Pc.clone().addScaledVector(N, 0.7175).addScaledVector(B, 0.10));
+        }
+
+        const pL = Pc.clone().addScaledVector(N, -1.4).addScaledVector(B, -0.2);
+        const pR = Pc.clone().addScaledVector(N, 1.4).addScaledVector(B, -0.2);
+        ballastPositions.push(pL.x, pL.y, pL.z, pR.x, pR.y, pR.z);
+
+        if (i < numSlices) {
+          const r1 = i * 2;
+          const r2 = (i + 1) * 2;
+          ballastIndices.push(r1, r1 + 1, r2 + 1);
+          ballastIndices.push(r1, r2 + 1, r2);
+        }
+      }
+
+      const railGeoL = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(leftPts, true), numSlices, 0.07, 4, true);
+      const railGeoR = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rightPts, true), numSlices, 0.07, 4, true);
+      const railMat = new THREE.MeshStandardMaterial({ color: 0x888c92, roughness: 0.4, metalness: 0.8 });
+      this.scene.add(new THREE.Mesh(railGeoL, railMat));
+      this.scene.add(new THREE.Mesh(railGeoR, railMat));
+
+      const balGeo = new THREE.BufferGeometry();
+      balGeo.setAttribute('position', new THREE.Float32BufferAttribute(ballastPositions, 3));
+      balGeo.setIndex(ballastIndices);
+      balGeo.computeVertexNormals();
+      const balMat = new THREE.MeshStandardMaterial({ color: 0x44403c, roughness: 1.0 });
+      this.scene.add(new THREE.Mesh(balGeo, balMat));
+    }
+  },
+
+  buildThirdRail() {
+    const numSlices = 750;
+
+    for (let trackOffset of [0, -4.0]) {
+      const thirdRailPts = [];
+      const trSupportPositions = [];
+      const trSupportIndices = [];
+
+      for (let i = 0; i <= numSlices; i++) {
+        const u = (i % numSlices) / numSlices;
+        const { P, N, B } = this.getTrackFrame(u);
+        const Pc = P.clone().addScaledVector(N, trackOffset);
+
+        const isLeft = (trackOffset === 0) ? -1 : 1;
+        const pt = Pc.clone().addScaledVector(N, isLeft * 1.15).addScaledVector(B, 0.25);
+
+        if (i < numSlices) {
+          thirdRailPts.push(pt);
+        }
+
+        if (i % 3 === 0 && i < numSlices) {
+          const base = pt.clone().addScaledVector(B, -0.2);
+          const top = pt.clone();
+          const w = 0.05;
+
+          const vBase = trSupportPositions.length / 3;
+          trSupportPositions.push(
+            base.x + w, base.y, base.z,
+            base.x - w, base.y, base.z,
+            top.x + w, top.y, top.z,
+            top.x - w, top.y, top.z
+          );
+
+          trSupportIndices.push(
+            vBase, vBase + 1, vBase + 3,
+            vBase, vBase + 3, vBase + 2
+          );
+        }
+      }
+
+      const thirdRailGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(thirdRailPts, true), numSlices, 0.08, 4, true);
+      const thirdRailMat = new THREE.MeshStandardMaterial({ color: 0xcc5500, roughness: 0.6, metalness: 0.5 });
+      this.scene.add(new THREE.Mesh(thirdRailGeo, thirdRailMat));
+
+      const supportGeo = new THREE.BufferGeometry();
+      supportGeo.setAttribute('position', new THREE.Float32BufferAttribute(trSupportPositions, 3));
+      supportGeo.setIndex(trSupportIndices);
+      supportGeo.computeVertexNormals();
+      const supportMat = new THREE.MeshStandardMaterial({ color: 0xa0a0a0, roughness: 0.9 });
+      this.scene.add(new THREE.Mesh(supportGeo, supportMat));
+    }
+  },
+
+  buildSleepers() {
+    const tieSpacing = 0.65;
+    const numTies = Math.floor(1500 / tieSpacing);
+    const tieGeo = new THREE.BoxGeometry(2.4, 0.16, 0.24);
+    const tieMat = new THREE.MeshStandardMaterial({ color: 0x686b72, roughness: 0.88 });
+
+    for (let trackOffset of [0, -4.0]) {
+      const tieMesh = new THREE.InstancedMesh(tieGeo, tieMat, numTies);
+      const m = new THREE.Matrix4();
+      const position = new THREE.Vector3();
+      for (let k = 0; k < numTies; k++) {
+        const u = (k * tieSpacing) / 1500.0;
+        const { P, T, N, B } = this.getTrackFrame(u);
+        const Pc = P.clone().addScaledVector(N, trackOffset);
+        position.copy(Pc).addScaledVector(B, -0.04);
+        m.makeBasis(N, B, T);
+        m.setPosition(position);
+        tieMesh.setMatrixAt(k, m);
+      }
+      tieMesh.instanceMatrix.needsUpdate = true;
+      this.scene.add(tieMesh);
+    }
+  },
+
+  // 지상/고가 구간 측면 콘크리트 방음/난간벽 (Parapets)
+  buildViaductParapets() {
+    this.viaductGroup = new THREE.Group();
+    const numSlices = 500;
+    const leftWallPos = [];
+    const leftWallInd = [];
+    const rightWallPos = [];
+    const rightWallInd = [];
+
+    for (let i = 0; i <= numSlices; i++) {
+      const u = (i % numSlices) / numSlices;
+      const s = u * 1500.0;
+      const { P, N, B } = this.getTrackFrame(u);
+
+      const inStation = (s >= 246 && s <= 384);
+      const isVisible = !inStation;
+
+      const pL0 = P.clone().addScaledVector(N, -6.3).addScaledVector(B, -0.2);
+      const pL1 = P.clone().addScaledVector(N, -6.3).addScaledVector(B, 0.95);
+      const pR0 = P.clone().addScaledVector(N, 2.3).addScaledVector(B, -0.2);
+      const pR1 = P.clone().addScaledVector(N, 2.3).addScaledVector(B, 0.95);
+
+      leftWallPos.push(pL0.x, pL0.y, pL0.z, pL1.x, pL1.y, pL1.z);
+      rightWallPos.push(pR0.x, pR0.y, pR0.z, pR1.x, pR1.y, pR1.z);
+
+      if (i < numSlices && isVisible) {
+        const r1 = i * 2;
+        const r2 = (i + 1) * 2;
+        leftWallInd.push(r1, r1 + 1, r2 + 1, r1, r2 + 1, r2);
+        rightWallInd.push(r1, r1 + 1, r2 + 1, r1, r2 + 1, r2);
+      }
+    }
+
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x6e737c, roughness: 0.9 });
+
+    const lGeo = new THREE.BufferGeometry();
+    lGeo.setAttribute('position', new THREE.Float32BufferAttribute(leftWallPos, 3));
+    lGeo.setIndex(leftWallInd);
+    lGeo.computeVertexNormals();
+    this.viaductGroup.add(new THREE.Mesh(lGeo, wallMat));
+
+    const rGeo = new THREE.BufferGeometry();
+    rGeo.setAttribute('position', new THREE.Float32BufferAttribute(rightWallPos, 3));
+    rGeo.setIndex(rightWallInd);
+    rGeo.computeVertexNormals();
+    this.viaductGroup.add(new THREE.Mesh(rGeo, wallMat));
+
+    this.scene.add(this.viaductGroup);
+  },
+
+  // 현실적 지하 마제형 콘크리트 터널 (바닥, 좌우벽체, 아치 천장, 케이블 트레이, 대피로 완비)
+  buildTunnel() {
+    this.tunnelGroup = new THREE.Group();
+    const sStart = 776.0;
+    const sEnd = 1114.0;
+    const step = 2.5;
+    const numSlices = Math.floor((sEnd - sStart) / step);
+
+    // 열차를 완전히 감싸는 터널 단면 프로파일 (DoubleSide 렌더링)
+    const profile = [
+      [-6.8, -0.3], // 0: 바닥 좌측
+      [-6.8, 0.4],  // 1: 좌측 턱
+      [-6.8, 1.8],  // 2: 좌측 하부 벽
+      [-6.7, 3.0],  // 3: 좌측 상부 벽
+      [-6.2, 4.0],  // 4: 좌측 아치
+      [-5.3, 4.7],  // 5: 좌측 천장
+      [-2.0, 5.0],  // 6: 천장 중앙 최고점
+      [ 1.3, 4.7],  // 7: 우측 천장
+      [ 2.2, 4.0],  // 8: 우측 아치
+      [ 2.7, 3.0],  // 9: 우측 상부 벽
+      [ 2.8, 1.8],  // 10: 우측 하부 벽
+      [ 2.8, 0.7],  // 11: 우측 대피로 외벽
+      [ 2.2, 0.7],  // 12: 우측 대피로 발판
+      [ 2.2, -0.3]  // 13: 바닥 우측
+    ];
+    const numV = profile.length;
+
+    const positions = [];
+    const indices = [];
+
+    for (let i = 0; i <= numSlices; i++) {
+      const s = sStart + i * step;
+      const u = s / 1500.0;
+      const { P, N, B } = this.getTrackFrame(u);
+
+      for (let j = 0; j < numV; j++) {
+        const pt = P.clone().addScaledVector(N, profile[j][0]).addScaledVector(B, profile[j][1]);
+        positions.push(pt.x, pt.y, pt.z);
+      }
+
+      if (i < numSlices) {
+        const row1 = i * numV;
+        const row2 = (i + 1) * numV;
+        for (let j = 0; j < numV - 1; j++) {
+          indices.push(row1 + j, row1 + j + 1, row2 + j + 1);
+          indices.push(row1 + j, row2 + j + 1, row2 + j);
+        }
+        // 바닥면 (마지막 정점 -> 첫번째 정점) 연결하여 터널 튜브 완전 밀폐
+        indices.push(row1 + (numV - 1), row1, row2 + (numV - 1));
+        indices.push(row1, row2, row2 + (numV - 1));
+      }
+    }
+
+    const tunnelGeo = new THREE.BufferGeometry();
+    tunnelGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    tunnelGeo.setIndex(indices);
+    tunnelGeo.computeVertexNormals();
+
+    const tunnelMat = new THREE.MeshStandardMaterial({
+      color: 0x22262c,
+      roughness: 0.90,
+      side: THREE.DoubleSide
+    });
+    const tunnelMesh = new THREE.Mesh(tunnelGeo, tunnelMat);
+    this.tunnelGroup.add(tunnelMesh);
+
+    // 터널 좌측 벽면 케이블 덕트 라인
+    const cablePts = [];
+    for (let i = 0; i <= numSlices; i++) {
+      const s = sStart + i * step;
+      const { P, N, B } = this.getTrackFrame(s / 1500.0);
+      cablePts.push(P.clone().addScaledVector(N, -2.75).addScaledVector(B, 1.9));
+    }
+    const cableCurve = new THREE.CatmullRomCurve3(cablePts, false, 'centripetal');
+    const cableGeo = new THREE.TubeGeometry(cableCurve, 200, 0.03, 5, false);
+    const cableMat = new THREE.MeshBasicMaterial({ color: 0x111317 });
+    this.tunnelGroup.add(new THREE.Mesh(cableGeo, cableMat));
+
+    // 천장 중앙 형광등 조명
+    const lampGeo = new THREE.BoxGeometry(1.6, 0.12, 0.25);
+    const lampMat = new THREE.MeshBasicMaterial({ color: 0xfffae0 });
+    const numLamps = Math.floor((sEnd - sStart) / 14.0);
+    const lampsMesh = new THREE.InstancedMesh(lampGeo, lampMat, numLamps);
+    const lm = new THREE.Matrix4();
+
+    for (let k = 0; k < numLamps; k++) {
+      const s = sStart + 7.0 + k * 14.0;
+      const { P, T, N, B } = this.getTrackFrame(s / 1500.0);
+      lm.makeBasis(N, B, T);
+      lm.setPosition(P.clone().addScaledVector(B, 4.85));
+      lampsMesh.setMatrixAt(k, lm);
+    }
+    lampsMesh.instanceMatrix.needsUpdate = true;
+    this.tunnelGroup.add(lampsMesh);
+
+    this.scene.add(this.tunnelGroup);
+
+    // 터널 입구(왕길->검단사거리) 및 출구(남동구청->인천대공원) 아치 갱구
+    this.portalEntryGroup = this.buildPortalArch(sStart, false);
+    this.portalExitGroup = this.buildPortalArch(sEnd, true);
+  },
+
+  // 뚫려있는 터널 입구 갱구 아치 구조물 (중앙 통로는 완전히 개방)
+  buildPortalArch(s, isExit) {
+    const { P, T, N, B } = this.getTrackFrame(s / 1500.0);
+    const pGroup = new THREE.Group();
+    const portalMat = new THREE.MeshStandardMaterial({ color: 0x5a6068, roughness: 0.85 });
+    const cliffMat = new THREE.MeshStandardMaterial({ color: 0x3a3834, roughness: 0.95 });
+
+    // 1. 좌측 콘크리트 포털 기둥
+    const leftPillar = new THREE.Mesh(new THREE.BoxGeometry(2.4, 6.0, 2.5), portalMat);
+    leftPillar.position.set(-8.1, 2.8, 0);
+    pGroup.add(leftPillar);
+
+    // 2. 우측 콘크리트 포털 기둥
+    const rightPillar = new THREE.Mesh(new THREE.BoxGeometry(2.4, 6.0, 2.5), portalMat);
+    rightPillar.position.set(4.1, 2.8, 0);
+    pGroup.add(rightPillar);
+
+    // 3. 상부 아치 헤더 빔
+    const topHeader = new THREE.Mesh(new THREE.BoxGeometry(14.6, 2.2, 2.5), portalMat);
+    topHeader.position.set(-2.0, 6.3, 0);
+    pGroup.add(topHeader);
+
+    // 4. 좌측 산악 암벽
+    const leftCliff = new THREE.Mesh(new THREE.BoxGeometry(22.0, 14.0, 3.0), cliffMat);
+    leftCliff.position.set(-20.3, 6.5, isExit ? 1.5 : -1.5);
+    pGroup.add(leftCliff);
+
+    // 5. 우측 산악 암벽
+    const rightCliff = new THREE.Mesh(new THREE.BoxGeometry(22.0, 14.0, 3.0), cliffMat);
+    rightCliff.position.set(16.3, 6.5, isExit ? 1.5 : -1.5);
+    pGroup.add(rightCliff);
+
+    // 6. 상부 산악 능선 암벽
+    const topCliff = new THREE.Mesh(new THREE.BoxGeometry(54.0, 8.0, 3.0), cliffMat);
+    topCliff.position.set(0, 11.4, isExit ? 1.5 : -1.5);
+    pGroup.add(topCliff);
+
+    // ★ 중앙 통로는 100% 뚫려있어 열차가 안전하게 통과함!
+    const m = new THREE.Matrix4().makeBasis(N, B, T);
+    pGroup.applyMatrix4(m);
+    pGroup.position.copy(P);
+    this.scene.add(pGroup);
+    return pGroup;
+  },
+
+  buildStation() {
+    // 1. Materials (DoubleSide on all structural surfaces so both left & right platforms are 100% visible)
+    const platMat = new THREE.MeshStandardMaterial({ color: 0xdbe2ea, roughness: 0.85, side: THREE.DoubleSide }); // Floor tile
+    const yellowMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.7, side: THREE.DoubleSide }); // Tactile yellow
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9, side: THREE.DoubleSide }); // Dark slate back wall
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8, side: THREE.DoubleSide }); // Platform ceiling roof
+    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.75 }); // Concrete columns
+    const lightMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Fluorescent ceiling LED
+
+    // PSD Materials - Crystal clear, transparent glass
+    const psdGlassMat = new THREE.MeshPhysicalMaterial({
+      color: 0x5a8fa8,
+      transmission: 0.88,
+      opacity: 1.0,
+      transparent: true,
+      roughness: 0.05,
+      reflectivity: 0.8,
+      ior: 1.5,
+      side: THREE.DoubleSide
+    });
+    // Slim, sleek dark steel frames
+    const psdFrameMat = new THREE.MeshStandardMaterial({ color: 0x1e222a, metalness: 0.6, roughness: 0.35 });
+    const psdTopMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.5 }); // Incheon Line 2 Orange
+    const psdLedMat = new THREE.MeshBasicMaterial({ color: 0x22c55e }); // Green door indicator LED
+
+    // Props Materials
+    const benchWoodMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.9 });
+    const benchLegMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
+    const vendingRedMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4 });
+    const vendingGlassMat = new THREE.MeshPhysicalMaterial({ color: 0x9ca3af, transmission: 0.6, opacity: 1, transparent: true, roughness: 0.1 });
+    const vendingBlackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
+    const escalatorStairMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 });
+    const escalatorRailMat = new THREE.MeshPhysicalMaterial({ color: 0x94a3b8, transmission: 0.8, opacity: 1, transparent: true, roughness: 0.1 });
+
+    const psdGroup = new THREE.Group();
+    this.psdDoors = [];
+    const propsGroup = new THREE.Group();
+    const platGroup = new THREE.Group();
+
+    // 2. Station Sign Texture Setup
+    const signCanvas = document.createElement('canvas');
+    signCanvas.width = 1024; signCanvas.height = 256;
+    this.signTextCanvas = signCanvas;
+    this.signTexture = new THREE.CanvasTexture(signCanvas);
+    this.updateStationSignTexture('201', '검단오류', 'Geomdan Oryu');
+    const signMat = new THREE.MeshBasicMaterial({ map: this.signTexture, side: THREE.DoubleSide });
+    const signGeo = new THREE.BoxGeometry(0.06, 1.15, 3.8);
+
+    // Slim, elegant frame geometries (refined to 6cm ~ 8cm thickness)
+    const postGeo = new THREE.BoxGeometry(0.08, 2.30, 0.08); // Thin vertical post
+    const mullionGeo = new THREE.BoxGeometry(0.06, 2.20, 0.05); // Thin vertical divider
+    const kickplateGeo = new THREE.BoxGeometry(0.07, 0.12, 1.95); // Slim bottom kickplate
+    const subHeaderGeo = new THREE.BoxGeometry(0.07, 0.08, 1.95); // Slim top frame
+    const windowGlassGeo = new THREE.BoxGeometry(0.03, 2.05, 1.92); // Large clear glass window
+    const doorLeafGlassGeo = new THREE.BoxGeometry(0.04, 2.20, 1.08); // Full glass sliding door leaf
+    const doorEdgeGeo = new THREE.BoxGeometry(0.06, 2.22, 0.04); // Slim rubber edge on door
+    const doorLedGeo = new THREE.BoxGeometry(0.12, 0.08, 0.22);
+    const signPoleGeo = new THREE.CylinderGeometry(0.025, 0.025, 1.2, 8);
+    const stationPillarGeo = new THREE.BoxGeometry(0.6, 4.8, 0.6);
+
+    // Two stations along the 1500m loop
+    const stations = [
+      { sStart: 245, sEnd: 345, stopP: 305, isTunnel: false },
+      { sStart: 960, sEnd: 1060, stopP: 1020, isTunnel: true }
+    ];
+
+    for (let st of stations) {
+      const sStart = st.sStart;
+      const sEnd = st.sEnd;
+      const stopP = st.stopP;
+      const numSlices = 50;
+      const step = (sEnd - sStart) / numSlices;
+
+      for (let trackOffset of [0, -4.0]) {
+        const sideSign = (trackOffset === 0) ? 1 : -1;
+        const platPositions = [];
+        const platIndices = [];
+        const yellowPositions = [];
+        const yellowIndices = [];
+        const wallPositions = [];
+        const wallIndices = [];
+        const roofPositions = [];
+        const roofIndices = [];
+
+        // Build continuous platform, back wall, and ceiling roof
+        for (let i = 0; i <= numSlices; i++) {
+          const s = sStart + i * step;
+          const { P, N, B } = this.getTrackFrame(s / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
+
+          // Points across platform cross-section
+          const pEdge = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, 1.15);
+          const pYell = Pc.clone().addScaledVector(N, sideSign * 1.65).addScaledVector(B, 1.152);
+          const pBack = Pc.clone().addScaledVector(N, sideSign * 5.40).addScaledVector(B, 1.15);
+          const pBase = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, -0.2);
+
+          platPositions.push(pBase.x, pBase.y, pBase.z, pEdge.x, pEdge.y, pEdge.z, pBack.x, pBack.y, pBack.z);
+          yellowPositions.push(pEdge.x, pEdge.y, pEdge.z, pYell.x, pYell.y, pYell.z);
+
+          // Back wall and Roof
+          const pWallTop = pBack.clone().addScaledVector(B, 4.2);
+          const pRoofFront = pEdge.clone().addScaledVector(B, 4.2).addScaledVector(N, -sideSign * 0.4);
+          wallPositions.push(pBack.x, pBack.y, pBack.z, pWallTop.x, pWallTop.y, pWallTop.z);
+          roofPositions.push(pWallTop.x, pWallTop.y, pWallTop.z, pRoofFront.x, pRoofFront.y, pRoofFront.z);
+
+          if (i < numSlices) {
+            const r1 = i * 3;
+            const r2 = (i + 1) * 3;
+
+            // Proper winding order depending on sideSign
+            if (sideSign === 1) {
+              platIndices.push(r1, r1 + 1, r2 + 1); platIndices.push(r1, r2 + 1, r2);
+              platIndices.push(r1 + 1, r1 + 2, r2 + 2); platIndices.push(r1 + 1, r2 + 2, r2 + 1);
+
+              const y1 = i * 2; const y2 = (i + 1) * 2;
+              yellowIndices.push(y1, y1 + 1, y2 + 1); yellowIndices.push(y1, y2 + 1, y2);
+
+              const w1 = i * 2; const w2 = (i + 1) * 2;
+              wallIndices.push(w1, w1 + 1, w2 + 1); wallIndices.push(w1, w2 + 1, w2);
+              roofIndices.push(w1, w1 + 1, w2 + 1); roofIndices.push(w1, w2 + 1, w2);
+            } else {
+              // Left side platform (reversed winding so normals face UP towards camera)
+              platIndices.push(r1, r2 + 1, r1 + 1); platIndices.push(r1, r2, r2 + 1);
+              platIndices.push(r1 + 1, r2 + 2, r1 + 2); platIndices.push(r1 + 1, r2 + 1, r2 + 2);
+
+              const y1 = i * 2; const y2 = (i + 1) * 2;
+              yellowIndices.push(y1, y2 + 1, y1 + 1); yellowIndices.push(y1, y2, y2 + 1);
+
+              const w1 = i * 2; const w2 = (i + 1) * 2;
+              wallIndices.push(w1, w2 + 1, w1 + 1); wallIndices.push(w1, w2, w2 + 1);
+              roofIndices.push(w1, w2 + 1, w1 + 1); roofIndices.push(w1, w2, w2 + 1);
+            }
+          }
+        }
+
+        // Platform meshes
+        const pGeo = new THREE.BufferGeometry();
+        pGeo.setAttribute('position', new THREE.Float32BufferAttribute(platPositions, 3));
+        pGeo.setIndex(platIndices);
+        pGeo.computeVertexNormals();
+        platGroup.add(new THREE.Mesh(pGeo, platMat));
+
+        const yGeo = new THREE.BufferGeometry();
+        yGeo.setAttribute('position', new THREE.Float32BufferAttribute(yellowPositions, 3));
+        yGeo.setIndex(yellowIndices);
+        yGeo.computeVertexNormals();
+        platGroup.add(new THREE.Mesh(yGeo, yellowMat));
+
+        const wallGeo = new THREE.BufferGeometry();
+        wallGeo.setAttribute('position', new THREE.Float32BufferAttribute(wallPositions, 3));
+        wallGeo.setIndex(wallIndices);
+        wallGeo.computeVertexNormals();
+        platGroup.add(new THREE.Mesh(wallGeo, wallMat));
+
+        const roofGeo = new THREE.BufferGeometry();
+        roofGeo.setAttribute('position', new THREE.Float32BufferAttribute(roofPositions, 3));
+        roofGeo.setIndex(roofIndices);
+        roofGeo.computeVertexNormals();
+        platGroup.add(new THREE.Mesh(roofGeo, roofMat));
+
+        // 3. Sleek PSD Top Header Box & Orange Line
+        const stLen = sEnd - sStart;
+        const numHeaderSteps = Math.floor(stLen / 10.0);
+        for (let h = 0; h < numHeaderSteps; h++) {
+          const hs = sStart + h * 10.0 + 5.0;
+          const { P, T, N, B } = this.getTrackFrame(hs / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
+
+          // Top Header dark housing (compact: 0.16m wide, 0.40m high)
+          const boxMesh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.40, 10.1), psdFrameMat);
+          const bPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 3.42);
+          boxMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(bPos));
+          psdGroup.add(boxMesh);
+
+          // Front Orange Line Stripe
+          const stripeMesh = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.16, 10.1), psdTopMat);
+          const sPos = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, 3.42);
+          stripeMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(sPos));
+          psdGroup.add(stripeMesh);
+        }
+
+        // 4. Slim, elegant vertical posts (Mullions: 8cm thin) spaced along platform edge
+        for (let sP = sStart + 2.0; sP <= sEnd - 2.0; sP += 2.0) {
+          const { P, T, N, B } = this.getTrackFrame(sP / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
+
+          // Slim vertical column connecting floor (1.15) to header (3.30)
+          const postMesh = new THREE.Mesh(postGeo, psdFrameMat);
+          const postPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 2.25);
+          postMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(postPos));
+          psdGroup.add(postMesh);
+        }
+
+        // 5. 100% Clear, transparent glass window panels between posts (no black walls!)
+        for (let sP = sStart + 3.0; sP <= sEnd - 3.0; sP += 2.0) {
+          // Leave sliding door openings clear
+          const isDoorZone = [-30, -15, 0].some(dOff => Math.abs(sP - (stopP + dOff)) < 1.3);
+          if (isDoorZone) continue;
+
+          const { P, T, N, B } = this.getTrackFrame(sP / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
+
+          // Clear Glass Pane (transparent, see right through to station signs!)
+          const glassMesh = new THREE.Mesh(windowGlassGeo, psdGlassMat);
+          const gPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 2.26);
+          glassMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(gPos));
+          psdGroup.add(glassMesh);
+
+          // Slim kickplate sill at bottom (12cm low)
+          const kickMesh = new THREE.Mesh(kickplateGeo, psdFrameMat);
+          const kPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 1.21);
+          kickMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(kPos));
+          psdGroup.add(kickMesh);
+
+          // Slim sub-header frame at top (8cm low)
+          const subMesh = new THREE.Mesh(subHeaderGeo, psdFrameMat);
+          const sbPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 3.24);
+          subMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(sbPos));
+          psdGroup.add(subMesh);
+        }
+
+        // 6. Sliding PSD Doors (Door 1 at stopP-30, Door 2 at stopP-15, Door 3 at stopP)
+        // 100% Clear Glass door leaves with slim rubber edges - absolutely NO opaque black slabs!
+        const doorOffsets = [-30.0, -15.0, 0.0];
+        doorOffsets.forEach((dOff) => {
+          const ds = stopP + dOff;
+          const { P, T, N, B } = this.getTrackFrame(ds / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
+
+          // Slim flanking portal posts (10cm thin)
+          const lpMesh = new THREE.Mesh(new THREE.BoxGeometry(0.10, 2.30, 0.10), psdFrameMat);
+          const rpMesh = new THREE.Mesh(new THREE.BoxGeometry(0.10, 2.30, 0.10), psdFrameMat);
+          const leftPillarPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 2.25).addScaledVector(T, -1.15);
+          const rightPillarPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 2.25).addScaledVector(T, 1.15);
+          lpMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(leftPillarPos));
+          rpMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(rightPillarPos));
+          psdGroup.add(lpMesh);
+          psdGroup.add(rpMesh);
+
+          // Door Status LED indicator above door
+          const ledMesh = new THREE.Mesh(doorLedGeo, psdLedMat);
+          const ledPos = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, 3.42);
+          ledMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(ledPos));
+          psdGroup.add(ledMesh);
+
+          // Sliding Door Leaves - Clean, beautiful transparent glass leaves!
+          // Left Leaf (mesh group)
+          const lLeafGroup = new THREE.Group();
+          const lGlass = new THREE.Mesh(doorLeafGlassGeo, psdGlassMat);
+          const lEdge = new THREE.Mesh(doorEdgeGeo, psdFrameMat);
+          lEdge.position.set(0, 0, 0.52); // Rubber seal on inner meeting edge
+          lLeafGroup.add(lGlass, lEdge);
+
+          // Right Leaf (mesh group)
+          const rLeafGroup = new THREE.Group();
+          const rGlass = new THREE.Mesh(doorLeafGlassGeo, psdGlassMat);
+          const rEdge = new THREE.Mesh(doorEdgeGeo, psdFrameMat);
+          rEdge.position.set(0, 0, -0.52); // Rubber seal on inner meeting edge
+          rLeafGroup.add(rGlass, rEdge);
+
+          const dlPos = Pc.clone().addScaledVector(N, sideSign * 1.32).addScaledVector(B, 2.23).addScaledVector(T, -0.54);
+          const drPos = Pc.clone().addScaledVector(N, sideSign * 1.32).addScaledVector(B, 2.23).addScaledVector(T, 0.54);
+
+          lLeafGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(dlPos));
+          rLeafGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(drPos));
+
+          psdGroup.add(lLeafGroup);
+          psdGroup.add(rLeafGroup);
+          this.psdDoors.push({ doorL: lLeafGroup, doorR: rLeafGroup, baseL: dlPos, baseR: drPos, tangent: T });
+        });
+
+        // 7. Station Sign (Mounted prominently at eye level, perfectly visible through clear PSD glass!)
+        {
+          const { P, T, N, B } = this.getTrackFrame(stopP / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
+          const signMesh = new THREE.Mesh(signGeo, signMat);
+          // Positioned at N = sideSign * 2.8, B = 2.6, T = 3.5: perfectly framed right in the driver's front/side window view
+          const signPos = Pc.clone().addScaledVector(N, sideSign * 2.8).addScaledVector(B, 2.6).addScaledVector(T, 3.5);
+
+          // Face the sign normal directly towards the track so text reads left-to-right from cab
+          const signNormal = N.clone().multiplyScalar(-sideSign);
+          const signTangent = T.clone().multiplyScalar(-1);
+          signMesh.applyMatrix4(new THREE.Matrix4().makeBasis(signNormal, B, signTangent).setPosition(signPos));
+          propsGroup.add(signMesh);
+
+          // Hanging steel mounting poles up to ceiling
+          const pole1 = new THREE.Mesh(signPoleGeo, psdFrameMat);
+          const pole2 = new THREE.Mesh(signPoleGeo, psdFrameMat);
+          pole1.position.copy(signPos).addScaledVector(B, 1.05).addScaledVector(T, -1.2);
+          pole2.position.copy(signPos).addScaledVector(B, 1.05).addScaledVector(T, 1.2);
+          propsGroup.add(pole1, pole2);
+        }
+
+        // 8. Station Columns, Ceiling Lights & Platform Furniture
+        for (let cS = sStart + 10.0; cS < sEnd; cS += 18.0) {
+          const { P, T, N, B } = this.getTrackFrame(cS / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
+
+          // Concrete station column
+          const pillar = new THREE.Mesh(stationPillarGeo, pillarMat);
+          const pilPos = Pc.clone().addScaledVector(N, sideSign * 4.2).addScaledVector(B, 3.4);
+          pillar.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(pilPos));
+          propsGroup.add(pillar);
+
+          // Ceiling LED light strip
+          const ledStrip = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.08, 4.0), lightMat);
+          const ledPos = Pc.clone().addScaledVector(N, sideSign * 3.0).addScaledVector(B, 5.25);
+          ledStrip.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(ledPos));
+          propsGroup.add(ledStrip);
+        }
+
+        // 9. Platform Props: Benches, Vending Machine, Escalator
+        const propT = (sideSign === -1) ? this.getTrackFrame(stopP / 1500.0).T.clone().negate() : this.getTrackFrame(stopP / 1500.0).T.clone();
+
+        // Bench
+        {
+          const { P, T, N, B } = this.getTrackFrame((stopP - 18.0) / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
+          const benchGroup = new THREE.Group();
+          const seat = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.1, 0.7), benchWoodMat);
+          seat.position.set(0, 1.6, 0);
+          const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.45, 0.55), benchLegMat);
+          leg1.position.set(-0.8, 1.375, 0);
+          const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.45, 0.55), benchLegMat);
+          leg2.position.set(0.8, 1.375, 0);
+          benchGroup.add(seat, leg1, leg2);
+          const bPos = Pc.clone().addScaledVector(N, sideSign * 3.5).addScaledVector(B, 0);
+          benchGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, propT).setPosition(bPos));
+          propsGroup.add(benchGroup);
+        }
+
+        // Vending Machine
+        {
+          const { P, T, N, B } = this.getTrackFrame((stopP + 12.0) / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
+          const vmGroup = new THREE.Group();
+          const vmBody = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.0, 0.9), vendingRedMat);
+          vmBody.position.set(0, 2.15, 0);
+          const vmGlass = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.1, 0.1), vendingGlassMat);
+          vmGlass.position.set(0, 2.45, sideSign * 0.46);
+          const vmSlot = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 0.1), vendingBlackMat);
+          vmSlot.position.set(0, 1.45, sideSign * 0.46);
+          vmGroup.add(vmBody, vmGlass, vmSlot);
+          const vmPos = Pc.clone().addScaledVector(N, sideSign * 3.8).addScaledVector(B, 0);
+          vmGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, propT).setPosition(vmPos));
+          propsGroup.add(vmGroup);
+        }
+
+        // Escalator
+        {
+          const { P, T, N, B } = this.getTrackFrame((stopP - 38.0) / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
+          const escGroup = new THREE.Group();
+          const steps = new THREE.Mesh(new THREE.BoxGeometry(2.0, 3.5, 3.5), escalatorStairMat);
+          steps.position.set(0, 2.9, 1.8);
+          steps.rotation.x = Math.PI / 4;
+          const rail = new THREE.Mesh(new THREE.BoxGeometry(2.1, 3.5, 0.1), escalatorRailMat);
+          rail.position.set(0, 3.7, 1.8);
+          rail.rotation.x = Math.PI / 4;
+          escGroup.add(steps, rail);
+          const ePos = Pc.clone().addScaledVector(N, sideSign * 3.6).addScaledVector(B, 0);
+          escGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, propT).setPosition(ePos));
+          propsGroup.add(escGroup);
+        }
+      }
+    }
+
+    this.scene.add(platGroup);
+    this.scene.add(psdGroup);
+    this.scene.add(propsGroup);
+  },
+
+  updateStationSignTexture(id, name, eng) {
+    if (!this.signTextCanvas || !this.signTexture) return;
+    const ctx = this.signTextCanvas.getContext('2d');
+    
+    // Background: White
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 1024, 256);
+    
+    // Bottom Orange Stripe
+    ctx.fillStyle = '#f97316';
+    ctx.fillRect(0, 220, 1024, 36);
+
+    // Frame Border
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#22262c';
+    ctx.strokeRect(0, 0, 1024, 256);
+    
+    // Station badge
+    ctx.fillStyle = '#f97316'; // orange badge
+    ctx.beginPath();
+    ctx.roundRect(40, 40, 140, 140, 20);
+    ctx.fill();
+
+    // Inside Badge text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 50px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(id || '200', 110, 110); // Hardcoded ID for now, can be updated if we pass ID
+
+    // Station Name (Korean)
+    ctx.fillStyle = '#111827';
+    ctx.font = 'bold 80px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(name, 512, 100);
+
+    // Station Name (English)
+    ctx.fillStyle = '#4b5563';
+    ctx.font = 'bold 36px Consolas, monospace';
+    ctx.fillText(eng || 'Incheon Line 2', 512, 170);
+
+    this.signTexture.needsUpdate = true;
+  },
+
+  buildTerrainAndTrees() {
+    const terrPositions = [];
+    const terrIndices = [];
+    const terrColors = [];
+    const numSlices = 250;
+
+    for (let i = 0; i <= numSlices; i++) {
+      const u = (i % numSlices) / numSlices;
+      const s = u * 1500.0;
+      const { P, N, B } = this.getTrackFrame(u);
+
+      const inTunnel = (s >= 772 && s <= 1118);
+      const isRock = (s >= 730 && s <= 780) || (s >= 1110 && s <= 1150);
+
+      const pFarL = P.clone().addScaledVector(N, -70).addScaledVector(B, -6.0);
+      const pMidL = P.clone().addScaledVector(N, -16).addScaledVector(B, -2.0);
+      const pBedL = P.clone().addScaledVector(N, -6.4).addScaledVector(B, -0.35);
+      const pBedR = P.clone().addScaledVector(N, 2.4).addScaledVector(B, -0.35);
+      const pMidR = P.clone().addScaledVector(N, 12).addScaledVector(B, -2.0);
+      const pFarR = P.clone().addScaledVector(N, 70).addScaledVector(B, -6.0);
+
+      const row = [pFarL, pMidL, pBedL, pBedR, pMidR, pFarR];
+      for (let j = 0; j < 6; j++) {
+        terrPositions.push(row[j].x, row[j].y, row[j].z);
+        if (isRock) {
+          terrColors.push(0.36, 0.34, 0.32);
+        } else {
+          terrColors.push(0.24, 0.40, 0.20);
+        }
+      }
+
+      if (i < numSlices && !inTunnel) {
+        const r1 = i * 6;
+        const r2 = (i + 1) * 6;
+        for (let j = 0; j < 5; j++) {
+          terrIndices.push(r1 + j, r1 + j + 1, r2 + j + 1);
+          terrIndices.push(r1 + j, r2 + j + 1, r2 + j);
+        }
+      }
+    }
+
+    const terrGeo = new THREE.BufferGeometry();
+    terrGeo.setAttribute('position', new THREE.Float32BufferAttribute(terrPositions, 3));
+    terrGeo.setAttribute('color', new THREE.Float32BufferAttribute(terrColors, 3));
+    terrGeo.setIndex(terrIndices);
+    terrGeo.computeVertexNormals();
+
+    const terrMat = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.95
+    });
+    this.terrainMesh = new THREE.Mesh(terrGeo, terrMat);
+    this.scene.add(this.terrainMesh);
+
+    const numTrees = 400;
+    const trunkGeo = new THREE.CylinderGeometry(0.3, 0.45, 3.5, 6);
+    const foliageGeo = new THREE.ConeGeometry(2.4, 5.2, 7);
+    foliageGeo.translate(0, 4.2, 0);
+
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x423020, roughness: 0.9 });
+    const foliageMat = new THREE.MeshStandardMaterial({ color: 0x274a21, roughness: 0.85 });
+
+    const trunkMesh = new THREE.InstancedMesh(trunkGeo, trunkMat, numTrees);
+    const foliageMesh = new THREE.InstancedMesh(foliageGeo, foliageMat, numTrees);
+
+    const tm = new THREE.Matrix4();
+
+    for (let k = 0; k < numTrees; k++) {
+      const u = (k / numTrees) + (Math.sin(k * 13.7) * 0.005);
+      const s = (((u % 1.0) + 1.0) % 1.0) * 1500.0;
+
+      if (s >= 755 && s <= 1130) {
+        tm.makeScale(0, 0, 0);
+        trunkMesh.setMatrixAt(k, tm);
+        foliageMesh.setMatrixAt(k, tm);
+        continue;
+      }
+
+      const { P, N, B } = this.getTrackFrame(u);
+      const side = (k % 2 === 0) ? 1 : -1;
+      const distOffset = side * (7.0 + (Math.abs(Math.sin(k * 7.91)) * 40.0));
+      const treePos = P.clone().addScaledVector(N, distOffset).addScaledVector(B, -1.2);
+
+      const sc = 0.75 + Math.abs(Math.sin(k * 3.3)) * 0.55;
+      tm.makeScale(sc, sc, sc);
+      tm.setPosition(treePos);
+      trunkMesh.setMatrixAt(k, tm);
+      foliageMesh.setMatrixAt(k, tm);
+    }
+
+    trunkMesh.instanceMatrix.needsUpdate = true;
+    foliageMesh.instanceMatrix.needsUpdate = true;
+    this.treesGroup = new THREE.Group();
+    this.treesGroup.add(trunkMesh);
+    this.treesGroup.add(foliageMesh);
+    this.scene.add(this.treesGroup);
+  },
+
+  update(trainDist, speed, dt, roll, pitch, shakeX, shakeY, headlightPower, isDoorOpen, tun, st) {
+    if (!this.active || !this.trackCurve) return;
+
+    if (st && st.name && st.name !== this.lastStationName) {
+      this.lastStationName = st.name;
+      this.updateStationSignTexture(st.id, st.name, st.eng);
+    }
+
+    // 터널 및 고가교 환경 요소 적응형 가시성 제어
+    if (tun) {
+      if (tun.mode === 'GROUND_GROUND') {
+        if (this.viaductGroup) this.viaductGroup.visible = true;
+        if (this.tunnelGroup) this.tunnelGroup.visible = false;
+        if (this.portalEntryGroup) this.portalEntryGroup.visible = false;
+        if (this.portalExitGroup) this.portalExitGroup.visible = false;
+        if (this.terrainMesh) this.terrainMesh.visible = true;
+        if (this.treesGroup) this.treesGroup.visible = true;
+      } else if (tun.mode === 'TUNNEL_TUNNEL') {
+        if (this.viaductGroup) this.viaductGroup.visible = false;
+        if (this.tunnelGroup) this.tunnelGroup.visible = true;
+        if (this.portalEntryGroup) this.portalEntryGroup.visible = false;
+        if (this.portalExitGroup) this.portalExitGroup.visible = false;
+        if (this.terrainMesh) this.terrainMesh.visible = false;
+        if (this.treesGroup) this.treesGroup.visible = false;
+      } else if (tun.mode === 'GROUND_TO_TUNNEL') {
+        if (this.viaductGroup) this.viaductGroup.visible = true;
+        if (this.tunnelGroup) this.tunnelGroup.visible = true;
+        if (this.portalEntryGroup) this.portalEntryGroup.visible = true;
+        if (this.portalExitGroup) this.portalExitGroup.visible = false;
+        if (this.terrainMesh) this.terrainMesh.visible = true;
+        if (this.treesGroup) this.treesGroup.visible = true;
+      } else if (tun.mode === 'TUNNEL_TO_GROUND') {
+        if (this.viaductGroup) this.viaductGroup.visible = true;
+        if (this.tunnelGroup) this.tunnelGroup.visible = true;
+        if (this.portalEntryGroup) this.portalEntryGroup.visible = false;
+        if (this.portalExitGroup) this.portalExitGroup.visible = true;
+        if (this.terrainMesh) this.terrainMesh.visible = true;
+        if (this.treesGroup) this.treesGroup.visible = true;
+      }
+    }
+
+    const isStationUnderground = (st && st.type === 'TUNNEL');
+    if (this.stationVaultGroup) this.stationVaultGroup.visible = isStationUnderground;
+    if (this.stationCanopyGroup) this.stationCanopyGroup.visible = !isStationUnderground;
+
+    const u = ((trainDist % 1500.0) + 1500.0) % 1500.0 / 1500.0;
+    const { P, T, N, B } = this.getTrackFrame(u);
+
+    const lookU = ((u + (28.0 / 1500.0)) % 1.0 + 1.0) % 1.0;
+    const lookP = this.trackCurve.getPointAt(lookU);
+
+    const eyePos = P.clone().addScaledVector(B, 1.85).addScaledVector(N, -0.22);
+    eyePos.addScaledVector(N, shakeX * 0.0035);
+    eyePos.addScaledVector(B, shakeY * 0.0035);
+    this.camera.position.copy(eyePos);
+
+    const pitchOffset = (pitch || 0) * 0.008;
+    const lookTarget = lookP.clone().addScaledVector(B, 1.85 + pitchOffset);
+    this.camera.lookAt(lookTarget);
+
+    if (roll) {
+      this.camera.rotateZ(roll * 0.85);
+    }
+
+    // 전조등 (Headlight)
+    const nosePos = eyePos.clone().addScaledVector(T, 1.4).addScaledVector(B, -0.6);
+    this.headlight.position.copy(nosePos);
+    this.headlightTarget.position.copy(lookTarget);
+    const hlMult = (tun && tun.inside) ? 4.5 : 3.0;
+    this.headlight.intensity = headlightPower * hlMult;
+
+    // 터널 내부 환경 전환 (Daylight <-> Tunnel Deep Darkness)
+    let tunBlend = 0.0;
+    if (tun && tun.inside) {
+      if (tun.exit < 35.0) {
+        tunBlend = Math.max(0.0, tun.exit / 35.0);
+      } else {
+        tunBlend = 1.0;
+      }
+    } else if (tun && tun.entry < 35.0) {
+      tunBlend = Math.max(0.0, (35.0 - tun.entry) / 35.0);
+    }
+
+    const dayBg = new THREE.Color(0x8cb8eb);
+    const tunBg = new THREE.Color(0x020305); // 터널 내부는 칠흑 같은 암전
+    this.scene.background.copy(dayBg).lerp(tunBg, tunBlend);
+    this.scene.fog.color.copy(this.scene.background);
+    this.scene.fog.density = 0.0022 + tunBlend * 0.022;
+
+    this.dirLight.intensity = (1.0 - tunBlend) * 1.25;
+    this.hemiLight.intensity = 0.60 - tunBlend * 0.56;
+
+    // 터널 동적 천장 조명
+    if (tun && tun.inside) {
+      for (let i = 0; i < this.tunnelLights.length; i++) {
+        const offset = (i - 1.5) * 14.0;
+        const lightU = (((trainDist + offset) % 1500.0) + 1500.0) % 1500.0 / 1500.0;
+        const lFrame = this.getTrackFrame(lightU);
+        this.tunnelLights[i].position.copy(lFrame.P).addScaledVector(lFrame.B, 4.8);
+        this.tunnelLights[i].intensity = 2.0;
+      }
+    } else {
+      for (let i = 0; i < this.tunnelLights.length; i++) {
+        this.tunnelLights[i].intensity = 0.0;
+      }
+    }
+
+    // 전구간 PSD 개폐 애니메이션 (출입문 상태와 100% 동기화)
+    if (isDoorOpen) {
+      this.psdOpenProgress = Math.min(1.0, this.psdOpenProgress + dt * 0.7);
+    } else {
+      this.psdOpenProgress = Math.max(0.0, this.psdOpenProgress - dt * 0.7);
+    }
+
+    if (this.psdDoors && this.psdDoors.length > 0) {
+      const openDist = this.psdOpenProgress * 0.48;
+      for (let i = 0; i < this.psdDoors.length; i++) {
+        const d = this.psdDoors[i];
+        d.doorL.position.copy(d.baseL).addScaledVector(d.tangent, -openDist);
+        d.doorR.position.copy(d.baseR).addScaledVector(d.tangent, openDist);
+      }
+    }
+
+    this.renderer.render(this.scene, this.camera);
+  }
+};
 
 function drawCabViewLoop() {
   const now = performance.now();
@@ -9398,81 +10880,126 @@ function drawCabViewLoop() {
   const ctx = cvState.ctx;
   cvPrepareAssets();
 
-  ctx.clearRect(0, 0, CV.W, CV.H);
-  ctx.fillStyle = '#0b0e13';
-  ctx.fillRect(0, 0, CV.W, CV.H);
-
-  if (!cvState.ready) { requestAnimationFrame(drawCabViewLoop); return; }
+  // Three.js 3D Cab View 초기화 시도
+  if (!ThreeCabView.initialized && typeof THREE !== 'undefined') {
+    ThreeCabView.init();
+  }
 
   const s = trainDistance;
   const tun = cvTunnelInfo(s);
   const st = cvStationInfo(s);
 
+  // 터널 내부에서는 전면창 빗방울 정지
+  if (tun.inside) {
+    cvState.rain = Math.max(0, cvState.rain - dt * 2.0);
+  }
+
   /* 조명 상태 */
   const hl = cvCompState('SW_HEADLIGHT', 'OFF');
   const headlightPower = (hl === 'HIGH') ? 1.0 : (hl === 'LOW' || hl === 'AUTO' || hl === 'REMOTE') ? 0.62 : 0.0;
-  let ambient = 1.0;
-  if (tun.inside) ambient = 0.10 + 0.10 * Math.max(0, 1 - Math.min(tun.exit, 60) / 60);
-  else if (!tun.inside && tun.entry < 30) ambient = 1 - 0.55 * (1 - tun.entry / 30);
-  ambient *= (1 - cvState.rain * 0.28);
-  cvState.ambient = ambient;
 
-  /* ---- 바깥 세상 (카메라 흔들림/롤링은 여기에만 적용) ---- */
-  ctx.save();
-  ctx.translate(CV.vpX, 300);
-  ctx.rotate(cvState.roll);
-  ctx.translate(-CV.vpX + cvState.shakeX, -300 + cvState.shakeY + cvState.pitch);
+  if (ThreeCabView.active) {
+    // ==========================================
+    // 🚅 3D WebGL 현실적 운전실 뷰 (Three.js 기반)
+    // ==========================================
+    ThreeCabView.update(
+      trainDistance,
+      trainSpeed,
+      dt,
+      cvState.roll,
+      cvState.pitch,
+      cvState.shakeX,
+      cvState.shakeY,
+      headlightPower,
+      isDoorOpen,
+      tun,
+      st
+    );
 
-  if (tun.inside) {
-    cvDrawTunnel(ctx, tun, headlightPower);
-    cvDrawBallastAndTrack(ctx, 2.2, Math.max(20, Math.min(tun.exit + 25, 110)));
-  } else {
-    cvDrawBackdrop(ctx);
-    cvDrawGround(ctx);
-    cvDrawFarScenery(ctx, s);
-    cvDrawBallastAndTrack(ctx, 2.2, 200);
-    if (st.dStart < 170 && st.dEnd > 0) cvDrawStation(ctx, st);
-    cvDrawNearScenery(ctx, s);
-    /* 터널 갱구 */
-    if (tun.entry < 120) {
-      const dp = Math.max(2.5, tun.entry);
-      cvArch(ctx, dp, 3.35);
-      ctx.fillStyle = '#5c5f63'; ctx.fill();
-      cvArch(ctx, dp, 2.95);
-      ctx.fillStyle = '#080a0d'; ctx.fill();
+    // 상단 2D 캔버스는 투명하게 지워 Three.js 3D 화면이 뒤에서 비치도록 함
+    ctx.clearRect(0, 0, CV.W, CV.H);
+
+    if (cvState.ready) {
+      /* ---- 유리면 / 비 / 오버레이 (창 개구부 안쪽만) ---- */
+      ctx.save();
+      ctx.clip(CV_WIN);
+      cvDrawGlass(ctx);
+      cvUpdateRain(ctx, dt);
+      cvDrawOverlayInfo(ctx, st, tun);
+      cvDrawWiper(ctx);
+      ctx.restore();
+
+      /* ---- 운전실 실물 콕핏 전경 오버레이(고정) ---- */
+      ctx.drawImage(CV_FRAME, 0, 0);
     }
-  }
+  } else {
+    // ==========================================
+    // 2D 폴백 모드 (Three.js 비활성 시)
+    // ==========================================
+    ctx.clearRect(0, 0, CV.W, CV.H);
+    ctx.fillStyle = '#0b0e13';
+    ctx.fillRect(0, 0, CV.W, CV.H);
 
-  if (ambient < 0.62) {
-    ctx.fillStyle = 'rgba(6,10,18,' + (1 - ambient) * 0.88 + ')';
-    ctx.fillRect(-60, -60, CV.W + 120, CV.H + 120);
-    cvDrawHeadlight(ctx, headlightPower, tun.inside ? 26 : 34);
-  }
-  ctx.restore();
+    if (!cvState.ready) { requestAnimationFrame(drawCabViewLoop); return; }
 
-  /* ---- 속도 방사형 모션블러 ---- */
-  if (trainSpeed > 22) {
-    const amt = Math.min(0.030, (trainSpeed - 22) * 0.0009);
+    let ambient = 1.0;
+    if (tun.inside) ambient = 0.10 + 0.10 * Math.max(0, 1 - Math.min(tun.exit, 60) / 60);
+    else if (!tun.inside && tun.entry < 30) ambient = 1 - 0.55 * (1 - tun.entry / 30);
+    ambient *= (1 - cvState.rain * 0.28);
+    cvState.ambient = ambient;
+
     ctx.save();
-    ctx.globalAlpha = 0.26;
-    for (let i = 1; i <= 2; i++) {
-      const sc = 1 + amt * i;
-      ctx.drawImage(canvas, CV.vpX * (1 - sc), CV.horizon * (1 - sc), CV.W * sc, CV.H * sc);
+    ctx.translate(CV.vpX, 300);
+    ctx.rotate(cvState.roll);
+    ctx.translate(-CV.vpX + cvState.shakeX, -300 + cvState.shakeY + cvState.pitch);
+
+    if (tun.inside) {
+      cvDrawTunnel(ctx, tun, headlightPower);
+      cvDrawBallastAndTrack(ctx, 2.2, Math.max(20, Math.min(tun.exit + 25, 110)));
+    } else {
+      cvDrawBackdrop(ctx);
+      cvDrawGround(ctx);
+      cvDrawFarScenery(ctx, s);
+      cvDrawBallastAndTrack(ctx, 2.2, 200);
+      if (st.dStart < 170 && st.dEnd > 0) cvDrawStation(ctx, st);
+      cvDrawNearScenery(ctx, s);
+      if (tun.entry < 120) {
+        const dp = Math.max(2.5, tun.entry);
+        cvArch(ctx, dp, 3.35);
+        ctx.fillStyle = '#5c5f63'; ctx.fill();
+        cvArch(ctx, dp, 2.95);
+        ctx.fillStyle = '#080a0d'; ctx.fill();
+      }
+    }
+
+    if (ambient < 0.62) {
+      ctx.fillStyle = 'rgba(6,10,18,' + (1 - ambient) * 0.88 + ')';
+      ctx.fillRect(-60, -60, CV.W + 120, CV.H + 120);
+      cvDrawHeadlight(ctx, headlightPower, tun.inside ? 26 : 34);
     }
     ctx.restore();
+
+    if (trainSpeed > 22) {
+      const amt = Math.min(0.030, (trainSpeed - 22) * 0.0009);
+      ctx.save();
+      ctx.globalAlpha = 0.26;
+      for (let i = 1; i <= 2; i++) {
+        const sc = 1 + amt * i;
+        ctx.drawImage(canvas, CV.vpX * (1 - sc), CV.horizon * (1 - sc), CV.W * sc, CV.H * sc);
+      }
+      ctx.restore();
+    }
+
+    ctx.save();
+    ctx.clip(CV_WIN);
+    cvDrawGlass(ctx);
+    cvUpdateRain(ctx, dt);
+    cvDrawOverlayInfo(ctx, st, tun);
+    cvDrawWiper(ctx);
+    ctx.restore();
+
+    ctx.drawImage(CV_FRAME, 0, 0);
   }
-
-  /* ---- 유리면 / 비 / 오버레이 (창 개구부 안쪽만) ---- */
-  ctx.save();
-  ctx.clip(CV_WIN);
-  cvDrawGlass(ctx);
-  cvUpdateRain(ctx, dt);
-  cvDrawOverlayInfo(ctx, st, tun);
-  cvDrawWiper(ctx);
-  ctx.restore();
-
-  /* ---- 운전실 전경(고정) ---- */
-  ctx.drawImage(CV_FRAME, 0, 0);
 
   requestAnimationFrame(drawCabViewLoop);
 }
@@ -10366,12 +11893,19 @@ function completeUnmannedModeToggle() {
     btnEl.classList.add('lit');
     sound.playSuccess();
     triggerHaptic([50, 40, 70]);
-    showTemporaryHudFeedback("🟢 [무인운전모드 ATO] 3초 인가 완료 - 열차가 자동으로 주행합니다!", false);
+    if (typeof AtoDriverless !== 'undefined') {
+      AtoDriverless.reset(trainDistance);
+    }
+    setMasconNotch('N', true);
+    showTemporaryHudFeedback("🟢 [무인운전모드 ATO] 3초 인가 완료 - 역별 자동 정차/출발 운행을 시작합니다. (수동 마스콘 조작 차단)", false);
   } else {
     btnEl.classList.remove('lit');
     sound.playClick();
     triggerHaptic(30);
-    showTemporaryHudFeedback("⚪ [무인운전모드 ATO] 무인운전 해제 - 열차가 정지합니다.", false);
+    if (typeof AtoDriverless !== 'undefined') {
+      AtoDriverless.reset();
+    }
+    showTemporaryHudFeedback("⚪ [무인운전모드 ATO] 무인운전 해제 - 수동 운전으로 전환됩니다.", false);
   }
 
   if (currentMode === 'REC') {
@@ -10813,7 +12347,7 @@ function handleComponentTouch(compId) {
       if (driveMode === 'OFF') {
         sound.playError();
         triggerHaptic([50, 50]);
-        showTemporaryHudFeedback('⚠️ [출입문 인터록] 운전 모드가 OFF 상태일 때는 출입문 버튼이 동작하지 않습니다. (FM / RM / ATPM 모드 선택 필요)', true);
+        showTemporaryHudFeedback('⚠️ [출입문 인터록] 운전 모드가 OFF 상태일 때는 수동 출입문 버튼이 동작하지 않습니다. (FM / RM / ATPM 모드 선택 필요)', true);
         return;
       }
 
@@ -10826,66 +12360,18 @@ function handleComponentTouch(compId) {
       }
 
       // 2. 정차 중 정상 개방 동작
-      isDoorOpen = true;
-      doorOpenSide = (compId === 'SW_DOOR_OPEN_L' ? 'L' : 'R');
-      window.doorOpenSide = doorOpenSide;
-      sound.playAirExhaust(0.8, 1200, 0.6);
-      triggerHaptic([30, 40]);
-
-      // OP2 출입문 표시등: 점등(lit) 해제 및 점멸(blinking) 활성화
-      const lampDoor = document.getElementById('lamp-door');
-      if (lampDoor) {
-        lampDoor.classList.remove('lit');
-        lampDoor.classList.add('blinking');
-      }
-
-      // OCC 관제 출입문 표시등 상태 업데이트 (황색 점멸)
-      const occLampDoor = document.getElementById('occ-lamp-door');
-      if (occLampDoor) {
-        occLampDoor.classList.remove('lit-green');
-        occLampDoor.classList.add('blink-amber');
-        occLampDoor.innerText = '🚪 출입문 열림 (점멸)';
-      }
-
-      showTemporaryHudFeedback(`🚪 [출입문 열림] ${compId === 'SW_DOOR_OPEN_L' ? '좌측' : '우측'} 출입문 개방 (표시등 점멸, 역행 차단)`, false);
+      openTrainDoors(compId === 'SW_DOOR_OPEN_L' ? 'L' : 'R', false);
     } else if (compId === 'SW_DOOR_CLOSE') {
       const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
       const driveMode = modeComp ? modeComp.state : 'OFF';
       if (driveMode === 'OFF') {
         sound.playError();
         triggerHaptic([50, 50]);
-        showTemporaryHudFeedback('⚠️ [출입문 인터록] 운전 모드가 OFF 상태일 때는 출입문 버튼이 동작하지 않습니다. (FM / RM / ATPM 모드 선택 필요)', true);
+        showTemporaryHudFeedback('⚠️ [출입문 인터록] 운전 모드가 OFF 상태일 때는 수동 출입문 버튼이 동작하지 않습니다. (FM / RM / ATPM 모드 선택 필요)', true);
         return;
       }
 
-      sound.playAirExhaust(1.0, 900, 0.7);
-      triggerHaptic([30, 40]);
-
-      if (window.__FAULT_DOOR_FAIL) {
-        isDoorOpen = true;
-        const lampDoor = document.getElementById('lamp-door');
-        if (lampDoor) {
-          lampDoor.classList.remove('lit');
-          lampDoor.classList.add('blinking');
-        }
-        showTemporaryHudFeedback(`🚨 [출입문 고장] 출입문 닫힘 신호 루프 불량! (완폐 불가, 점멸 지속 / OP4 출입문 바이패스 취급 필요)`, true);
-      } else {
-        isDoorOpen = false;
-        doorOpenSide = null;
-        window.doorOpenSide = null;
-        const lampDoor = document.getElementById('lamp-door');
-        if (lampDoor) {
-          lampDoor.classList.remove('blinking');
-          lampDoor.classList.add('lit');
-        }
-        const occLampDoor = document.getElementById('occ-lamp-door');
-        if (occLampDoor) {
-          occLampDoor.classList.remove('blink-amber');
-          occLampDoor.classList.add('lit-green');
-          occLampDoor.innerText = '🚪 출입문 닫힘';
-        }
-        showTemporaryHudFeedback(`🚪 [출입문 닫힘] 전체 출입문 닫힘 체결 (표시등 점등, 역행 가능)`, false);
-      }
+      closeTrainDoors(false);
     } else if (compId === 'SW_BATT_ON') {
       sound.playHeavyLatch();
       triggerHaptic([40, 50]);
@@ -11596,6 +13082,23 @@ function setMasconNotch(notch, silent = false) {
   const comp = COMPONENT_REGISTRY['SW_MASCON'];
   if (!comp) return false;
 
+  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+  const driveMode = modeComp ? modeComp.state : 'OFF';
+  const wirelessComp = COMPONENT_REGISTRY['SW_WIRELESS_MODE'];
+  const isUnmannedActive = (wirelessComp && wirelessComp.state === 'LIT') && (driveMode === 'OFF');
+
+  // [인터록] 무인운전(ATO) 모드 중에는 수동 마스콘 조작 차단 (동작 금지)
+  if (isUnmannedActive) {
+    if (!silent) {
+      if (typeof sound !== 'undefined' && sound && typeof sound.playError === 'function') sound.playError();
+      if (typeof triggerHaptic === 'function') triggerHaptic(40);
+      if (typeof showTemporaryHudFeedback === 'function') {
+        showTemporaryHudFeedback('⚠️ [무인운전 인터록] 무인운전(Driverless/ATO) 중에는 수동 마스콘 조작이 비활성화됩니다.', true);
+      }
+    }
+    return false;
+  }
+
   const revComp = COMPONENT_REGISTRY['SW_REVERSER'];
   const revPos = revComp ? revComp.state : 'N';
   const currentNotch = comp.notch || comp.state || 'N';
@@ -11613,9 +13116,6 @@ function setMasconNotch(notch, silent = false) {
     }
     return false;
   }
-
-  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
-  const driveMode = modeComp ? modeComp.state : 'OFF';
 
   const topPos = MASCON_POS_MAP[notch];
   if (topPos === undefined) return;
@@ -11736,6 +13236,19 @@ function setMasconNotch(notch, silent = false) {
 // 마스콘 트랙 클릭 위치로 이동
 function handleMasconTrackClick(event) {
   if (event) event.stopPropagation();
+  const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+  const driveMode = modeComp ? modeComp.state : 'OFF';
+  const wirelessComp = COMPONENT_REGISTRY['SW_WIRELESS_MODE'];
+  const isUnmannedActive = (wirelessComp && wirelessComp.state === 'LIT') && (driveMode === 'OFF');
+  if (isUnmannedActive) {
+    if (typeof sound !== 'undefined' && sound && typeof sound.playError === 'function') sound.playError();
+    if (typeof triggerHaptic === 'function') triggerHaptic(40);
+    if (typeof showTemporaryHudFeedback === 'function') {
+      showTemporaryHudFeedback('⚠️ [무인운전 인터록] 무인운전(Driverless/ATO) 중에는 수동 마스콘 조작이 비활성화됩니다.', true);
+    }
+    return;
+  }
+
   const track = document.getElementById('tbar-track');
   if (!track) return;
   const rect = track.getBoundingClientRect();
@@ -11852,6 +13365,20 @@ function initMasconDraggable() {
 
   function onPointerDown(e) {
     if (e.button !== undefined && e.button !== 0) return;
+    const modeComp = COMPONENT_REGISTRY['SW_DRIVE_MODE'];
+    const driveMode = modeComp ? modeComp.state : 'OFF';
+    const wirelessComp = COMPONENT_REGISTRY['SW_WIRELESS_MODE'];
+    const isUnmannedActive = (wirelessComp && wirelessComp.state === 'LIT') && (driveMode === 'OFF');
+    if (isUnmannedActive) {
+      if (typeof sound !== 'undefined' && sound && typeof sound.playError === 'function') sound.playError();
+      if (typeof triggerHaptic === 'function') triggerHaptic(40);
+      if (typeof showTemporaryHudFeedback === 'function') {
+        showTemporaryHudFeedback('⚠️ [무인운전 인터록] 무인운전(Driverless/ATO) 중에는 수동 마스콘 조작이 비활성화됩니다.', true);
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     isMasconDragging = true;
     masconDragPointerId = e.pointerId;
     try { handle.setPointerCapture(e.pointerId); } catch (_) {}
