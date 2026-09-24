@@ -10113,15 +10113,21 @@ const ThreeCabView = {
       }
 
       if (i < numSlices) {
-        const row1 = i * numV;
-        const row2 = (i + 1) * numV;
-        for (let j = 0; j < numV - 1; j++) {
-          indices.push(row1 + j, row1 + j + 1, row2 + j + 1);
-          indices.push(row1 + j, row2 + j + 1, row2 + j);
+        const nextS = s + step;
+        // 지하역사 구간(948m ~ 1068m)에서는 좁은 원형 터널 튜브를 생성하지 않고 광폭 지하 역사로 시원하게 개방!
+        const inStationZone = (s >= 948.0 && s <= 1068.0) || (nextS >= 948.0 && nextS <= 1068.0);
+
+        if (!inStationZone) {
+          const row1 = i * numV;
+          const row2 = (i + 1) * numV;
+          for (let j = 0; j < numV - 1; j++) {
+            indices.push(row1 + j, row1 + j + 1, row2 + j + 1);
+            indices.push(row1 + j, row2 + j + 1, row2 + j);
+          }
+          // 바닥면 연결
+          indices.push(row1 + (numV - 1), row1, row2 + (numV - 1));
+          indices.push(row1, row2, row2 + (numV - 1));
         }
-        // 바닥면 (마지막 정점 -> 첫번째 정점) 연결하여 터널 튜브 완전 밀폐
-        indices.push(row1 + (numV - 1), row1, row2 + (numV - 1));
-        indices.push(row1, row2, row2 + (numV - 1));
       }
     }
 
@@ -10142,6 +10148,7 @@ const ThreeCabView = {
     const cablePts = [];
     for (let i = 0; i <= numSlices; i++) {
       const s = sStart + i * step;
+      if (s >= 948.0 && s <= 1068.0) continue; // Skip subway station zone
       const { P, N, B } = this.getTrackFrame(s / 1500.0);
       cablePts.push(P.clone().addScaledVector(N, -2.75).addScaledVector(B, 1.9));
     }
@@ -10159,6 +10166,12 @@ const ThreeCabView = {
 
     for (let k = 0; k < numLamps; k++) {
       const s = sStart + 7.0 + k * 14.0;
+      if (s >= 948.0 && s <= 1068.0) {
+        // Hide tunnel lamp in station zone (station has its own bright LED lighting)
+        lm.makeScale(0, 0, 0);
+        lampsMesh.setMatrixAt(k, lm);
+        continue;
+      }
       const { P, T, N, B } = this.getTrackFrame(s / 1500.0);
       lm.makeBasis(N, B, T);
       lm.setPosition(P.clone().addScaledVector(B, 4.85));
@@ -10319,8 +10332,9 @@ const ThreeCabView = {
           yellowPositions.push(pEdge.x, pEdge.y, pEdge.z, pYell.x, pYell.y, pYell.z);
 
           // Back wall and Roof
-          const pWallTop = pBack.clone().addScaledVector(B, 4.2);
-          const pRoofFront = pEdge.clone().addScaledVector(B, 4.2).addScaledVector(N, -sideSign * 0.4);
+          const pWallTop = pBack.clone().addScaledVector(B, 4.4);
+          // Span the roof across the tracks to enclose the station
+          const pRoofFront = Pc.clone().addScaledVector(B, 4.8);
           wallPositions.push(pBack.x, pBack.y, pBack.z, pWallTop.x, pWallTop.y, pWallTop.z);
           roofPositions.push(pWallTop.x, pWallTop.y, pWallTop.z, pRoofFront.x, pRoofFront.y, pRoofFront.z);
 
