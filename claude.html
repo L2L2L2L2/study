@@ -7662,15 +7662,19 @@ const AtoDriverless = {
 
   initStopTarget(s) {
     const CYCLE = 1500.0;
-    const STOP_P = 305.0;
     const n = Math.floor(s / CYCLE);
     const p = ((s % CYCLE) + CYCLE) % CYCLE;
-    if (p <= STOP_P + 3.0) {
-      this.stationIdx = ((n % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
-      this.targetStopDist = n * CYCLE + STOP_P;
+
+    // 1500m 1주기당 2개 역 (지상역 305m, 지하역 1020m)
+    if (p <= 305.0 + 5.0) {
+      this.targetStopDist = n * CYCLE + 305.0;
+      this.stationIdx = (n * 2) % INCHEON2_STATIONS.length;
+    } else if (p <= 1020.0 + 5.0) {
+      this.targetStopDist = n * CYCLE + 1020.0;
+      this.stationIdx = (n * 2 + 1) % INCHEON2_STATIONS.length;
     } else {
-      this.stationIdx = (((n + 1) % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
-      this.targetStopDist = (n + 1) * CYCLE + STOP_P;
+      this.targetStopDist = (n + 1) * CYCLE + 305.0;
+      this.stationIdx = ((n + 1) * 2) % INCHEON2_STATIONS.length;
     }
   },
 
@@ -7768,7 +7772,13 @@ const AtoDriverless = {
         const nextSt = INCHEON2_STATIONS[nextIdx];
         const CYCLE = 1500.0;
         const n = Math.floor(dist / CYCLE);
-        this.targetStopDist = (n + 1) * CYCLE + 305.0;
+        const p = ((dist % CYCLE) + CYCLE) % CYCLE;
+        // 305m 역 출발 후에는 1020m 역으로, 1020m 역 출발 후에는 다음 주기 305m 역으로
+        if (p < 600.0) {
+          this.targetStopDist = n * CYCLE + 1020.0;
+        } else {
+          this.targetStopDist = (n + 1) * CYCLE + 305.0;
+        }
         this.state = 'DEPARTING';
         this.stateTimer = 2.0;
         if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
@@ -10210,15 +10220,9 @@ const ThreeCabView = {
   },
 
   buildStation() {
-    const sStart = 350;
-    const sEnd = 800;
-    const numSlices = 150;
-    const step = (sEnd - sStart) / numSlices;
-
     const platMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.9 }); // slate-200
     const yellowMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.8 }); // yellow-500
-
-    const psdGlassMat = new THREE.MeshPhysicalMaterial({ color: 0x3a6073, transmission: 0.6, opacity: 1, transparent: true, roughness: 0.1 });
+    const psdGlassMat = new THREE.MeshPhysicalMaterial({ color: 0x3a6073, transmission: 0.65, opacity: 1, transparent: true, roughness: 0.1 });
     const psdFrameMat = new THREE.MeshStandardMaterial({ color: 0x22262c, roughness: 0.5 });
     const psdTopMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.6 }); // orange stripe
     
@@ -10236,152 +10240,178 @@ const ThreeCabView = {
     const propsGroup = new THREE.Group();
     const platGroup = new THREE.Group();
 
-    // Create a sign canvas texture matching the pixel art
+    // Sign texture setup
     const signCanvas = document.createElement('canvas');
     signCanvas.width = 1024; signCanvas.height = 256;
     this.signTextCanvas = signCanvas;
     this.signTexture = new THREE.CanvasTexture(signCanvas);
-    this.updateStationSignTexture('226', '인천대공원', 'Incheon Grand Park'); // Initial placeholder
+    this.updateStationSignTexture('201', '검단오류', 'Geomdan Oryu');
     const signMat = new THREE.MeshBasicMaterial({ map: this.signTexture });
-    const signGeo = new THREE.BoxGeometry(0.1, 1.2, 4.0);
+    const signGeo = new THREE.BoxGeometry(0.1, 1.2, 3.8);
 
-    for (let trackOffset of [0, -4.0]) {
-      const sideSign = (trackOffset === 0) ? 1 : -1;
-      
-      const platPositions = [];
-      const platIndices = [];
-      const yellowPositions = [];
-      const yellowIndices = [];
+    // Two stations along the 1500m loop:
+    // Station 1: 245m ~ 345m (stops at 305m, Ground)
+    // Station 2: 960m ~ 1060m (stops at 1020m, Tunnel)
+    const stations = [
+      { sStart: 245, sEnd: 345, stopP: 305 },
+      { sStart: 960, sEnd: 1060, stopP: 1020 }
+    ];
 
-      // Render continuous platform and yellow line
-      for (let i = 0; i <= numSlices; i++) {
-        const s = sStart + i * step;
-        const { P, N, B } = this.getTrackFrame(s / 1500.0);
-        const Pc = P.clone().addScaledVector(N, trackOffset);
+    for (let st of stations) {
+      const sStart = st.sStart;
+      const sEnd = st.sEnd;
+      const stopP = st.stopP;
+      const numSlices = 50;
+      const step = (sEnd - sStart) / numSlices;
 
-        const pEdge = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, 1.15);
-        const pYell = Pc.clone().addScaledVector(N, sideSign * 1.65).addScaledVector(B, 1.152);
-        const pBack = Pc.clone().addScaledVector(N, sideSign * 5.20).addScaledVector(B, 1.15);
-        const pBase = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, -0.2);
+      for (let trackOffset of [0, -4.0]) {
+        const sideSign = (trackOffset === 0) ? 1 : -1;
+        const platPositions = [];
+        const platIndices = [];
+        const yellowPositions = [];
+        const yellowIndices = [];
 
-        platPositions.push(pBase.x, pBase.y, pBase.z, pEdge.x, pEdge.y, pEdge.z, pBack.x, pBack.y, pBack.z);
-        yellowPositions.push(pEdge.x, pEdge.y, pEdge.z, pYell.x, pYell.y, pYell.z);
+        for (let i = 0; i <= numSlices; i++) {
+          const s = sStart + i * step;
+          const { P, N, B } = this.getTrackFrame(s / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
 
-        if (i < numSlices) {
-          const r1 = i * 3;
-          const r2 = (i + 1) * 3;
-          platIndices.push(r1, r1 + 1, r2 + 1); platIndices.push(r1, r2 + 1, r2);
-          platIndices.push(r1 + 1, r1 + 2, r2 + 2); platIndices.push(r1 + 1, r2 + 2, r2 + 1);
-          
-          const y1 = i * 2;
-          const y2 = (i + 1) * 2;
-          yellowIndices.push(y1, y1 + 1, y2 + 1); yellowIndices.push(y1, y2 + 1, y2);
+          const pEdge = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, 1.15);
+          const pYell = Pc.clone().addScaledVector(N, sideSign * 1.65).addScaledVector(B, 1.152);
+          const pBack = Pc.clone().addScaledVector(N, sideSign * 5.20).addScaledVector(B, 1.15);
+          const pBase = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, -0.2);
+
+          platPositions.push(pBase.x, pBase.y, pBase.z, pEdge.x, pEdge.y, pEdge.z, pBack.x, pBack.y, pBack.z);
+          yellowPositions.push(pEdge.x, pEdge.y, pEdge.z, pYell.x, pYell.y, pYell.z);
+
+          if (i < numSlices) {
+            const r1 = i * 3;
+            const r2 = (i + 1) * 3;
+            platIndices.push(r1, r1 + 1, r2 + 1, r1, r2 + 1, r2);
+            platIndices.push(r1 + 1, r1 + 2, r2 + 2, r1 + 1, r2 + 2, r2 + 1);
+
+            const y1 = i * 2;
+            const y2 = (i + 1) * 2;
+            yellowIndices.push(y1, y1 + 1, y2 + 1, y1, y2 + 1, y2);
+          }
         }
-      }
 
-      const pGeo = new THREE.BufferGeometry();
-      pGeo.setAttribute('position', new THREE.Float32BufferAttribute(platPositions, 3));
-      pGeo.setIndex(platIndices);
-      pGeo.computeVertexNormals();
-      platGroup.add(new THREE.Mesh(pGeo, platMat));
+        const pGeo = new THREE.BufferGeometry();
+        pGeo.setAttribute('position', new THREE.Float32BufferAttribute(platPositions, 3));
+        pGeo.setIndex(platIndices);
+        pGeo.computeVertexNormals();
+        platGroup.add(new THREE.Mesh(pGeo, platMat));
 
-      const yGeo = new THREE.BufferGeometry();
-      yGeo.setAttribute('position', new THREE.Float32BufferAttribute(yellowPositions, 3));
-      yGeo.setIndex(yellowIndices);
-      yGeo.computeVertexNormals();
-      platGroup.add(new THREE.Mesh(yGeo, yellowMat));
+        const yGeo = new THREE.BufferGeometry();
+        yGeo.setAttribute('position', new THREE.Float32BufferAttribute(yellowPositions, 3));
+        yGeo.setIndex(yellowIndices);
+        yGeo.computeVertexNormals();
+        platGroup.add(new THREE.Mesh(yGeo, yellowMat));
 
-      // Prop placement loop
-      let doorIndex = 0;
-      for (let s = sStart + 5; s < sEnd; s += 20) {
-        const { P, T, N, B } = this.getTrackFrame(s / 1500.0);
-        const Pc = P.clone().addScaledVector(N, trackOffset);
+        // Place continuous PSD top header
+        const stLen = sEnd - sStart;
+        const numHeaderSteps = Math.floor(stLen / 15.0);
+        for (let h = 0; h < numHeaderSteps; h++) {
+          const hs = sStart + h * 15.0 + 7.5;
+          const { P, T, N, B } = this.getTrackFrame(hs / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
+          const headerGeo = new THREE.BoxGeometry(0.2, 0.45, 15.2);
+          const headerMesh = new THREE.Mesh(headerGeo, psdTopMat);
+          const headerPos = Pc.clone().addScaledVector(N, sideSign * 1.35).addScaledVector(B, 3.35);
+          headerMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(headerPos));
+          psdGroup.add(headerMesh);
+        }
 
-        // PSD Header (Orange stripe)
-        const headerGeo = new THREE.BoxGeometry(0.2, 0.4, 20);
-        const headerMesh = new THREE.Mesh(headerGeo, psdTopMat);
-        const headerPos = Pc.clone().addScaledVector(N, sideSign * 1.35).addScaledVector(B, 3.4);
-        const hm = new THREE.Matrix4().makeBasis(N, B, T).setPosition(headerPos);
-        headerMesh.applyMatrix4(hm);
-        psdGroup.add(headerMesh);
+        // Place PSD doors right where the train stops (stopP, stopP - 15, stopP - 30)
+        const doorOffsets = [-30.0, -15.0, 0.0];
+        doorOffsets.forEach((dOff, dIdx) => {
+          const ds = stopP + dOff;
+          const { P, T, N, B } = this.getTrackFrame(ds / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
 
-        // PSD Fixed Glass Panels
-        const fGlassGeo = new THREE.BoxGeometry(0.1, 2.2, 9.6);
-        const fGlassMesh = new THREE.Mesh(fGlassGeo, psdGlassMat);
-        const fGlassPos = Pc.clone().addScaledVector(N, sideSign * 1.35).addScaledVector(B, 2.1).addScaledVector(T, 5.2);
-        const gm = new THREE.Matrix4().makeBasis(N, B, T).setPosition(fGlassPos);
-        fGlassMesh.applyMatrix4(gm);
-        psdGroup.add(fGlassMesh);
+          // Fixed panels around doors
+          const fGlassGeo = new THREE.BoxGeometry(0.1, 2.2, 8.5);
+          const fGlassMesh = new THREE.Mesh(fGlassGeo, psdGlassMat);
+          const fGlassPos = Pc.clone().addScaledVector(N, sideSign * 1.35).addScaledVector(B, 2.1).addScaledVector(T, -5.5);
+          fGlassMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(fGlassPos));
+          psdGroup.add(fGlassMesh);
 
-        // PSD Sliding Doors
-        const dGlassGeo = new THREE.BoxGeometry(0.12, 2.2, 4.2);
-        const lDoor = new THREE.Mesh(dGlassGeo, psdGlassMat);
-        const rDoor = new THREE.Mesh(dGlassGeo, psdGlassMat);
-        const dlPos = Pc.clone().addScaledVector(N, sideSign * 1.32).addScaledVector(B, 2.1).addScaledVector(T, -2.1);
-        const drPos = Pc.clone().addScaledVector(N, sideSign * 1.32).addScaledVector(B, 2.1).addScaledVector(T, 2.1);
-        lDoor.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(dlPos));
-        rDoor.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(drPos));
-        psdGroup.add(lDoor);
-        psdGroup.add(rDoor);
-        this.psdDoors.push({ doorL: lDoor, doorR: rDoor, baseL: dlPos, baseR: drPos, tangent: T });
+          // Sliding door left & right
+          const dGlassGeo = new THREE.BoxGeometry(0.12, 2.2, 2.2);
+          const lDoor = new THREE.Mesh(dGlassGeo, psdGlassMat);
+          const rDoor = new THREE.Mesh(dGlassGeo, psdGlassMat);
+          const dlPos = Pc.clone().addScaledVector(N, sideSign * 1.32).addScaledVector(B, 2.1).addScaledVector(T, -1.05);
+          const drPos = Pc.clone().addScaledVector(N, sideSign * 1.32).addScaledVector(B, 2.1).addScaledVector(T, 1.05);
+          lDoor.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(dlPos));
+          rDoor.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(drPos));
+          psdGroup.add(lDoor);
+          psdGroup.add(rDoor);
+          this.psdDoors.push({ doorL: lDoor, doorR: rDoor, baseL: dlPos, baseR: drPos, tangent: T });
+        });
 
-        // Place Station Sign
-        if (doorIndex % 3 === 1) {
+        // Place Station Sign right at stop position so it is visible from the cab window!
+        {
+          const { P, T, N, B } = this.getTrackFrame(stopP / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
           const signMesh = new THREE.Mesh(signGeo, signMat);
-          const signPos = Pc.clone().addScaledVector(N, sideSign * 3.5).addScaledVector(B, 3.0);
+          const signPos = Pc.clone().addScaledVector(N, sideSign * 3.2).addScaledVector(B, 2.9).addScaledVector(T, 4.0);
           signMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(signPos));
           propsGroup.add(signMesh);
         }
 
-        // Place Props on Platform
-        const propT = T.clone();
-        if (sideSign === -1) propT.negate(); // Face the track
-        
-        if (doorIndex === 2) {
-          // Vending Machine
-          const vmGroup = new THREE.Group();
-          const vmBody = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.0, 1.0), vendingRedMat);
-          vmBody.position.set(0, 2.15, 0); // y = 1.15(platform) + 1.0(half height)
-          const vmGlass = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.2, 0.1), vendingGlassMat);
-          vmGlass.position.set(0, 2.4, sideSign * 0.51); // front face
-          const vmSlot = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 0.1), vendingBlackMat);
-          vmSlot.position.set(0, 1.5, sideSign * 0.51);
-          vmGroup.add(vmBody, vmGlass, vmSlot);
-          
-          const vmPos = Pc.clone().addScaledVector(N, sideSign * 4.0).addScaledVector(B, 0);
-          vmGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, propT).setPosition(vmPos));
-          propsGroup.add(vmGroup);
-        } else if (doorIndex === 4 || doorIndex === 8) {
-          // Bench
+        // Place props: Benches, Vending Machine, Escalator
+        const propT = (sideSign === -1) ? this.getTrackFrame(stopP / 1500.0).T.clone().negate() : this.getTrackFrame(stopP / 1500.0).T.clone();
+
+        // 1. Bench
+        {
+          const { P, T, N, B } = this.getTrackFrame((stopP - 18.0) / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
           const benchGroup = new THREE.Group();
-          const seat = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.1, 0.8), benchWoodMat);
-          seat.position.set(0, 1.6, 0); // y = 1.15 + 0.45
-          const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.45, 0.6), benchLegMat);
+          const seat = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.1, 0.7), benchWoodMat);
+          seat.position.set(0, 1.6, 0);
+          const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.45, 0.55), benchLegMat);
           leg1.position.set(-0.8, 1.375, 0);
-          const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.45, 0.6), benchLegMat);
+          const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.45, 0.55), benchLegMat);
           leg2.position.set(0.8, 1.375, 0);
           benchGroup.add(seat, leg1, leg2);
-
           const bPos = Pc.clone().addScaledVector(N, sideSign * 3.5).addScaledVector(B, 0);
           benchGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, propT).setPosition(bPos));
           propsGroup.add(benchGroup);
-        } else if (doorIndex === 6) {
-          // Escalator
-          const escGroup = new THREE.Group();
-          const steps = new THREE.Mesh(new THREE.BoxGeometry(2.0, 4.0, 4.0), escalatorStairMat);
-          steps.position.set(0, 3.15, 2.0); // sloped up
-          steps.rotation.x = Math.PI / 4;
-          const glassRail = new THREE.Mesh(new THREE.BoxGeometry(2.2, 4.0, 0.1), escalatorRailMat);
-          glassRail.position.set(0, 4.15, 2.0);
-          glassRail.rotation.x = Math.PI / 4;
-          escGroup.add(steps, glassRail);
+        }
 
-          const ePos = Pc.clone().addScaledVector(N, sideSign * 3.5).addScaledVector(B, 0);
+        // 2. Vending Machine
+        {
+          const { P, T, N, B } = this.getTrackFrame((stopP + 12.0) / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
+          const vmGroup = new THREE.Group();
+          const vmBody = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.0, 0.9), vendingRedMat);
+          vmBody.position.set(0, 2.15, 0);
+          const vmGlass = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.1, 0.1), vendingGlassMat);
+          vmGlass.position.set(0, 2.45, sideSign * 0.46);
+          const vmSlot = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 0.1), vendingBlackMat);
+          vmSlot.position.set(0, 1.45, sideSign * 0.46);
+          vmGroup.add(vmBody, vmGlass, vmSlot);
+          const vmPos = Pc.clone().addScaledVector(N, sideSign * 3.8).addScaledVector(B, 0);
+          vmGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, propT).setPosition(vmPos));
+          propsGroup.add(vmGroup);
+        }
+
+        // 3. Escalator
+        {
+          const { P, T, N, B } = this.getTrackFrame((stopP - 38.0) / 1500.0);
+          const Pc = P.clone().addScaledVector(N, trackOffset);
+          const escGroup = new THREE.Group();
+          const steps = new THREE.Mesh(new THREE.BoxGeometry(2.0, 3.5, 3.5), escalatorStairMat);
+          steps.position.set(0, 2.9, 1.8);
+          steps.rotation.x = Math.PI / 4;
+          const rail = new THREE.Mesh(new THREE.BoxGeometry(2.1, 3.5, 0.1), escalatorRailMat);
+          rail.position.set(0, 3.7, 1.8);
+          rail.rotation.x = Math.PI / 4;
+          escGroup.add(steps, rail);
+          const ePos = Pc.clone().addScaledVector(N, sideSign * 3.6).addScaledVector(B, 0);
           escGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, propT).setPosition(ePos));
           propsGroup.add(escGroup);
         }
-
-        doorIndex++;
       }
     }
 
