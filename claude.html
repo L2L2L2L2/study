@@ -10220,34 +10220,35 @@ const ThreeCabView = {
   },
 
   buildStation() {
-    // 1. Materials
-    const platMat = new THREE.MeshStandardMaterial({ color: 0xdbe2ea, roughness: 0.85 }); // Floor tile
-    const yellowMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.7 }); // Tactile yellow
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 }); // Dark slate station back wall
-    const roofMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 }); // Platform ceiling roof
+    // 1. Materials (DoubleSide on all structural surfaces so both left & right platforms are 100% visible)
+    const platMat = new THREE.MeshStandardMaterial({ color: 0xdbe2ea, roughness: 0.85, side: THREE.DoubleSide }); // Floor tile
+    const yellowMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.7, side: THREE.DoubleSide }); // Tactile yellow
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9, side: THREE.DoubleSide }); // Dark slate back wall
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8, side: THREE.DoubleSide }); // Platform ceiling roof
     const pillarMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.75 }); // Concrete columns
     const lightMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Fluorescent ceiling LED
 
-    // PSD Materials
+    // PSD Materials - Crystal clear, transparent glass
     const psdGlassMat = new THREE.MeshPhysicalMaterial({
-      color: 0x3a6073,
-      transmission: 0.75,
+      color: 0x5a8fa8,
+      transmission: 0.88,
       opacity: 1.0,
       transparent: true,
-      roughness: 0.08,
-      reflectivity: 0.9,
-      ior: 1.5
+      roughness: 0.05,
+      reflectivity: 0.8,
+      ior: 1.5,
+      side: THREE.DoubleSide
     });
-    const psdFrameMat = new THREE.MeshStandardMaterial({ color: 0x181c22, metalness: 0.6, roughness: 0.35 }); // Dark steel frame
+    // Slim, sleek dark steel frames
+    const psdFrameMat = new THREE.MeshStandardMaterial({ color: 0x1e222a, metalness: 0.6, roughness: 0.35 });
     const psdTopMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.5 }); // Incheon Line 2 Orange
-    const psdDoorFrameMat = new THREE.MeshStandardMaterial({ color: 0x28303d, metalness: 0.7, roughness: 0.3 }); // Door leaf frame
     const psdLedMat = new THREE.MeshBasicMaterial({ color: 0x22c55e }); // Green door indicator LED
 
     // Props Materials
     const benchWoodMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.9 });
     const benchLegMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
     const vendingRedMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4 });
-    const vendingGlassMat = new THREE.MeshPhysicalMaterial({ color: 0x9ca3af, transmission: 0.5, opacity: 1, transparent: true, roughness: 0.1 });
+    const vendingGlassMat = new THREE.MeshPhysicalMaterial({ color: 0x9ca3af, transmission: 0.6, opacity: 1, transparent: true, roughness: 0.1 });
     const vendingBlackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
     const escalatorStairMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 });
     const escalatorRailMat = new THREE.MeshPhysicalMaterial({ color: 0x94a3b8, transmission: 0.8, opacity: 1, transparent: true, roughness: 0.1 });
@@ -10263,20 +10264,20 @@ const ThreeCabView = {
     this.signTextCanvas = signCanvas;
     this.signTexture = new THREE.CanvasTexture(signCanvas);
     this.updateStationSignTexture('201', '검단오류', 'Geomdan Oryu');
-    const signMat = new THREE.MeshBasicMaterial({ map: this.signTexture });
-    const signGeo = new THREE.BoxGeometry(0.08, 1.15, 3.8);
+    const signMat = new THREE.MeshBasicMaterial({ map: this.signTexture, side: THREE.DoubleSide });
+    const signGeo = new THREE.BoxGeometry(0.06, 1.15, 3.8);
 
-    // Reusable geometries
-    const postGeo = new THREE.BoxGeometry(0.18, 2.30, 0.18);
-    const mullionGeo = new THREE.BoxGeometry(0.14, 2.20, 0.08);
-    const kickplateGeo = new THREE.BoxGeometry(0.15, 0.22, 1.95);
-    const subHeaderGeo = new THREE.BoxGeometry(0.15, 0.12, 1.95);
-    const windowGlassGeo = new THREE.BoxGeometry(0.06, 1.92, 1.86);
-    const doorLeafGlassGeo = new THREE.BoxGeometry(0.08, 2.16, 1.05);
-    const doorBorderGeo = new THREE.BoxGeometry(0.11, 2.22, 1.12);
-    const doorLedGeo = new THREE.BoxGeometry(0.22, 0.10, 0.25);
-    const signPoleGeo = new THREE.CylinderGeometry(0.03, 0.03, 1.1, 8);
-    const stationPillarGeo = new THREE.BoxGeometry(0.7, 4.8, 0.7);
+    // Slim, elegant frame geometries (refined to 6cm ~ 8cm thickness)
+    const postGeo = new THREE.BoxGeometry(0.08, 2.30, 0.08); // Thin vertical post
+    const mullionGeo = new THREE.BoxGeometry(0.06, 2.20, 0.05); // Thin vertical divider
+    const kickplateGeo = new THREE.BoxGeometry(0.07, 0.12, 1.95); // Slim bottom kickplate
+    const subHeaderGeo = new THREE.BoxGeometry(0.07, 0.08, 1.95); // Slim top frame
+    const windowGlassGeo = new THREE.BoxGeometry(0.03, 2.05, 1.92); // Large clear glass window
+    const doorLeafGlassGeo = new THREE.BoxGeometry(0.04, 2.20, 1.08); // Full glass sliding door leaf
+    const doorEdgeGeo = new THREE.BoxGeometry(0.06, 2.22, 0.04); // Slim rubber edge on door
+    const doorLedGeo = new THREE.BoxGeometry(0.12, 0.08, 0.22);
+    const signPoleGeo = new THREE.CylinderGeometry(0.025, 0.025, 1.2, 8);
+    const stationPillarGeo = new THREE.BoxGeometry(0.6, 4.8, 0.6);
 
     // Two stations along the 1500m loop
     const stations = [
@@ -10326,17 +10327,30 @@ const ThreeCabView = {
           if (i < numSlices) {
             const r1 = i * 3;
             const r2 = (i + 1) * 3;
-            platIndices.push(r1, r1 + 1, r2 + 1, r1, r2 + 1, r2);
-            platIndices.push(r1 + 1, r1 + 2, r2 + 2, r1 + 1, r2 + 2, r2 + 1);
 
-            const y1 = i * 2;
-            const y2 = (i + 1) * 2;
-            yellowIndices.push(y1, y1 + 1, y2 + 1, y1, y2 + 1, y2);
+            // Proper winding order depending on sideSign
+            if (sideSign === 1) {
+              platIndices.push(r1, r1 + 1, r2 + 1); platIndices.push(r1, r2 + 1, r2);
+              platIndices.push(r1 + 1, r1 + 2, r2 + 2); platIndices.push(r1 + 1, r2 + 2, r2 + 1);
 
-            const w1 = i * 2;
-            const w2 = (i + 1) * 2;
-            wallIndices.push(w1, w1 + 1, w2 + 1, w1, w2 + 1, w2);
-            roofIndices.push(w1, w1 + 1, w2 + 1, w1, w2 + 1, w2);
+              const y1 = i * 2; const y2 = (i + 1) * 2;
+              yellowIndices.push(y1, y1 + 1, y2 + 1); yellowIndices.push(y1, y2 + 1, y2);
+
+              const w1 = i * 2; const w2 = (i + 1) * 2;
+              wallIndices.push(w1, w1 + 1, w2 + 1); wallIndices.push(w1, w2 + 1, w2);
+              roofIndices.push(w1, w1 + 1, w2 + 1); roofIndices.push(w1, w2 + 1, w2);
+            } else {
+              // Left side platform (reversed winding so normals face UP towards camera)
+              platIndices.push(r1, r2 + 1, r1 + 1); platIndices.push(r1, r2, r2 + 1);
+              platIndices.push(r1 + 1, r2 + 2, r1 + 2); platIndices.push(r1 + 1, r2 + 1, r2 + 2);
+
+              const y1 = i * 2; const y2 = (i + 1) * 2;
+              yellowIndices.push(y1, y2 + 1, y1 + 1); yellowIndices.push(y1, y2, y2 + 1);
+
+              const w1 = i * 2; const w2 = (i + 1) * 2;
+              wallIndices.push(w1, w2 + 1, w1 + 1); wallIndices.push(w1, w2, w2 + 1);
+              roofIndices.push(w1, w2 + 1, w1 + 1); roofIndices.push(w1, w2, w2 + 1);
+            }
           }
         }
 
@@ -10365,7 +10379,7 @@ const ThreeCabView = {
         roofGeo.computeVertexNormals();
         platGroup.add(new THREE.Mesh(roofGeo, roofMat));
 
-        // 3. Continuous PSD Top Header Box & Orange Line
+        // 3. Sleek PSD Top Header Box & Orange Line
         const stLen = sEnd - sStart;
         const numHeaderSteps = Math.floor(stLen / 10.0);
         for (let h = 0; h < numHeaderSteps; h++) {
@@ -10373,71 +10387,72 @@ const ThreeCabView = {
           const { P, T, N, B } = this.getTrackFrame(hs / 1500.0);
           const Pc = P.clone().addScaledVector(N, trackOffset);
 
-          // Top Header dark housing
-          const boxMesh = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.48, 10.1), psdFrameMat);
-          const bPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 3.40);
+          // Top Header dark housing (compact: 0.16m wide, 0.40m high)
+          const boxMesh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.40, 10.1), psdFrameMat);
+          const bPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 3.42);
           boxMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(bPos));
           psdGroup.add(boxMesh);
 
           // Front Orange Line Stripe
-          const stripeMesh = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.18, 10.1), psdTopMat);
-          const sPos = Pc.clone().addScaledVector(N, sideSign * 1.22).addScaledVector(B, 3.40);
+          const stripeMesh = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.16, 10.1), psdTopMat);
+          const sPos = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, 3.42);
           stripeMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(sPos));
           psdGroup.add(stripeMesh);
         }
 
-        // 4. Sturdy Vertical Structural Posts (Mullions) along entire platform edge
+        // 4. Slim, elegant vertical posts (Mullions: 8cm thin) spaced along platform edge
         for (let sP = sStart + 2.0; sP <= sEnd - 2.0; sP += 2.0) {
           const { P, T, N, B } = this.getTrackFrame(sP / 1500.0);
           const Pc = P.clone().addScaledVector(N, trackOffset);
 
-          // Structural column connecting floor (1.15) to header (3.30)
+          // Slim vertical column connecting floor (1.15) to header (3.30)
           const postMesh = new THREE.Mesh(postGeo, psdFrameMat);
           const postPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 2.25);
           postMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(postPos));
           psdGroup.add(postMesh);
         }
 
-        // 5. Fixed Glass Windows with Kickplates & Frames between posts
+        // 5. 100% Clear, transparent glass window panels between posts (no black walls!)
         for (let sP = sStart + 3.0; sP <= sEnd - 3.0; sP += 2.0) {
-          // Check if this position is inside a sliding door opening
+          // Leave sliding door openings clear
           const isDoorZone = [-30, -15, 0].some(dOff => Math.abs(sP - (stopP + dOff)) < 1.3);
-          if (isDoorZone) continue; // Leave door openings clear
+          if (isDoorZone) continue;
 
           const { P, T, N, B } = this.getTrackFrame(sP / 1500.0);
           const Pc = P.clone().addScaledVector(N, trackOffset);
 
-          // Glass pane
+          // Clear Glass Pane (transparent, see right through to station signs!)
           const glassMesh = new THREE.Mesh(windowGlassGeo, psdGlassMat);
           const gPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 2.26);
           glassMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(gPos));
           psdGroup.add(glassMesh);
 
-          // Bottom kickplate sill
+          // Slim kickplate sill at bottom (12cm low)
           const kickMesh = new THREE.Mesh(kickplateGeo, psdFrameMat);
-          const kPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 1.25);
+          const kPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 1.21);
           kickMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(kPos));
           psdGroup.add(kickMesh);
 
-          // Top sub-header frame
+          // Slim sub-header frame at top (8cm low)
           const subMesh = new THREE.Mesh(subHeaderGeo, psdFrameMat);
-          const sbPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 3.22);
+          const sbPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 3.24);
           subMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(sbPos));
           psdGroup.add(subMesh);
         }
 
         // 6. Sliding PSD Doors (Door 1 at stopP-30, Door 2 at stopP-15, Door 3 at stopP)
+        // 100% Clear Glass door leaves with slim rubber edges - absolutely NO opaque black slabs!
         const doorOffsets = [-30.0, -15.0, 0.0];
-        doorOffsets.forEach((dOff, dIdx) => {
+        doorOffsets.forEach((dOff) => {
           const ds = stopP + dOff;
           const { P, T, N, B } = this.getTrackFrame(ds / 1500.0);
           const Pc = P.clone().addScaledVector(N, trackOffset);
 
-          // Flanking heavy door portal pillars (left and right of opening)
-          const leftPillarPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 2.25).addScaledVector(T, -1.25);
-          const rightPillarPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 2.25).addScaledVector(T, 1.25);
-          const lpMesh = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.30, 0.24), psdFrameMat);
-          const rpMesh = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.30, 0.24), psdFrameMat);
+          // Slim flanking portal posts (10cm thin)
+          const lpMesh = new THREE.Mesh(new THREE.BoxGeometry(0.10, 2.30, 0.10), psdFrameMat);
+          const rpMesh = new THREE.Mesh(new THREE.BoxGeometry(0.10, 2.30, 0.10), psdFrameMat);
+          const leftPillarPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 2.25).addScaledVector(T, -1.15);
+          const rightPillarPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 2.25).addScaledVector(T, 1.15);
           lpMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(leftPillarPos));
           rpMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(rightPillarPos));
           psdGroup.add(lpMesh);
@@ -10445,26 +10460,27 @@ const ThreeCabView = {
 
           // Door Status LED indicator above door
           const ledMesh = new THREE.Mesh(doorLedGeo, psdLedMat);
-          const ledPos = Pc.clone().addScaledVector(N, sideSign * 1.20).addScaledVector(B, 3.40);
+          const ledPos = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, 3.42);
           ledMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(ledPos));
           psdGroup.add(ledMesh);
 
-          // Sliding Door Leaves with Frame Borders
+          // Sliding Door Leaves - Clean, beautiful transparent glass leaves!
           // Left Leaf (mesh group)
           const lLeafGroup = new THREE.Group();
           const lGlass = new THREE.Mesh(doorLeafGlassGeo, psdGlassMat);
-          const lBorder = new THREE.Mesh(doorBorderGeo, psdDoorFrameMat);
-          lBorder.scale.set(1, 1, 1);
-          lLeafGroup.add(lBorder, lGlass);
+          const lEdge = new THREE.Mesh(doorEdgeGeo, psdFrameMat);
+          lEdge.position.set(0, 0, 0.52); // Rubber seal on inner meeting edge
+          lLeafGroup.add(lGlass, lEdge);
 
           // Right Leaf (mesh group)
           const rLeafGroup = new THREE.Group();
           const rGlass = new THREE.Mesh(doorLeafGlassGeo, psdGlassMat);
-          const rBorder = new THREE.Mesh(doorBorderGeo, psdDoorFrameMat);
-          rLeafGroup.add(rBorder, rGlass);
+          const rEdge = new THREE.Mesh(doorEdgeGeo, psdFrameMat);
+          rEdge.position.set(0, 0, -0.52); // Rubber seal on inner meeting edge
+          rLeafGroup.add(rGlass, rEdge);
 
-          const dlPos = Pc.clone().addScaledVector(N, sideSign * 1.31).addScaledVector(B, 2.23).addScaledVector(T, -0.55);
-          const drPos = Pc.clone().addScaledVector(N, sideSign * 1.31).addScaledVector(B, 2.23).addScaledVector(T, 0.55);
+          const dlPos = Pc.clone().addScaledVector(N, sideSign * 1.32).addScaledVector(B, 2.23).addScaledVector(T, -0.54);
+          const drPos = Pc.clone().addScaledVector(N, sideSign * 1.32).addScaledVector(B, 2.23).addScaledVector(T, 0.54);
 
           lLeafGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(dlPos));
           rLeafGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(drPos));
@@ -10474,24 +10490,25 @@ const ThreeCabView = {
           this.psdDoors.push({ doorL: lLeafGroup, doorR: rLeafGroup, baseL: dlPos, baseR: drPos, tangent: T });
         });
 
-        // 7. Station Sign (Fixed Orientation facing the driver's window directly, with hanging poles)
+        // 7. Station Sign (Mounted prominently at eye level, perfectly visible through clear PSD glass!)
         {
           const { P, T, N, B } = this.getTrackFrame(stopP / 1500.0);
           const Pc = P.clone().addScaledVector(N, trackOffset);
           const signMesh = new THREE.Mesh(signGeo, signMat);
-          const signPos = Pc.clone().addScaledVector(N, sideSign * 3.4).addScaledVector(B, 3.0).addScaledVector(T, 4.0);
+          // Positioned at N = sideSign * 2.8, B = 2.6, T = 3.5: perfectly framed right in the driver's front/side window view
+          const signPos = Pc.clone().addScaledVector(N, sideSign * 2.8).addScaledVector(B, 2.6).addScaledVector(T, 3.5);
 
-          // Orient sign face so text reads left-to-right when viewed from the train
+          // Face the sign normal directly towards the track so text reads left-to-right from cab
           const signNormal = N.clone().multiplyScalar(-sideSign);
           const signTangent = T.clone().multiplyScalar(-1);
           signMesh.applyMatrix4(new THREE.Matrix4().makeBasis(signNormal, B, signTangent).setPosition(signPos));
           propsGroup.add(signMesh);
 
-          // Hanging steel mounting poles
+          // Hanging steel mounting poles up to ceiling
           const pole1 = new THREE.Mesh(signPoleGeo, psdFrameMat);
           const pole2 = new THREE.Mesh(signPoleGeo, psdFrameMat);
-          pole1.position.copy(signPos).addScaledVector(B, 0.95).addScaledVector(T, -1.2);
-          pole2.position.copy(signPos).addScaledVector(B, 0.95).addScaledVector(T, 1.2);
+          pole1.position.copy(signPos).addScaledVector(B, 1.05).addScaledVector(T, -1.2);
+          pole2.position.copy(signPos).addScaledVector(B, 1.05).addScaledVector(T, 1.2);
           propsGroup.add(pole1, pole2);
         }
 
@@ -10502,7 +10519,7 @@ const ThreeCabView = {
 
           // Concrete station column
           const pillar = new THREE.Mesh(stationPillarGeo, pillarMat);
-          const pilPos = Pc.clone().addScaledVector(N, sideSign * 3.4).addScaledVector(B, 3.4);
+          const pilPos = Pc.clone().addScaledVector(N, sideSign * 4.2).addScaledVector(B, 3.4);
           pillar.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(pilPos));
           propsGroup.add(pillar);
 
