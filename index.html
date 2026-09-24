@@ -4639,7 +4639,8 @@
         <button id="view-op3" class="panel-toggle-btn active" onclick="switchPanelView('OP3')">OP3</button>
         <button id="view-op4" class="panel-toggle-btn" onclick="switchPanelView('OP4')">OP4</button>
         <button id="view-op5" class="panel-toggle-btn" onclick="switchPanelView('OP5')">OP5</button>
-        <button id="view-du" class="panel-toggle-btn du-tab-btn" onclick="switchPanelView('DU')">DU/ADU</button>
+        <button id="view-du" class="panel-toggle-btn du-tab-btn" onclick="switchPanelView('DU')">DU</button>
+        <button id="view-adu" class="panel-toggle-btn" onclick="switchPanelView('ADU')">ADU</button>
         <button id="view-occ" class="panel-toggle-btn occ-tab-btn" style="display:none;" onclick="switchPanelView('OCC')">OCC</button>
       </div>
 
@@ -4702,7 +4703,8 @@
           <button id="slot-l-op3" class="slot-switch-btn active" onclick="selectSlotPanel('left', 'OP3')">OP3</button>
           <button id="slot-l-op4" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP4')">OP4</button>
           <button id="slot-l-op5" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP5')">OP5</button>
-          <button id="slot-l-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('left', 'DU')">DU/ADU</button>
+          <button id="slot-l-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('left', 'DU')">DU</button>
+          <button id="slot-l-adu" class="slot-switch-btn" onclick="selectSlotPanel('left', 'ADU')">ADU</button>
           <button id="slot-l-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('left', 'OCC')">OCC</button>
         </div>
       </div>
@@ -4722,7 +4724,8 @@
           <button id="slot-c-op3" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP3')">OP3</button>
           <button id="slot-c-op4" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP4')">OP4</button>
           <button id="slot-c-op5" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP5')">OP5</button>
-          <button id="slot-c-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('center', 'DU')">DU/ADU</button>
+          <button id="slot-c-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('center', 'DU')">DU</button>
+          <button id="slot-c-adu" class="slot-switch-btn" onclick="selectSlotPanel('center', 'ADU')">ADU</button>
           <button id="slot-c-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('center', 'OCC')">OCC</button>
         </div>
       </div>
@@ -4742,7 +4745,8 @@
           <button id="slot-r-op3" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP3')">OP3</button>
           <button id="slot-r-op4" class="slot-switch-btn active" onclick="selectSlotPanel('right', 'OP4')">OP4</button>
           <button id="slot-r-op5" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP5')">OP5</button>
-          <button id="slot-r-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('right', 'DU')">DU/ADU</button>
+          <button id="slot-r-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('right', 'DU')">DU</button>
+          <button id="slot-r-adu" class="slot-switch-btn" onclick="selectSlotPanel('right', 'ADU')">ADU</button>
           <button id="slot-r-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('right', 'OCC')">OCC</button>
         </div>
       </div>
@@ -6177,7 +6181,21 @@
           </div>
 
           <!-- [우측 모니터] ADU -->
-          <div class="mmi-monitor-frame adu-frame">
+          </div></div></section>
+
+    <section id="panel-adu" class="train-metal-panel du-panel-board" style="display:none;">
+      <div class="screw tl"></div><div class="screw tr"></div>
+      <div class="screw bl"></div><div class="screw br"></div>
+      <div class="du-container">
+        <div class="du-header-bar">
+          <div class="du-title">
+            <span class="du-badge">CAB DISPLAY</span>
+            <span>ADU (ATO Display Unit)</span>
+          </div>
+          <div class="du-conn-status">🟢 ATC SYSTEM ONLINE</div>
+        </div>
+        <div class="du-monitors-grid">
+<div class="mmi-monitor-frame adu-frame">
             <div class="mmi-bezel-header">
               <span class="mmi-model">ADU</span>
               <div class="mmi-leds">
@@ -6319,7 +6337,7 @@
 
         </div>
       </div>
-    </section>
+    </div></section>
     </div>
     <!-- /panel-storage-pool -->
 
@@ -7180,7 +7198,7 @@ let pendingRecordedStep = null;
 // ========================================================
 // 반응형 멀티 뷰포트 시스템 (모바일 1분할 / 2분할 듀얼 / 3분할 트리플)
 // ========================================================
-let ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5', 'DU'];
+let ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5', 'DU', 'ADU'];
 let currentSplitMode = 2;       // 대화면 기본: 2분할 (2 또는 3)
 let activeLeftPanel = 'OP3';    // 좌측 슬롯 (기본 OP3)
 let activeCenterPanel = 'OP1';  // 중앙 슬롯 (3분할 전용 기본 OP1)

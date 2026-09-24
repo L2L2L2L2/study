@@ -4658,7 +4658,8 @@
         <button id="view-op3" class="panel-toggle-btn active" onclick="switchPanelView('OP3')">OP3</button>
         <button id="view-op4" class="panel-toggle-btn" onclick="switchPanelView('OP4')">OP4</button>
         <button id="view-op5" class="panel-toggle-btn" onclick="switchPanelView('OP5')">OP5</button>
-        <button id="view-du" class="panel-toggle-btn du-tab-btn" onclick="switchPanelView('DU')">DU/ADU</button>
+        <button id="view-du" class="panel-toggle-btn du-tab-btn" onclick="switchPanelView('DU')">DU</button>
+        <button id="view-adu" class="panel-toggle-btn" onclick="switchPanelView('ADU')">ADU</button>
         <button id="view-occ" class="panel-toggle-btn occ-tab-btn" style="display:none;" onclick="switchPanelView('OCC')">OCC</button>
       </div>
 
@@ -4721,7 +4722,8 @@
           <button id="slot-l-op3" class="slot-switch-btn active" onclick="selectSlotPanel('left', 'OP3')">OP3</button>
           <button id="slot-l-op4" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP4')">OP4</button>
           <button id="slot-l-op5" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP5')">OP5</button>
-          <button id="slot-l-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('left', 'DU')">DU/ADU</button>
+          <button id="slot-l-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('left', 'DU')">DU</button>
+          <button id="slot-l-adu" class="slot-switch-btn" onclick="selectSlotPanel('left', 'ADU')">ADU</button>
           <button id="slot-l-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('left', 'OCC')">OCC</button>
         </div>
       </div>
@@ -4741,7 +4743,8 @@
           <button id="slot-c-op3" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP3')">OP3</button>
           <button id="slot-c-op4" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP4')">OP4</button>
           <button id="slot-c-op5" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP5')">OP5</button>
-          <button id="slot-c-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('center', 'DU')">DU/ADU</button>
+          <button id="slot-c-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('center', 'DU')">DU</button>
+          <button id="slot-c-adu" class="slot-switch-btn" onclick="selectSlotPanel('center', 'ADU')">ADU</button>
           <button id="slot-c-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('center', 'OCC')">OCC</button>
         </div>
       </div>
@@ -4761,7 +4764,8 @@
           <button id="slot-r-op3" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP3')">OP3</button>
           <button id="slot-r-op4" class="slot-switch-btn active" onclick="selectSlotPanel('right', 'OP4')">OP4</button>
           <button id="slot-r-op5" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP5')">OP5</button>
-          <button id="slot-r-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('right', 'DU')">DU/ADU</button>
+          <button id="slot-r-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('right', 'DU')">DU</button>
+          <button id="slot-r-adu" class="slot-switch-btn" onclick="selectSlotPanel('right', 'ADU')">ADU</button>
           <button id="slot-r-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('right', 'OCC')">OCC</button>
         </div>
       </div>
@@ -6197,7 +6201,21 @@
           </div>
 
           <!-- [우측 모니터] ADU -->
-          <div class="mmi-monitor-frame adu-frame">
+          </div></div></section>
+
+    <section id="panel-adu" class="train-metal-panel du-panel-board" style="display:none;">
+      <div class="screw tl"></div><div class="screw tr"></div>
+      <div class="screw bl"></div><div class="screw br"></div>
+      <div class="du-container">
+        <div class="du-header-bar">
+          <div class="du-title">
+            <span class="du-badge">CAB DISPLAY</span>
+            <span>ADU (ATO Display Unit)</span>
+          </div>
+          <div class="du-conn-status">🟢 ATC SYSTEM ONLINE</div>
+        </div>
+        <div class="du-monitors-grid">
+<div class="mmi-monitor-frame adu-frame">
             <div class="mmi-bezel-header">
               <span class="mmi-model">ADU</span>
               <div class="mmi-leds">
@@ -6339,7 +6357,7 @@
 
         </div>
       </div>
-    </section>
+    </div></section>
     </div>
     <!-- /panel-storage-pool -->
 
@@ -7200,7 +7218,7 @@ let pendingRecordedStep = null;
 // ========================================================
 // 반응형 멀티 뷰포트 시스템 (모바일 1분할 / 2분할 듀얼 / 3분할 트리플)
 // ========================================================
-let ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5', 'DU'];
+let ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5', 'DU', 'ADU'];
 let currentSplitMode = 2;       // 대화면 기본: 2분할 (2 또는 3)
 let activeLeftPanel = 'OP3';    // 좌측 슬롯 (기본 OP3)
 let activeCenterPanel = 'OP1';  // 중앙 슬롯 (3분할 전용 기본 OP1)
@@ -7513,33 +7531,33 @@ const CV_LINE = {
 // 지하구간: 검단사거리 ~ 남동구청
 // 남동구청 -> 인천대공원: 터널 -> 지상 진출
 const INCHEON2_STATIONS = [
-  { name: '검단오류', eng: 'Geomdan Oryu', type: 'GROUND', platformSide: 'R' },
-  { name: '왕길', eng: 'Wanggil', type: 'GROUND', platformSide: 'R' },
-  { name: '검단사거리', eng: 'Geomdan Sageori', type: 'TUNNEL', platformSide: 'R' },
-  { name: '마전', eng: 'Majeon', type: 'TUNNEL', platformSide: 'R' },
-  { name: '완정', eng: 'Wanjeong', type: 'TUNNEL', platformSide: 'R' },
-  { name: '독정', eng: 'Dokjeong', type: 'TUNNEL', platformSide: 'R' },
-  { name: '검암', eng: 'Geomam', type: 'TUNNEL', platformSide: 'R' },
-  { name: '검바위', eng: 'Geombawi', type: 'TUNNEL', platformSide: 'R' },
-  { name: '아시아드경기장', eng: 'Asiad Stadium', type: 'TUNNEL', platformSide: 'R' },
-  { name: '서구청', eng: 'Seo-gu Office', type: 'TUNNEL', platformSide: 'R' },
-  { name: '가정', eng: 'Gajeong', type: 'TUNNEL', platformSide: 'R' },
-  { name: '가정중앙시장', eng: 'Gajeong Jungang Market', type: 'TUNNEL', platformSide: 'R' },
-  { name: '석남', eng: 'Seongnam', type: 'TUNNEL', platformSide: 'R' },
-  { name: '서부여성회관', eng: "West Woman's CC", type: 'TUNNEL', platformSide: 'R' },
-  { name: '인천가좌', eng: 'Incheon Gajwa', type: 'TUNNEL', platformSide: 'R' },
-  { name: '가재울', eng: 'Gajaeul', type: 'TUNNEL', platformSide: 'R' },
-  { name: '주안국가산단', eng: 'Juan Ind. Complex', type: 'TUNNEL', platformSide: 'R' },
-  { name: '주안', eng: 'Juan', type: 'TUNNEL', platformSide: 'R' },
-  { name: '시민공원', eng: 'Citizens Park', type: 'TUNNEL', platformSide: 'R' },
-  { name: '석바위시장', eng: 'Seokbawi Market', type: 'TUNNEL', platformSide: 'R' },
-  { name: '인천시청', eng: 'Incheon City Hall', type: 'TUNNEL', platformSide: 'R' },
-  { name: '석천사거리', eng: 'Seokcheon Sageori', type: 'TUNNEL', platformSide: 'R' },
-  { name: '모래내시장', eng: 'Moraenae Market', type: 'TUNNEL', platformSide: 'R' },
-  { name: '만수', eng: 'Mansu', type: 'TUNNEL', platformSide: 'R' },
-  { name: '남동구청', eng: 'Namdong-gu Office', type: 'TUNNEL', platformSide: 'R' },
-  { name: '인천대공원', eng: 'Incheon Grand Park', type: 'GROUND', platformSide: 'R' },
-  { name: '운연', eng: 'Unyeon', type: 'GROUND', platformSide: 'R' }
+  { id: '201', name: '검단오류', eng: 'Geomdan Oryu', type: 'GROUND', platformSide: 'R' },
+  { id: '202', name: '왕길', eng: 'Wanggil', type: 'GROUND', platformSide: 'R' },
+  { id: '203', name: '검단사거리', eng: 'Geomdan Sageori', type: 'TUNNEL', platformSide: 'R' },
+  { id: '204', name: '마전', eng: 'Majeon', type: 'TUNNEL', platformSide: 'R' },
+  { id: '205', name: '완정', eng: 'Wanjeong', type: 'TUNNEL', platformSide: 'R' },
+  { id: '206', name: '독정', eng: 'Dokjeong', type: 'TUNNEL', platformSide: 'R' },
+  { id: '207', name: '검암', eng: 'Geomam', type: 'TUNNEL', platformSide: 'R' },
+  { id: '208', name: '검바위', eng: 'Geombawi', type: 'TUNNEL', platformSide: 'R' },
+  { id: '209', name: '아시아드경기장', eng: 'Asiad Stadium', type: 'TUNNEL', platformSide: 'R' },
+  { id: '210', name: '서구청', eng: 'Seo-gu Office', type: 'TUNNEL', platformSide: 'R' },
+  { id: '211', name: '가정', eng: 'Gajeong', type: 'TUNNEL', platformSide: 'R' },
+  { id: '212', name: '가정중앙시장', eng: 'Gajeong Jungang Market', type: 'TUNNEL', platformSide: 'R' },
+  { id: '213', name: '석남', eng: 'Seongnam', type: 'TUNNEL', platformSide: 'R' },
+  { id: '214', name: '서부여성회관', eng: 'Seobu Yeoseong Hoegwan', type: 'TUNNEL', platformSide: 'R' },
+  { id: '215', name: '인천가좌', eng: 'Incheon Gajwa', type: 'TUNNEL', platformSide: 'R' },
+  { id: '216', name: '가재울', eng: 'Gajaeul', type: 'TUNNEL', platformSide: 'R' },
+  { id: '217', name: '주안국가산단', eng: 'Juan National Industrial Complex', type: 'TUNNEL', platformSide: 'R' },
+  { id: '218', name: '주안', eng: 'Juan', type: 'TUNNEL', platformSide: 'R' },
+  { id: '219', name: '시민공원', eng: 'Citizens Park', type: 'TUNNEL', platformSide: 'R' },
+  { id: '220', name: '석바위시장', eng: 'Seokbawi Market', type: 'TUNNEL', platformSide: 'R' },
+  { id: '221', name: '인천시청', eng: 'Incheon City Hall', type: 'TUNNEL', platformSide: 'R' },
+  { id: '222', name: '석천사거리', eng: 'Seokcheon Sageori', type: 'TUNNEL', platformSide: 'R' },
+  { id: '223', name: '모래내시장', eng: 'Moraenae Market', type: 'TUNNEL', platformSide: 'R' },
+  { id: '224', name: '만수', eng: 'Mansu', type: 'TUNNEL', platformSide: 'R' },
+  { id: '225', name: '남동구청', eng: 'Namdong-gu Office', type: 'GROUND', platformSide: 'R' },
+  { id: '226', name: '인천대공원', eng: 'Incheon Grand Park', type: 'GROUND', platformSide: 'R' },
+  { id: '227', name: '운연', eng: 'Unyeon', type: 'GROUND', platformSide: 'R' }
 ];
 const CV_STATIONS = INCHEON2_STATIONS.map(s => s.name);
 
@@ -8698,7 +8716,7 @@ function updateTrainPhysics() {
     target = 0.0; rate = -5.0; // 비상제동 체결되어 서서히 멈춤
   } else if (isUnmannedActive) {
     // 무인운전(ATO) 모드: AtoDriverless 제어기가 역간 주행, TASC 감속, 역 정차, 출입문/PSD 개폐, 자동 출발 총괄
-    if (isDoorInterlockCleared && cvBC() < 0.5) {
+    if (isDoorInterlockCleared && (cvBC() < 0.5 || isUnmannedActive)) {
       AtoDriverless.update(dt, trainDistance, trainSpeed);
       target = AtoDriverless.targetSpeed;
       rate = AtoDriverless.accelRate;
@@ -9873,119 +9891,125 @@ const ThreeCabView = {
 
   buildRailsAndBallast() {
     const numSlices = 750;
-    const leftPts = [];
-    const rightPts = [];
-    const ballastPositions = [];
-    const ballastIndices = [];
+    
+    for (let trackOffset of [0, -4.0]) {
+      const leftPts = [];
+      const rightPts = [];
+      const ballastPositions = [];
+      const ballastIndices = [];
 
-    for (let i = 0; i <= numSlices; i++) {
-      const u = (i % numSlices) / numSlices;
-      const { P, N, B } = this.getTrackFrame(u);
+      for (let i = 0; i <= numSlices; i++) {
+        const u = (i % numSlices) / numSlices;
+        const { P, N, B } = this.getTrackFrame(u);
+        const Pc = P.clone().addScaledVector(N, trackOffset);
 
-      if (i < numSlices) {
-        leftPts.push(P.clone().addScaledVector(N, -0.7175).addScaledVector(B, 0.10));
-        rightPts.push(P.clone().addScaledVector(N, 0.7175).addScaledVector(B, 0.10));
+        if (i < numSlices) {
+          leftPts.push(Pc.clone().addScaledVector(N, -0.7175).addScaledVector(B, 0.10));
+          rightPts.push(Pc.clone().addScaledVector(N, 0.7175).addScaledVector(B, 0.10));
+        }
+
+        const pL = Pc.clone().addScaledVector(N, -1.4).addScaledVector(B, -0.2);
+        const pR = Pc.clone().addScaledVector(N, 1.4).addScaledVector(B, -0.2);
+        ballastPositions.push(pL.x, pL.y, pL.z, pR.x, pR.y, pR.z);
+
+        if (i < numSlices) {
+          const r1 = i * 2;
+          const r2 = (i + 1) * 2;
+          ballastIndices.push(r1, r1 + 1, r2 + 1);
+          ballastIndices.push(r1, r2 + 1, r2);
+        }
       }
 
-      // Ballast profile: dark realistic crushed stone roadbed
-      const pBL = P.clone().addScaledVector(N, -2.3).addScaledVector(B, -0.32);
-      const pTL = P.clone().addScaledVector(N, -1.5).addScaledVector(B, 0.0);
-      const pTR = P.clone().addScaledVector(N, 1.5).addScaledVector(B, 0.0);
-      const pBR = P.clone().addScaledVector(N, 2.3).addScaledVector(B, -0.32);
+      const railGeoL = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(leftPts, true), numSlices, 0.07, 4, true);
+      const railGeoR = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rightPts, true), numSlices, 0.07, 4, true);
+      const railMat = new THREE.MeshStandardMaterial({ color: 0x888c92, roughness: 0.4, metalness: 0.8 });
+      this.scene.add(new THREE.Mesh(railGeoL, railMat));
+      this.scene.add(new THREE.Mesh(railGeoR, railMat));
 
-      ballastPositions.push(
-        pBL.x, pBL.y, pBL.z,
-        pTL.x, pTL.y, pTL.z,
-        pTR.x, pTR.y, pTR.z,
-        pBR.x, pBR.y, pBR.z
-      );
-
-      if (i < numSlices) {
-        const row1 = i * 4;
-        const row2 = (i + 1) * 4;
-        ballastIndices.push(row1, row1 + 1, row2 + 1);
-        ballastIndices.push(row1, row2 + 1, row2);
-        ballastIndices.push(row1 + 1, row1 + 2, row2 + 2);
-        ballastIndices.push(row1 + 1, row2 + 2, row2 + 1);
-        ballastIndices.push(row1 + 2, row1 + 3, row2 + 3);
-        ballastIndices.push(row1 + 2, row2 + 3, row2 + 2);
-      }
+      const balGeo = new THREE.BufferGeometry();
+      balGeo.setAttribute('position', new THREE.Float32BufferAttribute(ballastPositions, 3));
+      balGeo.setIndex(ballastIndices);
+      balGeo.computeVertexNormals();
+      const balMat = new THREE.MeshStandardMaterial({ color: 0x44403c, roughness: 1.0 });
+      this.scene.add(new THREE.Mesh(balGeo, balMat));
     }
-
-    const curveL = new THREE.CatmullRomCurve3(leftPts, true, 'centripetal');
-    const curveR = new THREE.CatmullRomCurve3(rightPts, true, 'centripetal');
-    const geoRailL = new THREE.TubeGeometry(curveL, 700, 0.035, 8, true);
-    const geoRailR = new THREE.TubeGeometry(curveR, 700, 0.035, 8, true);
-    const railMat = new THREE.MeshStandardMaterial({
-      color: 0x9099a5,
-      metalness: 0.90,
-      roughness: 0.20
-    });
-
-    const meshL = new THREE.Mesh(geoRailL, railMat);
-    const meshR = new THREE.Mesh(geoRailR, railMat);
-    this.scene.add(meshL);
-    this.scene.add(meshR);
-
-    const ballastGeo = new THREE.BufferGeometry();
-    ballastGeo.setAttribute('position', new THREE.Float32BufferAttribute(ballastPositions, 3));
-    ballastGeo.setIndex(ballastIndices);
-    ballastGeo.computeVertexNormals();
-
-    const ballastMat = new THREE.MeshStandardMaterial({
-      color: 0x363432,
-      roughness: 0.96
-    });
-    const ballastMesh = new THREE.Mesh(ballastGeo, ballastMat);
-    this.scene.add(ballastMesh);
   },
 
-  // 인천 2호선 제3궤조 급전 방식 (DC 750V Third Rail)
   buildThirdRail() {
-    const numSlices = 500;
-    const thirdRailPts = [];
+    const numSlices = 750;
 
-    for (let i = 0; i < numSlices; i++) {
-      const u = i / numSlices;
-      const { P, N, B } = this.getTrackFrame(u);
-      thirdRailPts.push(P.clone().addScaledVector(N, 1.20).addScaledVector(B, 0.22));
+    for (let trackOffset of [0, -4.0]) {
+      const thirdRailPts = [];
+      const trSupportPositions = [];
+      const trSupportIndices = [];
+
+      for (let i = 0; i <= numSlices; i++) {
+        const u = (i % numSlices) / numSlices;
+        const { P, N, B } = this.getTrackFrame(u);
+        const Pc = P.clone().addScaledVector(N, trackOffset);
+
+        const isLeft = (trackOffset === 0) ? -1 : 1;
+        const pt = Pc.clone().addScaledVector(N, isLeft * 1.15).addScaledVector(B, 0.25);
+
+        if (i < numSlices) {
+          thirdRailPts.push(pt);
+        }
+
+        if (i % 3 === 0 && i < numSlices) {
+          const base = pt.clone().addScaledVector(B, -0.2);
+          const top = pt.clone();
+          const w = 0.05;
+
+          const vBase = trSupportPositions.length / 3;
+          trSupportPositions.push(
+            base.x + w, base.y, base.z,
+            base.x - w, base.y, base.z,
+            top.x + w, top.y, top.z,
+            top.x - w, top.y, top.z
+          );
+
+          trSupportIndices.push(
+            vBase, vBase + 1, vBase + 3,
+            vBase, vBase + 3, vBase + 2
+          );
+        }
+      }
+
+      const thirdRailGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(thirdRailPts, true), numSlices, 0.08, 4, true);
+      const thirdRailMat = new THREE.MeshStandardMaterial({ color: 0xcc5500, roughness: 0.6, metalness: 0.5 });
+      this.scene.add(new THREE.Mesh(thirdRailGeo, thirdRailMat));
+
+      const supportGeo = new THREE.BufferGeometry();
+      supportGeo.setAttribute('position', new THREE.Float32BufferAttribute(trSupportPositions, 3));
+      supportGeo.setIndex(trSupportIndices);
+      supportGeo.computeVertexNormals();
+      const supportMat = new THREE.MeshStandardMaterial({ color: 0xa0a0a0, roughness: 0.9 });
+      this.scene.add(new THREE.Mesh(supportGeo, supportMat));
     }
-
-    const trCurve = new THREE.CatmullRomCurve3(thirdRailPts, true, 'centripetal');
-    const trGeo = new THREE.TubeGeometry(trCurve, 500, 0.045, 6, true);
-    const trMat = new THREE.MeshStandardMaterial({
-      color: 0xd99a16, // 제3궤조 황색 보호 덮개
-      roughness: 0.6,
-      metalness: 0.2
-    });
-    const trMesh = new THREE.Mesh(trGeo, trMat);
-    this.scene.add(trMesh);
   },
 
   buildSleepers() {
     const tieSpacing = 0.65;
     const numTies = Math.floor(1500 / tieSpacing);
     const tieGeo = new THREE.BoxGeometry(2.4, 0.16, 0.24);
-    const tieMat = new THREE.MeshStandardMaterial({
-      color: 0x686b72,
-      roughness: 0.88
-    });
-    const tieMesh = new THREE.InstancedMesh(tieGeo, tieMat, numTies);
+    const tieMat = new THREE.MeshStandardMaterial({ color: 0x686b72, roughness: 0.88 });
 
-    const m = new THREE.Matrix4();
-    const position = new THREE.Vector3();
-
-    for (let k = 0; k < numTies; k++) {
-      const u = (k * tieSpacing) / 1500.0;
-      const { P, T, N, B } = this.getTrackFrame(u);
-
-      position.copy(P).addScaledVector(B, -0.04);
-      m.makeBasis(N, B, T);
-      m.setPosition(position);
-      tieMesh.setMatrixAt(k, m);
+    for (let trackOffset of [0, -4.0]) {
+      const tieMesh = new THREE.InstancedMesh(tieGeo, tieMat, numTies);
+      const m = new THREE.Matrix4();
+      const position = new THREE.Vector3();
+      for (let k = 0; k < numTies; k++) {
+        const u = (k * tieSpacing) / 1500.0;
+        const { P, T, N, B } = this.getTrackFrame(u);
+        const Pc = P.clone().addScaledVector(N, trackOffset);
+        position.copy(Pc).addScaledVector(B, -0.04);
+        m.makeBasis(N, B, T);
+        m.setPosition(position);
+        tieMesh.setMatrixAt(k, m);
+      }
+      tieMesh.instanceMatrix.needsUpdate = true;
+      this.scene.add(tieMesh);
     }
-    tieMesh.instanceMatrix.needsUpdate = true;
-    this.scene.add(tieMesh);
   },
 
   // 지상/고가 구간 측면 콘크리트 방음/난간벽 (Parapets)
@@ -10005,8 +10029,8 @@ const ThreeCabView = {
       const inStation = (s >= 246 && s <= 384);
       const isVisible = !inStation;
 
-      const pL0 = P.clone().addScaledVector(N, -2.3).addScaledVector(B, -0.2);
-      const pL1 = P.clone().addScaledVector(N, -2.3).addScaledVector(B, 0.95);
+      const pL0 = P.clone().addScaledVector(N, -6.3).addScaledVector(B, -0.2);
+      const pL1 = P.clone().addScaledVector(N, -6.3).addScaledVector(B, 0.95);
       const pR0 = P.clone().addScaledVector(N, 2.3).addScaledVector(B, -0.2);
       const pR1 = P.clone().addScaledVector(N, 2.3).addScaledVector(B, 0.95);
 
@@ -10048,13 +10072,13 @@ const ThreeCabView = {
 
     // 열차를 완전히 감싸는 터널 단면 프로파일 (DoubleSide 렌더링)
     const profile = [
-      [-2.8, -0.3], // 0: 바닥 좌측
-      [-2.8, 0.4],  // 1: 좌측 턱
-      [-2.8, 1.8],  // 2: 좌측 하부 벽
-      [-2.7, 3.0],  // 3: 좌측 상부 벽
-      [-2.2, 4.0],  // 4: 좌측 아치
-      [-1.3, 4.7],  // 5: 좌측 천장
-      [ 0.0, 5.0],  // 6: 천장 중앙 최고점
+      [-6.8, -0.3], // 0: 바닥 좌측
+      [-6.8, 0.4],  // 1: 좌측 턱
+      [-6.8, 1.8],  // 2: 좌측 하부 벽
+      [-6.7, 3.0],  // 3: 좌측 상부 벽
+      [-6.2, 4.0],  // 4: 좌측 아치
+      [-5.3, 4.7],  // 5: 좌측 천장
+      [-2.0, 5.0],  // 6: 천장 중앙 최고점
       [ 1.3, 4.7],  // 7: 우측 천장
       [ 2.2, 4.0],  // 8: 우측 아치
       [ 2.7, 3.0],  // 9: 우측 상부 벽
@@ -10149,7 +10173,7 @@ const ThreeCabView = {
 
     // 1. 좌측 콘크리트 포털 기둥
     const leftPillar = new THREE.Mesh(new THREE.BoxGeometry(2.4, 6.0, 2.5), portalMat);
-    leftPillar.position.set(-4.1, 2.8, 0);
+    leftPillar.position.set(-8.1, 2.8, 0);
     pGroup.add(leftPillar);
 
     // 2. 우측 콘크리트 포털 기둥
@@ -10158,13 +10182,13 @@ const ThreeCabView = {
     pGroup.add(rightPillar);
 
     // 3. 상부 아치 헤더 빔
-    const topHeader = new THREE.Mesh(new THREE.BoxGeometry(10.6, 2.2, 2.5), portalMat);
-    topHeader.position.set(0, 6.3, 0);
+    const topHeader = new THREE.Mesh(new THREE.BoxGeometry(14.6, 2.2, 2.5), portalMat);
+    topHeader.position.set(-2.0, 6.3, 0);
     pGroup.add(topHeader);
 
     // 4. 좌측 산악 암벽
     const leftCliff = new THREE.Mesh(new THREE.BoxGeometry(22.0, 14.0, 3.0), cliffMat);
-    leftCliff.position.set(-16.3, 6.5, isExit ? 1.5 : -1.5);
+    leftCliff.position.set(-20.3, 6.5, isExit ? 1.5 : -1.5);
     pGroup.add(leftCliff);
 
     // 5. 우측 산악 암벽
@@ -10186,186 +10210,228 @@ const ThreeCabView = {
   },
 
   buildStation() {
-    const sStart = 248.0;
-    const sEnd = 382.0;
-    const step = 2.0;
-    const numSlices = Math.floor((sEnd - sStart) / step);
+    const sStart = 350;
+    const sEnd = 800;
+    const numSlices = 150;
+    const step = (sEnd - sStart) / numSlices;
 
-    const stGroup = new THREE.Group();
-    const platPositions = [];
-    const platIndices = [];
-    const yellowPositions = [];
-    const yellowIndices = [];
+    const platMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.9 }); // slate-200
+    const yellowMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.8 }); // yellow-500
 
-    for (let i = 0; i <= numSlices; i++) {
-      const s = sStart + i * step;
-      const { P, N, B } = this.getTrackFrame(s / 1500.0);
+    const psdGlassMat = new THREE.MeshPhysicalMaterial({ color: 0x3a6073, transmission: 0.6, opacity: 1, transparent: true, roughness: 0.1 });
+    const psdFrameMat = new THREE.MeshStandardMaterial({ color: 0x22262c, roughness: 0.5 });
+    const psdTopMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.6 }); // orange stripe
+    
+    // Station props materials
+    const benchWoodMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.9 });
+    const benchLegMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
+    const vendingRedMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4 });
+    const vendingGlassMat = new THREE.MeshPhysicalMaterial({ color: 0x9ca3af, transmission: 0.5, opacity: 1, transparent: true, roughness: 0.1 });
+    const vendingBlackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
+    const escalatorStairMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 });
+    const escalatorRailMat = new THREE.MeshPhysicalMaterial({ color: 0x94a3b8, transmission: 0.8, opacity: 1, transparent: true, roughness: 0.1 });
 
-      const pEdge = P.clone().addScaledVector(N, 1.25).addScaledVector(B, 1.15);
-      const pYell = P.clone().addScaledVector(N, 1.65).addScaledVector(B, 1.152);
-      const pBack = P.clone().addScaledVector(N, 5.20).addScaledVector(B, 1.15);
-      const pBase = P.clone().addScaledVector(N, 1.25).addScaledVector(B, -0.2);
+    const psdGroup = new THREE.Group();
+    this.psdDoors = [];
+    const propsGroup = new THREE.Group();
+    const platGroup = new THREE.Group();
 
-      platPositions.push(
-        pBase.x, pBase.y, pBase.z,
-        pEdge.x, pEdge.y, pEdge.z,
-        pBack.x, pBack.y, pBack.z
-      );
+    // Create a sign canvas texture matching the pixel art
+    const signCanvas = document.createElement('canvas');
+    signCanvas.width = 1024; signCanvas.height = 256;
+    this.signTextCanvas = signCanvas;
+    this.signTexture = new THREE.CanvasTexture(signCanvas);
+    this.updateStationSignTexture('226', '인천대공원', 'Incheon Grand Park'); // Initial placeholder
+    const signMat = new THREE.MeshBasicMaterial({ map: this.signTexture });
+    const signGeo = new THREE.BoxGeometry(0.1, 1.2, 4.0);
 
-      yellowPositions.push(
-        pEdge.x, pEdge.y, pEdge.z,
-        pYell.x, pYell.y, pYell.z
-      );
+    for (let trackOffset of [0, -4.0]) {
+      const sideSign = (trackOffset === 0) ? 1 : -1;
+      
+      const platPositions = [];
+      const platIndices = [];
+      const yellowPositions = [];
+      const yellowIndices = [];
 
-      if (i < numSlices) {
-        const r1 = i * 3;
-        const r2 = (i + 1) * 3;
-        platIndices.push(r1, r1 + 1, r2 + 1);
-        platIndices.push(r1, r2 + 1, r2);
-        platIndices.push(r1 + 1, r1 + 2, r2 + 2);
-        platIndices.push(r1 + 1, r2 + 2, r2 + 1);
+      // Render continuous platform and yellow line
+      for (let i = 0; i <= numSlices; i++) {
+        const s = sStart + i * step;
+        const { P, N, B } = this.getTrackFrame(s / 1500.0);
+        const Pc = P.clone().addScaledVector(N, trackOffset);
 
-        const yr1 = i * 2;
-        const yr2 = (i + 1) * 2;
-        yellowIndices.push(yr1, yr1 + 1, yr2 + 1);
-        yellowIndices.push(yr1, yr2 + 1, yr2);
+        const pEdge = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, 1.15);
+        const pYell = Pc.clone().addScaledVector(N, sideSign * 1.65).addScaledVector(B, 1.152);
+        const pBack = Pc.clone().addScaledVector(N, sideSign * 5.20).addScaledVector(B, 1.15);
+        const pBase = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, -0.2);
+
+        platPositions.push(pBase.x, pBase.y, pBase.z, pEdge.x, pEdge.y, pEdge.z, pBack.x, pBack.y, pBack.z);
+        yellowPositions.push(pEdge.x, pEdge.y, pEdge.z, pYell.x, pYell.y, pYell.z);
+
+        if (i < numSlices) {
+          const r1 = i * 3;
+          const r2 = (i + 1) * 3;
+          platIndices.push(r1, r1 + 1, r2 + 1); platIndices.push(r1, r2 + 1, r2);
+          platIndices.push(r1 + 1, r1 + 2, r2 + 2); platIndices.push(r1 + 1, r2 + 2, r2 + 1);
+          
+          const y1 = i * 2;
+          const y2 = (i + 1) * 2;
+          yellowIndices.push(y1, y1 + 1, y2 + 1); yellowIndices.push(y1, y2 + 1, y2);
+        }
+      }
+
+      const pGeo = new THREE.BufferGeometry();
+      pGeo.setAttribute('position', new THREE.Float32BufferAttribute(platPositions, 3));
+      pGeo.setIndex(platIndices);
+      pGeo.computeVertexNormals();
+      platGroup.add(new THREE.Mesh(pGeo, platMat));
+
+      const yGeo = new THREE.BufferGeometry();
+      yGeo.setAttribute('position', new THREE.Float32BufferAttribute(yellowPositions, 3));
+      yGeo.setIndex(yellowIndices);
+      yGeo.computeVertexNormals();
+      platGroup.add(new THREE.Mesh(yGeo, yellowMat));
+
+      // Prop placement loop
+      let doorIndex = 0;
+      for (let s = sStart + 5; s < sEnd; s += 20) {
+        const { P, T, N, B } = this.getTrackFrame(s / 1500.0);
+        const Pc = P.clone().addScaledVector(N, trackOffset);
+
+        // PSD Header (Orange stripe)
+        const headerGeo = new THREE.BoxGeometry(0.2, 0.4, 20);
+        const headerMesh = new THREE.Mesh(headerGeo, psdTopMat);
+        const headerPos = Pc.clone().addScaledVector(N, sideSign * 1.35).addScaledVector(B, 3.4);
+        const hm = new THREE.Matrix4().makeBasis(N, B, T).setPosition(headerPos);
+        headerMesh.applyMatrix4(hm);
+        psdGroup.add(headerMesh);
+
+        // PSD Fixed Glass Panels
+        const fGlassGeo = new THREE.BoxGeometry(0.1, 2.2, 9.6);
+        const fGlassMesh = new THREE.Mesh(fGlassGeo, psdGlassMat);
+        const fGlassPos = Pc.clone().addScaledVector(N, sideSign * 1.35).addScaledVector(B, 2.1).addScaledVector(T, 5.2);
+        const gm = new THREE.Matrix4().makeBasis(N, B, T).setPosition(fGlassPos);
+        fGlassMesh.applyMatrix4(gm);
+        psdGroup.add(fGlassMesh);
+
+        // PSD Sliding Doors
+        const dGlassGeo = new THREE.BoxGeometry(0.12, 2.2, 4.2);
+        const lDoor = new THREE.Mesh(dGlassGeo, psdGlassMat);
+        const rDoor = new THREE.Mesh(dGlassGeo, psdGlassMat);
+        const dlPos = Pc.clone().addScaledVector(N, sideSign * 1.32).addScaledVector(B, 2.1).addScaledVector(T, -2.1);
+        const drPos = Pc.clone().addScaledVector(N, sideSign * 1.32).addScaledVector(B, 2.1).addScaledVector(T, 2.1);
+        lDoor.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(dlPos));
+        rDoor.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(drPos));
+        psdGroup.add(lDoor);
+        psdGroup.add(rDoor);
+        this.psdDoors.push({ doorL: lDoor, doorR: rDoor, baseL: dlPos, baseR: drPos, tangent: T });
+
+        // Place Station Sign
+        if (doorIndex % 3 === 1) {
+          const signMesh = new THREE.Mesh(signGeo, signMat);
+          const signPos = Pc.clone().addScaledVector(N, sideSign * 3.5).addScaledVector(B, 3.0);
+          signMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(signPos));
+          propsGroup.add(signMesh);
+        }
+
+        // Place Props on Platform
+        const propT = T.clone();
+        if (sideSign === -1) propT.negate(); // Face the track
+        
+        if (doorIndex === 2) {
+          // Vending Machine
+          const vmGroup = new THREE.Group();
+          const vmBody = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.0, 1.0), vendingRedMat);
+          vmBody.position.set(0, 2.15, 0); // y = 1.15(platform) + 1.0(half height)
+          const vmGlass = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.2, 0.1), vendingGlassMat);
+          vmGlass.position.set(0, 2.4, sideSign * 0.51); // front face
+          const vmSlot = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 0.1), vendingBlackMat);
+          vmSlot.position.set(0, 1.5, sideSign * 0.51);
+          vmGroup.add(vmBody, vmGlass, vmSlot);
+          
+          const vmPos = Pc.clone().addScaledVector(N, sideSign * 4.0).addScaledVector(B, 0);
+          vmGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, propT).setPosition(vmPos));
+          propsGroup.add(vmGroup);
+        } else if (doorIndex === 4 || doorIndex === 8) {
+          // Bench
+          const benchGroup = new THREE.Group();
+          const seat = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.1, 0.8), benchWoodMat);
+          seat.position.set(0, 1.6, 0); // y = 1.15 + 0.45
+          const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.45, 0.6), benchLegMat);
+          leg1.position.set(-0.8, 1.375, 0);
+          const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.45, 0.6), benchLegMat);
+          leg2.position.set(0.8, 1.375, 0);
+          benchGroup.add(seat, leg1, leg2);
+
+          const bPos = Pc.clone().addScaledVector(N, sideSign * 3.5).addScaledVector(B, 0);
+          benchGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, propT).setPosition(bPos));
+          propsGroup.add(benchGroup);
+        } else if (doorIndex === 6) {
+          // Escalator
+          const escGroup = new THREE.Group();
+          const steps = new THREE.Mesh(new THREE.BoxGeometry(2.0, 4.0, 4.0), escalatorStairMat);
+          steps.position.set(0, 3.15, 2.0); // sloped up
+          steps.rotation.x = Math.PI / 4;
+          const glassRail = new THREE.Mesh(new THREE.BoxGeometry(2.2, 4.0, 0.1), escalatorRailMat);
+          glassRail.position.set(0, 4.15, 2.0);
+          glassRail.rotation.x = Math.PI / 4;
+          escGroup.add(steps, glassRail);
+
+          const ePos = Pc.clone().addScaledVector(N, sideSign * 3.5).addScaledVector(B, 0);
+          escGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, propT).setPosition(ePos));
+          propsGroup.add(escGroup);
+        }
+
+        doorIndex++;
       }
     }
 
-    const platGeo = new THREE.BufferGeometry();
-    platGeo.setAttribute('position', new THREE.Float32BufferAttribute(platPositions, 3));
-    platGeo.setIndex(platIndices);
-    platGeo.computeVertexNormals();
-    const platMat = new THREE.MeshStandardMaterial({ color: 0x888c94, roughness: 0.85 });
-    stGroup.add(new THREE.Mesh(platGeo, platMat));
-
-    const yelGeo = new THREE.BufferGeometry();
-    yelGeo.setAttribute('position', new THREE.Float32BufferAttribute(yellowPositions, 3));
-    yelGeo.setIndex(yellowIndices);
-    yelGeo.computeVertexNormals();
-    const yelMat = new THREE.MeshBasicMaterial({ color: 0xf5b000 });
-    stGroup.add(new THREE.Mesh(yelGeo, yelMat));
-
-    // 지상 역사용 기둥 및 캐노피 지붕
-    this.stationCanopyGroup = new THREE.Group();
-    const pillarGeo = new THREE.BoxGeometry(0.25, 4.0, 0.25);
-    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x4a525d, metalness: 0.5 });
-    const canopyGeo = new THREE.BoxGeometry(4.2, 0.2, 11.5);
-    const canopyMat = new THREE.MeshStandardMaterial({ color: 0x6e7682, roughness: 0.7 });
-
-    for (let s = sStart + 6; s <= sEnd - 6; s += 12) {
-      const { P, T, N, B } = this.getTrackFrame(s / 1500.0);
-      const m = new THREE.Matrix4().makeBasis(N, B, T);
-      const pillar = new THREE.Mesh(pillarGeo, pillarMat);
-      pillar.applyMatrix4(m);
-      pillar.position.copy(P).addScaledVector(N, 4.5).addScaledVector(B, 3.15);
-      this.stationCanopyGroup.add(pillar);
-
-      const canopy = new THREE.Mesh(canopyGeo, canopyMat);
-      canopy.applyMatrix4(m);
-      canopy.position.copy(P).addScaledVector(N, 3.2).addScaledVector(B, 5.15);
-      this.stationCanopyGroup.add(canopy);
-    }
-    this.scene.add(this.stationCanopyGroup);
-
-    // 지하 역사용 터널 천장/아치 볼트 (지하 역사 도착 시 표시)
-    this.stationVaultGroup = new THREE.Group();
-    const vaultMat = new THREE.MeshStandardMaterial({ color: 0x2e333b, roughness: 0.88, side: THREE.DoubleSide });
-    for (let s = sStart + 5; s <= sEnd - 5; s += 14) {
-      const { P, T, N, B } = this.getTrackFrame(s / 1500.0);
-      const m = new THREE.Matrix4().makeBasis(N, B, T);
-      const roof = new THREE.Mesh(new THREE.BoxGeometry(11.0, 0.35, 13.8), vaultMat);
-      roof.applyMatrix4(m);
-      roof.position.copy(P).addScaledVector(N, 1.8).addScaledVector(B, 5.2);
-      this.stationVaultGroup.add(roof);
-
-      const wall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 5.8, 13.8), vaultMat);
-      wall.applyMatrix4(m);
-      wall.position.copy(P).addScaledVector(N, 6.2).addScaledVector(B, 2.5);
-      this.stationVaultGroup.add(wall);
-    }
-    this.scene.add(this.stationVaultGroup);
-
-    // 전구간 100% 설치된 스크린도어 (PSD)
-    const psdGlassMat = new THREE.MeshStandardMaterial({
-      color: 0x3a6073,
-      transparent: true,
-      opacity: 0.55,
-      metalness: 0.2,
-      roughness: 0.1
-    });
-    const psdFrameMat = new THREE.MeshStandardMaterial({ color: 0x22262c, metalness: 0.7, roughness: 0.3 });
-
-    this.psdDoors = [];
-    const psdPositions = [265, 275, 290, 305, 320, 335];
-
-    for (let idx = 0; idx < psdPositions.length; idx++) {
-      const s = psdPositions[idx];
-      const { P, T, N, B } = this.getTrackFrame(s / 1500.0);
-      const m = new THREE.Matrix4().makeBasis(N, B, T);
-
-      const header = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.3, 3.6), psdFrameMat);
-      header.applyMatrix4(m);
-      header.position.copy(P).addScaledVector(N, 1.25).addScaledVector(B, 3.15);
-      stGroup.add(header);
-
-      const doorL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.0, 0.85), psdGlassMat);
-      const doorR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.0, 0.85), psdGlassMat);
-      doorL.applyMatrix4(m);
-      doorR.applyMatrix4(m);
-
-      const baseCenter = P.clone().addScaledVector(N, 1.25).addScaledVector(B, 2.15);
-      doorL.position.copy(baseCenter).addScaledVector(T, -0.44);
-      doorR.position.copy(baseCenter).addScaledVector(T, 0.44);
-
-      stGroup.add(doorL);
-      stGroup.add(doorR);
-
-      this.psdDoors.push({
-        doorL,
-        doorR,
-        baseL: doorL.position.clone(),
-        baseR: doorR.position.clone(),
-        tangent: T.clone()
-      });
-    }
-
-    const signCanvas = document.createElement('canvas');
-    signCanvas.width = 512;
-    signCanvas.height = 128;
-    this.signTextCanvas = signCanvas;
-    this.signTexture = new THREE.CanvasTexture(signCanvas);
-    this.updateStationSignTexture('검단오류', 'Geomdan Oryu');
-
-    const signMat = new THREE.MeshBasicMaterial({ map: this.signTexture });
-    const signGeo = new THREE.BoxGeometry(0.1, 0.8, 3.2);
-
-    const sSign = 295.0;
-    const { P, T, N, B } = this.getTrackFrame(sSign / 1500.0);
-    const mSign = new THREE.Matrix4().makeBasis(N, B, T);
-    const signMesh = new THREE.Mesh(signGeo, signMat);
-    signMesh.applyMatrix4(mSign);
-    signMesh.position.copy(P).addScaledVector(N, 3.2).addScaledVector(B, 4.2);
-    stGroup.add(signMesh);
-
-    this.scene.add(stGroup);
+    this.scene.add(platGroup);
+    this.scene.add(psdGroup);
+    this.scene.add(propsGroup);
   },
 
-  updateStationSignTexture(name, eng) {
+  updateStationSignTexture(id, name, eng) {
     if (!this.signTextCanvas || !this.signTexture) return;
     const ctx = this.signTextCanvas.getContext('2d');
-    ctx.fillStyle = '#101721';
-    ctx.fillRect(0, 0, 512, 128);
-    ctx.fillStyle = '#ffcc00';
-    ctx.fillRect(0, 0, 512, 16);
+    
+    // Background: White
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 46px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+    ctx.fillRect(0, 0, 1024, 256);
+    
+    // Bottom Orange Stripe
+    ctx.fillStyle = '#f97316';
+    ctx.fillRect(0, 220, 1024, 36);
+
+    // Frame Border
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#22262c';
+    ctx.strokeRect(0, 0, 1024, 256);
+    
+    // Station badge
+    ctx.fillStyle = '#f97316'; // orange badge
+    ctx.beginPath();
+    ctx.roundRect(40, 40, 140, 140, 20);
+    ctx.fill();
+
+    // Inside Badge text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 50px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(name, 256, 62);
-    ctx.font = 'bold 18px Consolas, monospace';
-    ctx.fillStyle = '#a0aec0';
-    ctx.fillText(eng || 'Incheon Line 2', 256, 102);
+    ctx.fillText(id || '200', 110, 110); // Hardcoded ID for now, can be updated if we pass ID
+
+    // Station Name (Korean)
+    ctx.fillStyle = '#111827';
+    ctx.font = 'bold 80px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(name, 512, 100);
+
+    // Station Name (English)
+    ctx.fillStyle = '#4b5563';
+    ctx.font = 'bold 36px Consolas, monospace';
+    ctx.fillText(eng || 'Incheon Line 2', 512, 170);
+
     this.signTexture.needsUpdate = true;
   },
 
@@ -10384,8 +10450,8 @@ const ThreeCabView = {
       const isRock = (s >= 730 && s <= 780) || (s >= 1110 && s <= 1150);
 
       const pFarL = P.clone().addScaledVector(N, -70).addScaledVector(B, -6.0);
-      const pMidL = P.clone().addScaledVector(N, -12).addScaledVector(B, -2.0);
-      const pBedL = P.clone().addScaledVector(N, -2.4).addScaledVector(B, -0.35);
+      const pMidL = P.clone().addScaledVector(N, -16).addScaledVector(B, -2.0);
+      const pBedL = P.clone().addScaledVector(N, -6.4).addScaledVector(B, -0.35);
       const pBedR = P.clone().addScaledVector(N, 2.4).addScaledVector(B, -0.35);
       const pMidR = P.clone().addScaledVector(N, 12).addScaledVector(B, -2.0);
       const pFarR = P.clone().addScaledVector(N, 70).addScaledVector(B, -6.0);
@@ -10472,7 +10538,7 @@ const ThreeCabView = {
 
     if (st && st.name && st.name !== this.lastStationName) {
       this.lastStationName = st.name;
-      this.updateStationSignTexture(st.name, st.eng);
+      this.updateStationSignTexture(st.id, st.name, st.eng);
     }
 
     // 터널 및 고가교 환경 요소 적응형 가시성 제어
