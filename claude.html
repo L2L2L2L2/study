@@ -62,19 +62,14 @@
 
     /* 모바일 프레임 컨테이너 (대화면 시 반응형 확장) */
     #app-container {
-      width: 100%;
-      max-width: 480px;
-      height: 100%;
-      height: 100vh;
-      height: 100dvh;
-      height: var(--app-height, 100%);
-      display: flex;
-      flex-direction: column;
-      background-color: var(--bg-dark);
-      position: relative;
-      box-shadow: 0 0 35px rgba(0,0,0,0.8);
-      overflow: hidden;
-      transition: max-width 0.25s ease;
+      width: 100vw !important;
+      max-width: 100vw !important;
+      height: 100vh !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
     }
 
     /* ========================================================
@@ -613,12 +608,12 @@
         display: inline-flex !important;
       }
       #panel-viewport {
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 12px;
-        align-items: start;
-        padding: 10px 12px 16px 12px;
-        width: 100%;
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        overflow: hidden !important;
         box-sizing: border-box;
       }
       #panel-viewport.triple-split {
@@ -4613,7 +4608,348 @@
       gap: 8px;
       align-items: center;
     }
-  </style>
+  
+    /* ========================================================
+       인천 2호선 모의운전 워크스테이션 신규 레이아웃 (정밀 고증)
+       - 좌측 상단 (61.8%): 전면 3D 시뮬레이터 + OP1~OP5 오버레이 버튼
+       - 좌측 하단 (38.2%): DU / ADU 나란히 50:50 배치
+       - 우측 세로 (24.4%): OP1 ~ OP5 전용 조작반
+    ======================================================== */
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      overflow: hidden !important;
+      background: #000000 !important;
+    }
+    #app-container {
+      width: 100vw !important;
+      max-width: 100vw !important;
+      height: 100vh !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+    .hud-header,
+    .hud-status-display,
+    .hud-rec-bar,
+    .floating-toolbar,
+    .slot-header {
+      display: none !important;
+    }
+    #panel-viewport {
+      flex: 1 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      overflow: hidden !important;
+      display: block !important;
+      background: #000000 !important;
+    }
+    .sim-workstation-layout {
+      display: flex !important;
+      flex-direction: row !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      background: #000000 !important;
+    }
+
+    /* 좌측 컬럼 (3D 뷰 + DU/ADU) */
+    .sim-left-col {
+      flex: 0 0 75.6% !important;
+      width: 75.6% !important;
+      height: 100vh !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      background: #000000 !important;
+      border-right: 2px solid #282f3a !important;
+    }
+
+    /* 상단: 3D 시뮬레이터 뷰 */
+    .sim-cab-section {
+      flex: 0 0 61.8% !important;
+      height: 61.8% !important;
+      width: 100% !important;
+      position: relative !important;
+      overflow: hidden !important;
+      background: #000000 !important;
+      border-bottom: 2px solid #282f3a !important;
+    }
+    .sim-cab-section .cab-screen-viewport {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      border-radius: 0 !important;
+      border: none !important;
+      background: #000000 !important;
+      overflow: hidden !important;
+    }
+    .sim-cab-section #cab-3d-stage {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    .sim-cab-section #cab-3d-stage canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block !important;
+    }
+    .sim-cab-section #cab-view-canvas {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      z-index: 1 !important;
+      pointer-events: none !important;
+    }
+
+    /* 3D 화면 우측 하단: OP1 ~ OP5 오버레이 플로팅 버튼 바 */
+    .cab-op-overlay-bar {
+      position: absolute !important;
+      bottom: 12px !important;
+      right: 14px !important;
+      z-index: 10 !important;
+      display: flex !important;
+      gap: 6px !important;
+      align-items: center !important;
+      pointer-events: auto !important;
+      user-select: none !important;
+    }
+    .cab-op-btn {
+      padding: 0 14px !important;
+      min-width: 58px !important;
+      height: 38px !important;
+      background: rgba(35, 75, 115, 0.45) !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.65) !important;
+      border-radius: 7px !important;
+      color: #ffffff !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif !important;
+      font-size: 16px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.5px !important;
+      cursor: pointer !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35) !important;
+      transition: all 0.15s ease !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      outline: none !important;
+    }
+    .cab-op-btn:hover {
+      background: rgba(50, 110, 170, 0.65) !important;
+      border-color: #ffffff !important;
+      transform: translateY(-1px) !important;
+    }
+    .cab-op-btn.active {
+      background: rgba(65, 135, 205, 0.75) !important;
+      border: 2px solid #ffffff !important;
+      box-shadow: 0 0 12px rgba(100, 200, 255, 0.85), inset 0 0 8px rgba(255, 255, 255, 0.35) !important;
+      color: #ffffff !important;
+      font-weight: 800 !important;
+      transform: scale(1.02) !important;
+    }
+
+    /* 퀵 메뉴 토글 버튼 & 팝업 */
+    .sim-quick-menu-btn {
+      position: absolute !important;
+      top: 8px !important;
+      right: 8px !important;
+      z-index: 20 !important;
+      background: rgba(20, 25, 35, 0.6) !important;
+      border: 1px solid rgba(255, 255, 255, 0.25) !important;
+      border-radius: 6px !important;
+      color: #ffffff !important;
+      font-size: 14px !important;
+      width: 28px !important;
+      height: 28px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      backdrop-filter: blur(4px) !important;
+      transition: all 0.2s ease !important;
+    }
+    .sim-quick-menu-btn:hover {
+      background: rgba(40, 50, 70, 0.85) !important;
+      border-color: #58a6ff !important;
+    }
+    .sim-quick-menu {
+      position: absolute !important;
+      top: 40px !important;
+      right: 8px !important;
+      z-index: 25 !important;
+      background: #161b22 !important;
+      border: 1px solid #30363d !important;
+      border-radius: 8px !important;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8) !important;
+      padding: 6px !important;
+      display: none;
+      flex-direction: column !important;
+      gap: 4px !important;
+      min-width: 170px !important;
+    }
+    .sim-quick-menu.open {
+      display: flex !important;
+    }
+    .quick-menu-header {
+      font-size: 11px !important;
+      font-weight: 800 !important;
+      color: #8b949e !important;
+      padding: 4px 8px !important;
+      border-bottom: 1px solid #21262d !important;
+    }
+    .quick-menu-item {
+      background: transparent !important;
+      border: none !important;
+      border-radius: 4px !important;
+      color: #c9d1d9 !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      text-align: left !important;
+      padding: 6px 10px !important;
+      cursor: pointer !important;
+      transition: background 0.15s !important;
+    }
+    .quick-menu-item:hover {
+      background: #21262d !important;
+      color: #58a6ff !important;
+    }
+
+    /* 하단: DU & ADU 모니터 50:50 나란히 */
+    .sim-mmi-section {
+      flex: 1 1 38.2% !important;
+      height: 38.2% !important;
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: row !important;
+      gap: 4px !important;
+      padding: 4px !important;
+      box-sizing: border-box !important;
+      background: #090c10 !important;
+      overflow: hidden !important;
+    }
+    .sim-mmi-box {
+      flex: 1 1 50% !important;
+      width: 50% !important;
+      min-width: 0 !important;
+      height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+    }
+    .sim-mmi-box .mmi-monitor-frame {
+      flex: 1 !important;
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      border-radius: 4px !important;
+      border: 2px solid #232832 !important;
+      background: #000000 !important;
+      box-sizing: border-box !important;
+    }
+    .sim-mmi-box .mmi-screen {
+      flex: 1 !important;
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 0 !important;
+      position: relative !important;
+      overflow: hidden !important;
+      display: flex !important;
+      align-items: flex-start !important;
+      justify-content: flex-start !important;
+      background: #000000 !important;
+    }
+    .sim-mmi-box .du2-tcms-wrapper,
+    .sim-mmi-box .adu2-mmi-wrapper {
+      transform-origin: top left !important;
+      flex-shrink: 0 !important;
+    }
+
+    /* 우측 컬럼 (OP 패널 100% 높이) */
+    .sim-right-col {
+      flex: 0 0 24.4% !important;
+      width: 24.4% !important;
+      height: 100vh !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      background: #181c22 !important;
+      box-sizing: border-box !important;
+      padding: 4px !important;
+      border-left: 1px solid #21262d !important;
+    }
+    .sim-right-col .train-metal-panel {
+      border-radius: 6px !important;
+      margin: 0 !important;
+      padding: 10px 6px !important;
+      min-height: 100% !important;
+      box-sizing: border-box !important;
+      border: 1px solid #30363d !important;
+    }
+    .sim-right-col .op1-bottom-row {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
+      width: 100% !important;
+    }
+    .sim-right-col .op1-bottom-left-col,
+    .sim-right-col .op1-bottom-right-col {
+      width: 100% !important;
+    }
+
+    /* 우측 스크롤바 */
+    .sim-right-col::-webkit-scrollbar {
+      width: 5px;
+    }
+    .sim-right-col::-webkit-scrollbar-track {
+      background: #111419;
+    }
+    .sim-right-col::-webkit-scrollbar-thumb {
+      background: #2d333b;
+      border-radius: 3px;
+    }
+    .sim-right-col::-webkit-scrollbar-thumb:hover {
+      background: #444c56;
+    }
+
+
+    /* OP4 및 우측 패널 컴팩트 핏 */
+    .sim-right-col .main-panel-grid {
+      gap: 4px !important;
+    }
+    .sim-right-col .air-gauge-panel-block {
+      margin-top: 4px !important;
+      padding: 4px 6px !important;
+    }
+    .sim-right-col .mode-switch-block {
+      margin-top: 4px !important;
+      padding: 4px 6px !important;
+    }
+    .sim-right-col .component-label {
+      font-size: 10px !important;
+      margin-top: 2px !important;
+    }
+    .sim-right-col .rotary-ticks {
+      margin-top: 2px !important;
+    }
+
+</style>
 </head>
 <body>
 
@@ -4708,71 +5044,732 @@
 
   <!-- 2. 중앙 패널 인터랙션 뷰포트 (모바일 1분할 / 폴드·태블릿·PC 2분할 듀얼 / 3분할 트리플) -->
   <main id="panel-viewport">
+    <div class="sim-workstation-layout" id="sim-workstation-layout">
+      <!-- 좌측 메인 영역: 3D 운전실 뷰 (상단 61.8%) + DU/ADU (하단 38.2%) -->
+      <div class="sim-left-col">
+        
+        <!-- 상단: 3D 전면 운전실 뷰 주행 시뮬레이터 -->
+        <div class="sim-cab-section" id="wrap-CAB_VIEW">
+          <!-- 퀵 액션 토글 버튼 (시나리오/사운드/리셋 빠른 접근) -->
+          <button type="button" class="sim-quick-menu-btn" onclick="toggleQuickMenu(event)" title="시뮬레이터 메뉴 열기">⚙️</button>
+          <div id="sim-quick-menu" class="sim-quick-menu" style="display:none;" onclick="event.stopPropagation()">
+            <div class="quick-menu-header">모의운전 훈련 메뉴</div>
+            <button type="button" class="quick-menu-item" onclick="openScenarioModal(); toggleQuickMenu();">📋 시나리오 선택</button>
+            <button type="button" class="quick-menu-item" onclick="resetCurrentScenario(); toggleQuickMenu();">↺ 처음부터 재시작</button>
+            <button type="button" class="quick-menu-item" onclick="toggleMuteSound(); toggleQuickMenu();">🔊 소리 켜기 / 끄기</button>
+            <button type="button" class="quick-menu-item" onclick="openRemoteModal(); toggleQuickMenu();">📡 원격 교육 연동</button>
+          </div>
 
-    <!-- 좌측 슬롯 (모바일 단일 뷰 / 대화면 좌측 뷰) -->
-    <div id="slot-left" class="viewport-slot">
-      <div class="slot-header" id="slot-header-left">
-        <div class="slot-title">
-          <span class="slot-indicator slot-left-ind">LEFT</span>
-          <span id="slot-left-label">OP3 (긴급 제동 조작반)</span>
+          <div class="cab-screen-viewport" id="cab-screen-viewport">
+            <div id="cab-3d-stage"></div>
+            <canvas id="cab-view-canvas" width="1024" height="473"></canvas>
+            
+            <!-- 실물 OSD 오버레이 (노치 및 속도 인디케이터) -->
+            <div class="cab-osd-overlay">
+              <div class="cab-osd-notch-tag" id="cab-osd-notch-bar">
+                <span id="cab-osd-notch">F N</span>
+                <span class="osd-sep"></span>
+                <span class="osd-current"><strong id="cab-osd-speed">0</strong> km/h</span>
+              </div>
+            </div>
+
+            <!-- 시뮬레이터 화면 우측 하단: OP1 ~ OP5 선택 플로팅 오버레이 버튼 바 -->
+            <div class="cab-op-overlay-bar" id="cab-op-overlay-bar">
+              <button type="button" class="cab-op-btn" id="btn-op1" onclick="switchRightOp('OP1')">OP1</button>
+              <button type="button" class="cab-op-btn" id="btn-op2" onclick="switchRightOp('OP2')">OP2</button>
+              <button type="button" class="cab-op-btn" id="btn-op3" onclick="switchRightOp('OP3')">OP3</button>
+              <button type="button" class="cab-op-btn active" id="btn-op4" onclick="switchRightOp('OP4')">OP4</button>
+              <button type="button" class="cab-op-btn" id="btn-op5" onclick="switchRightOp('OP5')">OP5</button>
+            </div>
+          </div>
         </div>
-        <div class="slot-panel-switcher">
-          <button id="slot-l-op1" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP1')">OP1</button>
-          <button id="slot-l-op2" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP2')">OP2</button>
-          <button id="slot-l-op3" class="slot-switch-btn active" onclick="selectSlotPanel('left', 'OP3')">OP3</button>
-          <button id="slot-l-op4" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP4')">OP4</button>
-          <button id="slot-l-op5" class="slot-switch-btn" onclick="selectSlotPanel('left', 'OP5')">OP5</button>
-          <button id="slot-l-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('left', 'DU')">DU</button>
-          <button id="slot-l-adu" class="slot-switch-btn" onclick="selectSlotPanel('left', 'ADU')">ADU</button>
-          <button id="slot-l-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('left', 'OCC')">OCC</button>
+
+        <!-- 하단: DU & ADU 모니터 나란히 50:50 배치 -->
+        <div class="sim-mmi-section">
+          <!-- 좌측: DU (차량정보제어장치 TCMS 운전일반) -->
+          <div class="sim-mmi-box sim-du-box" id="sim-du-box">
+            <div class="mmi-monitor-frame du-frame">
+              <div class="mmi-bezel-header">
+                <span class="mmi-model">DU</span>
+                <div class="mmi-leds">
+                  <span class="mmi-led green lit" title="POWER"></span>
+                  <span class="mmi-led green lit" title="RUN"></span>
+                  <span class="mmi-led red" id="du-led-err" title="FAULT"></span>
+                </div>
+              </div>
+              <div class="mmi-screen du-screen" style="padding:0; background:#000; overflow:hidden;">
+                <div class="du2-tcms-wrapper">
+                <!-- 1. 최상단 헤더 -->
+                <div class="du2-top-header">
+                  <div class="du2-logo-badge">
+                    <svg width="22" height="16" viewBox="0 0 32 24" fill="none">
+                      <path d="M4 18 C12 6, 20 6, 28 8 C22 14, 14 18, 4 18 Z" fill="#003399"/>
+                      <path d="M12 16 C16 10, 22 10, 28 12 C24 16, 18 18, 12 16 Z" fill="#ff6600"/>
+                    </svg>
+                    <span style="font-size:11px; font-weight:900; color:#002288; font-style:italic;">Fly Incheon</span>
+                  </div>
+                  <div class="du2-header-title">운 전 일 반</div>
+                  <div class="du2-datetime-wrap">
+                    <div id="du2-live-date">2026-09-24</div>
+                    <div id="du2-live-time">13:32:07</div>
+                  </div>
+                </div>
+
+                <!-- 2. 상단 상태 및 측정치 서브 바 -->
+                <div class="du2-sub-bar">
+                  <div class="du2-chips-group">
+                    <span class="du2-chip-box" id="du2-chip-hb">HB</span>
+                    <span class="du2-chip-box active-red" id="du2-chip-eb">EB</span>
+                    <span class="du2-chip-box active-blue" id="du2-chip-pb">PB</span>
+                    <span class="du2-chip-box" id="du2-chip-adbs">ADBS</span>
+                  </div>
+
+                  <div class="du2-st-dest-wrap">
+                    <div>다음역 : <span class="val-green" id="du2-next-st">검단오류</span></div>
+                    <div>종착역 : <span class="val-green" id="du2-dest-st">운연</span></div>
+                  </div>
+
+                  <div class="du2-meter-item">
+                    <span class="du2-val-big-green" id="du2-speed-val">0</span>
+                    <span class="du2-meter-unit">[km/h]</span>
+                  </div>
+
+                  <div class="du2-meter-item">
+                    <span class="du2-meter-label red">가선전압</span>
+                    <span class="du2-val-big-red" id="du2-volt-val">0</span>
+                    <span class="du2-meter-unit">[V]</span>
+                  </div>
+
+                  <div class="du2-meter-item">
+                    <span class="du2-meter-label red">가선전류</span>
+                    <span class="du2-val-big-red" id="du2-amp-val">0</span>
+                    <span class="du2-meter-unit">[A]</span>
+                  </div>
+                </div>
+
+                <!-- 3. 열차 편성 및 출입문 다이어그램 -->
+                <div class="du2-cars-row">
+                  <!-- Mc1 전진 화살표 -->
+                  <div class="du2-arrow-col-left">
+                    <span class="du2-arrow-ind" id="du2-arrow-fwd">◀</span>
+                  </div>
+
+                  <!-- Mc1 차체 (상단 3개, 하단 3개 출입문) -->
+                  <div class="du2-car-unit mc1">
+                    <span class="du2-car-label">Mc1</span>
+                    <div class="du2-car-capsule">
+                      <div class="du2-cab-mark left" id="du2-cab-mark-1"></div>
+                      <div class="du2-door-indicators top">
+                        <span class="du2-door-block" id="du2-d1-t1"></span>
+                        <span class="du2-door-block" id="du2-d1-t2"></span>
+                        <span class="du2-door-block" id="du2-d1-t3"></span>
+                      </div>
+                      <span class="du2-car-code">2101</span>
+                      <div class="du2-door-indicators bottom">
+                        <span class="du2-door-block" id="du2-d1-b1"></span>
+                        <span class="du2-door-block" id="du2-d1-b2"></span>
+                        <span class="du2-door-block" id="du2-d1-b3"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 중앙 연결부 (빈 공간) -->
+                  <div></div>
+
+                  <!-- Mc2 차체 (상단 3개, 하단 3개 출입문) -->
+                  <div class="du2-car-unit mc2">
+                    <span class="du2-car-label">Mc2</span>
+                    <div class="du2-car-capsule">
+                      <div class="du2-door-indicators top">
+                        <span class="du2-door-block" id="du2-d2-t1"></span>
+                        <span class="du2-door-block" id="du2-d2-t2"></span>
+                        <span class="du2-door-block" id="du2-d2-t3"></span>
+                      </div>
+                      <span class="du2-car-code">2001</span>
+                      <div class="du2-door-indicators bottom">
+                        <span class="du2-door-block" id="du2-d2-b1"></span>
+                        <span class="du2-door-block" id="du2-d2-b2"></span>
+                        <span class="du2-door-block" id="du2-d2-b3"></span>
+                      </div>
+                      <div class="du2-cab-mark right" id="du2-cab-mark-2"></div>
+                    </div>
+                  </div>
+
+                  <!-- Mc2 후진 화살표 & 도어 범례 -->
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <div class="du2-arrow-col-right">
+                      <span class="du2-arrow-ind" id="du2-arrow-rev">▶</span>
+                    </div>
+                    <div class="du2-car-legend">
+                      <div class="du2-leg-line">
+                        <span class="du2-leg-box yellow"></span> 통신고장
+                        <span class="du2-leg-box bypass" style="margin-left:4px;">☒</span> 바이패스
+                      </div>
+                      <div class="du2-leg-line">
+                        <span class="du2-leg-box white"></span> 개
+                        <span class="du2-leg-box blue" style="margin-left:4px;"></span> 폐
+                        <span class="du2-leg-box red" style="margin-left:4px;"></span> 고장
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 4. 기기 모니터링 테이블 (Mc1 / Mc2 수직 정렬 완벽 고증) -->
+                <div class="du2-table-wrap">
+                  <!-- (1) 경보 -->
+                  <div class="du2-trow">
+                    <div class="du2-th">경보</div>
+                    <div style="grid-column: 2 / span 4; display:flex; align-items:center; padding-left:10px;">
+                      <span id="du2-alarm-text" style="color: #4ade80; font-size: 11px; font-weight: 800;">● 정상 운행 중</span>
+                    </div>
+                  </div>
+
+                  <!-- (2) 견인지령 -->
+                  <div class="du2-trow" style="min-height: 72px;">
+                    <div class="du2-th">
+                      <div class="du2-trac-gauge-cell">
+                        <div class="du2-v-track"><div class="du2-v-fill" id="du2-trac-fill"></div></div>
+                        <div style="display:flex; flex-direction:column;">
+                          <span>견인지령</span>
+                          <span class="du2-gauge-pct" id="du2-trac-pct">0%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Mc1: 4개 박스 수직 스택 -->
+                    <div class="du2-tcol-eq">
+                      <div class="du2-val-box gray" id="du2-panto-3rd-1" style="font-size:10px;">3rd</div>
+                      <div class="du2-val-box gray" style="font-size:10px;">Stinger</div>
+                      <div class="du2-val-box blue" id="du2-motor-cur-1a">0</div>
+                      <div class="du2-val-box blue" id="du2-motor-cur-1b">0</div>
+                    </div>
+                    <!-- 중앙 공간 -->
+                    <div class="du2-tcol-center"></div>
+                    <!-- Mc2: 4개 박스 수직 스택 -->
+                    <div class="du2-tcol-eq">
+                      <div class="du2-val-box gray" id="du2-panto-3rd-2" style="font-size:10px;">3rd</div>
+                      <div class="du2-val-box gray" style="font-size:10px;">Stinger</div>
+                      <div class="du2-val-box blue" id="du2-motor-cur-2a">0</div>
+                      <div class="du2-val-box blue" id="du2-motor-cur-2b">0</div>
+                    </div>
+                    <!-- 우측 범례 -->
+                    <div class="du2-tr-side">
+                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box blue" style="width:7px; height:7px;"></span> 투입</div>
+                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box gray" style="width:7px; height:7px;"></span> 차단</div>
+                      <div style="margin-top:4px; color:#aaa;">모터전류 [A]</div>
+                    </div>
+                  </div>
+
+                  <!-- (3) 제동지령 -->
+                  <div class="du2-trow" style="min-height: 42px;">
+                    <div class="du2-th">
+                      <div class="du2-trac-gauge-cell">
+                        <div class="du2-v-track"><div class="du2-v-fill" id="du2-brake-fill"></div></div>
+                        <div style="display:flex; flex-direction:column;">
+                          <span>제동지령</span>
+                          <span class="du2-gauge-pct" id="du2-brake-pct">0%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Mc1: 2개 박스 수직 스택 -->
+                    <div class="du2-tcol-eq">
+                      <div class="du2-val-box blue" id="du2-bc-val-1a">0.00</div>
+                      <div class="du2-val-box blue" id="du2-bc-val-1b">0.00</div>
+                    </div>
+                    <!-- 중앙 공간 -->
+                    <div class="du2-tcol-center"></div>
+                    <!-- Mc2: 2개 박스 수직 스택 -->
+                    <div class="du2-tcol-eq">
+                      <div class="du2-val-box blue" id="du2-bc-val-2a">0.00</div>
+                      <div class="du2-val-box blue" id="du2-bc-val-2b">0.00</div>
+                    </div>
+                    <!-- 우측 라벨 -->
+                    <div class="du2-tr-side">
+                      <div style="color:#aaa;">제동압력 [Bar]</div>
+                    </div>
+                  </div>
+
+                  <!-- (4) 신호장치 & ESK 브리지 -->
+                  <div class="du2-trow">
+                    <div class="du2-th">신호장치</div>
+                    <!-- Mc1 -->
+                    <div class="du2-tcol-eq">
+                      <div class="du2-val-box blue active-vobc" id="du2-vobc-1">VOBC</div>
+                    </div>
+                    <!-- 중앙 ESK 브리지 -->
+                    <div class="du2-tcol-center">
+                      <div class="du2-esk-bridge-unit">
+                        <span class="du2-esk-wire-line"></span>
+                        <span class="du2-esk-box-label">연장급전기(ESK)</span>
+                        <span class="du2-esk-wire-line"></span>
+                      </div>
+                    </div>
+                    <!-- Mc2 -->
+                    <div class="du2-tcol-eq">
+                      <div class="du2-val-box blue" id="du2-vobc-2">VOBC</div>
+                    </div>
+                    <!-- 우측 범례 -->
+                    <div class="du2-tr-side">
+                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box blue" style="width:7px; height:7px;"></span> 정상 <span class="du2-leg-box red" style="width:7px; height:7px; margin-left:2px;"></span> 불량 <span class="du2-leg-box yellow" style="width:7px; height:7px; margin-left:2px;"></span> 통신고장</div>
+                    </div>
+                  </div>
+
+                  <!-- (5) 보조전원 -->
+                  <div class="du2-trow">
+                    <div class="du2-th">보조전원</div>
+                    <!-- Mc1 -->
+                    <div class="du2-tcol-eq">
+                      <div class="du2-val-box blue" id="du2-siv-1">0</div>
+                    </div>
+                    <!-- 중앙 공간 -->
+                    <div class="du2-tcol-center"></div>
+                    <!-- Mc2 -->
+                    <div class="du2-tcol-eq">
+                      <div class="du2-val-box blue" id="du2-siv-2">0</div>
+                    </div>
+                    <div class="du2-tr-side">
+                      <div style="color:#aaa;">SIV 전압</div>
+                    </div>
+                  </div>
+
+                  <!-- (6) 공기압축기 -->
+                  <div class="du2-trow">
+                    <div class="du2-th">공기압축기</div>
+                    <!-- Mc1 -->
+                    <div class="du2-tcol-eq">
+                      <div class="du2-val-box gray" id="du2-cmg-1">CMG</div>
+                    </div>
+                    <!-- 중앙 공간 -->
+                    <div class="du2-tcol-center"></div>
+                    <!-- Mc2 -->
+                    <div class="du2-tcol-eq">
+                      <div class="du2-val-box gray" id="du2-cmg-2">CMG</div>
+                    </div>
+                    <div class="du2-tr-side">
+                      <div style="color:#aaa;">MR 9.0 Bar</div>
+                    </div>
+                  </div>
+
+                  <!-- (7) HVAC -->
+                  <div class="du2-trow">
+                    <div class="du2-th">HVAC</div>
+                    <!-- Mc1: 2개 박스 나란히 -->
+                    <div class="du2-tcol-eq" style="flex-direction:row; gap:3px;">
+                      <div class="du2-val-box blue" style="width:28px;">22</div>
+                      <div class="du2-val-box blue" style="width:28px;">22</div>
+                    </div>
+                    <!-- 중앙 공간 -->
+                    <div class="du2-tcol-center"></div>
+                    <!-- Mc2: 2개 박스 나란히 -->
+                    <div class="du2-tcol-eq" style="flex-direction:row; gap:3px;">
+                      <div class="du2-val-box blue" style="width:28px;">22</div>
+                      <div class="du2-val-box blue" style="width:28px;">22</div>
+                    </div>
+                    <div class="du2-tr-side">
+                      <div style="color:#aaa;">실내온도 [℃]</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 5. 하단 메시지 바 -->
+                <div class="du2-msg-bar">
+                  <span class="du2-msg-prefix">메시지:</span>
+                  <span class="du2-msg-body" id="du2-msg-content">정상 운행 대기 중입니다.</span>
+                </div>
+
+                <!-- 6. 하단 4개 소프트키 버튼 -->
+                <div class="du2-footer-actions">
+                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [고장정보] 현재 차량 시스템 정상, 기록된 고장 코드 없음', false)">고장정보</button>
+                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [서비스기기] 객실 냉난방 및 출입문 장치 정상 동작 중', false)">서비스기기</button>
+                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [상태정보] 가선 전압 750V, 주공기압력 9.0 bar 정상', false)">상태정보</button>
+                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [검수정보] 201편성(2101-2001) 출고 검수 완료 상태', false)">검수정보</button>
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 우측: ADU (운전정보속도계 ATO/ATC) -->
+          <div class="sim-mmi-box sim-adu-box" id="sim-adu-box">
+            <div class="mmi-monitor-frame adu-frame">
+              <div class="mmi-bezel-header">
+                <span class="mmi-model">ADU</span>
+                <div class="mmi-leds">
+                  <span class="mmi-led green lit" title="SIGNAL"></span>
+                  <span class="mmi-led amber" id="adu-led-warn" title="OVERSPEED"></span>
+                  <span class="mmi-led red" id="adu-led-eb" title="EMG BRAKE"></span>
+                </div>
+              </div>
+              <div class="mmi-screen adu-screen" style="padding:0; background:#000; overflow:hidden;">
+                <div class="adu2-mmi-wrapper">
+                <!-- 1. 상단 바 -->
+                <div class="adu2-top-bar">
+                  <div class="adu2-top-col">
+                    <span class="adu2-top-lbl">Docking Status</span>
+                    <span class="adu2-top-val green" id="adu2-dock-status">Docked</span>
+                  </div>
+                  <div class="adu2-top-col">
+                    <span class="adu2-top-lbl">Dwell Time</span>
+                    <span class="adu2-top-val white" id="adu2-dwell-time">27 <small>sec</small></span>
+                  </div>
+                  <div class="adu2-top-col">
+                    <span class="adu2-top-banner red" id="adu2-eb-banner">E B</span>
+                  </div>
+                  <div class="adu2-top-col">
+                    <span class="adu2-top-banner yellow" id="adu2-fsb-banner">F S B</span>
+                  </div>
+                  <div class="adu2-top-col">
+                    <span class="adu2-top-lbl">Train Length</span>
+                    <span class="adu2-top-val white" id="adu2-train-length">2-Car</span>
+                  </div>
+                  <div class="adu2-top-col">
+                    <span class="adu2-top-lbl">ATP</span>
+                    <span class="adu2-top-val yellow" id="adu2-atp-dir">Forward</span>
+                  </div>
+                </div>
+
+                <!-- 2. 중앙 메인 영역 -->
+                <div class="adu2-middle-area">
+                  <!-- 좌측: Target Point 컬럼 -->
+                  <div class="adu2-target-col">
+                    <div class="adu2-tp-header">
+                      <span class="lbl">Target Point</span>
+                      <span class="val" id="adu2-tp-val">200 m</span>
+                    </div>
+                    <div class="adu2-tp-gauge-wrap">
+                      <div class="adu2-tp-scale">
+                        <div>1000 <span class="tick">—</span></div>
+                        <div><span class="tick">—</span></div>
+                        <div><span class="tick">—</span></div>
+                        <div><span class="tick">—</span></div>
+                        <div>500 <span class="tick">—</span></div>
+                        <div>400 <span class="tick">—</span></div>
+                        <div>300 <span class="tick">—</span></div>
+                        <div>200 <span class="tick">—</span></div>
+                        <div>100 <span class="tick">—</span></div>
+                        <div>0 <span class="tick">—</span></div>
+                      </div>
+                      <div class="adu2-tp-bar-track">
+                        <div class="adu2-tp-bar-fill" id="adu2-tp-bar-fill" style="height: 20%;"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 중앙: 속도계 다이얼 & 모드 박스 -->
+                  <div class="adu2-center-col">
+                    <div class="adu2-canvas-container">
+                      <canvas id="adu2-speedo-canvas" width="280" height="215"></canvas>
+                    </div>
+                    <div class="adu2-center-footer">
+                      <div class="adu2-mode-box" id="adu2-mode-box">OFF</div>
+                    </div>
+                  </div>
+
+                  <!-- 우측: 플랫폼, 도어, VOBC -->
+                  <div class="adu2-right-col">
+                    <div class="adu2-info-block">
+                      <span class="adu2-info-lbl">Next Platform</span>
+                      <span class="adu2-info-val white" id="adu2-next-plat">201A</span>
+                    </div>
+                    <div class="adu2-info-block">
+                      <span class="adu2-info-lbl">Final Platform</span>
+                      <span class="adu2-info-val white" id="adu2-final-plat">227</span>
+                    </div>
+                    <div class="adu2-doors-block">
+                      <span class="adu2-info-lbl">PSD</span>
+                      <div class="adu2-door-boxes-row">
+                        <span class="side-lbl">L</span>
+                        <span class="adu2-sq-box yellow" id="adu2-psd-l1">■</span>
+                        <span class="adu2-sq-box yellow" id="adu2-psd-l2">■</span>
+                        <span style="flex:1;"></span>
+                        <span class="adu2-sq-box green" id="adu2-psd-r1">■</span>
+                        <span class="adu2-sq-box green" id="adu2-psd-r2">■</span>
+                        <span class="side-lbl" style="text-align:right;">R</span>
+                      </div>
+                    </div>
+                    <div class="adu2-doors-block">
+                      <span class="adu2-info-lbl">Train Door</span>
+                      <div class="adu2-door-boxes-row">
+                        <span class="side-lbl">L</span>
+                        <span class="adu2-sq-box yellow" id="adu2-tdoor-l1">■</span>
+                        <span class="adu2-sq-box yellow" id="adu2-tdoor-l2">■</span>
+                        <span style="flex:1;"></span>
+                        <span class="adu2-sq-box green" id="adu2-tdoor-r1">■</span>
+                        <span class="adu2-sq-box green" id="adu2-tdoor-r2">■</span>
+                        <span class="side-lbl" style="text-align:right;">R</span>
+                      </div>
+                    </div>
+                    <div class="adu2-info-block">
+                      <span class="adu2-info-lbl">Door Enable</span>
+                      <span class="adu2-info-val green" id="adu2-door-enable">Left</span>
+                    </div>
+                    <div class="adu2-subsys-block">
+                      <div class="adu2-subsys-line green" id="adu2-subsys-tcms">TCMS</div>
+                      <div class="adu2-subsys-line green" id="adu2-subsys-vobc1">VOBC 1 <span class="vobc-active-icon">Ⓐ</span></div>
+                      <div class="adu2-subsys-line green" id="adu2-subsys-vobc2">VOBC 2</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. 하단 바: 시계, 터미널 로그, Setup 버튼 -->
+                <div class="adu2-bottom-bar">
+                  <div class="adu2-bottom-clock">
+                    <span class="adu2-clock-date" id="adu2-clock-date">2026.09.24</span>
+                    <span class="adu2-clock-time" id="adu2-clock-time">11:37:14</span>
+                  </div>
+                  <div class="adu2-bottom-logs" id="adu2-bottom-logs">
+                    <div id="adu2-log-1">11:34:54 HOLD</div>
+                    <div id="adu2-log-2">11:34:08 SKIP</div>
+                    <div id="adu2-log-3">11:34:40 FSB FAIL</div>
+                    <div id="adu2-log-4">11:34:24 TCMS LINK OK</div>
+                  </div>
+                  <div class="adu2-bottom-btn-wrap">
+                    <button type="button" class="adu2-setup-btn" onclick="showTemporaryHudFeedback('ℹ️ [ADU Setup] SelTrac MMI 환경설정 메뉴', false)">Setup</button>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div id="slot-left-content" class="slot-content"></div>
-    </div>
 
-    <!-- 중앙 슬롯 (대화면 3분할 전용 뷰) -->
-    <div id="slot-center" class="viewport-slot" style="display:none;">
-      <div class="slot-header" id="slot-header-center">
-        <div class="slot-title">
-          <span class="slot-indicator slot-center-ind">MID</span>
-          <span id="slot-center-label">OP1 (주 제어반 & 마스콘)</span>
+      <!-- 우측 메인 영역: 선택된 OP 패널 (초기 OP4 마운트) -->
+      <div class="sim-right-col" id="sim-right-col">
+        <section id="panel-op4" class="train-metal-panel" style="display:block;">
+      <div class="screw tl"></div><div class="screw tr"></div>
+      <div class="screw bl"></div><div class="screw br"></div>
+
+      <div class="main-panel-grid">
+
+        <!-- 1행 1열: 예비 (로터리 스위치) -->
+        <div class="component-cell" id="wrap-SW_RESERVE_ROTARY">
+          <div class="rotary-unit main-compact" onclick="handleComponentTouch('SW_RESERVE_ROTARY')">
+            <div class="rotary-dial-plate"></div>
+            <div id="comp-SW_RESERVE_ROTARY" class="rotary-knob" style="transform: rotate(-45deg);">
+              <div class="rotary-pointer"></div>
+            </div>
+          </div>
+          <div class="component-label">예비</div>
         </div>
-        <div class="slot-panel-switcher">
-          <button id="slot-c-op1" class="slot-switch-btn active" onclick="selectSlotPanel('center', 'OP1')">OP1</button>
-          <button id="slot-c-op2" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP2')">OP2</button>
-          <button id="slot-c-op3" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP3')">OP3</button>
-          <button id="slot-c-op4" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP4')">OP4</button>
-          <button id="slot-c-op5" class="slot-switch-btn" onclick="selectSlotPanel('center', 'OP5')">OP5</button>
-          <button id="slot-c-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('center', 'DU')">DU</button>
-          <button id="slot-c-adu" class="slot-switch-btn" onclick="selectSlotPanel('center', 'ADU')">ADU</button>
-          <button id="slot-c-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('center', 'OCC')">OCC</button>
+
+        <!-- 1행 2열: 와이퍼 (실물 사진 100% 동일 5단계 셀렉터: AUTO / OFF / INT / SLOW / FAST) -->
+        <div class="component-cell" id="wrap-SW_WIPER">
+          <div class="wiper-unit-box" onclick="handleComponentTouch('SW_WIPER')">
+            <span class="wiper-lbl wiper-lbl-off" id="wiper-lbl-OFF" onclick="setWiperPosition('OFF', event)">OFF</span>
+            <span class="wiper-lbl wiper-lbl-auto" id="wiper-lbl-AUTO" onclick="setWiperPosition('AUTO', event)">AUTO</span>
+            <span class="wiper-lbl wiper-lbl-int" id="wiper-lbl-INT" onclick="setWiperPosition('INT', event)">INT</span>
+            <span class="wiper-lbl wiper-lbl-slow" id="wiper-lbl-SLOW" onclick="setWiperPosition('SLOW', event)">SLOW</span>
+            <span class="wiper-lbl wiper-lbl-fast" id="wiper-lbl-FAST" onclick="setWiperPosition('FAST', event)">FAST</span>
+
+            <div class="wiper-dial-plate"></div>
+            <div id="comp-SW_WIPER" class="wiper-bar-knob" style="transform: rotate(-65deg);">
+              <div class="wiper-knob-indicator"></div>
+              <div class="wiper-screw-hole"></div>
+            </div>
+          </div>
+          <div class="component-label">와이퍼</div>
+        </div>
+
+        <!-- 1행 3열: 예비 (원형 녹색 버튼) -->
+        <div class="component-cell" id="wrap-SW_RESERVE_BTN">
+          <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_RESERVE_BTN')">
+            <div id="comp-SW_RESERVE_BTN" class="push-btn-inner green" style="width:34px; height:34px;"></div>
+          </div>
+          <div class="component-label">예비</div>
+        </div>
+
+        <!-- 2행 1열: 장애물 감지 (정상 / 바이패스 로터리) -->
+        <div class="component-cell" id="wrap-SW_OBSTACLE_BYPASS">
+          <div class="rotary-unit main-compact" onclick="handleComponentTouch('SW_OBSTACLE_BYPASS')">
+            <div class="rotary-dial-plate"></div>
+            <div id="comp-SW_OBSTACLE_BYPASS" class="rotary-knob" style="transform: rotate(-45deg);">
+              <div class="rotary-pointer"></div>
+            </div>
+            <div class="rotary-ticks">
+              <span class="tick-label tick-2-left">정상</span>
+              <span class="tick-label tick-2-right">바이패스</span>
+            </div>
+          </div>
+          <div class="component-label">장애물 감지</div>
+        </div>
+
+        <!-- 2행 2열: 출입문 (정상 / 바이패스 로터리) -->
+        <div class="component-cell" id="wrap-SW_DOOR_BYPASS">
+          <div class="rotary-unit main-compact" onclick="handleComponentTouch('SW_DOOR_BYPASS')">
+            <div class="rotary-dial-plate"></div>
+            <div id="comp-SW_DOOR_BYPASS" class="rotary-knob" style="transform: rotate(-45deg);">
+              <div class="rotary-pointer"></div>
+            </div>
+            <div class="rotary-ticks">
+              <span class="tick-label tick-2-left">정상</span>
+              <span class="tick-label tick-2-right">바이패스</span>
+            </div>
+          </div>
+          <div class="component-label">출입문</div>
+        </div>
+
+        <!-- 2행 3열: 출입문 히터 (원형 녹색 버튼) -->
+        <div class="component-cell" id="wrap-SW_DOOR_HEATER">
+          <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_DOOR_HEATER')">
+            <div id="comp-SW_DOOR_HEATER" class="push-btn-inner green" style="width:34px; height:34px;"></div>
+          </div>
+          <div class="component-label">출입문 히터</div>
+        </div>
+
+        <!-- 3행 좌측 (2열 차지): 실물 사각 볼트 베젤 공기 압력계 (MR, BC) -->
+        <div class="gauge-square-frame">
+          <div class="screw tl" style="top:4px; left:4px;"></div>
+          <div class="screw tr" style="top:4px; right:4px;"></div>
+          <div class="screw bl" style="bottom:4px; left:4px;"></div>
+          <div class="screw br" style="bottom:4px; right:4px;"></div>
+          <div class="gauge-body" style="width:136px; height:136px;">
+            <svg class="gauge-face" viewBox="0 0 160 160">
+              <!-- 다이얼 배경 및 베젤 -->
+              <circle cx="80" cy="80" r="76" fill="#ffffff"/>
+              <circle cx="80" cy="80" r="74" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+
+              <!-- 바깥/안쪽 눈금 트랙 레일 아크 (0 ~ 12 bar, 총 270도) -->
+              <path d="M 34.75 125.25 A 64 64 0 1 1 125.25 125.25" fill="none" stroke="#334155" stroke-width="1.2"/>
+              <path d="M 41.82 118.18 A 54 54 0 1 1 118.18 118.18" fill="none" stroke="#334155" stroke-width="1.2"/>
+
+              <!-- [핵심] 8 ~ 10 bar 적색 경고 대역 (MR 정상 운전 압력 범위 8.0 ~ 10.0 bar) -->
+              <g class="gauge-red-zone">
+                <!-- 적색 채움 아크 -->
+                <path d="M 125.25 34.75 A 64 64 0 0 1 144 80 L 134 80 A 54 54 0 0 0 118.18 41.82 Z" fill="#ef4444" stroke="#dc2626" stroke-width="0.5"/>
+
+                <!-- 8~10 구간 세부 분할선 (0.2 bar 단위 흰색 격자선: 실물 동일 사각 적색 블록 분할) -->
+                <line x1="125.25" y1="34.75" x2="118.18" y2="41.82" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="128.67" y1="38.44" x2="121.06" y2="44.93" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="131.78" y1="42.38" x2="123.69" y2="48.26" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="134.57" y1="46.56" x2="126.04" y2="51.79" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="137.02" y1="50.94" x2="128.11" y2="55.48" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="139.13" y1="55.51" x2="129.89" y2="59.34" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="140.87" y1="60.22" x2="131.36" y2="63.31" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="142.23" y1="65.06" x2="132.51" y2="67.40" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="143.21" y1="70.00" x2="133.34" y2="71.55" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="143.80" y1="74.98" x2="133.83" y2="75.76" stroke="#ffffff" stroke-width="1.2"/>
+                <line x1="144.00" y1="80.00" x2="134.00" y2="80.00" stroke="#ffffff" stroke-width="1.2"/>
+
+                <!-- 적색 구역 외곽/내곽 테두리 강조 -->
+                <path d="M 125.25 34.75 A 64 64 0 0 1 144 80" fill="none" stroke="#1e293b" stroke-width="1.2"/>
+                <path d="M 118.18 41.82 A 54 54 0 0 1 134 80" fill="none" stroke="#1e293b" stroke-width="1.2"/>
+              </g>
+
+              <!-- 주요 눈금선 (Major Ticks) -->
+              <line x1="34.75" y1="125.25" x2="43.23" y2="116.77" stroke="#0f172a" stroke-width="2"/> <!-- 0 bar -->
+              <line x1="20.87" y1="104.49" x2="30.11" y2="100.67" stroke="#334155" stroke-width="1.2"/> <!-- 1 bar -->
+              <line x1="16.00" y1="80.00" x2="28.00" y2="80.00" stroke="#0f172a" stroke-width="2"/> <!-- 2 bar -->
+              <line x1="20.87" y1="55.51" x2="30.11" y2="59.33" stroke="#334155" stroke-width="1.2"/> <!-- 3 bar -->
+              <line x1="34.75" y1="34.75" x2="43.23" y2="43.23" stroke="#0f172a" stroke-width="2"/> <!-- 4 bar -->
+              <line x1="55.51" y1="20.87" x2="59.33" y2="30.11" stroke="#334155" stroke-width="1.2"/> <!-- 5 bar -->
+              <line x1="80.00" y1="16.00" x2="80.00" y2="28.00" stroke="#0f172a" stroke-width="2"/> <!-- 6 bar -->
+              <line x1="104.49" y1="20.87" x2="100.67" y2="30.11" stroke="#334155" stroke-width="1.2"/> <!-- 7 bar -->
+              <line x1="125.25" y1="34.75" x2="116.77" y2="43.23" stroke="#0f172a" stroke-width="2"/> <!-- 8 bar -->
+              <line x1="144.00" y1="80.00" x2="132.00" y2="80.00" stroke="#0f172a" stroke-width="2"/> <!-- 10 bar -->
+              <line x1="139.13" y1="104.49" x2="129.89" y2="100.67" stroke="#334155" stroke-width="1.2"/> <!-- 11 bar -->
+              <line x1="125.25" y1="125.25" x2="116.77" y2="116.77" stroke="#0f172a" stroke-width="2"/> <!-- 12 bar -->
+
+              <!-- 0~8 구간 및 10~12 구간 소눈금 점선 -->
+              <path d="M 34.75 125.25 A 64 64 0 0 1 125.25 34.75" fill="none" stroke="#64748b" stroke-width="3" stroke-dasharray="1.5, 4.5"/>
+              <path d="M 144 80 A 64 64 0 0 1 125.25 125.25" fill="none" stroke="#64748b" stroke-width="3" stroke-dasharray="1.5, 4.5"/>
+
+              <!-- 바늘 정지 핀 (0 bar 하단) -->
+              <circle cx="38" cy="115" r="1.5" fill="#94a3b8" stroke="#475569" stroke-width="0.5"/>
+
+              <!-- 다이얼 고정 나사 2개 -->
+              <circle cx="44" cy="76" r="2.2" fill="#e2e8f0" stroke="#64748b" stroke-width="0.6"/>
+              <line x1="42.5" y1="76" x2="45.5" y2="76" stroke="#475569" stroke-width="0.6"/>
+              <circle cx="116" cy="76" r="2.2" fill="#e2e8f0" stroke="#64748b" stroke-width="0.6"/>
+              <line x1="114.5" y1="76" x2="117.5" y2="76" stroke="#475569" stroke-width="0.6"/>
+
+              <!-- 수치 라벨 -->
+              <text x="44" y="112" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">0</text>
+              <text x="32" y="84" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">2</text>
+              <text x="46" y="52" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">4</text>
+              <text x="80" y="38" font-size="11" font-weight="900" fill="#0f172a" text-anchor="middle">6</text>
+              <text x="114" y="52" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">8</text>
+              <text x="127" y="84" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">10</text>
+              <text x="115" y="112" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">12</text>
+
+              <!-- 중앙 텍스트 (실물 NAGANO NKS 게이지 100% 동일) -->
+              <text x="80" y="60" font-size="7.5" font-weight="900" text-anchor="middle" fill="#0f172a" letter-spacing="0.4">PRESSURE GAUGE</text>
+              <text x="80" y="70" font-size="6.2" font-weight="900" text-anchor="middle">
+                <tspan fill="#dc2626">MR (RED)</tspan>
+                <tspan fill="#64748b"> / </tspan>
+                <tspan fill="#0f172a">BC (BLACK)</tspan>
+              </text>
+              <text x="80" y="103" font-size="8.5" font-weight="900" text-anchor="middle" fill="#0f172a">bar</text>
+
+              <!-- NKS 및 KOREA NAGANO 로고 -->
+              <circle cx="80" cy="116" r="6" fill="none" stroke="#0f172a" stroke-width="0.8"/>
+              <text x="80" y="118.5" font-size="4.8" font-weight="900" text-anchor="middle" fill="#0f172a">NKS</text>
+              <text x="80" y="127" font-size="4.5" font-weight="700" text-anchor="middle" fill="#334155" letter-spacing="0.8">KI 101765</text>
+              <text x="80" y="133" font-size="4.2" font-weight="800" text-anchor="middle" fill="#334155" letter-spacing="0.4">KOREA NAGANO</text>
+            </svg>
+            <div id="needle-mr" class="gauge-needle needle-mr" style="height:54px; transform: rotate(67.5deg);"></div>
+            <div id="needle-bc" class="gauge-needle needle-bc" style="height:52px; transform: rotate(-135deg);"></div>
+            <div class="gauge-center-cap"></div>
+          </div>
+          <div class="gauge-readout-legend" style="font-size:9.5px; margin-top:4px;">
+            <span class="readout-mr">MR: <strong id="val-mr">9.0</strong> bar</span>
+            <span class="readout-bc">BC: <strong id="val-bc">0.0</strong> bar</span>
+          </div>
+          <div class="component-label" style="margin-top:4px; font-size:9.5px;">공기 압력계(MR, BC)</div>
+        </div>
+
+        <!-- 3행 우측 (1열 차지): 공기질개선장치 작동스위치 (실물 사각 알루미늄 명판) -->
+        <div class="component-cell" id="wrap-SW_AIR_CLEAN" style="grid-column: span 1;">
+          <div class="air-clean-plate" style="width:84px;">
+            <div class="rotary-unit" style="width:76px; height:74px;" onclick="handleComponentTouch('SW_AIR_CLEAN')">
+              <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px; border-color:#64748b;"></div>
+              <div id="comp-SW_AIR_CLEAN" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px; transform: rotate(-45deg);">
+                <div class="rotary-pointer" style="height:17px; width:6px; left:10px; top:-5px;"></div>
+              </div>
+              <div class="rotary-ticks">
+                <span class="tick-label interactive-tick" style="top:15px; left:14px; font-size:8px; line-height:1.05;" onclick="setRotary3Position('SW_AIR_CLEAN', 'AUTO', event)">AUTO<br><span style="font-size:6.5px; color:#475569;">(미세먼지)</span></span>
+                <span class="tick-label interactive-tick" style="top:4px; left:50%; font-size:9px;" onclick="setRotary3Position('SW_AIR_CLEAN', 'OFF', event)">OFF</span>
+                <span class="tick-label interactive-tick" style="top:15px; left:62px; font-size:9px;" onclick="setRotary3Position('SW_AIR_CLEAN', 'ON', event)">ON</span>
+              </div>
+            </div>
+          </div>
+          <div class="component-label" style="font-size:9px; margin-top:4px;">공기질개선장치 작동스위치</div>
+        </div>
+
+      </div>
+
+      <!-- OP4 하단 독립 박스: 운전 모드 단독 스위치 유닛 (FM / RM / OFF / ATPM) -->
+      <div class="drive-mode-recess-box">
+        <div class="screw tl" style="top:5px; left:5px;"></div>
+        <div class="screw tr" style="top:5px; right:5px;"></div>
+        <div class="screw bl" style="bottom:5px; left:5px;"></div>
+        <div class="screw br" style="bottom:5px; right:5px;"></div>
+
+        <div class="drive-mode-box-title">운전 모드</div>
+
+        <div class="component-cell" id="wrap-SW_DRIVE_MODE" style="margin: 0 auto; min-height: 124px;">
+          <div class="drive-mode-plate" onclick="handleComponentTouch('SW_DRIVE_MODE')">
+            <!-- 4개 위치 텍스트 라벨 (직접 터치 시 해당 위치 즉시 회전) -->
+            <span class="dm-lbl dm-lbl-off interactive-tick" onclick="setDriveModePosition('OFF', event)">OFF</span>
+            <span class="dm-lbl dm-lbl-rm interactive-tick" onclick="setDriveModePosition('RM', event)">RM</span>
+            <span class="dm-lbl dm-lbl-fm interactive-tick" onclick="setDriveModePosition('FM', event)">FM</span>
+            <span class="dm-lbl dm-lbl-atpm interactive-tick" onclick="setDriveModePosition('ATPM', event)">ATPM</span>
+
+            <!-- 중앙 원형 베이스 링 -->
+            <div class="dm-dial-base"></div>
+
+            <!-- 레버 노브 -->
+            <div id="comp-SW_DRIVE_MODE" class="dm-lever-knob" style="transform: rotate(0deg);">
+              <div class="dm-indicator-dot"></div>
+              <div class="dm-knob-screw"></div>
+            </div>
+          </div>
+          <div class="component-label" style="margin-top: 6px;">운전 모드 (MODE)</div>
         </div>
       </div>
-      <div id="slot-center-content" class="slot-content"></div>
-    </div>
-
-    <!-- 우측 슬롯 (대화면 듀얼/트리플 전용 뷰) -->
-    <div id="slot-right" class="viewport-slot">
-      <div class="slot-header" id="slot-header-right">
-        <div class="slot-title">
-          <span class="slot-indicator slot-right-ind">RIGHT</span>
-          <span id="slot-right-label">OP4 (메인 계기 & 바이패스)</span>
-        </div>
-        <div class="slot-panel-switcher">
-          <button id="slot-r-op1" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP1')">OP1</button>
-          <button id="slot-r-op2" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP2')">OP2</button>
-          <button id="slot-r-op3" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP3')">OP3</button>
-          <button id="slot-r-op4" class="slot-switch-btn active" onclick="selectSlotPanel('right', 'OP4')">OP4</button>
-          <button id="slot-r-op5" class="slot-switch-btn" onclick="selectSlotPanel('right', 'OP5')">OP5</button>
-          <button id="slot-r-du" class="slot-switch-btn du-slot-btn" onclick="selectSlotPanel('right', 'DU')">DU</button>
-          <button id="slot-r-adu" class="slot-switch-btn" onclick="selectSlotPanel('right', 'ADU')">ADU</button>
-          <button id="slot-r-occ" class="slot-switch-btn occ-slot-btn" style="display:none;" onclick="selectSlotPanel('right', 'OCC')">OCC</button>
-        </div>
+    </section>
       </div>
-      <div id="slot-right-content" class="slot-content"></div>
     </div>
 
-    <!-- 패널 저장소 풀 (미표시 패널 대기 영역) -->
     <div id="panel-storage-pool" style="display:none;" aria-hidden="true">
 
     <!-- [패널 1] OP1 : 운전실 주 제어반 (주간제어기, COB 방송장치, 출입문스위치, 축전지) -->
@@ -4782,37 +5779,6 @@
 
       <div class="op1-container">
         
-        <!-- [상단 와이드 행] 전면 주행 뷰 모니터 (너비 100% 와이드 뷰) -->
-        <div class="op1-top-row">
-          <!-- (0) 운전실 전면 주행 뷰 모니터 (인천 2호선 전면 시야창) -->
-          <div class="cab-view-monitor" id="wrap-CAB_VIEW">
-            <div class="cab-monitor-header">
-              <div class="cab-header-left">
-                <span class="cab-cam-dot" id="cab-cam-dot"></span>
-                <span class="cab-monitor-title">전면 운전실 뷰 (CAB VIEW)</span>
-              </div>
-              <div class="cab-header-right">
-                <span id="cab-status-badge" class="cab-badge stopped">정차중</span>
-                <button type="button" class="cab-expand-btn" onclick="toggleCabZoom(event)" title="화면 크기 확대/원래대로">🔍</button>
-              </div>
-            </div>
-
-            <div class="cab-screen-viewport" id="cab-screen-viewport">
-              <div id="cab-3d-stage"></div>
-              <canvas id="cab-view-canvas" width="1024" height="473"></canvas>
-              
-              <!-- 실물 OSD 오버레이 (노치 및 속도 인디케이터) -->
-              <div class="cab-osd-overlay">
-                <div class="cab-osd-notch-tag" id="cab-osd-notch-bar">
-                  <span id="cab-osd-notch">F N</span>
-                  <span class="osd-sep"></span>
-                  <span class="osd-current"><strong id="cab-osd-speed">0</strong> km/h</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- [하단 2단 분할 행] 좌측: 마이크 및 출입문 / 우측: 마스콘 및 운전대 -->
         <div class="op1-bottom-row">
           <!-- [하단 좌측 열] 방송 및 통화용 마이크 + 출입문 버튼 -->
@@ -5331,239 +6297,7 @@
       </div>
     </section>
 
-    <!-- [패널 4] OP4 : 메인 계기 및 바이패스 조작반 -->
-    <section id="panel-op4" class="train-metal-panel" style="display:none;">
-      <div class="screw tl"></div><div class="screw tr"></div>
-      <div class="screw bl"></div><div class="screw br"></div>
-
-      <div class="main-panel-grid">
-
-        <!-- 1행 1열: 예비 (로터리 스위치) -->
-        <div class="component-cell" id="wrap-SW_RESERVE_ROTARY">
-          <div class="rotary-unit main-compact" onclick="handleComponentTouch('SW_RESERVE_ROTARY')">
-            <div class="rotary-dial-plate"></div>
-            <div id="comp-SW_RESERVE_ROTARY" class="rotary-knob" style="transform: rotate(-45deg);">
-              <div class="rotary-pointer"></div>
-            </div>
-          </div>
-          <div class="component-label">예비</div>
-        </div>
-
-        <!-- 1행 2열: 와이퍼 (실물 사진 100% 동일 5단계 셀렉터: AUTO / OFF / INT / SLOW / FAST) -->
-        <div class="component-cell" id="wrap-SW_WIPER">
-          <div class="wiper-unit-box" onclick="handleComponentTouch('SW_WIPER')">
-            <span class="wiper-lbl wiper-lbl-off" id="wiper-lbl-OFF" onclick="setWiperPosition('OFF', event)">OFF</span>
-            <span class="wiper-lbl wiper-lbl-auto" id="wiper-lbl-AUTO" onclick="setWiperPosition('AUTO', event)">AUTO</span>
-            <span class="wiper-lbl wiper-lbl-int" id="wiper-lbl-INT" onclick="setWiperPosition('INT', event)">INT</span>
-            <span class="wiper-lbl wiper-lbl-slow" id="wiper-lbl-SLOW" onclick="setWiperPosition('SLOW', event)">SLOW</span>
-            <span class="wiper-lbl wiper-lbl-fast" id="wiper-lbl-FAST" onclick="setWiperPosition('FAST', event)">FAST</span>
-
-            <div class="wiper-dial-plate"></div>
-            <div id="comp-SW_WIPER" class="wiper-bar-knob" style="transform: rotate(-65deg);">
-              <div class="wiper-knob-indicator"></div>
-              <div class="wiper-screw-hole"></div>
-            </div>
-          </div>
-          <div class="component-label">와이퍼</div>
-        </div>
-
-        <!-- 1행 3열: 예비 (원형 녹색 버튼) -->
-        <div class="component-cell" id="wrap-SW_RESERVE_BTN">
-          <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_RESERVE_BTN')">
-            <div id="comp-SW_RESERVE_BTN" class="push-btn-inner green" style="width:34px; height:34px;"></div>
-          </div>
-          <div class="component-label">예비</div>
-        </div>
-
-        <!-- 2행 1열: 장애물 감지 (정상 / 바이패스 로터리) -->
-        <div class="component-cell" id="wrap-SW_OBSTACLE_BYPASS">
-          <div class="rotary-unit main-compact" onclick="handleComponentTouch('SW_OBSTACLE_BYPASS')">
-            <div class="rotary-dial-plate"></div>
-            <div id="comp-SW_OBSTACLE_BYPASS" class="rotary-knob" style="transform: rotate(-45deg);">
-              <div class="rotary-pointer"></div>
-            </div>
-            <div class="rotary-ticks">
-              <span class="tick-label tick-2-left">정상</span>
-              <span class="tick-label tick-2-right">바이패스</span>
-            </div>
-          </div>
-          <div class="component-label">장애물 감지</div>
-        </div>
-
-        <!-- 2행 2열: 출입문 (정상 / 바이패스 로터리) -->
-        <div class="component-cell" id="wrap-SW_DOOR_BYPASS">
-          <div class="rotary-unit main-compact" onclick="handleComponentTouch('SW_DOOR_BYPASS')">
-            <div class="rotary-dial-plate"></div>
-            <div id="comp-SW_DOOR_BYPASS" class="rotary-knob" style="transform: rotate(-45deg);">
-              <div class="rotary-pointer"></div>
-            </div>
-            <div class="rotary-ticks">
-              <span class="tick-label tick-2-left">정상</span>
-              <span class="tick-label tick-2-right">바이패스</span>
-            </div>
-          </div>
-          <div class="component-label">출입문</div>
-        </div>
-
-        <!-- 2행 3열: 출입문 히터 (원형 녹색 버튼) -->
-        <div class="component-cell" id="wrap-SW_DOOR_HEATER">
-          <div class="metal-bezel-btn" style="width:48px; height:48px;" onclick="handleComponentTouch('SW_DOOR_HEATER')">
-            <div id="comp-SW_DOOR_HEATER" class="push-btn-inner green" style="width:34px; height:34px;"></div>
-          </div>
-          <div class="component-label">출입문 히터</div>
-        </div>
-
-        <!-- 3행 좌측 (2열 차지): 실물 사각 볼트 베젤 공기 압력계 (MR, BC) -->
-        <div class="gauge-square-frame">
-          <div class="screw tl" style="top:4px; left:4px;"></div>
-          <div class="screw tr" style="top:4px; right:4px;"></div>
-          <div class="screw bl" style="bottom:4px; left:4px;"></div>
-          <div class="screw br" style="bottom:4px; right:4px;"></div>
-          <div class="gauge-body" style="width:136px; height:136px;">
-            <svg class="gauge-face" viewBox="0 0 160 160">
-              <!-- 다이얼 배경 및 베젤 -->
-              <circle cx="80" cy="80" r="76" fill="#ffffff"/>
-              <circle cx="80" cy="80" r="74" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
-
-              <!-- 바깥/안쪽 눈금 트랙 레일 아크 (0 ~ 12 bar, 총 270도) -->
-              <path d="M 34.75 125.25 A 64 64 0 1 1 125.25 125.25" fill="none" stroke="#334155" stroke-width="1.2"/>
-              <path d="M 41.82 118.18 A 54 54 0 1 1 118.18 118.18" fill="none" stroke="#334155" stroke-width="1.2"/>
-
-              <!-- [핵심] 8 ~ 10 bar 적색 경고 대역 (MR 정상 운전 압력 범위 8.0 ~ 10.0 bar) -->
-              <g class="gauge-red-zone">
-                <!-- 적색 채움 아크 -->
-                <path d="M 125.25 34.75 A 64 64 0 0 1 144 80 L 134 80 A 54 54 0 0 0 118.18 41.82 Z" fill="#ef4444" stroke="#dc2626" stroke-width="0.5"/>
-
-                <!-- 8~10 구간 세부 분할선 (0.2 bar 단위 흰색 격자선: 실물 동일 사각 적색 블록 분할) -->
-                <line x1="125.25" y1="34.75" x2="118.18" y2="41.82" stroke="#ffffff" stroke-width="1.2"/>
-                <line x1="128.67" y1="38.44" x2="121.06" y2="44.93" stroke="#ffffff" stroke-width="1.2"/>
-                <line x1="131.78" y1="42.38" x2="123.69" y2="48.26" stroke="#ffffff" stroke-width="1.2"/>
-                <line x1="134.57" y1="46.56" x2="126.04" y2="51.79" stroke="#ffffff" stroke-width="1.2"/>
-                <line x1="137.02" y1="50.94" x2="128.11" y2="55.48" stroke="#ffffff" stroke-width="1.2"/>
-                <line x1="139.13" y1="55.51" x2="129.89" y2="59.34" stroke="#ffffff" stroke-width="1.2"/>
-                <line x1="140.87" y1="60.22" x2="131.36" y2="63.31" stroke="#ffffff" stroke-width="1.2"/>
-                <line x1="142.23" y1="65.06" x2="132.51" y2="67.40" stroke="#ffffff" stroke-width="1.2"/>
-                <line x1="143.21" y1="70.00" x2="133.34" y2="71.55" stroke="#ffffff" stroke-width="1.2"/>
-                <line x1="143.80" y1="74.98" x2="133.83" y2="75.76" stroke="#ffffff" stroke-width="1.2"/>
-                <line x1="144.00" y1="80.00" x2="134.00" y2="80.00" stroke="#ffffff" stroke-width="1.2"/>
-
-                <!-- 적색 구역 외곽/내곽 테두리 강조 -->
-                <path d="M 125.25 34.75 A 64 64 0 0 1 144 80" fill="none" stroke="#1e293b" stroke-width="1.2"/>
-                <path d="M 118.18 41.82 A 54 54 0 0 1 134 80" fill="none" stroke="#1e293b" stroke-width="1.2"/>
-              </g>
-
-              <!-- 주요 눈금선 (Major Ticks) -->
-              <line x1="34.75" y1="125.25" x2="43.23" y2="116.77" stroke="#0f172a" stroke-width="2"/> <!-- 0 bar -->
-              <line x1="20.87" y1="104.49" x2="30.11" y2="100.67" stroke="#334155" stroke-width="1.2"/> <!-- 1 bar -->
-              <line x1="16.00" y1="80.00" x2="28.00" y2="80.00" stroke="#0f172a" stroke-width="2"/> <!-- 2 bar -->
-              <line x1="20.87" y1="55.51" x2="30.11" y2="59.33" stroke="#334155" stroke-width="1.2"/> <!-- 3 bar -->
-              <line x1="34.75" y1="34.75" x2="43.23" y2="43.23" stroke="#0f172a" stroke-width="2"/> <!-- 4 bar -->
-              <line x1="55.51" y1="20.87" x2="59.33" y2="30.11" stroke="#334155" stroke-width="1.2"/> <!-- 5 bar -->
-              <line x1="80.00" y1="16.00" x2="80.00" y2="28.00" stroke="#0f172a" stroke-width="2"/> <!-- 6 bar -->
-              <line x1="104.49" y1="20.87" x2="100.67" y2="30.11" stroke="#334155" stroke-width="1.2"/> <!-- 7 bar -->
-              <line x1="125.25" y1="34.75" x2="116.77" y2="43.23" stroke="#0f172a" stroke-width="2"/> <!-- 8 bar -->
-              <line x1="144.00" y1="80.00" x2="132.00" y2="80.00" stroke="#0f172a" stroke-width="2"/> <!-- 10 bar -->
-              <line x1="139.13" y1="104.49" x2="129.89" y2="100.67" stroke="#334155" stroke-width="1.2"/> <!-- 11 bar -->
-              <line x1="125.25" y1="125.25" x2="116.77" y2="116.77" stroke="#0f172a" stroke-width="2"/> <!-- 12 bar -->
-
-              <!-- 0~8 구간 및 10~12 구간 소눈금 점선 -->
-              <path d="M 34.75 125.25 A 64 64 0 0 1 125.25 34.75" fill="none" stroke="#64748b" stroke-width="3" stroke-dasharray="1.5, 4.5"/>
-              <path d="M 144 80 A 64 64 0 0 1 125.25 125.25" fill="none" stroke="#64748b" stroke-width="3" stroke-dasharray="1.5, 4.5"/>
-
-              <!-- 바늘 정지 핀 (0 bar 하단) -->
-              <circle cx="38" cy="115" r="1.5" fill="#94a3b8" stroke="#475569" stroke-width="0.5"/>
-
-              <!-- 다이얼 고정 나사 2개 -->
-              <circle cx="44" cy="76" r="2.2" fill="#e2e8f0" stroke="#64748b" stroke-width="0.6"/>
-              <line x1="42.5" y1="76" x2="45.5" y2="76" stroke="#475569" stroke-width="0.6"/>
-              <circle cx="116" cy="76" r="2.2" fill="#e2e8f0" stroke="#64748b" stroke-width="0.6"/>
-              <line x1="114.5" y1="76" x2="117.5" y2="76" stroke="#475569" stroke-width="0.6"/>
-
-              <!-- 수치 라벨 -->
-              <text x="44" y="112" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">0</text>
-              <text x="32" y="84" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">2</text>
-              <text x="46" y="52" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">4</text>
-              <text x="80" y="38" font-size="11" font-weight="900" fill="#0f172a" text-anchor="middle">6</text>
-              <text x="114" y="52" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">8</text>
-              <text x="127" y="84" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">10</text>
-              <text x="115" y="112" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">12</text>
-
-              <!-- 중앙 텍스트 (실물 NAGANO NKS 게이지 100% 동일) -->
-              <text x="80" y="60" font-size="7.5" font-weight="900" text-anchor="middle" fill="#0f172a" letter-spacing="0.4">PRESSURE GAUGE</text>
-              <text x="80" y="70" font-size="6.2" font-weight="900" text-anchor="middle">
-                <tspan fill="#dc2626">MR (RED)</tspan>
-                <tspan fill="#64748b"> / </tspan>
-                <tspan fill="#0f172a">BC (BLACK)</tspan>
-              </text>
-              <text x="80" y="103" font-size="8.5" font-weight="900" text-anchor="middle" fill="#0f172a">bar</text>
-
-              <!-- NKS 및 KOREA NAGANO 로고 -->
-              <circle cx="80" cy="116" r="6" fill="none" stroke="#0f172a" stroke-width="0.8"/>
-              <text x="80" y="118.5" font-size="4.8" font-weight="900" text-anchor="middle" fill="#0f172a">NKS</text>
-              <text x="80" y="127" font-size="4.5" font-weight="700" text-anchor="middle" fill="#334155" letter-spacing="0.8">KI 101765</text>
-              <text x="80" y="133" font-size="4.2" font-weight="800" text-anchor="middle" fill="#334155" letter-spacing="0.4">KOREA NAGANO</text>
-            </svg>
-            <div id="needle-mr" class="gauge-needle needle-mr" style="height:54px; transform: rotate(67.5deg);"></div>
-            <div id="needle-bc" class="gauge-needle needle-bc" style="height:52px; transform: rotate(-135deg);"></div>
-            <div class="gauge-center-cap"></div>
-          </div>
-          <div class="gauge-readout-legend" style="font-size:9.5px; margin-top:4px;">
-            <span class="readout-mr">MR: <strong id="val-mr">9.0</strong> bar</span>
-            <span class="readout-bc">BC: <strong id="val-bc">0.0</strong> bar</span>
-          </div>
-          <div class="component-label" style="margin-top:4px; font-size:9.5px;">공기 압력계(MR, BC)</div>
-        </div>
-
-        <!-- 3행 우측 (1열 차지): 공기질개선장치 작동스위치 (실물 사각 알루미늄 명판) -->
-        <div class="component-cell" id="wrap-SW_AIR_CLEAN" style="grid-column: span 1;">
-          <div class="air-clean-plate" style="width:84px;">
-            <div class="rotary-unit" style="width:76px; height:74px;" onclick="handleComponentTouch('SW_AIR_CLEAN')">
-              <div class="rotary-dial-plate" style="bottom:2px; width:44px; height:44px; border-color:#64748b;"></div>
-              <div id="comp-SW_AIR_CLEAN" class="rotary-knob" style="bottom:10px; width:26px; height:26px; margin-left:-13px; transform: rotate(-45deg);">
-                <div class="rotary-pointer" style="height:17px; width:6px; left:10px; top:-5px;"></div>
-              </div>
-              <div class="rotary-ticks">
-                <span class="tick-label interactive-tick" style="top:15px; left:14px; font-size:8px; line-height:1.05;" onclick="setRotary3Position('SW_AIR_CLEAN', 'AUTO', event)">AUTO<br><span style="font-size:6.5px; color:#475569;">(미세먼지)</span></span>
-                <span class="tick-label interactive-tick" style="top:4px; left:50%; font-size:9px;" onclick="setRotary3Position('SW_AIR_CLEAN', 'OFF', event)">OFF</span>
-                <span class="tick-label interactive-tick" style="top:15px; left:62px; font-size:9px;" onclick="setRotary3Position('SW_AIR_CLEAN', 'ON', event)">ON</span>
-              </div>
-            </div>
-          </div>
-          <div class="component-label" style="font-size:9px; margin-top:4px;">공기질개선장치 작동스위치</div>
-        </div>
-
-      </div>
-
-      <!-- OP4 하단 독립 박스: 운전 모드 단독 스위치 유닛 (FM / RM / OFF / ATPM) -->
-      <div class="drive-mode-recess-box">
-        <div class="screw tl" style="top:5px; left:5px;"></div>
-        <div class="screw tr" style="top:5px; right:5px;"></div>
-        <div class="screw bl" style="bottom:5px; left:5px;"></div>
-        <div class="screw br" style="bottom:5px; right:5px;"></div>
-
-        <div class="drive-mode-box-title">운전 모드</div>
-
-        <div class="component-cell" id="wrap-SW_DRIVE_MODE" style="margin: 0 auto; min-height: 124px;">
-          <div class="drive-mode-plate" onclick="handleComponentTouch('SW_DRIVE_MODE')">
-            <!-- 4개 위치 텍스트 라벨 (직접 터치 시 해당 위치 즉시 회전) -->
-            <span class="dm-lbl dm-lbl-off interactive-tick" onclick="setDriveModePosition('OFF', event)">OFF</span>
-            <span class="dm-lbl dm-lbl-rm interactive-tick" onclick="setDriveModePosition('RM', event)">RM</span>
-            <span class="dm-lbl dm-lbl-fm interactive-tick" onclick="setDriveModePosition('FM', event)">FM</span>
-            <span class="dm-lbl dm-lbl-atpm interactive-tick" onclick="setDriveModePosition('ATPM', event)">ATPM</span>
-
-            <!-- 중앙 원형 베이스 링 -->
-            <div class="dm-dial-base"></div>
-
-            <!-- 레버 노브 -->
-            <div id="comp-SW_DRIVE_MODE" class="dm-lever-knob" style="transform: rotate(0deg);">
-              <div class="dm-indicator-dot"></div>
-              <div class="dm-knob-screw"></div>
-            </div>
-          </div>
-          <div class="component-label" style="margin-top: 6px;">운전 모드 (MODE)</div>
-        </div>
-      </div>
-    </section>
+    
  
     <!-- [패널 5] OP5 : 보조 조작반 (실물 사진 100% 동일 2행 4열 레이아웃) -->
     <section id="panel-op5" class="train-metal-panel" style="display:none;">
@@ -5881,484 +6615,6 @@
       </div>
     </section>
 
-    <!-- [패널 6] DU & ADU : 운전실 모니터 (차량정보제어장치 TCMS & 운전정보속도계 ATC/ATO) -->
-    <section id="panel-du" class="train-metal-panel du-panel-board" style="display:none;">
-      <div class="screw tl"></div><div class="screw tr"></div>
-      <div class="screw bl"></div><div class="screw br"></div>
-
-      <div class="du-container">
-        <!-- 모니터 상단 상태바 -->
-        <!-- 모니터 상단 상태바 -->
-        <div class="du-header-bar">
-          <div class="du-title">
-            <span class="du-badge">CAB DISPLAY</span>
-            <span>DU & ADU 디지털 통합 모니터 패널</span>
-          </div>
-          <div class="du-conn-status">● TCMS / ATC SYSTEM ONLINE</div>
-        </div>
-
-        <!-- 2대 모니터 나란히 배치 그리드 -->
-        <div class="du-monitors-grid">
-
-          <!-- [좌측 모니터] DU -->
-          <div class="mmi-monitor-frame du-frame">
-            <div class="mmi-bezel-header">
-              <span class="mmi-model">DU</span>
-              <div class="mmi-leds">
-                <span class="mmi-led green lit" title="POWER"></span>
-                <span class="mmi-led green lit" title="RUN"></span>
-                <span class="mmi-led red" id="du-led-err" title="FAULT"></span>
-              </div>
-            </div>
-            <div class="mmi-screen du-screen" style="padding:0; background:#000; overflow:hidden;">
-              <div class="du2-tcms-wrapper">
-                <!-- 1. 최상단 헤더 -->
-                <div class="du2-top-header">
-                  <div class="du2-logo-badge">
-                    <svg width="22" height="16" viewBox="0 0 32 24" fill="none">
-                      <path d="M4 18 C12 6, 20 6, 28 8 C22 14, 14 18, 4 18 Z" fill="#003399"/>
-                      <path d="M12 16 C16 10, 22 10, 28 12 C24 16, 18 18, 12 16 Z" fill="#ff6600"/>
-                    </svg>
-                    <span style="font-size:11px; font-weight:900; color:#002288; font-style:italic;">Fly Incheon</span>
-                  </div>
-                  <div class="du2-header-title">운 전 일 반</div>
-                  <div class="du2-datetime-wrap">
-                    <div id="du2-live-date">2026-09-24</div>
-                    <div id="du2-live-time">13:32:07</div>
-                  </div>
-                </div>
-
-                <!-- 2. 상단 상태 및 측정치 서브 바 -->
-                <div class="du2-sub-bar">
-                  <div class="du2-chips-group">
-                    <span class="du2-chip-box" id="du2-chip-hb">HB</span>
-                    <span class="du2-chip-box active-red" id="du2-chip-eb">EB</span>
-                    <span class="du2-chip-box active-blue" id="du2-chip-pb">PB</span>
-                    <span class="du2-chip-box" id="du2-chip-adbs">ADBS</span>
-                  </div>
-
-                  <div class="du2-st-dest-wrap">
-                    <div>다음역 : <span class="val-green" id="du2-next-st">검단오류</span></div>
-                    <div>종착역 : <span class="val-green" id="du2-dest-st">운연</span></div>
-                  </div>
-
-                  <div class="du2-meter-item">
-                    <span class="du2-val-big-green" id="du2-speed-val">0</span>
-                    <span class="du2-meter-unit">[km/h]</span>
-                  </div>
-
-                  <div class="du2-meter-item">
-                    <span class="du2-meter-label red">가선전압</span>
-                    <span class="du2-val-big-red" id="du2-volt-val">0</span>
-                    <span class="du2-meter-unit">[V]</span>
-                  </div>
-
-                  <div class="du2-meter-item">
-                    <span class="du2-meter-label red">가선전류</span>
-                    <span class="du2-val-big-red" id="du2-amp-val">0</span>
-                    <span class="du2-meter-unit">[A]</span>
-                  </div>
-                </div>
-
-                <!-- 3. 열차 편성 및 출입문 다이어그램 -->
-                <div class="du2-cars-row">
-                  <!-- Mc1 전진 화살표 -->
-                  <div class="du2-arrow-col-left">
-                    <span class="du2-arrow-ind" id="du2-arrow-fwd">◀</span>
-                  </div>
-
-                  <!-- Mc1 차체 (상단 3개, 하단 3개 출입문) -->
-                  <div class="du2-car-unit mc1">
-                    <span class="du2-car-label">Mc1</span>
-                    <div class="du2-car-capsule">
-                      <div class="du2-cab-mark left" id="du2-cab-mark-1"></div>
-                      <div class="du2-door-indicators top">
-                        <span class="du2-door-block" id="du2-d1-t1"></span>
-                        <span class="du2-door-block" id="du2-d1-t2"></span>
-                        <span class="du2-door-block" id="du2-d1-t3"></span>
-                      </div>
-                      <span class="du2-car-code">2101</span>
-                      <div class="du2-door-indicators bottom">
-                        <span class="du2-door-block" id="du2-d1-b1"></span>
-                        <span class="du2-door-block" id="du2-d1-b2"></span>
-                        <span class="du2-door-block" id="du2-d1-b3"></span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 중앙 연결부 (빈 공간) -->
-                  <div></div>
-
-                  <!-- Mc2 차체 (상단 3개, 하단 3개 출입문) -->
-                  <div class="du2-car-unit mc2">
-                    <span class="du2-car-label">Mc2</span>
-                    <div class="du2-car-capsule">
-                      <div class="du2-door-indicators top">
-                        <span class="du2-door-block" id="du2-d2-t1"></span>
-                        <span class="du2-door-block" id="du2-d2-t2"></span>
-                        <span class="du2-door-block" id="du2-d2-t3"></span>
-                      </div>
-                      <span class="du2-car-code">2001</span>
-                      <div class="du2-door-indicators bottom">
-                        <span class="du2-door-block" id="du2-d2-b1"></span>
-                        <span class="du2-door-block" id="du2-d2-b2"></span>
-                        <span class="du2-door-block" id="du2-d2-b3"></span>
-                      </div>
-                      <div class="du2-cab-mark right" id="du2-cab-mark-2"></div>
-                    </div>
-                  </div>
-
-                  <!-- Mc2 후진 화살표 & 도어 범례 -->
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <div class="du2-arrow-col-right">
-                      <span class="du2-arrow-ind" id="du2-arrow-rev">▶</span>
-                    </div>
-                    <div class="du2-car-legend">
-                      <div class="du2-leg-line">
-                        <span class="du2-leg-box yellow"></span> 통신고장
-                        <span class="du2-leg-box bypass" style="margin-left:4px;">☒</span> 바이패스
-                      </div>
-                      <div class="du2-leg-line">
-                        <span class="du2-leg-box white"></span> 개
-                        <span class="du2-leg-box blue" style="margin-left:4px;"></span> 폐
-                        <span class="du2-leg-box red" style="margin-left:4px;"></span> 고장
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 4. 기기 모니터링 테이블 (Mc1 / Mc2 수직 정렬 완벽 고증) -->
-                <div class="du2-table-wrap">
-                  <!-- (1) 경보 -->
-                  <div class="du2-trow">
-                    <div class="du2-th">경보</div>
-                    <div style="grid-column: 2 / span 4; display:flex; align-items:center; padding-left:10px;">
-                      <span id="du2-alarm-text" style="color: #4ade80; font-size: 11px; font-weight: 800;">● 정상 운행 중</span>
-                    </div>
-                  </div>
-
-                  <!-- (2) 견인지령 -->
-                  <div class="du2-trow" style="min-height: 72px;">
-                    <div class="du2-th">
-                      <div class="du2-trac-gauge-cell">
-                        <div class="du2-v-track"><div class="du2-v-fill" id="du2-trac-fill"></div></div>
-                        <div style="display:flex; flex-direction:column;">
-                          <span>견인지령</span>
-                          <span class="du2-gauge-pct" id="du2-trac-pct">0%</span>
-                        </div>
-                      </div>
-                    </div>
-                    <!-- Mc1: 4개 박스 수직 스택 -->
-                    <div class="du2-tcol-eq">
-                      <div class="du2-val-box gray" id="du2-panto-3rd-1" style="font-size:10px;">3rd</div>
-                      <div class="du2-val-box gray" style="font-size:10px;">Stinger</div>
-                      <div class="du2-val-box blue" id="du2-motor-cur-1a">0</div>
-                      <div class="du2-val-box blue" id="du2-motor-cur-1b">0</div>
-                    </div>
-                    <!-- 중앙 공간 -->
-                    <div class="du2-tcol-center"></div>
-                    <!-- Mc2: 4개 박스 수직 스택 -->
-                    <div class="du2-tcol-eq">
-                      <div class="du2-val-box gray" id="du2-panto-3rd-2" style="font-size:10px;">3rd</div>
-                      <div class="du2-val-box gray" style="font-size:10px;">Stinger</div>
-                      <div class="du2-val-box blue" id="du2-motor-cur-2a">0</div>
-                      <div class="du2-val-box blue" id="du2-motor-cur-2b">0</div>
-                    </div>
-                    <!-- 우측 범례 -->
-                    <div class="du2-tr-side">
-                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box blue" style="width:7px; height:7px;"></span> 투입</div>
-                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box gray" style="width:7px; height:7px;"></span> 차단</div>
-                      <div style="margin-top:4px; color:#aaa;">모터전류 [A]</div>
-                    </div>
-                  </div>
-
-                  <!-- (3) 제동지령 -->
-                  <div class="du2-trow" style="min-height: 42px;">
-                    <div class="du2-th">
-                      <div class="du2-trac-gauge-cell">
-                        <div class="du2-v-track"><div class="du2-v-fill" id="du2-brake-fill"></div></div>
-                        <div style="display:flex; flex-direction:column;">
-                          <span>제동지령</span>
-                          <span class="du2-gauge-pct" id="du2-brake-pct">0%</span>
-                        </div>
-                      </div>
-                    </div>
-                    <!-- Mc1: 2개 박스 수직 스택 -->
-                    <div class="du2-tcol-eq">
-                      <div class="du2-val-box blue" id="du2-bc-val-1a">0.00</div>
-                      <div class="du2-val-box blue" id="du2-bc-val-1b">0.00</div>
-                    </div>
-                    <!-- 중앙 공간 -->
-                    <div class="du2-tcol-center"></div>
-                    <!-- Mc2: 2개 박스 수직 스택 -->
-                    <div class="du2-tcol-eq">
-                      <div class="du2-val-box blue" id="du2-bc-val-2a">0.00</div>
-                      <div class="du2-val-box blue" id="du2-bc-val-2b">0.00</div>
-                    </div>
-                    <!-- 우측 라벨 -->
-                    <div class="du2-tr-side">
-                      <div style="color:#aaa;">제동압력 [Bar]</div>
-                    </div>
-                  </div>
-
-                  <!-- (4) 신호장치 & ESK 브리지 -->
-                  <div class="du2-trow">
-                    <div class="du2-th">신호장치</div>
-                    <!-- Mc1 -->
-                    <div class="du2-tcol-eq">
-                      <div class="du2-val-box blue active-vobc" id="du2-vobc-1">VOBC</div>
-                    </div>
-                    <!-- 중앙 ESK 브리지 -->
-                    <div class="du2-tcol-center">
-                      <div class="du2-esk-bridge-unit">
-                        <span class="du2-esk-wire-line"></span>
-                        <span class="du2-esk-box-label">연장급전기(ESK)</span>
-                        <span class="du2-esk-wire-line"></span>
-                      </div>
-                    </div>
-                    <!-- Mc2 -->
-                    <div class="du2-tcol-eq">
-                      <div class="du2-val-box blue" id="du2-vobc-2">VOBC</div>
-                    </div>
-                    <!-- 우측 범례 -->
-                    <div class="du2-tr-side">
-                      <div style="display:flex; align-items:center; gap:3px;"><span class="du2-leg-box blue" style="width:7px; height:7px;"></span> 정상 <span class="du2-leg-box red" style="width:7px; height:7px; margin-left:2px;"></span> 불량 <span class="du2-leg-box yellow" style="width:7px; height:7px; margin-left:2px;"></span> 통신고장</div>
-                    </div>
-                  </div>
-
-                  <!-- (5) 보조전원 -->
-                  <div class="du2-trow">
-                    <div class="du2-th">보조전원</div>
-                    <!-- Mc1 -->
-                    <div class="du2-tcol-eq">
-                      <div class="du2-val-box blue" id="du2-siv-1">0</div>
-                    </div>
-                    <!-- 중앙 공간 -->
-                    <div class="du2-tcol-center"></div>
-                    <!-- Mc2 -->
-                    <div class="du2-tcol-eq">
-                      <div class="du2-val-box blue" id="du2-siv-2">0</div>
-                    </div>
-                    <div class="du2-tr-side">
-                      <div style="color:#aaa;">SIV 전압</div>
-                    </div>
-                  </div>
-
-                  <!-- (6) 공기압축기 -->
-                  <div class="du2-trow">
-                    <div class="du2-th">공기압축기</div>
-                    <!-- Mc1 -->
-                    <div class="du2-tcol-eq">
-                      <div class="du2-val-box gray" id="du2-cmg-1">CMG</div>
-                    </div>
-                    <!-- 중앙 공간 -->
-                    <div class="du2-tcol-center"></div>
-                    <!-- Mc2 -->
-                    <div class="du2-tcol-eq">
-                      <div class="du2-val-box gray" id="du2-cmg-2">CMG</div>
-                    </div>
-                    <div class="du2-tr-side">
-                      <div style="color:#aaa;">MR 9.0 Bar</div>
-                    </div>
-                  </div>
-
-                  <!-- (7) HVAC -->
-                  <div class="du2-trow">
-                    <div class="du2-th">HVAC</div>
-                    <!-- Mc1: 2개 박스 나란히 -->
-                    <div class="du2-tcol-eq" style="flex-direction:row; gap:3px;">
-                      <div class="du2-val-box blue" style="width:28px;">22</div>
-                      <div class="du2-val-box blue" style="width:28px;">22</div>
-                    </div>
-                    <!-- 중앙 공간 -->
-                    <div class="du2-tcol-center"></div>
-                    <!-- Mc2: 2개 박스 나란히 -->
-                    <div class="du2-tcol-eq" style="flex-direction:row; gap:3px;">
-                      <div class="du2-val-box blue" style="width:28px;">22</div>
-                      <div class="du2-val-box blue" style="width:28px;">22</div>
-                    </div>
-                    <div class="du2-tr-side">
-                      <div style="color:#aaa;">실내온도 [℃]</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 5. 하단 메시지 바 -->
-                <div class="du2-msg-bar">
-                  <span class="du2-msg-prefix">메시지:</span>
-                  <span class="du2-msg-body" id="du2-msg-content">정상 운행 대기 중입니다.</span>
-                </div>
-
-                <!-- 6. 하단 4개 소프트키 버튼 -->
-                <div class="du2-footer-actions">
-                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [고장정보] 현재 차량 시스템 정상, 기록된 고장 코드 없음', false)">고장정보</button>
-                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [서비스기기] 객실 냉난방 및 출입문 장치 정상 동작 중', false)">서비스기기</button>
-                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [상태정보] 가선 전압 750V, 주공기압력 9.0 bar 정상', false)">상태정보</button>
-                  <button type="button" class="du2-soft-btn" onclick="showTemporaryHudFeedback('ℹ️ [검수정보] 201편성(2101-2001) 출고 검수 완료 상태', false)">검수정보</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- [우측 모니터] ADU -->
-          </div></div></section>
-
-    <section id="panel-adu" class="train-metal-panel du-panel-board" style="display:none;">
-      <div class="screw tl"></div><div class="screw tr"></div>
-      <div class="screw bl"></div><div class="screw br"></div>
-      <div class="du-container">
-        <div class="du-header-bar">
-          <div class="du-title">
-            <span class="du-badge">CAB DISPLAY</span>
-            <span>ADU (ATO Display Unit)</span>
-          </div>
-          <div class="du-conn-status">🟢 ATC SYSTEM ONLINE</div>
-        </div>
-        <div class="du-monitors-grid">
-<div class="mmi-monitor-frame adu-frame">
-            <div class="mmi-bezel-header">
-              <span class="mmi-model">ADU</span>
-              <div class="mmi-leds">
-                <span class="mmi-led green lit" title="SIGNAL"></span>
-                <span class="mmi-led amber" id="adu-led-warn" title="OVERSPEED"></span>
-                <span class="mmi-led red" id="adu-led-eb" title="EMG BRAKE"></span>
-              </div>
-            </div>
-            <div class="mmi-screen adu-screen" style="padding:0; background:#000; overflow:hidden;">
-              <div class="adu2-mmi-wrapper">
-                <!-- 1. 상단 바 -->
-                <div class="adu2-top-bar">
-                  <div class="adu2-top-col">
-                    <span class="adu2-top-lbl">Docking Status</span>
-                    <span class="adu2-top-val green" id="adu2-dock-status">Docked</span>
-                  </div>
-                  <div class="adu2-top-col">
-                    <span class="adu2-top-lbl">Dwell Time</span>
-                    <span class="adu2-top-val white" id="adu2-dwell-time">27 <small>sec</small></span>
-                  </div>
-                  <div class="adu2-top-col">
-                    <span class="adu2-top-banner red" id="adu2-eb-banner">E B</span>
-                  </div>
-                  <div class="adu2-top-col">
-                    <span class="adu2-top-banner yellow" id="adu2-fsb-banner">F S B</span>
-                  </div>
-                  <div class="adu2-top-col">
-                    <span class="adu2-top-lbl">Train Length</span>
-                    <span class="adu2-top-val white" id="adu2-train-length">2-Car</span>
-                  </div>
-                  <div class="adu2-top-col">
-                    <span class="adu2-top-lbl">ATP</span>
-                    <span class="adu2-top-val yellow" id="adu2-atp-dir">Forward</span>
-                  </div>
-                </div>
-
-                <!-- 2. 중앙 메인 영역 -->
-                <div class="adu2-middle-area">
-                  <!-- 좌측: Target Point 컬럼 -->
-                  <div class="adu2-target-col">
-                    <div class="adu2-tp-header">
-                      <span class="lbl">Target Point</span>
-                      <span class="val" id="adu2-tp-val">200 m</span>
-                    </div>
-                    <div class="adu2-tp-gauge-wrap">
-                      <div class="adu2-tp-scale">
-                        <div>1000 <span class="tick">—</span></div>
-                        <div><span class="tick">—</span></div>
-                        <div><span class="tick">—</span></div>
-                        <div><span class="tick">—</span></div>
-                        <div>500 <span class="tick">—</span></div>
-                        <div>400 <span class="tick">—</span></div>
-                        <div>300 <span class="tick">—</span></div>
-                        <div>200 <span class="tick">—</span></div>
-                        <div>100 <span class="tick">—</span></div>
-                        <div>0 <span class="tick">—</span></div>
-                      </div>
-                      <div class="adu2-tp-bar-track">
-                        <div class="adu2-tp-bar-fill" id="adu2-tp-bar-fill" style="height: 20%;"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 중앙: 속도계 다이얼 & 모드 박스 -->
-                  <div class="adu2-center-col">
-                    <div class="adu2-canvas-container">
-                      <canvas id="adu2-speedo-canvas" width="280" height="215"></canvas>
-                    </div>
-                    <div class="adu2-center-footer">
-                      <div class="adu2-mode-box" id="adu2-mode-box">OFF</div>
-                    </div>
-                  </div>
-
-                  <!-- 우측: 플랫폼, 도어, VOBC -->
-                  <div class="adu2-right-col">
-                    <div class="adu2-info-block">
-                      <span class="adu2-info-lbl">Next Platform</span>
-                      <span class="adu2-info-val white" id="adu2-next-plat">201A</span>
-                    </div>
-                    <div class="adu2-info-block">
-                      <span class="adu2-info-lbl">Final Platform</span>
-                      <span class="adu2-info-val white" id="adu2-final-plat">227</span>
-                    </div>
-                    <div class="adu2-doors-block">
-                      <span class="adu2-info-lbl">PSD</span>
-                      <div class="adu2-door-boxes-row">
-                        <span class="side-lbl">L</span>
-                        <span class="adu2-sq-box yellow" id="adu2-psd-l1">■</span>
-                        <span class="adu2-sq-box yellow" id="adu2-psd-l2">■</span>
-                        <span style="flex:1;"></span>
-                        <span class="adu2-sq-box green" id="adu2-psd-r1">■</span>
-                        <span class="adu2-sq-box green" id="adu2-psd-r2">■</span>
-                        <span class="side-lbl" style="text-align:right;">R</span>
-                      </div>
-                    </div>
-                    <div class="adu2-doors-block">
-                      <span class="adu2-info-lbl">Train Door</span>
-                      <div class="adu2-door-boxes-row">
-                        <span class="side-lbl">L</span>
-                        <span class="adu2-sq-box yellow" id="adu2-tdoor-l1">■</span>
-                        <span class="adu2-sq-box yellow" id="adu2-tdoor-l2">■</span>
-                        <span style="flex:1;"></span>
-                        <span class="adu2-sq-box green" id="adu2-tdoor-r1">■</span>
-                        <span class="adu2-sq-box green" id="adu2-tdoor-r2">■</span>
-                        <span class="side-lbl" style="text-align:right;">R</span>
-                      </div>
-                    </div>
-                    <div class="adu2-info-block">
-                      <span class="adu2-info-lbl">Door Enable</span>
-                      <span class="adu2-info-val green" id="adu2-door-enable">Left</span>
-                    </div>
-                    <div class="adu2-subsys-block">
-                      <div class="adu2-subsys-line green" id="adu2-subsys-tcms">TCMS</div>
-                      <div class="adu2-subsys-line green" id="adu2-subsys-vobc1">VOBC 1 <span class="vobc-active-icon">Ⓐ</span></div>
-                      <div class="adu2-subsys-line green" id="adu2-subsys-vobc2">VOBC 2</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 3. 하단 바: 시계, 터미널 로그, Setup 버튼 -->
-                <div class="adu2-bottom-bar">
-                  <div class="adu2-bottom-clock">
-                    <span class="adu2-clock-date" id="adu2-clock-date">2026.09.24</span>
-                    <span class="adu2-clock-time" id="adu2-clock-time">11:37:14</span>
-                  </div>
-                  <div class="adu2-bottom-logs" id="adu2-bottom-logs">
-                    <div id="adu2-log-1">11:34:54 HOLD</div>
-                    <div id="adu2-log-2">11:34:08 SKIP</div>
-                    <div id="adu2-log-3">11:34:40 FSB FAIL</div>
-                    <div id="adu2-log-4">11:34:24 TCMS LINK OK</div>
-                  </div>
-                  <div class="adu2-bottom-btn-wrap">
-                    <button type="button" class="adu2-setup-btn" onclick="showTemporaryHudFeedback('ℹ️ [ADU Setup] SelTrac MMI 환경설정 메뉴', false)">Setup</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-    </div>
     <!-- /panel-storage-pool -->
 
     <!-- 중앙 플로팅 VOBC 결과 메시지 토스트 -->
@@ -14246,7 +14502,109 @@ function openScenarioModal() {
   loadScenarioListUI();
   openModal('modal-scenario-list');
 }
+
+// ========================================================
+// [신규 레이아웃] 우측 OP 패널 전환 및 MMI 반응형 스케일러
+// ========================================================
+function toggleQuickMenu(e) {
+  if (e) e.stopPropagation();
+  const m = document.getElementById('sim-quick-menu');
+  if (m) m.classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  const m = document.getElementById('sim-quick-menu');
+  if (m) m.classList.remove('open');
+});
+
+function switchRightOp(opId) {
+  opId = opId.toUpperCase();
+  if (!['OP1', 'OP2', 'OP3', 'OP4', 'OP5'].includes(opId)) return;
+
+  activeRightPanel = opId;
+
+  // 1. 오버레이 버튼 active 토글
+  document.querySelectorAll('.cab-op-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.id === `btn-${opId.toLowerCase()}`);
+  });
+
+  // 2. 우측 슬롯에 해당 OP 패널 마운트
+  const rightCol = document.getElementById('sim-right-col');
+  const pool = document.getElementById('panel-storage-pool');
+  if (!rightCol || !pool) return;
+
+  ['OP1', 'OP2', 'OP3', 'OP4', 'OP5'].forEach(p => {
+    const el = document.getElementById(`panel-${p.toLowerCase()}`);
+    if (!el) return;
+    if (p === opId) {
+      el.style.display = 'block';
+      if (el.parentElement !== rightCol) {
+        rightCol.appendChild(el);
+      }
+    } else {
+      el.style.display = 'none';
+      if (el.parentElement !== pool) {
+        pool.appendChild(el);
+      }
+    }
+  });
+
+  if (typeof triggerHaptic === 'function') triggerHaptic(25);
+  if (opId === 'OP1') {
+    requestAnimationFrame(updateMasconScalers);
+  }
+}
+
+// DU / ADU 반응형 자동 스케일러 (어떤 해상도에서도 화면에 꽉 맞게 비례 축소/확대)
+function updateMmiScalers() {
+  const duScreen = document.querySelector('.sim-du-box .du-screen');
+  const aduScreen = document.querySelector('.sim-adu-box .adu-screen');
+  const duWrap = document.querySelector('.sim-du-box .du2-tcms-wrapper');
+  const aduWrap = document.querySelector('.sim-adu-box .adu2-mmi-wrapper');
+
+  if (duScreen && duWrap) {
+    const sw = duScreen.clientWidth;
+    const sh = duScreen.clientHeight;
+    if (sw > 0 && sh > 0) {
+      const s = Math.min(sw / 528, sh / 400);
+      duWrap.style.transform = `scale(${s})`;
+      duWrap.style.width = '522px';
+    }
+  }
+  if (aduScreen && aduWrap) {
+    const sw = aduScreen.clientWidth;
+    const sh = aduScreen.clientHeight;
+    if (sw > 0 && sh > 0) {
+      const s = Math.min(sw / 528, sh / 400);
+      aduWrap.style.transform = `scale(${s})`;
+      aduWrap.style.width = '522px';
+    }
+  }
+}
+
+// 윈도우 리사이즈 및 초기화 연동
+window.addEventListener('resize', () => {
+  updateMmiScalers();
+  if (typeof ThreeCabView !== 'undefined' && ThreeCabView.active) {
+    ThreeCabView.onResize();
+  }
+});
+
+// 초기 구동 시 OP4 활성화 및 스케일러 적용
+window.addEventListener('DOMContentLoaded', () => {
+  updateMmiScalers();
+  if (typeof ThreeCabView !== 'undefined' && ThreeCabView.active) {
+    ThreeCabView.onResize();
+  }
+});
+setTimeout(() => {
+  updateMmiScalers();
+  if (typeof ThreeCabView !== 'undefined' && ThreeCabView.active) {
+    ThreeCabView.onResize();
+  }
+}, 300);
+
 </script>
+
 
 </body>
 </html>
