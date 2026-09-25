@@ -7793,8 +7793,8 @@ const INCHEON2_STATIONS = [
   { id: '204', name: '마전', eng: 'Majeon', type: 'TUNNEL', platformSide: 'R' },
   { id: '205', name: '완정', eng: 'Wanjeong', type: 'TUNNEL', platformSide: 'R' },
   { id: '206', name: '독정', eng: 'Dokjeong', type: 'TUNNEL', platformSide: 'R' },
-  { id: '207', name: '검암', eng: 'Geomam', type: 'TUNNEL', platformSide: 'R' },
-  { id: '208', name: '검바위', eng: 'Geombawi', type: 'TUNNEL', platformSide: 'R' },
+  { id: '207', name: '검암', eng: 'Geomam', type: 'GROUND', platformSide: 'R' },
+  { id: '208', name: '검바위', eng: 'Geombawi', type: 'GROUND', platformSide: 'R' },
   { id: '209', name: '아시아드경기장', eng: 'Asiad Stadium', type: 'TUNNEL', platformSide: 'R' },
   { id: '210', name: '서구청', eng: 'Seo-gu Office', type: 'TUNNEL', platformSide: 'R' },
   { id: '211', name: '가정', eng: 'Gajeong', type: 'TUNNEL', platformSide: 'R' },
@@ -7811,7 +7811,7 @@ const INCHEON2_STATIONS = [
   { id: '222', name: '석천사거리', eng: 'Seokcheon Sageori', type: 'TUNNEL', platformSide: 'R' },
   { id: '223', name: '모래내시장', eng: 'Moraenae Market', type: 'TUNNEL', platformSide: 'R' },
   { id: '224', name: '만수', eng: 'Mansu', type: 'TUNNEL', platformSide: 'R' },
-  { id: '225', name: '남동구청', eng: 'Namdong-gu Office', type: 'GROUND', platformSide: 'R' },
+  { id: '225', name: '남동구청', eng: 'Namdong-gu Office', type: 'TUNNEL', platformSide: 'R' },
   { id: '226', name: '인천대공원', eng: 'Incheon Grand Park', type: 'GROUND', platformSide: 'R' },
   { id: '227', name: '운연', eng: 'Unyeon', type: 'GROUND', platformSide: 'R' }
 ];
@@ -7921,16 +7921,12 @@ const AtoDriverless = {
     const n = Math.floor(s / CYCLE);
     const p = ((s % CYCLE) + CYCLE) % CYCLE;
 
-    // 1500m 1주기당 2개 역 (지상역 305m, 지하역 1020m)
     if (p <= 305.0 + 5.0) {
       this.targetStopDist = n * CYCLE + 305.0;
-      this.stationIdx = (n * 2) % INCHEON2_STATIONS.length;
-    } else if (p <= 1020.0 + 5.0) {
-      this.targetStopDist = n * CYCLE + 1020.0;
-      this.stationIdx = (n * 2 + 1) % INCHEON2_STATIONS.length;
+      this.stationIdx = ((n % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
     } else {
       this.targetStopDist = (n + 1) * CYCLE + 305.0;
-      this.stationIdx = ((n + 1) * 2) % INCHEON2_STATIONS.length;
+      this.stationIdx = (((n + 1) % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
     }
   },
 
@@ -8029,12 +8025,8 @@ const AtoDriverless = {
         const CYCLE = 1500.0;
         const n = Math.floor(dist / CYCLE);
         const p = ((dist % CYCLE) + CYCLE) % CYCLE;
-        // 305m 역 출발 후에는 1020m 역으로, 1020m 역 출발 후에는 다음 주기 305m 역으로
-        if (p < 600.0) {
-          this.targetStopDist = n * CYCLE + 1020.0;
-        } else {
-          this.targetStopDist = (n + 1) * CYCLE + 305.0;
-        }
+        // 다음 역 승강장 정차점 (다음 주기의 305m 승강장)
+        this.targetStopDist = (n + 1) * CYCLE + 305.0;
         this.state = 'DEPARTING';
         this.stateTimer = 2.0;
         if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
@@ -8084,8 +8076,58 @@ const cvElev = new Float32Array(CV.DMAX + 2);
 function cvCurv(s) {           // 곡률 (1/m), + 가 우곡선
   return 0.0026 * Math.sin(s / 215) + 0.0015 * Math.sin(s / 79 + 1.7) + 0.0007 * Math.sin(s / 31 + 0.4);
 }
-function cvGradeAt(s) {        // 구배 (m/m)
-  return 0.011 * Math.sin(s / 290 + 0.8) + 0.005 * Math.sin(s / 113 + 2.1);
+function cvGradeAt(s) {        // 실시간 선형 구배 (m/m, 퍼밀 고증)
+  const CYCLE = 1500.0;
+  const p = ((s % CYCLE) + CYCLE) % CYCLE;
+  const n = Math.floor(s / CYCLE);
+  const curIdx = ((n % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
+  const nextIdx = (curIdx + 1) % INCHEON2_STATIONS.length;
+
+  const curStation = INCHEON2_STATIONS[curIdx];
+  const nextStation = INCHEON2_STATIONS[nextIdx];
+
+  // 1. 검바위(208) -> 아시아드경기장(209): 54/1000 (54‰, -0.054) 롤러코스터 급강하 하구배
+  //    검바위역 출발(305m) 후 높은 고가교에서 지하 갱구(776m) 직전까지의 급경사 강하 구간
+  if (curStation.id === '208' && nextStation.id === '209') {
+    if (p >= 430.0 && p <= 760.0) {
+      const t = (p - 430.0) / (760.0 - 430.0);
+      const bell = Math.sin(t * Math.PI);
+      return -0.054 * Math.pow(bell, 0.45); // 피크에서 정확히 -0.054 (54/1000 하구배)
+    }
+  }
+
+  // 2. 독정(206) -> 검암(207): 지하 터널에서 경인아라뱃길/시천교 상공 높은 고가교로 치고 올라가는 급상승 상구배 (+38‰)
+  if (curStation.id === '206' && nextStation.id === '207') {
+    if (p >= 460.0 && p <= 760.0) {
+      const t = (p - 460.0) / (760.0 - 460.0);
+      const bell = Math.sin(t * Math.PI);
+      return 0.038 * Math.pow(bell, 0.5); // 피크에서 +0.038 (38/1000 상구배)
+    }
+  }
+
+  // 3. 검암(207) -> 검바위(208): 높은 지상 고가교 평탄 유지
+  if (curStation.id === '207' && nextStation.id === '208') {
+    return 0.002 * Math.sin(p / 100);
+  }
+
+  // 4. 왕길(202) -> 검단사거리(203): 지상에서 지하 갱구 진입 (-32‰)
+  if (curStation.id === '202' && nextStation.id === '203') {
+    if (p >= 480.0 && p <= 760.0) {
+      const t = (p - 480.0) / (760.0 - 480.0);
+      return -0.032 * Math.sin(t * Math.PI);
+    }
+  }
+
+  // 5. 남동구청(225) -> 인천대공원(226): 지하에서 지상 고가 진출 (+35‰)
+  if (curStation.id === '225' && nextStation.id === '226') {
+    if (p >= 480.0 && p <= 760.0) {
+      const t = (p - 480.0) / (760.0 - 480.0);
+      return 0.035 * Math.sin(t * Math.PI);
+    }
+  }
+
+  // 일반 완만한 구배
+  return 0.008 * Math.sin(s / 290 + 0.8) + 0.004 * Math.sin(s / 113 + 2.1);
 }
 function cvHash(a, b) {
   const h = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
@@ -9893,6 +9935,11 @@ function cvDrawGlass(ctx) {
 --------------------------------------------------------------------------- */
 function cvDrawOverlayInfo(ctx, st, tun) {
   const msgs = [];
+    if (cvState.slope <= -0.04) {
+    msgs.push(['급경사 하구배 (54‰)', '하강 주의 감속', '#f87171']);
+  } else if (cvState.slope >= 0.03) {
+    msgs.push(['급경사 상구배 (38‰)', '상승 견인 가속', '#60a5fa']);
+  }
   if (tun.inside) msgs.push(['터널 통과 중', '잔여 ' + Math.round(tun.exit) + ' m', '#7dd3fc']);
   else if (tun.entry < 250) msgs.push(['터널 진입 예고', Math.round(tun.entry) + ' m 전방', '#fbbf24']);
   if (st.dStart > 0 && st.dStart < 420) msgs.push(['다음역 ' + st.name, Math.round(st.dStart) + ' m', '#a7f3d0']);
