@@ -4762,6 +4762,39 @@
       transform: scale(1.02) !important;
     }
 
+    .cab-return-badge {
+      position: absolute !important;
+      top: 14px !important;
+      right: 14px !important;
+      z-index: 15 !important;
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+      color: #ffffff !important;
+      border: 1.5px solid #ffedd5 !important;
+      padding: 9px 16px !important;
+      border-radius: 8px !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif !important;
+      font-size: 14px !important;
+      font-weight: 800 !important;
+      cursor: pointer !important;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 0 12px rgba(249, 115, 22, 0.6) !important;
+      transition: all 0.2s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      pointer-events: auto !important;
+      user-select: none !important;
+      animation: pulseTerminalBadge 2s infinite !important;
+    }
+    .cab-return-badge:hover {
+      background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
+      transform: scale(1.05) !important;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7), 0 0 16px rgba(249, 115, 22, 0.9) !important;
+    }
+    @keyframes pulseTerminalBadge {
+      0%, 100% { box-shadow: 0 4px 14px rgba(0,0,0,0.55), 0 0 10px rgba(249,115,22,0.6); }
+      50% { box-shadow: 0 4px 18px rgba(0,0,0,0.65), 0 0 20px rgba(249,115,22,0.95); }
+    }
+
     /* 퀵 메뉴 토글 버튼 & 팝업 */
     .sim-quick-menu-btn {
       position: absolute !important;
@@ -5055,6 +5088,8 @@
           <div id="sim-quick-menu" class="sim-quick-menu" style="display:none;" onclick="event.stopPropagation()">
             <div class="quick-menu-header">모의운전 훈련 메뉴</div>
             <button type="button" class="quick-menu-item" onclick="openScenarioModal(); toggleQuickMenu();">📋 시나리오 선택</button>
+            <button type="button" class="quick-menu-item" onclick="returnToFirstStation(); toggleQuickMenu();">🔄 기점역(검단오류역)으로 회차</button>
+            <button type="button" class="quick-menu-item" onclick="jumpToStation('운연'); toggleQuickMenu();">📍 종착역(운연역)으로 바로 이동</button>
             <button type="button" class="quick-menu-item" onclick="resetCurrentScenario(); toggleQuickMenu();">↺ 처음부터 재시작</button>
             <button type="button" class="quick-menu-item" onclick="toggleMuteSound(); toggleQuickMenu();">🔊 소리 켜기 / 끄기</button>
             <button type="button" class="quick-menu-item" onclick="openRemoteModal(); toggleQuickMenu();">📡 원격 교육 연동</button>
@@ -5064,6 +5099,9 @@
             <div id="cab-3d-stage"></div>
             <canvas id="cab-view-canvas" width="1024" height="473"></canvas>
             
+            <!-- 시뮬레이터 화면 상단 우측: 회차 버튼 (종착역 도착 시 표시) -->
+            <button type="button" class="cab-return-badge" id="btn-cab-return-first" style="display:none;" onclick="returnToFirstStation()">🔄 처음(검단오류역)으로 회차</button>
+
             <!-- 실물 OSD 오버레이 (노치 및 속도 인디케이터) -->
             <div class="cab-osd-overlay">
               <div class="cab-osd-notch-tag" id="cab-osd-notch-bar">
@@ -6770,6 +6808,47 @@
     </div>
   </div>
 
+  <!-- [D] 종착역(운연역) 운행 종료 및 회차 안내 모달 -->
+  <div id="modal-terminal-arrival" class="modal-backdrop">
+    <div class="modal-window" style="max-width: 500px; border: 1.5px solid #f97316; box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 25px rgba(249,115,22,0.4);">
+      <div class="modal-header" style="background:#1e293b; border-bottom:1px solid #334155; padding:14px 18px;">
+        <span style="font-weight:bold; color:#f97316; font-size:16px; display:flex; align-items:center; gap:8px;">
+          <span style="font-size:18px;">🏁</span> 인천 2호선 종착역(운연역) 운행 종료
+        </span>
+        <span style="cursor:pointer; color:#94a3b8; font-size:18px; font-weight:bold;" onclick="closeModal('modal-terminal-arrival')">✕</span>
+      </div>
+      <div class="modal-body" style="padding:20px; color:#e2e8f0; font-size:13.5px; line-height:1.65; background:#0f172a;">
+        <div style="background:#1e293b; border:1px solid #334155; border-radius:8px; padding:14px; margin-bottom:14px;">
+          <div style="font-size:15px; font-weight:bold; color:#38bdf8; margin-bottom:4px;">
+            🚊 마지막 역인 <span style="color:#f97316;">운연(서창)역</span>에 도착하였습니다.
+          </div>
+          <div style="color:#94a3b8; font-size:12.5px;">
+            승객 하차 및 출입문/PSD 닫힘이 완료되었으며, <strong>본 열차의 모든 영업 운행이 종료</strong>되었습니다. 더 이상 다음 역으로 운행하지 않습니다.
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; font-size:12px;">
+          <div style="background:#1e293b; padding:10px 12px; border-radius:6px; border:1px solid #334155;">
+            <div style="color:#94a3b8;">제동 체결 상태</div>
+            <div style="font-weight:bold; color:#ef4444; margin-top:2px;">정차제동(HB) 2.0 Bar 체결 중</div>
+          </div>
+          <div style="background:#1e293b; padding:10px 12px; border-radius:6px; border:1px solid #334155;">
+            <div style="color:#94a3b8;">운행 상태</div>
+            <div style="font-weight:bold; color:#22c55e; margin-top:2px;">당역 종착 완료 (ATO 정지)</div>
+          </div>
+        </div>
+
+        <div style="padding:10px 14px; background:rgba(249,115,22,0.12); border-left:3.5px solid #f97316; border-radius:4px; font-size:12.5px; color:#fed7aa;">
+          기점인 <strong>검단오류역</strong>으로 회차하여 새로운 편도 운행을 시작하시겠습니까?
+        </div>
+      </div>
+      <div class="modal-footer" style="background:#0b0f19; border-top:1px solid #334155; padding:12px 18px; display:flex; justify-content:flex-end; gap:8px;">
+        <button class="toolbar-btn" style="background:#1e293b; border:1px solid #475569; color:#cbd5e1;" onclick="closeModal('modal-terminal-arrival')">대기 (창 닫기)</button>
+        <button class="toolbar-btn primary" style="background:#f97316; border-color:#ea580c; font-weight:bold; font-size:13px; color:#ffffff;" onclick="returnToFirstStation();">🔄 처음(검단오류역)으로 회차하기</button>
+      </div>
+    </div>
+  </div>
+
   <!-- [C] 훈련 / 평가 완료 결과 모달 -->
   <div id="modal-completion" class="modal-backdrop">
     <div class="modal-window">
@@ -7897,13 +7976,15 @@ function closeTrainDoors(isAuto = false) {
    무인운전(ATO / Driverless) 전자동 역간 운행 및 PSD 연동 제어기
 --------------------------------------------------------------------------- */
 const AtoDriverless = {
-  state: 'CRUISING', // 'CRUISING', 'BRAKING', 'STOPPED', 'DWELLING', 'DOOR_CLOSING', 'DEPARTING'
+  state: 'CRUISING', // 'CRUISING', 'BRAKING', 'STOPPED', 'DWELLING', 'DOOR_CLOSING', 'DEPARTING', 'TERMINATED'
   targetSpeed: 0.0,
   accelRate: 0.0,
   stationIdx: 0,
   targetStopDist: 305.0,
   dwellTimeRemaining: 0.0,
   stateTimer: 0.0,
+  isHoldingBrake: false,
+  departRampDuration: 1.5,
 
   reset(dist) {
     this.state = 'CRUISING';
@@ -7911,6 +7992,7 @@ const AtoDriverless = {
     this.accelRate = 0.0;
     this.dwellTimeRemaining = 0.0;
     this.stateTimer = 0.0;
+    this.isHoldingBrake = false;
     if (dist !== undefined) {
       this.initStopTarget(dist);
     }
@@ -7923,14 +8005,22 @@ const AtoDriverless = {
 
     if (p <= 305.0 + 5.0) {
       this.targetStopDist = n * CYCLE + 305.0;
-      this.stationIdx = ((n % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
+      this.stationIdx = Math.min(INCHEON2_STATIONS.length - 1, ((n % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length);
     } else {
       this.targetStopDist = (n + 1) * CYCLE + 305.0;
-      this.stationIdx = (((n + 1) % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
+      this.stationIdx = Math.min(INCHEON2_STATIONS.length - 1, (((n + 1) % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length);
     }
   },
 
   update(dt, dist, speed) {
+    if (this.state === 'TERMINATED') {
+      this.targetSpeed = 0.0;
+      this.accelRate = 0.0;
+      this.isHoldingBrake = true;
+      if (typeof updateGaugeUI === 'function') updateGaugeUI(2.0);
+      return;
+    }
+
     if (!this.targetStopDist || this.targetStopDist < dist - 10.0) {
       this.initStopTarget(dist);
     }
@@ -7946,12 +8036,14 @@ const AtoDriverless = {
 
       if (distToStop <= reqBrakeDist && distToStop > -5.0) {
         this.state = 'BRAKING';
+        this.isHoldingBrake = false;
         if (typeof showTemporaryHudFeedback === 'function') {
           showTemporaryHudFeedback(`🚊 [무인운전 ATO] 이번 역은 ${currSt.name} (${currSt.eng}) 역입니다. 감속 제동을 시작합니다.`, false);
         }
       } else {
         this.targetSpeed = cruiseSpeed;
         this.accelRate = 2.6;
+        this.isHoldingBrake = false;
         if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
       }
     }
@@ -7969,9 +8061,11 @@ const AtoDriverless = {
           trainSpeed = 0.0;
           this.state = 'STOPPED';
           this.stateTimer = 0.8;
-          if (typeof updateGaugeUI === 'function') updateGaugeUI(4.0);
+          // 정차제동(HB) 체결: 2.0 Bar 설정
+          this.isHoldingBrake = true;
+          if (typeof updateGaugeUI === 'function') updateGaugeUI(2.0);
           if (typeof showTemporaryHudFeedback === 'function') {
-            showTemporaryHudFeedback(`🚊 [무인운전 ATO] ${currSt.name}역 정위치 정차 완료 (정차 오차 0.0m)`, false);
+            showTemporaryHudFeedback(`🚊 [무인운전 ATO] ${currSt.name}역 정위치 정차 완료 (정차제동 HB 2.0 Bar 체결)`, false);
           }
         }
       } else {
@@ -7981,13 +8075,14 @@ const AtoDriverless = {
         } else {
           this.accelRate = Math.min(2.0, (tSpeed - speed) * 1.2);
         }
-        const bcPres = Math.min(4.0, Math.max(0.0, (-this.accelRate / 4.0) * 3.6));
+        const bcPres = Math.min(3.8, Math.max(0.0, (-this.accelRate / 4.0) * 3.4));
         if (typeof updateGaugeUI === 'function') updateGaugeUI(bcPres);
       }
     } else if (this.state === 'STOPPED') {
       this.targetSpeed = 0.0;
       this.accelRate = -4.0;
-      if (typeof updateGaugeUI === 'function') updateGaugeUI(4.0);
+      this.isHoldingBrake = true;
+      if (typeof updateGaugeUI === 'function') updateGaugeUI(2.0);
       this.stateTimer -= dt;
       if (this.stateTimer <= 0) {
         openTrainDoors(currSt.platformSide || 'R', true);
@@ -8000,7 +8095,8 @@ const AtoDriverless = {
     } else if (this.state === 'DWELLING') {
       this.targetSpeed = 0.0;
       this.accelRate = -4.0;
-      if (typeof updateGaugeUI === 'function') updateGaugeUI(4.0);
+      this.isHoldingBrake = true;
+      if (typeof updateGaugeUI === 'function') updateGaugeUI(2.0);
       this.dwellTimeRemaining -= dt;
       if (this.dwellTimeRemaining <= 0) {
         closeTrainDoors(true);
@@ -8013,37 +8109,68 @@ const AtoDriverless = {
     } else if (this.state === 'DOOR_CLOSING') {
       this.targetSpeed = 0.0;
       this.accelRate = -4.0;
-      if (typeof updateGaugeUI === 'function') updateGaugeUI(4.0);
+      this.isHoldingBrake = true;
+      if (typeof updateGaugeUI === 'function') updateGaugeUI(2.0);
       this.stateTimer -= dt;
       const lampDoor = document.getElementById('lamp-door');
       const isDoorClosed = !isDoorOpen && (!window.__FAULT_DOOR_FAIL) && (lampDoor ? lampDoor.classList.contains('lit') : true);
 
       if (this.stateTimer <= 0 && isDoorClosed) {
+        // ★ 마지막역인 운연역(227) 도착 시 더 이상 운행하지 않고 종착 안내
+        if (this.stationIdx >= INCHEON2_STATIONS.length - 1 || currSt.id === '227' || currSt.name === '운연') {
+          this.state = 'TERMINATED';
+          this.targetSpeed = 0.0;
+          this.accelRate = 0.0;
+          this.isHoldingBrake = true;
+          if (typeof updateGaugeUI === 'function') updateGaugeUI(2.0);
+          const cabBtn = document.getElementById('btn-cab-return-first');
+          if (cabBtn) cabBtn.style.display = 'flex';
+          if (typeof openModal === 'function') {
+            openModal('modal-terminal-arrival');
+          }
+          if (typeof showTemporaryHudFeedback === 'function') {
+            showTemporaryHudFeedback(`🏁 [운행 종료] 마지막 역인 ${currSt.name}역에 도착하였습니다. 열차 운행이 종료되었습니다.`, false);
+          }
+          return;
+        }
+
         const nextIdx = (this.stationIdx + 1) % INCHEON2_STATIONS.length;
         this.stationIdx = nextIdx;
         const nextSt = INCHEON2_STATIONS[nextIdx];
         const CYCLE = 1500.0;
         const n = Math.floor(dist / CYCLE);
-        const p = ((dist % CYCLE) + CYCLE) % CYCLE;
         // 다음 역 승강장 정차점 (다음 주기의 305m 승강장)
         this.targetStopDist = (n + 1) * CYCLE + 305.0;
         this.state = 'DEPARTING';
-        this.stateTimer = 2.0;
-        if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
+        this.departRampDuration = 1.5;
+        this.stateTimer = 1.5;
         if (typeof sound !== 'undefined' && sound && typeof sound.playAirExhaust === 'function') {
           sound.playAirExhaust(0.6, 1200, 0.4);
         }
         if (typeof showTemporaryHudFeedback === 'function') {
-          showTemporaryHudFeedback(`🟢 [무인운전 ATO] 출입문 완폐 확인 - 다음 역(${nextSt.name})으로 자동 출발합니다!`, false);
+          showTemporaryHudFeedback(`🟢 [무인운전 ATO] 출입문 완폐 확인 - 정차제동 완해(2→0 Bar) 후 ${nextSt.name}역으로 자동 출발합니다!`, false);
         }
       }
     } else if (this.state === 'DEPARTING') {
-      this.targetSpeed = 65.0;
-      this.accelRate = 2.6;
-      if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
       this.stateTimer -= dt;
-      if (this.stateTimer <= 0 && speed > 5.0) {
+      // 출발 시 제동값을 2Bar에서 0Bar로 서서히 감압 완해
+      const progress = Math.min(1.0, Math.max(0.0, 1.0 - (this.stateTimer / this.departRampDuration)));
+      const bcVal = Math.max(0.0, 2.0 * (1.0 - progress));
+      if (typeof updateGaugeUI === 'function') updateGaugeUI(bcVal);
+
+      // 제동압력이 거의 빠지면 HB 표시등 해제
+      if (bcVal <= 0.08) {
+        this.isHoldingBrake = false;
+      }
+
+      // 제동 완해 진행에 따라 견인 가속도 투입 (서서히 바뀌면서 출발)
+      this.targetSpeed = 65.0;
+      this.accelRate = progress * 2.6;
+
+      if (this.stateTimer <= 0 && speed > 2.0) {
         this.state = 'CRUISING';
+        this.isHoldingBrake = false;
+        if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
       }
     }
   }
@@ -8525,6 +8652,11 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const isEmgActive = (isEmgStopLatched && !isEmgReleaseLatched);
     const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB');
 
+    // 정차제동(HB) 칩: 승강장 정차 중일 때 붉은 배경에 흰 글씨 점등
+    const chipHb = document.getElementById('du2-chip-hb');
+    const isHbActive = (typeof AtoDriverless !== 'undefined' && AtoDriverless.isHoldingBrake) || (window.__HOLDING_BRAKE_ACTIVE === true);
+    if (chipHb) chipHb.classList.toggle('active-red', !!isHbActive);
+
     const chipEb = document.getElementById('du2-chip-eb');
     if (chipEb) chipEb.classList.toggle('active-red', isEbActive);
 
@@ -8540,7 +8672,13 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const stInfo = cvStationInfo(trainDistance);
     const distToStation = Math.max(0, Math.round(stInfo ? stInfo.dStart : 0));
     const nextStEl = document.getElementById('du2-next-st');
-    if (nextStEl) nextStEl.innerText = stInfo ? stInfo.name : '검단오류';
+    if (nextStEl) {
+      if (typeof AtoDriverless !== 'undefined' && AtoDriverless.state === 'TERMINATED') {
+        nextStEl.innerText = '운연 (종착)';
+      } else {
+        nextStEl.innerText = stInfo ? stInfo.name : '검단오류';
+      }
+    }
 
     const spdEl = document.getElementById('du2-speed-val');
     if (spdEl) spdEl.innerText = Math.round(trainSpeed);
@@ -8647,7 +8785,13 @@ function updateDuAduDisplay(driveMode, notch, now) {
     // 6. Alarm Message Row
     const alarmEl = document.getElementById('du2-alarm-text');
     if (alarmEl) {
-      if (isEbActive) {
+      if (typeof AtoDriverless !== 'undefined' && AtoDriverless.state === 'TERMINATED') {
+        alarmEl.style.color = '#f97316';
+        alarmEl.innerText = '🏁 [운행종료] 종착역(운연역) 도착 완료 - 회차 대기 중';
+      } else if (typeof AtoDriverless !== 'undefined' && AtoDriverless.isHoldingBrake) {
+        alarmEl.style.color = '#ef4444';
+        alarmEl.innerText = '🛑 [정차제동] 승강장 정차제동(HB 2.0 Bar) 체결 중';
+      } else if (isEbActive) {
         alarmEl.style.color = '#ff3333';
         alarmEl.innerText = '🚨 [비상제동] 비상제동 체결 중 (정차 후 복구 요망)';
       } else if (driveMode === 'RM' && rmOverspeedTimer > 0) {
@@ -8694,6 +8838,8 @@ function updateDuAduDisplay(driveMode, notch, now) {
       brakePct = Math.round((bNum / 7) * 100);
     } else if (isEbActive) {
       brakePct = 100;
+    } else if (cvBC() > 0) {
+      brakePct = Math.min(100, Math.round((cvBC() / 4.0) * 100));
     }
     const brakePctEl = document.getElementById('du2-brake-pct');
     if (brakePctEl) brakePctEl.innerText = `${brakePct}%`;
@@ -9029,7 +9175,7 @@ function updateTrainPhysics() {
       target = AtoDriverless.targetSpeed;
       rate = AtoDriverless.accelRate;
     } else {
-      if (AtoDriverless.state === 'STOPPED' || AtoDriverless.state === 'DWELLING' || AtoDriverless.state === 'DOOR_CLOSING') {
+      if (AtoDriverless.state === 'STOPPED' || AtoDriverless.state === 'DWELLING' || AtoDriverless.state === 'DOOR_CLOSING' || AtoDriverless.state === 'TERMINATED') {
         AtoDriverless.update(dt, trainDistance, trainSpeed);
         target = AtoDriverless.targetSpeed;
         rate = AtoDriverless.accelRate;
@@ -9935,16 +10081,24 @@ function cvDrawGlass(ctx) {
 --------------------------------------------------------------------------- */
 function cvDrawOverlayInfo(ctx, st, tun) {
   const msgs = [];
+  if (typeof AtoDriverless !== 'undefined' && AtoDriverless.state === 'TERMINATED') {
+    msgs.push(['🏁 종착역(' + st.name + ') 운행종료', '당역 종착 / 회차 대기', '#f97316']);
+    msgs.push(['정차제동(HB) 2.0 Bar 체결', '대기 중', '#ef4444']);
+  } else {
+    if (typeof AtoDriverless !== 'undefined' && AtoDriverless.isHoldingBrake) {
+      msgs.push(['정차제동(HB) 2.0 Bar 체결', '승강장 정차 중', '#ef4444']);
+    }
     if (cvState.slope <= -0.04) {
-    msgs.push(['급경사 하구배 (54‰)', '하강 주의 감속', '#f87171']);
-  } else if (cvState.slope >= 0.03) {
-    msgs.push(['급경사 상구배 (38‰)', '상승 견인 가속', '#60a5fa']);
+      msgs.push(['급경사 하구배 (54‰)', '하강 주의 감속', '#f87171']);
+    } else if (cvState.slope >= 0.03) {
+      msgs.push(['급경사 상구배 (38‰)', '상승 견인 가속', '#60a5fa']);
+    }
+    if (tun.inside) msgs.push(['터널 통과 중', '잔여 ' + Math.round(tun.exit) + ' m', '#7dd3fc']);
+    else if (tun.entry < 250) msgs.push(['터널 진입 예고', Math.round(tun.entry) + ' m 전방', '#fbbf24']);
+    if (st.dStart > 0 && st.dStart < 420) msgs.push(['다음역 ' + st.name, Math.round(st.dStart) + ' m', '#a7f3d0']);
+    else if (st.dStart <= 0 && st.dEnd > 0) msgs.push([st.name + ' 정차위치', '승강장 진입', '#a7f3d0']);
+    if (cvState.rain > 0.12) msgs.push(['강우 구간', cvState.rain > 0.6 ? '강우 강함' : '약한 비', '#bae6fd']);
   }
-  if (tun.inside) msgs.push(['터널 통과 중', '잔여 ' + Math.round(tun.exit) + ' m', '#7dd3fc']);
-  else if (tun.entry < 250) msgs.push(['터널 진입 예고', Math.round(tun.entry) + ' m 전방', '#fbbf24']);
-  if (st.dStart > 0 && st.dStart < 420) msgs.push(['다음역 ' + st.name, Math.round(st.dStart) + ' m', '#a7f3d0']);
-  else if (st.dStart <= 0 && st.dEnd > 0) msgs.push([st.name + ' 정차위치', '승강장 진입', '#a7f3d0']);
-  if (cvState.rain > 0.12) msgs.push(['강우 구간', cvState.rain > 0.6 ? '강우 강함' : '약한 비', '#bae6fd']);
   if (!msgs.length) return;
 
   ctx.save();
@@ -10002,11 +10156,16 @@ function updateCabOSD(notch, revNotch, isUnmannedActive, driveMode) {
   } else if (isUnmannedActive) {
     badge.classList.add('driving');
     if (typeof AtoDriverless !== 'undefined') {
-      if (AtoDriverless.state === 'DWELLING') {
+      if (AtoDriverless.state === 'TERMINATED') {
+        badge.innerText = '🏁 종착역 운행종료 (회차 대기)';
+        badge.classList.remove('driving');
+        badge.classList.add('stopped');
+        if (dot) dot.classList.remove('moving');
+      } else if (AtoDriverless.state === 'DWELLING') {
         badge.innerText = `ATO 승하차 (${Math.ceil(AtoDriverless.dwellTimeRemaining)}s)`;
         if (dot) dot.classList.remove('moving');
       } else if (AtoDriverless.state === 'STOPPED') {
-        badge.innerText = 'ATO 정위치 정차';
+        badge.innerText = 'ATO 정위치 정차 (HB 2.0 Bar)';
         if (dot) dot.classList.remove('moving');
       } else if (AtoDriverless.state === 'DOOR_CLOSING') {
         badge.innerText = 'ATO 출입문 닫힘';
@@ -10459,12 +10618,9 @@ const ThreeCabView = {
     const lampMat = new THREE.MeshBasicMaterial({ color: 0xfffae0 });
     const lampGeo = new THREE.BoxGeometry(1.6, 0.12, 0.25);
 
-    // Two inter-station tunnel segments spanning the entire loop between Station 1 (245~345) and Station 2 (960~1060):
-    // Segment A: Station 1 exit (345m) -> Station 2 entrance (960m) [Length: 615m]
-    // Segment B: Station 2 exit (1060m) -> Station 1 entrance (245m of next loop, 1745m) [Length: 685m]
+    // Inter-station tunnel segment connecting station exit (345m) through entire loop to next station entrance (1745m)
     const segments = [
-      { sStart: 345.0, sEnd: 960.0 },
-      { sStart: 1060.0, sEnd: 1745.0 }
+      { sStart: 345.0, sEnd: 1745.0 }
     ];
 
     const step = 2.5;
@@ -10646,10 +10802,9 @@ const ThreeCabView = {
     const signPoleGeo = new THREE.CylinderGeometry(0.025, 0.025, 1.2, 8);
     const stationPillarGeo = new THREE.BoxGeometry(0.6, 4.8, 0.6);
 
-    // Two stations along the 1500m loop
+    // One station along the 1500m loop (정차위치: 305m)
     const stations = [
-      { sStart: 245, sEnd: 345, stopP: 305, isTunnel: false },
-      { sStart: 960, sEnd: 1060, stopP: 1020, isTunnel: true }
+      { sStart: 245, sEnd: 345, stopP: 305, isTunnel: false }
     ];
 
     for (let st of stations) {
@@ -11397,6 +11552,88 @@ function resetCabView() {
   cvState.wiperAngle = 0; cvState.wiperTimer = 0; cvState.lastClack = 0;
   lastPhysicsTime = performance.now();
 }
+
+/* ---------------------------------------------------------------------------
+   종착역(운연역) 회차 및 역 위치 이동 제어
+--------------------------------------------------------------------------- */
+function returnToFirstStation() {
+  trainDistance = 0.0;
+  trainSpeed = 0.0;
+  trainTargetSpeed = 0.0;
+  trainAccelRate = 0.0;
+  if (typeof AtoDriverless !== 'undefined') {
+    AtoDriverless.reset(0.0);
+    AtoDriverless.stationIdx = 0;
+    AtoDriverless.targetStopDist = 305.0;
+    AtoDriverless.state = 'STOPPED';
+    AtoDriverless.stateTimer = 1.0;
+    AtoDriverless.isHoldingBrake = true;
+  }
+  if (typeof updateGaugeUI === 'function') updateGaugeUI(2.0);
+
+  const cabBtn = document.getElementById('btn-cab-return-first');
+  if (cabBtn) cabBtn.style.display = 'none';
+
+  if (typeof closeModal === 'function') {
+    closeModal('modal-terminal-arrival');
+  }
+
+  if (typeof showTemporaryHudFeedback === 'function') {
+    showTemporaryHudFeedback('🔄 [회차 완료] 기점역(검단오류역)으로 회차하였습니다. 정차제동(HB 2.0 Bar) 체결 상태에서 잠시 후 자동 운행을 시작합니다.', false);
+  }
+
+  const destEl = document.getElementById('du2-dest-st');
+  if (destEl) destEl.innerText = '운연';
+  const nextStEl = document.getElementById('du2-next-st');
+  if (nextStEl) nextStEl.innerText = '검단오류';
+}
+window.returnToFirstStation = returnToFirstStation;
+
+window.jumpToStation = function(target, directStop = false) {
+  let idx = -1;
+  if (typeof target === 'number') {
+    idx = target;
+  } else if (typeof target === 'string') {
+    idx = INCHEON2_STATIONS.findIndex(s => s.name === target || s.id === target || s.eng.toLowerCase() === target.toLowerCase());
+  }
+  if (idx < 0 || idx >= INCHEON2_STATIONS.length) return false;
+
+  const st = INCHEON2_STATIONS[idx];
+  const CYCLE = 1500.0;
+  const targetStop = idx * CYCLE + 305.0;
+
+  if (directStop) {
+    trainDistance = targetStop;
+    trainSpeed = 0.0;
+    trainTargetSpeed = 0.0;
+    trainAccelRate = 0.0;
+    if (typeof AtoDriverless !== 'undefined') {
+      AtoDriverless.state = 'STOPPED';
+      AtoDriverless.stationIdx = idx;
+      AtoDriverless.targetStopDist = targetStop;
+      AtoDriverless.stateTimer = 0.8;
+      AtoDriverless.isHoldingBrake = true;
+    }
+    if (typeof updateGaugeUI === 'function') updateGaugeUI(2.0);
+  } else {
+    // 250m 전방에서 55km/h로 진입하도록 세팅하여 자동 감속 및 정차 과정을 관찰 가능
+    trainDistance = Math.max(0.0, targetStop - 250.0);
+    trainSpeed = 55.0;
+    trainTargetSpeed = 55.0;
+    trainAccelRate = 0.0;
+    if (typeof AtoDriverless !== 'undefined') {
+      AtoDriverless.state = 'CRUISING';
+      AtoDriverless.stationIdx = idx;
+      AtoDriverless.targetStopDist = targetStop;
+      AtoDriverless.isHoldingBrake = false;
+    }
+    if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
+  }
+  if (typeof showTemporaryHudFeedback === 'function') {
+    showTemporaryHudFeedback(`📍 [역 이동] ${st.name}역(${st.id})으로 위치 이동하였습니다.`, false);
+  }
+  return true;
+};
 
 // ========================================================
 // 📡 원격 교육 & 종합관제(OCC) 실시간 연동 시스템 (Supabase & Broadcast)
