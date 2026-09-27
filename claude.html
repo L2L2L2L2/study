@@ -6325,7 +6325,7 @@
                    onpointerup="endUnmannedPress(event)"
                    onpointerleave="endUnmannedPress(event)"
                    oncontextmenu="event.preventDefault()">
-                <div id="comp-SW_WIRELESS_MODE" class="push-btn-inner green lit" style="width:34px; height:34px;"></div>
+                <div id="comp-SW_WIRELESS_MODE" class="push-btn-inner green" style="width:34px; height:34px;"></div>
                 <svg class="hold-progress-svg" id="unmanned-progress-svg" viewBox="0 0 40 40">
                   <circle class="hold-progress-circle" cx="20" cy="20" r="18" fill="none" stroke="#34d399" stroke-width="3.5"/>
                 </svg>
@@ -7390,7 +7390,7 @@ const COMPONENT_REGISTRY = {
   SW_LOW_SPEED: { name: '저속도', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP3' },
   SW_PARK_SET: { name: '주차제동체결', type: 'MOMENTARY', state: 'IDLE', panel: 'OP3' },
   SW_WIRELESS_COVER: { name: '무인모드 보호커버', type: 'COVER', state: 'CLOSED', panel: 'OP3' },
-  SW_WIRELESS_MODE: { name: '무인모드', type: 'MOMENTARY', state: 'LIT', panel: 'OP3', requiresCover: 'SW_WIRELESS_COVER' },
+  SW_WIRELESS_MODE: { name: '무인모드', type: 'MOMENTARY', state: 'IDLE', panel: 'OP3', requiresCover: 'SW_WIRELESS_COVER' },
   SW_PARK_REL: { name: '주차제동완해', type: 'MOMENTARY', state: 'IDLE', panel: 'OP3' },
   SW_ROOM_LIGHT: { name: '실내등', type: 'ROTARY_3', state: 'AUTO', panel: 'OP3' }, // MANUAL, AUTO, EMERGENCY
   SW_RESCUE_DRIVE: { name: '구원운전', type: 'ROTARY_3', state: 'NORMAL', panel: 'OP3' }, // RESCUE, NORMAL, EMERGENCY
@@ -11594,6 +11594,9 @@ function resetCabView() {
   cvState.headingDrift = 0; cvState.roll = 0; cvState.rain = 0;
   cvState.wiperAngle = 0; cvState.wiperTimer = 0; cvState.lastClack = 0;
   lastPhysicsTime = performance.now();
+  if (typeof setUnmannedMode === 'function') {
+    setUnmannedMode(false);
+  }
   const cabBtn = document.getElementById('btn-cab-return-first');
   if (cabBtn) cabBtn.classList.remove('visible');
 }
@@ -11606,6 +11609,9 @@ function returnToFirstStation() {
   trainSpeed = 0.0;
   trainTargetSpeed = 0.0;
   trainAccelRate = 0.0;
+  if (typeof setUnmannedMode === 'function') {
+    setUnmannedMode(false);
+  }
   if (typeof AtoDriverless !== 'undefined') {
     AtoDriverless.reset(0.0);
     AtoDriverless.stationIdx = 0;
@@ -11624,7 +11630,7 @@ function returnToFirstStation() {
   }
 
   if (typeof showTemporaryHudFeedback === 'function') {
-    showTemporaryHudFeedback('🔄 [회차 완료] 기점역(검단오류역)으로 회차하였습니다. 정차제동(HB 2.0 Bar) 체결 상태에서 잠시 후 자동 운행을 시작합니다.', false);
+    showTemporaryHudFeedback('🔄 [회차 완료] 기점역(검단오류역)으로 회차하였습니다. 정차제동(HB 2.0 Bar) 체결 상태에서 대기합니다.', false);
   }
 
   const destEl = document.getElementById('du2-dest-st');
@@ -12363,10 +12369,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   TrainRemote.initStorage();
   initMasconResponsiveScaler();
-  // ★ 시작부터 무인운전(ATO) 버튼 활성화
-  if (typeof setUnmannedMode === 'function') {
-    setUnmannedMode(true);
-  }
 });
 
 // 모드 드롭다운 토글 및 조작 함수
@@ -14605,9 +14607,7 @@ function resetCurrentScenario() {
       const el = document.getElementById(`comp-${id}`);
       if (el) el.classList.remove('pressed', 'lit');
       if (id === 'SW_WIRELESS_MODE') {
-        // 기본값: 시작부터 무인운전(ATO) 활성화 유지
-        comp.state = 'LIT';
-        if (el) el.classList.add('lit');
+        comp.state = 'OFF';
         const svgEl = document.getElementById('unmanned-progress-svg');
         if (svgEl) svgEl.classList.remove('charging');
       } else if (id === 'SW_VOBC_RESET') {
