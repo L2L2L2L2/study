@@ -4761,6 +4761,25 @@
       font-weight: 800 !important;
       transform: scale(1.02) !important;
     }
+    .cab-op-btn.occ-tab-btn {
+      background: rgba(109, 40, 217, 0.55) !important;
+      border: 1.5px solid #a78bfa !important;
+      color: #ede9fe !important;
+      font-weight: 800 !important;
+      box-shadow: 0 0 10px rgba(139, 92, 246, 0.45) !important;
+    }
+    .cab-op-btn.occ-tab-btn:hover {
+      background: rgba(124, 58, 237, 0.75) !important;
+      border-color: #c4b5fd !important;
+      transform: translateY(-2px) scale(1.03) !important;
+    }
+    .cab-op-btn.occ-tab-btn.active {
+      background: rgba(139, 92, 246, 0.85) !important;
+      border: 2px solid #ffffff !important;
+      box-shadow: 0 0 16px rgba(167, 139, 250, 0.95), inset 0 0 8px rgba(255, 255, 255, 0.4) !important;
+      color: #ffffff !important;
+      transform: scale(1.04) !important;
+    }
 
     .cab-return-badge {
       position: absolute !important;
@@ -5093,6 +5112,7 @@
             <button type="button" class="quick-menu-item" onclick="resetCurrentScenario(); toggleQuickMenu();">↺ 처음부터 재시작</button>
             <button type="button" class="quick-menu-item" onclick="toggleMuteSound(); toggleQuickMenu();">🔊 소리 켜기 / 끄기</button>
             <button type="button" class="quick-menu-item" onclick="openRemoteModal(); toggleQuickMenu();">📡 원격 교육 연동</button>
+            <button type="button" class="quick-menu-item" id="menu-btn-occ" style="display:none; color:#a78bfa; font-weight:bold;" onclick="switchRightOp('OCC'); toggleQuickMenu();">📡 종합관제실(OCC) 화면 열기</button>
           </div>
 
           <div class="cab-screen-viewport" id="cab-screen-viewport">
@@ -5118,6 +5138,7 @@
               <button type="button" class="cab-op-btn" id="btn-op3" onclick="switchRightOp('OP3')">OP3</button>
               <button type="button" class="cab-op-btn active" id="btn-op4" onclick="switchRightOp('OP4')">OP4</button>
               <button type="button" class="cab-op-btn" id="btn-op5" onclick="switchRightOp('OP5')">OP5</button>
+              <button type="button" class="cab-op-btn occ-tab-btn" id="btn-occ" style="display:none;" onclick="switchRightOp('OCC')" title="종합관제실(OCC) 교관 관제 패널">📡 OCC</button>
             </div>
           </div>
         </div>
@@ -11683,6 +11704,10 @@ const TrainRemote = {
     if (nameEl) nameEl.value = localStorage.getItem('TRAIN_SB_NAME') || (this.role === 'INSTRUCTOR' ? '관제사 1' : '운전연습생 1');
 
     this.updateRoleButtonsUI();
+    this.applyRoleUI(this.role);
+    if (this.role === 'INSTRUCTOR') {
+      switchRightOp('OCC');
+    }
   },
 
   saveStorageFromInput() {
@@ -11710,6 +11735,9 @@ const TrainRemote = {
     localStorage.setItem('TRAIN_SB_ROLE', role);
     this.updateRoleButtonsUI();
     this.applyRoleUI(role);
+    if (role === 'INSTRUCTOR') {
+      switchRightOp('OCC');
+    }
   },
 
   updateRoleButtonsUI() {
@@ -11743,6 +11771,8 @@ const TrainRemote = {
     const occSlotL = document.getElementById('slot-l-occ');
     const occSlotC = document.getElementById('slot-c-occ');
     const occSlotR = document.getElementById('slot-r-occ');
+    const occBtn = document.getElementById('btn-occ');
+    const menuOcc = document.getElementById('menu-btn-occ');
 
     if (role === 'INSTRUCTOR') {
       if (!ALL_PANELS.includes('OCC')) {
@@ -11752,6 +11782,8 @@ const TrainRemote = {
       if (occSlotL) occSlotL.style.display = 'inline-block';
       if (occSlotC) occSlotC.style.display = 'inline-block';
       if (occSlotR) occSlotR.style.display = 'inline-block';
+      if (occBtn) occBtn.style.display = 'inline-flex';
+      if (menuOcc) menuOcc.style.display = 'block';
     } else {
       const idx = ALL_PANELS.indexOf('OCC');
       if (idx !== -1) ALL_PANELS.splice(idx, 1);
@@ -11759,10 +11791,14 @@ const TrainRemote = {
       if (occSlotL) occSlotL.style.display = 'none';
       if (occSlotC) occSlotC.style.display = 'none';
       if (occSlotR) occSlotR.style.display = 'none';
+      if (occBtn) occBtn.style.display = 'none';
+      if (menuOcc) menuOcc.style.display = 'none';
 
+      if (activeRightPanel === 'OCC') {
+        switchRightOp('OP4');
+      }
       if (activeLeftPanel === 'OCC') activeLeftPanel = 'OP3';
       if (activeCenterPanel === 'OCC') activeCenterPanel = 'OP1';
-      if (activeRightPanel === 'OCC') activeRightPanel = 'OP4';
       renderDualPanels();
     }
   },
@@ -11856,12 +11892,7 @@ const TrainRemote = {
 
     if (this.role === 'INSTRUCTOR') {
       this.applyRoleUI('INSTRUCTOR');
-      const isWide = checkIsDualMode();
-      if (isWide) {
-        selectSlotPanel('right', 'OCC');
-      } else {
-        switchPanelView('OCC');
-      }
+      switchRightOp('OCC');
       this.addLog(`[관제 연결] 세션(${this.room}) 교관(${this.userName}) 관제 준비 완료`, 'green');
     } else {
       this.sendStudentAction({
@@ -14802,7 +14833,8 @@ document.addEventListener('click', () => {
 
 function switchRightOp(opId) {
   opId = opId.toUpperCase();
-  if (!['OP1', 'OP2', 'OP3', 'OP4', 'OP5'].includes(opId)) return;
+  const validPanels = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5', 'OCC'];
+  if (!validPanels.includes(opId)) return;
 
   activeRightPanel = opId;
 
@@ -14811,12 +14843,12 @@ function switchRightOp(opId) {
     btn.classList.toggle('active', btn.id === `btn-${opId.toLowerCase()}`);
   });
 
-  // 2. 우측 슬롯에 해당 OP 패널 마운트
+  // 2. 우측 컬럼에 해당 OP / OCC 패널 마운트
   const rightCol = document.getElementById('sim-right-col');
   const pool = document.getElementById('panel-storage-pool');
   if (!rightCol || !pool) return;
 
-  ['OP1', 'OP2', 'OP3', 'OP4', 'OP5'].forEach(p => {
+  validPanels.forEach(p => {
     const el = document.getElementById(`panel-${p.toLowerCase()}`);
     if (!el) return;
     if (p === opId) {
