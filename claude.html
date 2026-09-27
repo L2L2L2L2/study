@@ -4583,6 +4583,32 @@
       box-shadow: 0 0 14px rgba(239, 68, 68, 0.6);
       animation: occ-fault-flash 1s infinite;
     }
+    .occ-radio-test-btn {
+      background: #0d1b2a !important;
+      border: 1.5px solid #1e40af !important;
+      color: #93c5fd !important;
+    }
+    .occ-radio-test-btn:hover {
+      background: #172554 !important;
+      border-color: #3b82f6 !important;
+    }
+    .occ-radio-test-btn.transmitting {
+      background: #1d4ed8 !important;
+      border-color: #93c5fd !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 14px rgba(59, 130, 246, 0.8) !important;
+      animation: occ-radio-pulse 1s infinite !important;
+    }
+    @keyframes occ-radio-pulse {
+      0%, 100% { box-shadow: 0 0 8px rgba(59, 130, 246, 0.5); }
+      50% { box-shadow: 0 0 18px rgba(96, 165, 250, 0.95); }
+    }
+    .occ-radio-test-btn .occ-fault-sub {
+      color: #60a5fa !important;
+    }
+    .occ-radio-test-btn.transmitting .occ-fault-sub {
+      color: #e0f2fe !important;
+    }
     @keyframes occ-fault-flash {
       0%, 100% { border-color: #fca5a5; }
       50% { border-color: #ef4444; }
@@ -6669,6 +6695,10 @@
             <button type="button" id="btn-fault-tcms" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('TCMS_FAIL')">
               <span>🚨 TCMS 통신이상 (ADU 적색)</span>
               <span id="fault-lbl-tcms" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
+            </button>
+            <button type="button" id="btn-occ-radio-test" class="occ-fault-toggle-btn occ-radio-test-btn" onclick="playOccRadioTest()" title="관제 음성 무전 테스트 방송 송출 (클릭 시 TTS 및 무전 효과음 재생)">
+              <span>🎙️ 관제 음성무전 테스트</span>
+              <span id="fault-lbl-radio-test" class="occ-fault-sub">선로 확인 지령 (TTS)</span>
             </button>
           </div>
         </div>
@@ -11696,6 +11726,191 @@ window.jumpToStation = function(target, directStop = false) {
 };
 
 // ========================================================
+// 🎙️ TRS 철도 관제 무전 오디오 합성 & TTS 방송 시스템
+// ========================================================
+function playRadioSquelch(type = 'start') {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!window.__radioAudioCtx) {
+      window.__radioAudioCtx = new AudioCtx();
+    }
+    const ctx = window.__radioAudioCtx;
+    if (ctx.state === 'suspended') ctx.resume();
+    const t = ctx.currentTime;
+
+    if (type === 'start') {
+      // 1. TRS PTT 듀얼톤 비프음 (941Hz + 1336Hz)
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+      osc1.type = 'sine'; osc1.frequency.setValueAtTime(941, t);
+      osc2.type = 'sine'; osc2.frequency.setValueAtTime(1336, t + 0.04);
+
+      oscGain.gain.setValueAtTime(0.18, t);
+      oscGain.gain.setValueAtTime(0.18, t + 0.08);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+
+      osc1.connect(oscGain); osc2.connect(oscGain);
+      oscGain.connect(ctx.destination);
+      osc1.start(t); osc1.stop(t + 0.12);
+      osc2.start(t + 0.04); osc2.stop(t + 0.12);
+
+      // 2. 무전 주파수 오픈 스퀠치 노이즈 ("치익~")
+      const bufferSize = Math.floor(ctx.sampleRate * 0.09);
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+      const noise = ctx.createBufferSource();
+      noise.buffer = noiseBuffer;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 2400;
+      filter.Q.value = 1.8;
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.12, t + 0.06);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+
+      noise.start(t + 0.06);
+      noise.stop(t + 0.15);
+    } else {
+      // 무전 종료 테일 노이즈 ("치익- 삑")
+      const bufferSize = Math.floor(ctx.sampleRate * 0.12);
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+      const noise = ctx.createBufferSource();
+      noise.buffer = noiseBuffer;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 1900;
+      filter.Q.value = 2.0;
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.14, t);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+
+      noise.start(t);
+      noise.stop(t + 0.11);
+
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1209, t + 0.07);
+      oscGain.gain.setValueAtTime(0.16, t + 0.07);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+
+      osc.connect(oscGain);
+      oscGain.connect(ctx.destination);
+      osc.start(t + 0.07);
+      osc.stop(t + 0.13);
+    }
+  } catch(e) {
+    console.warn('Radio squelch effect error:', e);
+  }
+}
+window.playRadioSquelch = playRadioSquelch;
+
+let isRadioSpeaking = false;
+
+function playOccRadioTest(customText) {
+  const radioBtn = document.getElementById('btn-occ-radio-test');
+  const subLbl = document.getElementById('fault-lbl-radio-test');
+
+  if (isRadioSpeaking) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    isRadioSpeaking = false;
+    if (radioBtn) radioBtn.classList.remove('transmitting');
+    if (subLbl) subLbl.innerText = '선로 확인 지령 (TTS)';
+    playRadioSquelch('end');
+    return;
+  }
+
+  const message = customText || "201편성 안전요원, 인천대공원역과 운연역 사이 선로 이상없는지 확인바랍니다.";
+
+  isRadioSpeaking = true;
+  if (radioBtn) radioBtn.classList.add('transmitting');
+  if (subLbl) subLbl.innerText = '무전 송출 중... (클릭 시 중단)';
+
+  // 1. 무전 개시 효과음 재생
+  playRadioSquelch('start');
+
+  // 2. OCC 로그 기록 및 HUD 피드백
+  if (typeof TrainRemote !== 'undefined' && typeof TrainRemote.addLog === 'function') {
+    TrainRemote.addLog(`[관제 음성무전] ➔ "${message}"`, 'blue');
+  }
+  if (typeof showTemporaryHudFeedback === 'function') {
+    showTemporaryHudFeedback(`📡 [관제 음성무전] "${message}"`, false);
+  }
+
+  // 3. 연동된 학생 화면으로도 무전 데이터 실시간 전송
+  if (typeof TrainRemote !== 'undefined' && TrainRemote.isConnected && TrainRemote.role === 'INSTRUCTOR') {
+    TrainRemote.sendInstructorCommand({
+      type: 'RADIO_TTS',
+      message: message
+    });
+  }
+
+  // 4. 관제사 음성 합성 (TTS)
+  if ('speechSynthesis' in window) {
+    setTimeout(() => {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(message);
+      utter.lang = 'ko-KR';
+      utter.rate = 0.95; // 침착하고 명확한 관제 속도
+      utter.pitch = 1.0;
+      utter.volume = 1.0;
+
+      const voices = window.speechSynthesis.getVoices();
+      const koVoice = voices.find(v => v.lang === 'ko-KR' || v.lang === 'ko_KR' || v.name.includes('Korean') || v.name.includes('한국어'));
+      if (koVoice) utter.voice = koVoice;
+
+      utter.onend = () => {
+        isRadioSpeaking = false;
+        if (radioBtn) radioBtn.classList.remove('transmitting');
+        if (subLbl) subLbl.innerText = '선로 확인 지령 (TTS)';
+        playRadioSquelch('end');
+      };
+
+      utter.onerror = (err) => {
+        console.warn('SpeechSynthesis error:', err);
+        isRadioSpeaking = false;
+        if (radioBtn) radioBtn.classList.remove('transmitting');
+        if (subLbl) subLbl.innerText = '선로 확인 지령 (TTS)';
+        playRadioSquelch('end');
+      };
+
+      window.speechSynthesis.speak(utter);
+    }, 200);
+  } else {
+    setTimeout(() => {
+      isRadioSpeaking = false;
+      if (radioBtn) radioBtn.classList.remove('transmitting');
+      if (subLbl) subLbl.innerText = '선로 확인 지령 (TTS)';
+      playRadioSquelch('end');
+    }, 3500);
+  }
+}
+window.playOccRadioTest = playOccRadioTest;
+
+// ========================================================
 // 📡 원격 교육 & 종합관제(OCC) 실시간 연동 시스템 (Supabase & Broadcast)
 // ========================================================
 const TrainRemote = {
@@ -12055,6 +12270,10 @@ const TrainRemote = {
       this.showRemoteHint(cmd.target, cmd.message, cmd.instructorName);
       return;
     }
+    if (cmd.type === 'RADIO_TTS') {
+      this.playStudentRadioTts(cmd.message);
+      return;
+    }
   },
 
   updateOCCMeters(data) {
@@ -12265,6 +12484,33 @@ const TrainRemote = {
     this.addLog(`[지령 발송] ➔ 대상 부품: ${target}${message ? ` | "${message}"` : ''}`, 'blue');
     if (msgInput) msgInput.value = '';
     triggerHaptic(20);
+  },
+
+  playStudentRadioTts(message) {
+    if (typeof showTemporaryHudFeedback === 'function') {
+      showTemporaryHudFeedback(`📡 [관제실 음성무전] "${message}"`, false);
+    }
+    if (typeof playRadioSquelch === 'function') {
+      playRadioSquelch('start');
+    }
+    if ('speechSynthesis' in window) {
+      setTimeout(() => {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(message);
+        utter.lang = 'ko-KR';
+        utter.rate = 0.95;
+        const voices = window.speechSynthesis.getVoices();
+        const koVoice = voices.find(v => v.lang === 'ko-KR' || v.lang === 'ko_KR' || v.name.includes('Korean') || v.name.includes('한국어'));
+        if (koVoice) utter.voice = koVoice;
+        utter.onend = () => {
+          if (typeof playRadioSquelch === 'function') playRadioSquelch('end');
+        };
+        utter.onerror = () => {
+          if (typeof playRadioSquelch === 'function') playRadioSquelch('end');
+        };
+        window.speechSynthesis.speak(utter);
+      }, 200);
+    }
   },
 
   showRemoteHint(target, message, instructorName) {
