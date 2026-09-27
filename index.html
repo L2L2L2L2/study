@@ -6632,6 +6632,7 @@
             <span>📋 훈련생 실시간 조작 로그 (EVENT STREAM)</span>
             <div style="display:flex; gap:6px; align-items:center;">
               <span id="occ-log-count" style="font-size:10px; color:#64748b;">0건 기록</span>
+              <button type="button" class="occ-cfg-btn" style="padding:2px 7px; font-size:10px; background:#1e3a8a; border-color:#3b82f6; color:#93c5fd; font-weight:700;" onclick="TrainRemote.exportLogExcel()" title="전체 조작 로그를 엑셀 호환 CSV 파일로 다운로드">📥 엑셀 저장</button>
               <button type="button" class="occ-cfg-btn" style="padding:2px 6px; font-size:10px;" onclick="TrainRemote.clearLog()">로그 지우기</button>
             </div>
           </div>
@@ -11714,6 +11715,7 @@ const TrainRemote = {
   },
   _lastPhysicsBroadcast: 0,
   logCount: 0,
+  logs: [],
 
   initStorage() {
     const savedUrl = localStorage.getItem('TRAIN_SB_URL') || '';
@@ -12299,14 +12301,30 @@ const TrainRemote = {
     this.logCount++;
     if (countEl) countEl.innerText = `${this.logCount}건 기록`;
 
+    const now = new Date();
+    const timeStr = now.toTimeString().split(' ')[0];
+    const fullTimeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${timeStr}`;
+
+    // 구조화된 로그 데이터 저장 (엑셀 다운로드용)
+    const spd = (typeof trainSpeed !== 'undefined' ? trainSpeed.toFixed(1) : '0.0');
+    const dst = (typeof trainDistance !== 'undefined' ? trainDistance.toFixed(1) : '0.0');
+    if (!this.logs) this.logs = [];
+    this.logs.push({
+      id: this.logCount,
+      time: fullTimeStr,
+      text: text,
+      color: color,
+      speed: spd,
+      dist: dst
+    });
+
     const row = document.createElement('div');
     row.className = 'occ-log-row';
     if (color === 'red') row.style.borderLeftColor = '#ef4444';
     else if (color === 'green') row.style.borderLeftColor = '#22c55e';
     else if (color === 'blue') row.style.borderLeftColor = '#38bdf8';
 
-    const now = new Date().toTimeString().split(' ')[0];
-    row.innerHTML = `<span style="color:#64748b; font-size:10px; margin-right:6px;">[${now}]</span> <span>${text}</span>`;
+    row.innerHTML = `<span style="color:#64748b; font-size:10px; margin-right:6px;">[${timeStr}]</span> <span>${text}</span>`;
 
     list.appendChild(row);
     list.scrollTop = list.scrollHeight;
@@ -12317,7 +12335,37 @@ const TrainRemote = {
     const countEl = document.getElementById('occ-log-count');
     if (list) list.innerHTML = '';
     this.logCount = 0;
+    this.logs = [];
     if (countEl) countEl.innerText = '0건 기록';
+  },
+
+  exportLogExcel() {
+    if (!this.logs || this.logs.length === 0) {
+      alert("다운로드할 조작 로그 데이터가 없습니다.");
+      return;
+    }
+
+    // 엑셀에서 바로 열 수 있는 UTF-8 BOM 인코딩 CSV 포맷
+    const headers = ['순번', '기록일시', '이벤트 상세 내용', '열차속도(km/h)', '주행거리(m)'];
+    const rows = this.logs.map(log => [
+      log.id,
+      `"${log.time}"`,
+      `"${String(log.text).replace(/"/g, '""')}"`,
+      log.speed,
+      log.dist
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const nowStr = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+    link.href = url;
+    link.setAttribute('download', `인천2호선_관제조작로그_${nowStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 };
 
