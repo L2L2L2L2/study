@@ -4781,28 +4781,32 @@
       transform: scale(1.04) !important;
     }
 
+    /* 종착역 회차 배지 (기본은 완전히 숨김, 종착역 도착 시에만 노출) */
     .cab-return-badge {
+      display: none !important;
       position: absolute !important;
-      top: 14px !important;
-      right: 14px !important;
+      top: 10px !important;
+      right: 60px !important; /* 톱니바퀴 버튼(40px) 좌측에 여유 있게 배치하여 겹침 방지 */
       z-index: 15 !important;
       background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
       color: #ffffff !important;
       border: 1.5px solid #ffedd5 !important;
-      padding: 9px 16px !important;
+      padding: 8px 14px !important;
       border-radius: 8px !important;
       font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif !important;
-      font-size: 14px !important;
+      font-size: 13px !important;
       font-weight: 800 !important;
       cursor: pointer !important;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 0 12px rgba(249, 115, 22, 0.6) !important;
       transition: all 0.2s ease !important;
-      display: flex !important;
       align-items: center !important;
       gap: 6px !important;
       pointer-events: auto !important;
       user-select: none !important;
       animation: pulseTerminalBadge 2s infinite !important;
+    }
+    .cab-return-badge.visible {
+      display: flex !important;
     }
     .cab-return-badge:hover {
       background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
@@ -4814,35 +4818,39 @@
       50% { box-shadow: 0 4px 18px rgba(0,0,0,0.65), 0 0 20px rgba(249,115,22,0.95); }
     }
 
-    /* 퀵 메뉴 토글 버튼 & 팝업 */
+    /* 우측 상단 톱니바퀴 퀵 메뉴 버튼 (크고 선명하게 개선) */
     .sim-quick-menu-btn {
       position: absolute !important;
-      top: 8px !important;
-      right: 8px !important;
-      z-index: 20 !important;
-      background: rgba(20, 25, 35, 0.6) !important;
-      border: 1px solid rgba(255, 255, 255, 0.25) !important;
-      border-radius: 6px !important;
+      top: 10px !important;
+      right: 10px !important;
+      z-index: 25 !important;
+      background: rgba(15, 23, 42, 0.75) !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+      border-radius: 9px !important;
       color: #ffffff !important;
-      font-size: 14px !important;
-      width: 28px !important;
-      height: 28px !important;
+      font-size: 20px !important;
+      width: 40px !important;
+      height: 40px !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       cursor: pointer !important;
-      backdrop-filter: blur(4px) !important;
-      transition: all 0.2s ease !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     .sim-quick-menu-btn:hover {
-      background: rgba(40, 50, 70, 0.85) !important;
-      border-color: #58a6ff !important;
+      background: rgba(30, 41, 59, 0.95) !important;
+      border-color: #38bdf8 !important;
+      transform: scale(1.08) !important;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.7) !important;
     }
     .sim-quick-menu {
       position: absolute !important;
-      top: 40px !important;
-      right: 8px !important;
-      z-index: 25 !important;
+      top: 56px !important;
+      right: 10px !important;
+      z-index: 30 !important;
       background: #161b22 !important;
       border: 1px solid #30363d !important;
       border-radius: 8px !important;
@@ -4852,6 +4860,20 @@
       flex-direction: column !important;
       gap: 4px !important;
       min-width: 170px !important;
+    }
+
+    /* OCC 버튼 및 메뉴 아이템 기본 숨김 규칙 (중요: !important 기본 display 방지) */
+    #btn-occ {
+      display: none !important;
+    }
+    #btn-occ.visible {
+      display: inline-flex !important;
+    }
+    #menu-btn-occ {
+      display: none !important;
+    }
+    #menu-btn-occ.visible {
+      display: block !important;
     }
     .sim-quick-menu.open {
       display: flex !important;
@@ -5112,7 +5134,7 @@
             <button type="button" class="quick-menu-item" onclick="resetCurrentScenario(); toggleQuickMenu();">↺ 처음부터 재시작</button>
             <button type="button" class="quick-menu-item" onclick="toggleMuteSound(); toggleQuickMenu();">🔊 소리 켜기 / 끄기</button>
             <button type="button" class="quick-menu-item" onclick="openRemoteModal(); toggleQuickMenu();">📡 원격 교육 연동</button>
-            <button type="button" class="quick-menu-item" id="menu-btn-occ" style="display:none; color:#a78bfa; font-weight:bold;" onclick="switchRightOp('OCC'); toggleQuickMenu();">📡 종합관제실(OCC) 화면 열기</button>
+            <button type="button" class="quick-menu-item" id="menu-btn-occ" style="color:#a78bfa; font-weight:bold;" onclick="switchRightOp('OCC'); toggleQuickMenu();">📡 종합관제실(OCC) 화면 열기</button>
           </div>
 
           <div class="cab-screen-viewport" id="cab-screen-viewport">
@@ -5120,7 +5142,7 @@
             <canvas id="cab-view-canvas" width="1024" height="473"></canvas>
             
             <!-- 시뮬레이터 화면 상단 우측: 회차 버튼 (종착역 도착 시 표시) -->
-            <button type="button" class="cab-return-badge" id="btn-cab-return-first" style="display:none;" onclick="returnToFirstStation()">🔄 처음(검단오류역)으로 회차</button>
+            <button type="button" class="cab-return-badge" id="btn-cab-return-first" onclick="returnToFirstStation()">🔄 처음(검단오류역)으로 회차</button>
 
             <!-- 실물 OSD 오버레이 (노치 및 속도 인디케이터) -->
             <div class="cab-osd-overlay">
@@ -5138,7 +5160,7 @@
               <button type="button" class="cab-op-btn" id="btn-op3" onclick="switchRightOp('OP3')">OP3</button>
               <button type="button" class="cab-op-btn active" id="btn-op4" onclick="switchRightOp('OP4')">OP4</button>
               <button type="button" class="cab-op-btn" id="btn-op5" onclick="switchRightOp('OP5')">OP5</button>
-              <button type="button" class="cab-op-btn occ-tab-btn" id="btn-occ" style="display:none;" onclick="switchRightOp('OCC')" title="종합관제실(OCC) 교관 관제 패널">📡 OCC</button>
+              <button type="button" class="cab-op-btn occ-tab-btn" id="btn-occ" onclick="switchRightOp('OCC')" title="종합관제실(OCC) 교관 관제 패널">📡 OCC</button>
             </div>
           </div>
         </div>
@@ -8145,7 +8167,7 @@ const AtoDriverless = {
           this.isHoldingBrake = true;
           if (typeof updateGaugeUI === 'function') updateGaugeUI(2.0);
           const cabBtn = document.getElementById('btn-cab-return-first');
-          if (cabBtn) cabBtn.style.display = 'flex';
+          if (cabBtn) cabBtn.classList.add('visible');
           if (typeof openModal === 'function') {
             openModal('modal-terminal-arrival');
           }
@@ -11572,6 +11594,8 @@ function resetCabView() {
   cvState.headingDrift = 0; cvState.roll = 0; cvState.rain = 0;
   cvState.wiperAngle = 0; cvState.wiperTimer = 0; cvState.lastClack = 0;
   lastPhysicsTime = performance.now();
+  const cabBtn = document.getElementById('btn-cab-return-first');
+  if (cabBtn) cabBtn.classList.remove('visible');
 }
 
 /* ---------------------------------------------------------------------------
@@ -11593,7 +11617,7 @@ function returnToFirstStation() {
   if (typeof updateGaugeUI === 'function') updateGaugeUI(2.0);
 
   const cabBtn = document.getElementById('btn-cab-return-first');
-  if (cabBtn) cabBtn.style.display = 'none';
+  if (cabBtn) cabBtn.classList.remove('visible');
 
   if (typeof closeModal === 'function') {
     closeModal('modal-terminal-arrival');
@@ -11775,21 +11799,21 @@ const TrainRemote = {
       if (!ALL_PANELS.includes('OCC')) {
         ALL_PANELS.push('OCC');
       }
-      if (occTab) occTab.style.display = 'inline-flex';
-      if (occSlotL) occSlotL.style.display = 'inline-block';
-      if (occSlotC) occSlotC.style.display = 'inline-block';
-      if (occSlotR) occSlotR.style.display = 'inline-block';
-      if (occBtn) occBtn.style.display = 'inline-flex';
-      if (menuOcc) menuOcc.style.display = 'block';
+      if (occTab) occTab.style.setProperty('display', 'inline-flex', 'important');
+      if (occSlotL) occSlotL.style.setProperty('display', 'inline-block', 'important');
+      if (occSlotC) occSlotC.style.setProperty('display', 'inline-block', 'important');
+      if (occSlotR) occSlotR.style.setProperty('display', 'inline-block', 'important');
+      if (occBtn) occBtn.classList.add('visible');
+      if (menuOcc) menuOcc.classList.add('visible');
     } else {
       const idx = ALL_PANELS.indexOf('OCC');
       if (idx !== -1) ALL_PANELS.splice(idx, 1);
-      if (occTab) occTab.style.display = 'none';
-      if (occSlotL) occSlotL.style.display = 'none';
-      if (occSlotC) occSlotC.style.display = 'none';
-      if (occSlotR) occSlotR.style.display = 'none';
-      if (occBtn) occBtn.style.display = 'none';
-      if (menuOcc) menuOcc.style.display = 'none';
+      if (occTab) occTab.style.setProperty('display', 'none', 'important');
+      if (occSlotL) occSlotL.style.setProperty('display', 'none', 'important');
+      if (occSlotC) occSlotC.style.setProperty('display', 'none', 'important');
+      if (occSlotR) occSlotR.style.setProperty('display', 'none', 'important');
+      if (occBtn) occBtn.classList.remove('visible');
+      if (menuOcc) menuOcc.classList.remove('visible');
 
       if (activeRightPanel === 'OCC') {
         switchRightOp('OP4');
