@@ -3383,10 +3383,10 @@
     .du2-tcms-wrapper {
       background: #000000;
       color: #ffffff;
-      padding: 4px 6px;
+      padding: 6px 8px;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
       font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, 'Consolas', sans-serif;
       min-width: 520px;
       box-sizing: border-box;
@@ -3440,7 +3440,6 @@
     .du2-chips-group {
       display: flex;
       gap: 2px;
-      align-items: stretch;
     }
     .du2-chip-box {
       font-size: 11px;
@@ -3452,9 +3451,6 @@
       min-width: 24px;
       text-align: center;
       box-sizing: border-box;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
     }
     .du2-chip-box.active-red {
       background: #ff0000 !important;
@@ -3471,57 +3467,6 @@
       background: #00cc00 !important;
       color: #ffffff !important;
       border-color: #22ee22 !important;
-    }
-
-    /* 출입문 상태(상단 ADC) & 바이패스(하단 ADBS) 2단 분할 칩 고증 */
-    .du2-chip-split {
-      display: inline-flex;
-      flex-direction: column;
-      width: 36px;
-      min-width: 36px;
-      border: 1px solid #444444;
-      background: #181818;
-      box-sizing: border-box;
-      overflow: hidden;
-      border-radius: 1px;
-    }
-    .du2-chip-sub {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 8px;
-      font-weight: 900;
-      line-height: 1;
-      padding: 1px 0;
-      text-align: center;
-      box-sizing: border-box;
-      user-select: none;
-    }
-    #du2-chip-adc {
-      border-bottom: 1px solid #333333;
-    }
-    .du2-chip-sub.active-blue {
-      background: #0022ff !important;
-      color: #ffffff !important;
-    }
-    .du2-chip-sub.active-red {
-      background: #ff0000 !important;
-      color: #ffffff !important;
-    }
-    .du2-chip-sub.normal-gray {
-      background: #808080 !important;
-      color: #000000 !important;
-      font-weight: 900 !important;
-    }
-    .du2-chip-sub.active-red-blink {
-      background: #ff0000 !important;
-      color: #ffffff !important;
-      animation: chipBlinkRed 0.6s infinite alternate !important;
-    }
-    @keyframes chipBlinkRed {
-      0% { background: #ff0000 !important; color: #ffffff !important; }
-      100% { background: #440000 !important; color: #ff9999 !important; }
     }
 
     .du2-st-dest-wrap {
@@ -4756,8 +4701,8 @@
 
     /* 상단: 3D 시뮬레이터 뷰 */
     .sim-cab-section {
-      flex: 0 0 52% !important;
-      height: 52% !important;
+      flex: 0 0 61.8% !important;
+      height: 61.8% !important;
       width: 100% !important;
       position: relative !important;
       overflow: hidden !important;
@@ -4985,13 +4930,13 @@
 
     /* 하단: DU & ADU 모니터 50:50 나란히 */
     .sim-mmi-section {
-      flex: 1 1 48% !important;
-      height: 48% !important;
+      flex: 1 1 38.2% !important;
+      height: 38.2% !important;
       width: 100% !important;
       display: flex !important;
       flex-direction: row !important;
-      gap: 6px !important;
-      padding: 6px !important;
+      gap: 4px !important;
+      padding: 4px !important;
       box-sizing: border-box !important;
       background: #090c10 !important;
       overflow: hidden !important;
@@ -5014,11 +4959,9 @@
       display: flex !important;
       flex-direction: column !important;
       overflow: hidden !important;
-      border-radius: 6px !important;
-      border: 5px solid #1a1e24 !important;
-      outline: 1.5px solid #2d333b !important;
+      border-radius: 4px !important;
+      border: 2px solid #232832 !important;
       background: #000000 !important;
-      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.95), 0 4px 14px rgba(0, 0, 0, 0.7) !important;
       box-sizing: border-box !important;
     }
     .sim-mmi-box .mmi-screen {
@@ -5029,13 +4972,13 @@
       position: relative !important;
       overflow: hidden !important;
       display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
+      align-items: flex-start !important;
+      justify-content: flex-start !important;
       background: #000000 !important;
     }
     .sim-mmi-box .du2-tcms-wrapper,
     .sim-mmi-box .adu2-mmi-wrapper {
-      transform-origin: center center !important;
+      transform-origin: top left !important;
       flex-shrink: 0 !important;
     }
 
@@ -5253,6 +5196,14 @@
           <!-- 좌측: DU (차량정보제어장치 TCMS 운전일반) -->
           <div class="sim-mmi-box sim-du-box" id="sim-du-box">
             <div class="mmi-monitor-frame du-frame">
+              <div class="mmi-bezel-header">
+                <span class="mmi-model">DU</span>
+                <div class="mmi-leds">
+                  <span class="mmi-led green lit" title="POWER"></span>
+                  <span class="mmi-led green lit" title="RUN"></span>
+                  <span class="mmi-led red" id="du-led-err" title="FAULT"></span>
+                </div>
+              </div>
               <div class="mmi-screen du-screen" style="padding:0; background:#000; overflow:hidden;">
                 <div class="du2-tcms-wrapper">
                 <!-- 1. 최상단 헤더 -->
@@ -5277,10 +5228,7 @@
                     <span class="du2-chip-box" id="du2-chip-hb">HB</span>
                     <span class="du2-chip-box active-red" id="du2-chip-eb">EB</span>
                     <span class="du2-chip-box active-blue" id="du2-chip-pb">PB</span>
-                    <div class="du2-chip-split" id="du2-chip-door-split">
-                      <span class="du2-chip-sub active-blue" id="du2-chip-adc">ADC</span>
-                      <span class="du2-chip-sub normal-gray" id="du2-chip-adbs">ADBS</span>
-                    </div>
+                    <span class="du2-chip-box" id="du2-chip-adbs">ADBS</span>
                   </div>
 
                   <div class="du2-st-dest-wrap">
@@ -5550,6 +5498,14 @@
           <!-- 우측: ADU (운전정보속도계 ATO/ATC) -->
           <div class="sim-mmi-box sim-adu-box" id="sim-adu-box">
             <div class="mmi-monitor-frame adu-frame">
+              <div class="mmi-bezel-header">
+                <span class="mmi-model">ADU</span>
+                <div class="mmi-leds">
+                  <span class="mmi-led green lit" title="SIGNAL"></span>
+                  <span class="mmi-led amber" id="adu-led-warn" title="OVERSPEED"></span>
+                  <span class="mmi-led red" id="adu-led-eb" title="EMG BRAKE"></span>
+                </div>
+              </div>
               <div class="mmi-screen adu-screen" style="padding:0; background:#000; overflow:hidden;">
                 <div class="adu2-mmi-wrapper">
                 <!-- 1. 상단 바 -->
@@ -8782,21 +8738,9 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const isPbActive = (cvCompState('SW_PARK_SET') === 'LATCHED') || (trainSpeed <= 0.2 && cvBC() >= 3.5);
     if (chipPb) chipPb.classList.toggle('active-blue', isPbActive);
 
-    // 출입문 전체 닫힘 상태(ADC) 및 출입문 바이패스(ADBS) 칩 고증
-    const chipAdc = document.getElementById('du2-chip-adc');
-    const lampDoor = document.getElementById('lamp-door');
-    const areDoorsAllClosed = (!isDoorOpen && !window.__FAULT_DOOR_FAIL && (lampDoor ? lampDoor.classList.contains('lit') : true));
-    if (chipAdc) {
-      chipAdc.classList.toggle('active-blue', areDoorsAllClosed);
-      chipAdc.classList.toggle('active-red', !areDoorsAllClosed);
-    }
-
     const chipAdbs = document.getElementById('du2-chip-adbs');
     const isAdbsActive = (cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
-    if (chipAdbs) {
-      chipAdbs.classList.toggle('active-red-blink', isAdbsActive);
-      chipAdbs.classList.toggle('normal-gray', !isAdbsActive);
-    }
+    if (chipAdbs) chipAdbs.classList.toggle('active-green', isAdbsActive);
 
     // 3. Stations & Speed & Catenary
     const stInfo = cvStationInfo(trainDistance);
@@ -15283,20 +15227,18 @@ function updateMmiScalers() {
     const sw = duScreen.clientWidth;
     const sh = duScreen.clientHeight;
     if (sw > 0 && sh > 0) {
-      duWrap.style.width = '522px';
-      const duH = duWrap.scrollHeight || 495;
-      const s = Math.min(sw / 522, sh / duH);
+      const s = Math.min(sw / 528, sh / 400);
       duWrap.style.transform = `scale(${s})`;
+      duWrap.style.width = '522px';
     }
   }
   if (aduScreen && aduWrap) {
     const sw = aduScreen.clientWidth;
     const sh = aduScreen.clientHeight;
     if (sw > 0 && sh > 0) {
-      aduWrap.style.width = '522px';
-      const aduH = aduWrap.scrollHeight || 404;
-      const s = Math.min(sw / 522, sh / aduH);
+      const s = Math.min(sw / 528, sh / 400);
       aduWrap.style.transform = `scale(${s})`;
+      aduWrap.style.width = '522px';
     }
   }
 }
@@ -15309,24 +15251,19 @@ window.addEventListener('resize', () => {
   }
 });
 
-// 초기 구동 시 스케일러 적용 (레이아웃 완성 후 여러 단계에서 재시도)
+// 초기 구동 시 OP4 활성화 및 스케일러 적용
 window.addEventListener('DOMContentLoaded', () => {
-  requestAnimationFrame(() => {
-    updateMmiScalers();
-  });
+  updateMmiScalers();
   if (typeof ThreeCabView !== 'undefined' && ThreeCabView.active) {
     ThreeCabView.onResize();
   }
 });
-// 300ms, 800ms, 1500ms 다단계 재시도로 어떤 환경에서도 올바르게 적용
-[300, 800, 1500].forEach(ms => {
-  setTimeout(() => {
-    updateMmiScalers();
-    if (ms === 300 && typeof ThreeCabView !== 'undefined' && ThreeCabView.active) {
-      ThreeCabView.onResize();
-    }
-  }, ms);
-});
+setTimeout(() => {
+  updateMmiScalers();
+  if (typeof ThreeCabView !== 'undefined' && ThreeCabView.active) {
+    ThreeCabView.onResize();
+  }
+}, 300);
 
 </script>
 
