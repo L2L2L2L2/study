@@ -1204,7 +1204,7 @@
       // 공통 창문 렌더러
       const drawWindow = (wx, wy, ww, wh) => {
         if (ww <= 8) return;
-        ctx.fillStyle = '#fef08a';
+        ctx.fillStyle = '#38bdf8';
         ctx.fillRect(wx, wy, ww, wh);
         ctx.strokeStyle = '#475569';
         ctx.lineWidth = 1.2;
@@ -1266,7 +1266,7 @@
         ctx.fillRect(tdx - slide, windowBandY, halfTDW - 0.5, trainH - (windowBandY - trainTopY) - 2);
         ctx.fillRect(tdx + halfTDW + slide, windowBandY, halfTDW - 0.5, trainH - (windowBandY - trainTopY) - 2);
 
-        ctx.fillStyle = '#38bdf8';
+        ctx.fillStyle = '#fef08a';
         ctx.fillRect(tdx + 3 - slide, windowBandY + 4, halfTDW - 6, windowBandH - 8);
         ctx.fillRect(tdx + halfTDW + 3 + slide, windowBandY + 4, halfTDW - 6, windowBandH - 8);
 
