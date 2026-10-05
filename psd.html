@@ -20,14 +20,14 @@
       height: 100vh;
     }
 
-    /* 전체 화면 레이아웃 (좌: 승강장 애니메이션, 우: 조작반 패널) */
+    /* 전체 화면 레이아웃 (좌: 승강장 56%, 우: 조작반 44%) */
     .app-container {
       display: flex;
       flex-direction: row;
       width: 100%;
       height: 100%;
     }
-    @media (max-width: 960px) {
+    @media (max-width: 1080px) {
       .app-container {
         flex-direction: column;
       }
@@ -55,7 +55,7 @@
       flex-direction: column;
       gap: 6px;
       z-index: 10;
-      max-width: 440px;
+      max-width: 380px;
     }
     .badge-title {
       display: inline-flex;
@@ -64,10 +64,10 @@
       background: rgba(15, 23, 42, 0.92);
       border: 1px solid rgba(249, 115, 22, 0.55);
       backdrop-filter: blur(10px);
-      padding: 7px 14px;
+      padding: 6px 12px;
       border-radius: 8px;
       color: #fed7aa;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
       width: fit-content;
@@ -87,12 +87,12 @@
     .badge-sub {
       display: flex;
       gap: 6px;
-      font-size: 11px;
+      font-size: 10px;
       flex-wrap: wrap;
     }
     .tag {
-      padding: 4px 9px;
-      border-radius: 5px;
+      padding: 3px 8px;
+      border-radius: 4px;
       font-weight: 600;
       backdrop-filter: blur(6px);
     }
@@ -117,31 +117,33 @@
       align-items: center;
       background: rgba(15, 23, 42, 0.88);
       border: 1px solid #334155;
-      padding: 9px 18px;
+      padding: 10px 20px;
       border-radius: 8px;
       color: #cbd5e1;
-      font-size: 12px;
+      font-size: 13px;
       z-index: 10;
       backdrop-filter: blur(8px);
     }
 
-    /* 2. 승강장조작반 (PSL) 패널 */
+    /* 2. 승강장조작반 (PSL) 패널 - 시원하고 큼직한 비율로 스케일업 */
     .psl-panel-container {
-      width: 580px;
-      min-width: 520px;
+      width: 44%;
+      min-width: 620px;
+      max-width: 840px;
       height: 100%;
       background: #d6d9dc;
-      padding: 16px;
-      border-left: 4px solid #94a3b8;
-      box-shadow: -8px 0 25px rgba(0, 0, 0, 0.4);
+      padding: 18px;
+      border-left: 5px solid #94a3b8;
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.45);
       overflow-y: auto;
       display: flex;
       flex-direction: column;
     }
-    @media (max-width: 960px) {
+    @media (max-width: 1080px) {
       .psl-panel-container {
         width: 100%;
         min-width: unset;
+        max-width: unset;
         height: 60%;
       }
     }
@@ -150,30 +152,30 @@
       position: relative;
       flex: 1;
       background: #e3e6e8;
-      border-radius: 12px;
-      border: 2px solid #b0b4b8;
-      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.15);
-      padding: 16px;
+      border-radius: 14px;
+      border: 3px solid #b0b4b8;
+      box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.18);
+      padding: 20px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 12px;
+      gap: 16px;
     }
 
     /* 볼트 디자인 */
     .bolt {
       position: absolute;
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background: #94a3b8;
-      border: 1px solid #475569;
+      border: 1.5px solid #475569;
       box-shadow: inset 1px 1px 2px #fff, inset -1px -1px 2px #000;
     }
-    .bolt-tl { top: 6px; left: 8px; }
-    .bolt-tr { top: 6px; right: 8px; }
-    .bolt-bl { bottom: 6px; left: 8px; }
-    .bolt-br { bottom: 6px; right: 8px; }
+    .bolt-tl { top: 8px; left: 10px; }
+    .bolt-tr { top: 8px; right: 10px; }
+    .bolt-bl { bottom: 8px; left: 10px; }
+    .bolt-br { bottom: 8px; right: 10px; }
 
     /* 타이틀 헤더 */
     .panel-header {
@@ -181,13 +183,13 @@
       justify-content: center;
       align-items: center;
       border-bottom: 2px solid #cbd5e1;
-      padding-bottom: 6px;
+      padding-bottom: 8px;
     }
     .panel-title {
-      font-size: 26px;
+      font-size: 30px;
       font-weight: 900;
-      letter-spacing: 0.25em;
-      text-indent: 0.25em;
+      letter-spacing: 0.3em;
+      text-indent: 0.3em;
       color: #1e293b;
       margin: 0;
       padding-left: 0;
@@ -197,60 +199,64 @@
     /* 통신상태 & HMI 모니터 행 */
     .top-system-row {
       display: grid;
-      grid-template-columns: 140px 1fr;
-      gap: 10px;
+      grid-template-columns: 160px 1fr;
+      gap: 14px;
     }
 
     /* 통신상태 */
     .comm-box {
-      border: 1px solid #94a3b8;
+      border: 1.5px solid #94a3b8;
       background: #dce0e3;
-      border-radius: 8px;
-      padding: 8px;
+      border-radius: 10px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      font-size: 11px;
+      font-size: 12px;
     }
     .comm-title {
       text-align: center;
       font-weight: bold;
       color: #334155;
       border-bottom: 1px solid #cbd5e1;
-      padding-bottom: 4px;
+      padding-bottom: 6px;
+      font-size: 13px;
     }
     .comm-power {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 6px;
+      padding: 6px 8px;
+      font-weight: bold;
+      color: #1e293b;
     }
     .led-power {
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
       background: #22c55e;
-      box-shadow: 0 0 8px #22c55e;
-      border: 1px solid #16a34a;
+      box-shadow: 0 0 10px #22c55e;
+      border: 1.5px solid #16a34a;
     }
     .comm-ports {
       display: flex;
       justify-content: space-around;
       text-align: center;
       font-family: monospace;
-      font-size: 9px;
+      font-size: 10px;
       border-top: 1px solid #cbd5e1;
-      padding-top: 4px;
+      padding-top: 6px;
       color: #475569;
+      font-weight: bold;
     }
 
     /* HMI 모니터 */
     .hmi-monitor {
       background: #23272d;
-      border: 3px solid #475569;
-      border-radius: 8px;
-      padding: 8px;
-      box-shadow: inset 0 2px 8px #000;
+      border: 3.5px solid #475569;
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: inset 0 3px 10px #000;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -259,24 +265,24 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 6px;
+      padding-bottom: 8px;
       border-bottom: 1px solid #334155;
     }
     .hmi-btn {
-      padding: 2px 8px;
+      padding: 3px 10px;
       border-radius: 4px;
       background: #f5eccb;
       color: #8a7228;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: bold;
       border: 1px solid #b8a050;
       cursor: pointer;
     }
     .hmi-status-pill {
       flex: 1;
-      margin: 0 10px;
-      height: 18px;
-      border-radius: 9px;
+      margin: 0 12px;
+      height: 20px;
+      border-radius: 10px;
       background: rgba(186, 196, 217, 0.25);
       border: 1px solid #475569;
       display: flex;
@@ -284,26 +290,27 @@
       justify-content: center;
       color: #cbd5e1;
       font-family: monospace;
-      font-size: 9px;
+      font-size: 11px;
+      font-weight: bold;
     }
 
     /* 12도어 3단 그리드 */
     .hmi-grid-container {
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      margin-top: 6px;
+      gap: 7px;
+      margin-top: 8px;
     }
     .hmi-row {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
     .hmi-legend {
-      width: 48px;
-      font-size: 8px;
+      width: 54px;
+      font-size: 9px;
       font-weight: bold;
-      line-height: 1.2;
+      line-height: 1.3;
       color: #94a3b8;
     }
     .hmi-legend .red { color: #f87171; }
@@ -314,7 +321,7 @@
       flex: 1;
       display: grid;
       grid-template-columns: repeat(6, 1fr);
-      gap: 3px;
+      gap: 4px;
     }
     .pd-cell {
       display: flex;
@@ -323,7 +330,7 @@
     }
     .pd-label {
       font-family: monospace;
-      font-size: 8px;
+      font-size: 9.5px;
       font-weight: bold;
       color: #cbd5e1;
     }
@@ -331,34 +338,35 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      margin-top: 2px;
+      gap: 2.5px;
+      margin-top: 3px;
     }
     .pd-bar {
-      height: 7px;
-      border-radius: 1px;
-      border: 1px solid rgba(0, 0, 0, 0.4);
+      height: 9px;
+      border-radius: 1.5px;
+      border: 1px solid rgba(0, 0, 0, 0.5);
       background-color: #38d368;
       transition: background-color 0.2s, box-shadow 0.2s;
     }
     .pd-bar.open {
       background-color: #ef4444;
-      box-shadow: 0 0 5px #ef4444;
+      box-shadow: 0 0 6px #ef4444;
     }
 
     /* 하단 조작부: 인터폰 + 제어/상태표시 */
     .bottom-control-row {
       display: grid;
-      grid-template-columns: 140px 1fr;
-      gap: 10px;
+      grid-template-columns: 160px 1fr;
+      gap: 14px;
+      align-items: stretch;
     }
 
     /* 인터폰 수화기 */
     .interphone-box {
       background: #c8cccf;
       border: 2px solid #94a3b8;
-      border-radius: 8px;
-      padding: 8px;
+      border-radius: 10px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -366,94 +374,96 @@
       box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
     }
     .handset {
-      width: 68px;
-      height: 155px;
+      width: 80px;
+      height: 180px;
       background: #ffffff;
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-      padding: 6px;
+      border-radius: 10px;
+      border: 1.5px solid #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      padding: 8px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
     }
-    .handset-ear { width: 44px; height: 18px; background: #f1f5f9; border-radius: 4px; border: 1px solid #e2e8f0; }
-    .handset-mouth { width: 44px; height: 20px; background: #f1f5f9; border-radius: 4px; border: 1px solid #e2e8f0; }
-    .handset-buttons { width: 100%; display: flex; flex-direction: column; gap: 4px; }
-    .handset-btn-line { height: 4px; background: #e2e8f0; border-radius: 2px; }
+    .handset-ear { width: 54px; height: 22px; background: #f1f5f9; border-radius: 5px; border: 1px solid #e2e8f0; }
+    .handset-mouth { width: 54px; height: 24px; background: #f1f5f9; border-radius: 5px; border: 1px solid #e2e8f0; }
+    .handset-buttons { width: 100%; display: flex; flex-direction: column; gap: 5px; }
+    .handset-btn-line { height: 5px; background: #e2e8f0; border-radius: 2px; }
 
     /* 제어 및 상태표시 컨테이너 */
     .controls-wrapper {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
+      justify-content: space-between;
     }
 
     /* 1. 상태표시 */
     .section-box {
-      border: 1px solid #94a3b8;
+      border: 1.5px solid #94a3b8;
       background: #dbe0e3;
-      border-radius: 8px;
-      padding: 8px 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      border-radius: 10px;
+      padding: 10px 14px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
       position: relative;
     }
     .section-title {
-      font-size: 11px;
+      font-size: 13px;
       font-weight: bold;
       color: #334155;
       text-align: center;
-      border-bottom: 1px solid #cbd5e1;
-      padding-bottom: 3px;
-      margin-bottom: 8px;
+      border-bottom: 1.5px solid #cbd5e1;
+      padding-bottom: 4px;
+      margin-bottom: 10px;
     }
     .indicator-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      gap: 10px;
       text-align: center;
     }
     .ind-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
     }
     .ind-label {
-      font-size: 10px;
+      font-size: 11.5px;
       font-weight: bold;
       color: #334155;
     }
+    /* 상태표시 램프 크기 대폭 확대 (28px -> 38px) */
     .pilot-lamp {
-      width: 28px;
-      height: 28px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
-      border: 2px solid #334155;
+      border: 3px solid #334155;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.15s ease;
       background: #334155;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
     .pilot-lamp::after {
       content: '';
-      width: 10px;
-      height: 10px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.35);
     }
-    /* 램프 점등 색상 */
-    .lamp-red-off { background: #5c1c1c; opacity: 0.6; }
-    .lamp-red-on { background: #ef4444 !important; box-shadow: 0 0 14px #ef4444; opacity: 1 !important; }
-    .lamp-green-off { background: #14492d; opacity: 0.6; }
-    .lamp-green-on { background: #10b981 !important; box-shadow: 0 0 14px #10b981; opacity: 1 !important; }
+    .lamp-red-off { background: #5c1c1c; opacity: 0.65; }
+    .lamp-red-on { background: #ef4444 !important; box-shadow: 0 0 18px #ef4444; opacity: 1 !important; }
+    .lamp-green-off { background: #14492d; opacity: 0.65; }
+    .lamp-green-on { background: #10b981 !important; box-shadow: 0 0 18px #10b981; opacity: 1 !important; }
 
     /* 2. 제어 스위치 & 버튼 그리드 */
     .controls-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      gap: 12px;
       text-align: center;
     }
     .ctrl-item {
@@ -463,55 +473,55 @@
       justify-content: center;
     }
     .ctrl-label {
-      font-size: 10px;
+      font-size: 12px;
       font-weight: bold;
       color: #1e293b;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
 
-    /* 회전 노브 스위치 */
+    /* 회전 노브 스위치 확대 (38px -> 46px) */
     .knob-container {
       position: relative;
-      margin: 4px 0;
+      margin: 6px 0;
     }
     .rotary-knob {
-      width: 38px;
-      height: 38px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
       background: #0f172a;
-      border: 2px solid #475569;
+      border: 3px solid #475569;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
       transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
     .knob-pointer {
-      width: 3px;
-      height: 22px;
+      width: 4px;
+      height: 28px;
       background: #f8fafc;
       border-radius: 2px;
-      box-shadow: 0 0 2px #fff;
+      box-shadow: 0 0 3px #fff;
     }
 
-    /* 푸시 버튼 공통 */
+    /* 푸시 버튼 확대 (38px -> 48px) */
     .push-btn {
-      width: 38px;
-      height: 38px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
-      border: 2px solid #0f172a;
+      border: 3px solid #0f172a;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.35);
       transition: transform 0.08s, box-shadow 0.08s;
       outline: none;
     }
     .push-btn:active, .push-btn.pressed {
       transform: scale(0.92);
-      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
+      box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.65);
     }
     .btn-red { background: #ef4444; }
     .btn-red:hover { background: #f87171; }
@@ -521,19 +531,19 @@
     .btn-black:hover { background: #475569; }
 
     .btn-inner {
-      width: 26px;
-      height: 26px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
     }
 
     /* 인터록 해제 전용 노란색 강조 박스 */
     .interlock-box {
       border: 2px solid #dc2626;
       background: #fef08a;
-      border-radius: 6px;
-      padding: 4px;
-      box-shadow: 0 2px 6px rgba(220, 38, 38, 0.2);
+      border-radius: 8px;
+      padding: 6px;
+      box-shadow: 0 3px 8px rgba(220, 38, 38, 0.25);
     }
     .interlock-box .ctrl-label {
       color: #991b1b;
@@ -543,18 +553,18 @@
     /* 툴팁 말풍선 */
     .tooltip-bubble {
       position: absolute;
-      top: -30px;
+      top: -34px;
       left: 50%;
       transform: translateX(-50%);
       background: #ea580c;
       color: #ffffff;
-      padding: 5px 12px;
+      padding: 6px 14px;
       border-radius: 6px;
       font-size: 11px;
       font-weight: bold;
       border: 1px solid #fdba74;
       white-space: nowrap;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
       animation: floatTooltip 1.2s infinite alternate ease-in-out;
       display: none;
       z-index: 50;
@@ -572,7 +582,7 @@
   <div class="viewport-section" id="viewportSection">
     <canvas id="metroCanvas"></canvas>
 
-    <!-- 좌측 상단 안내 박스 (우측 조명과 겹치지 않도록 컴팩트하게 정렬) -->
+    <!-- 좌측 상단 안내 박스 -->
     <div class="hud-badge">
       <div class="badge-title">
         <span class="pulse-dot"></span>
@@ -585,12 +595,12 @@
     </div>
 
     <div class="hud-status-bar">
-      <div>개방된 출입문: <strong id="openDoorCountText" style="color:#fb923c; font-size:14px;">0 / 12</strong></div>
+      <div>개방된 출입문: <strong id="openDoorCountText" style="color:#fb923c; font-size:15px; margin-left:4px;">0 / 12</strong></div>
       <div id="psdSummaryText" style="font-weight:bold; color:#34d399;">모든 PSD 닫힘 상태</div>
     </div>
   </div>
 
-  <!-- 2. 승강장조작반 (PSL) 실물 전면 패널 -->
+  <!-- 2. 승강장조작반 (PSL) 실물 전면 패널 (시원하게 커진 비율) -->
   <div class="psl-panel-container">
     <div class="psl-chassis">
       <div class="bolt bolt-tl"></div>
@@ -598,7 +608,7 @@
       <div class="bolt bolt-bl"></div>
       <div class="bolt bolt-br"></div>
 
-      <!-- 상단 제목 (중앙 배치) -->
+      <!-- 상단 제목 -->
       <div class="panel-header">
         <h1 class="panel-title">승강장조작반</h1>
       </div>
@@ -615,7 +625,7 @@
             <div>CAN1<br>TX RX</div>
             <div>CAN2<br>TX RX</div>
           </div>
-          <div style="text-align:center; background:#cbd5e1; border-radius:3px; padding:2px; font-size:8px; font-weight:bold;">
+          <div style="text-align:center; background:#cbd5e1; border-radius:4px; padding:3px; font-size:9px; font-weight:bold; margin-top:2px;">
             DEBUG
           </div>
         </div>
@@ -656,8 +666,8 @@
       <div class="bottom-control-row">
         <!-- 인터폰 그래픽 -->
         <div class="interphone-box">
-          <div style="font-size:9px; font-weight:bold; color:#334155;">KOCOM</div>
-          <div style="font-size:7px; color:#64748b;">KIP-611PG</div>
+          <div style="font-size:11px; font-weight:bold; color:#334155;">KOCOM</div>
+          <div style="font-size:8px; color:#64748b;">KIP-611PG</div>
           <div class="handset">
             <div class="handset-ear"></div>
             <div class="handset-buttons">
@@ -670,7 +680,7 @@
             </div>
             <div class="handset-mouth"></div>
           </div>
-          <div style="width:100%; height:4px; border-top:2px dashed #64748b; margin-top:4px;"></div>
+          <div style="width:100%; height:5px; border-top:2px dashed #64748b; margin-top:4px;"></div>
         </div>
 
         <div class="controls-wrapper">
@@ -702,11 +712,11 @@
             <div class="section-title">제어</div>
             <div class="tooltip-bubble" id="tooltipBubble">💬 원래는 손을 놓으면 복귀되는 스위치입니다</div>
 
-            <div class="controls-grid" style="margin-bottom:8px;">
+            <div class="controls-grid" style="margin-bottom:10px;">
               <!-- 차량선택 로터리 스위치 -->
               <div class="ctrl-item">
                 <span class="ctrl-label">차량선택</span>
-                <div style="display:flex; justify-content:space-between; width:50px; font-size:8px; font-weight:bold; color:#475569;">
+                <div style="display:flex; justify-content:space-between; width:58px; font-size:10px; font-weight:bold; color:#475569;">
                   <span>2량</span><span>4량</span>
                 </div>
                 <div class="knob-container">
@@ -734,11 +744,11 @@
             </div>
 
             <!-- 하단 3개 스위치/버튼 -->
-            <div class="controls-grid" style="border-top:1px solid #cbd5e1; padding-top:8px;">
+            <div class="controls-grid" style="border-top:1.5px solid #cbd5e1; padding-top:10px;">
               <!-- 운전모드 로터리 스위치 -->
               <div class="ctrl-item">
                 <span class="ctrl-label">운전모드</span>
-                <div style="display:flex; justify-content:space-between; width:46px; font-size:8px; font-weight:bold; color:#475569;">
+                <div style="display:flex; justify-content:space-between; width:52px; font-size:10px; font-weight:bold; color:#475569;">
                   <span>-</span><span>정지</span>
                 </div>
                 <div class="knob-container">
@@ -751,7 +761,7 @@
               <!-- 인터록 해제 박스 & 스위치 -->
               <div class="ctrl-item interlock-box">
                 <span class="ctrl-label">인 터 록 해 제</span>
-                <div style="display:flex; justify-content:space-between; width:44px; font-size:8px; font-weight:bold; color:#991b1b;">
+                <div style="display:flex; justify-content:space-between; width:50px; font-size:9px; font-weight:bold; color:#991b1b;">
                   <span>OFF</span><span>ON</span>
                 </div>
                 <div class="knob-container">
@@ -1018,7 +1028,7 @@
   }
 
   /* =========================================================================
-     6. ★ [핵심 개선] 고해상도(HiDPI/Retina) Canvas 렌더링 & 조명 재배치
+     6. 고해상도 캔버스 렌더링 & 조명 균형 배치
      ========================================================================= */
   const canvas = document.getElementById('metroCanvas');
   const ctx = canvas.getContext('2d');
@@ -1034,7 +1044,6 @@
     logicalWidth = rect.width;
     logicalHeight = rect.height;
 
-    // 실제 캔버스 내부 픽셀 해상도를 디바이스 픽셀 비율만큼 곱하여 극도로 선명하게 설정
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
   }
@@ -1070,7 +1079,7 @@
 
     // 2. 고해상도 캔버스 렌더링 시작
     ctx.save();
-    ctx.scale(dpr, dpr); // 고해상도 배율 적용
+    ctx.scale(dpr, dpr);
 
     const width = logicalWidth;
     const height = logicalHeight;
@@ -1098,27 +1107,28 @@
       ctx.stroke();
     }
 
-    // ★ [조명 위치 이동] 좌측 안내 박스 영역을 완전히 비우고, 우측 여백 [48%, 72%, 92%]에 조명 배치!
-    const lampPositions = [0.48, 0.72, 0.92];
+    // ★ [조명 균형 재배치] 벽면 전체에 조화롭게 4기 배치 (24%, 46%, 68%, 90%)
+    const lampPositions = [0.24, 0.46, 0.68, 0.90];
     lampPositions.forEach(ratio => {
       const lx = width * ratio;
-      const ly = 32 * scaleY;
-      const lampW = Math.max(60, 68 * scaleX);
-      const lampH = Math.max(14, 15 * scaleY);
+      const ly = 30 * scaleY;
+      const lampW = Math.max(68, 76 * (width / 1200));
+      const lampH = Math.max(16, 17 * scaleY);
 
-      // 천장 연결 브래킷 파이프
-      ctx.fillStyle = '#1c1b22';
-      ctx.fillRect(lx - 2, 0, 4, ly);
+      // 천장 연결 듀얼 와이어 (양쪽)
+      ctx.fillStyle = '#1e222a';
+      ctx.fillRect(lx - lampW * 0.35 - 1, 0, 2, ly);
+      ctx.fillRect(lx + lampW * 0.35 - 1, 0, 2, ly);
 
-      // 넓게 퍼지는 부드러운 웜오렌지 Bloom 조명광
-      const glow = ctx.createRadialGradient(lx, ly + lampH * 0.5, 8, lx, ly + lampH * 0.5, 140 * scaleY);
-      glow.addColorStop(0, 'rgba(255, 185, 60, 0.42)');
-      glow.addColorStop(0.35, 'rgba(255, 140, 30, 0.16)');
-      glow.addColorStop(0.8, 'rgba(255, 110, 20, 0.04)');
+      // 부드러운 웜오렌지 Bloom 광원
+      const glow = ctx.createRadialGradient(lx, ly + lampH * 0.6, 6, lx, ly + lampH * 0.6, 130 * scaleY);
+      glow.addColorStop(0, 'rgba(255, 180, 60, 0.40)');
+      glow.addColorStop(0.4, 'rgba(255, 140, 30, 0.14)');
+      glow.addColorStop(0.8, 'rgba(255, 110, 20, 0.03)');
       glow.addColorStop(1, 'transparent');
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(lx, ly + lampH * 0.5, 140 * scaleY, 0, Math.PI * 2);
+      ctx.arc(lx, ly + lampH * 0.6, 130 * scaleY, 0, Math.PI * 2);
       ctx.fill();
 
       // 메탈 하우징 프레임
@@ -1135,11 +1145,11 @@
       const tubeH = lampH - 6;
       ctx.fillStyle = '#fffdf0';
       ctx.shadowColor = 'rgba(255, 170, 50, 0.95)';
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 10;
       ctx.beginPath();
       ctx.roundRect(lx - tubeW / 2, ly + 3, tubeW, tubeH, 2);
       ctx.fill();
-      ctx.shadowBlur = 0; // 그림자 초기화
+      ctx.shadowBlur = 0;
     });
 
     // 선로 바닥
@@ -1187,14 +1197,14 @@
       const slide = door.openProgress * 10 * scaleX;
       const is2Car = door.carType === '2CAR';
 
-      // 도어 번호 명판 (고해상도 앤티앨리어싱)
+      // 도어 번호 명판
       ctx.fillStyle = is2Car ? '#ffffff' : '#cbd5e1';
       ctx.font = `bold ${Math.max(10, Math.floor(8.5 * scaleX))}px "Pretendard", sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(door.label, dx + dw / 2, psdTopY + 6.5 * scaleY);
 
-      // 도어 상단 LED (열림: 빨강, 닫힘: 초록)
+      // 도어 상단 LED
       const ledColor = door.openProgress > 0.05 ? '#ef4444' : '#22c55e';
       ctx.fillStyle = ledColor;
       ctx.shadowColor = ledColor;
@@ -1234,7 +1244,7 @@
       ctx.fill();
     });
 
-    ctx.restore(); // 캔버스 상태 복원
+    ctx.restore();
 
     requestAnimationFrame(renderLoop);
   }
