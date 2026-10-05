@@ -21,6 +21,7 @@
       position: relative;
     }
 
+    /* 1. 배경 전체 캔버스 */
     #metroCanvas {
       position: absolute;
       top: 0;
@@ -31,6 +32,7 @@
       z-index: 1;
     }
 
+    /* 좌측 상단 HUD 배지 */
     .hud-badge {
       position: absolute;
       top: 14px;
@@ -89,6 +91,7 @@
       color: #6ee7b7;
     }
 
+    /* 좌측 하단 교육 실습 가이드 HUD */
     .hud-guide-box {
       position: absolute;
       left: 20px;
@@ -140,37 +143,35 @@
       font-size: 12px;
     }
 
+    /* 2. 우측 하단 승강장조작반 (PSL) 패널 - 스크롤바 완전 차단 및 컴팩트 핏 */
     .psl-panel-container {
       position: absolute;
       right: 20px;
       bottom: 20px;
       width: 580px;
       max-width: 46vw;
-      height: 520px;
-      max-height: 58vh;
+      height: auto;
       background: #d6d9dc;
-      padding: 14px;
-      border-radius: 16px;
+      padding: 10px 12px;
+      border-radius: 14px;
       border: 3px solid #94a3b8;
       box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
       z-index: 20;
       display: flex;
       flex-direction: column;
-      overflow-y: auto;
+      overflow: hidden; /* ★ 스크롤바 생성 원천 차단 */
     }
 
     .psl-chassis {
       position: relative;
-      flex: 1;
       background: #e3e6e8;
-      border-radius: 12px;
+      border-radius: 10px;
       border: 2px solid #b0b4b8;
       box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.15);
-      padding: 14px 16px;
+      padding: 10px 14px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      gap: 10px;
+      gap: 6px;
     }
 
     .bolt {
@@ -192,10 +193,10 @@
       justify-content: center;
       align-items: center;
       border-bottom: 2px solid #cbd5e1;
-      padding-bottom: 4px;
+      padding-bottom: 2px;
     }
     .panel-title {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 900;
       letter-spacing: 0.28em;
       text-indent: 0.28em;
@@ -206,38 +207,38 @@
 
     .top-system-row {
       display: grid;
-      grid-template-columns: 140px 1fr;
-      gap: 10px;
+      grid-template-columns: 135px 1fr;
+      gap: 8px;
     }
 
     .comm-box {
       border: 1px solid #94a3b8;
       background: #dce0e3;
-      border-radius: 8px;
-      padding: 8px;
+      border-radius: 6px;
+      padding: 6px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      font-size: 11px;
+      font-size: 10.5px;
     }
     .comm-title {
       text-align: center;
       font-weight: bold;
       color: #334155;
       border-bottom: 1px solid #cbd5e1;
-      padding-bottom: 4px;
+      padding-bottom: 3px;
     }
     .comm-power {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 6px;
+      padding: 3px 5px;
       font-weight: bold;
       color: #1e293b;
     }
     .led-power {
-      width: 12px;
-      height: 12px;
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
       background: #22c55e;
       box-shadow: 0 0 8px #22c55e;
@@ -248,18 +249,18 @@
       justify-content: space-around;
       text-align: center;
       font-family: monospace;
-      font-size: 9px;
+      font-size: 8.5px;
       border-top: 1px solid #cbd5e1;
-      padding-top: 4px;
+      padding-top: 3px;
       color: #475569;
       font-weight: bold;
     }
 
     .hmi-monitor {
       background: #23272d;
-      border: 3px solid #475569;
-      border-radius: 8px;
-      padding: 8px 10px;
+      border: 2.5px solid #475569;
+      border-radius: 6px;
+      padding: 6px 8px;
       box-shadow: inset 0 2px 8px #000;
       display: flex;
       flex-direction: column;
@@ -269,24 +270,24 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 6px;
+      padding-bottom: 4px;
       border-bottom: 1px solid #334155;
     }
     .hmi-btn {
-      padding: 2px 8px;
+      padding: 2px 7px;
       border-radius: 4px;
       background: #f5eccb;
       color: #8a7228;
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: bold;
       border: 1px solid #b8a050;
       cursor: pointer;
     }
     .hmi-status-pill {
       flex: 1;
-      margin: 0 10px;
-      height: 18px;
-      border-radius: 9px;
+      margin: 0 8px;
+      height: 17px;
+      border-radius: 8px;
       background: rgba(186, 196, 217, 0.25);
       border: 1px solid #475569;
       display: flex;
@@ -294,15 +295,15 @@
       justify-content: center;
       color: #cbd5e1;
       font-family: monospace;
-      font-size: 9.5px;
+      font-size: 9px;
       font-weight: bold;
     }
 
     .hmi-grid-container {
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      margin-top: 6px;
+      gap: 3px;
+      margin-top: 4px;
     }
     .hmi-row {
       display: flex;
@@ -358,16 +359,16 @@
 
     .bottom-control-row {
       display: grid;
-      grid-template-columns: 130px 1fr;
-      gap: 10px;
+      grid-template-columns: 125px 1fr;
+      gap: 8px;
       align-items: stretch;
     }
 
     .interphone-box {
       background: #c8cccf;
       border: 2px solid #94a3b8;
-      border-radius: 8px;
-      padding: 8px;
+      border-radius: 6px;
+      padding: 6px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -375,67 +376,67 @@
       box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
     }
     .handset {
-      width: 66px;
-      height: 150px;
+      width: 60px;
+      height: 125px;
       background: #ffffff;
-      border-radius: 8px;
+      border-radius: 6px;
       border: 1px solid #cbd5e1;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-      padding: 6px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+      padding: 4px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
     }
-    .handset-ear { width: 44px; height: 18px; background: #f1f5f9; border-radius: 4px; border: 1px solid #e2e8f0; }
-    .handset-mouth { width: 44px; height: 20px; background: #f1f5f9; border-radius: 4px; border: 1px solid #e2e8f0; }
-    .handset-buttons { width: 100%; display: flex; flex-direction: column; gap: 4px; }
-    .handset-btn-line { height: 4px; background: #e2e8f0; border-radius: 2px; }
+    .handset-ear { width: 40px; height: 15px; background: #f1f5f9; border-radius: 3px; border: 1px solid #e2e8f0; }
+    .handset-mouth { width: 40px; height: 16px; background: #f1f5f9; border-radius: 3px; border: 1px solid #e2e8f0; }
+    .handset-buttons { width: 100%; display: flex; flex-direction: column; gap: 3px; }
+    .handset-btn-line { height: 3.5px; background: #e2e8f0; border-radius: 2px; }
 
     .controls-wrapper {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       justify-content: space-between;
     }
 
     .section-box {
       border: 1px solid #94a3b8;
       background: #dbe0e3;
-      border-radius: 8px;
-      padding: 8px 10px;
+      border-radius: 6px;
+      padding: 6px 8px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       position: relative;
     }
     .section-title {
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: bold;
       color: #334155;
       text-align: center;
       border-bottom: 1px solid #cbd5e1;
-      padding-bottom: 3px;
-      margin-bottom: 6px;
+      padding-bottom: 2px;
+      margin-bottom: 4px;
     }
     .indicator-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      gap: 6px;
       text-align: center;
     }
     .ind-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
     }
     .ind-label {
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: bold;
       color: #334155;
     }
     .pilot-lamp {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       border: 2px solid #334155;
       display: flex;
@@ -447,8 +448,8 @@
     }
     .pilot-lamp::after {
       content: '';
-      width: 11px;
-      height: 11px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.35);
     }
@@ -460,7 +461,7 @@
     .controls-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      gap: 6px;
       text-align: center;
     }
     .ctrl-item {
@@ -470,7 +471,7 @@
       justify-content: center;
     }
     .ctrl-label {
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: bold;
       color: #1e293b;
       margin-bottom: 2px;
@@ -478,40 +479,40 @@
 
     .knob-container {
       position: relative;
-      margin: 4px 0;
+      margin: 2px 0;
     }
     .rotary-knob {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       background: #0f172a;
-      border: 2.5px solid #475569;
+      border: 2px solid #475569;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
       transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
     .knob-pointer {
-      width: 3.5px;
-      height: 24px;
+      width: 3px;
+      height: 20px;
       background: #f8fafc;
       border-radius: 2px;
       box-shadow: 0 0 2px #fff;
     }
 
     .push-btn {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      border: 2.5px solid #0f172a;
+      border: 2px solid #0f172a;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-      transition: transform 0.08s, box-shadow 0.08s;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+      transition: transform 0.08s;
       outline: none;
     }
     .push-btn:active, .push-btn.pressed {
@@ -526,8 +527,8 @@
     .btn-black:hover { background: #475569; }
 
     .btn-inner {
-      width: 26px;
-      height: 26px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       border: 1px solid rgba(255, 255, 255, 0.35);
     }
@@ -535,8 +536,8 @@
     .interlock-box {
       border: 2px solid #dc2626;
       background: #fef08a;
-      border-radius: 6px;
-      padding: 4px;
+      border-radius: 5px;
+      padding: 3px;
       box-shadow: 0 2px 6px rgba(220, 38, 38, 0.2);
     }
     .interlock-box .ctrl-label {
@@ -553,7 +554,7 @@
       color: #ffffff;
       padding: 5px 12px;
       border-radius: 6px;
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: bold;
       border: 1px solid #fdba74;
       white-space: nowrap;
