@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>인천2호선 승강장조작반(PSD) 교육용 시뮬레이터</title>
+  <title>인천2호선 승강장조작반(PSL) 교육용 시뮬레이터</title>
   <style>
     * {
       box-sizing: border-box;
@@ -18,44 +18,29 @@
       overflow: hidden;
       width: 100vw;
       height: 100vh;
-    }
-
-    /* 전체 화면 레이아웃 (좌: 승강장 56%, 우: 조작반 44%) */
-    .app-container {
-      display: flex;
-      flex-direction: row;
-      width: 100%;
-      height: 100%;
-    }
-    @media (max-width: 1080px) {
-      .app-container {
-        flex-direction: column;
-      }
-    }
-
-    /* 1. 승강장 뷰어 영역 */
-    .viewport-section {
-      flex: 1;
       position: relative;
-      height: 100%;
-      background: #090d16;
-      border-right: 3px solid #1e293b;
-      overflow: hidden;
     }
-    canvas {
-      display: block;
+
+    /* 1. 배경 전체 캔버스 (상단 PSD 12도어 + 하단 승강장 바닥) */
+    #metroCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
+      display: block;
+      z-index: 1;
     }
+
+    /* 좌측 상단 HUD 배지 */
     .hud-badge {
       position: absolute;
       top: 14px;
-      left: 16px;
+      left: 18px;
       display: flex;
       flex-direction: column;
       gap: 6px;
       z-index: 10;
-      max-width: 380px;
     }
     .badge-title {
       display: inline-flex;
@@ -64,10 +49,10 @@
       background: rgba(15, 23, 42, 0.92);
       border: 1px solid rgba(249, 115, 22, 0.55);
       backdrop-filter: blur(10px);
-      padding: 6px 12px;
+      padding: 6px 14px;
       border-radius: 8px;
       color: #fed7aa;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
       width: fit-content;
@@ -87,8 +72,7 @@
     .badge-sub {
       display: flex;
       gap: 6px;
-      font-size: 10px;
-      flex-wrap: wrap;
+      font-size: 11px;
     }
     .tag {
       padding: 3px 8px;
@@ -107,75 +91,106 @@
       color: #6ee7b7;
     }
 
-    .hud-status-bar {
+    /* 좌측 하단 교육 실습 가이드 HUD */
+    .hud-guide-box {
       position: absolute;
-      bottom: 14px;
-      left: 16px;
-      right: 16px;
+      left: 20px;
+      bottom: 20px;
+      width: 380px;
+      background: rgba(15, 23, 42, 0.90);
+      border: 1.5px solid rgba(71, 85, 105, 0.6);
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(12px);
+      z-index: 10;
+      color: #cbd5e1;
+    }
+    .guide-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #f97316;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 6px;
+    }
+    .guide-steps {
+      list-style: none;
+      font-size: 11.5px;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .guide-steps li {
+      display: flex;
+      gap: 6px;
+    }
+    .step-num {
+      color: #38bdf8;
+      font-weight: bold;
+    }
+    .guide-status {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed #334155;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(15, 23, 42, 0.88);
-      border: 1px solid #334155;
-      padding: 10px 20px;
-      border-radius: 8px;
-      color: #cbd5e1;
-      font-size: 13px;
-      z-index: 10;
-      backdrop-filter: blur(8px);
+      font-size: 12px;
     }
 
-    /* 2. 승강장조작반 (PSL) 패널 - 시원하고 큼직한 비율로 스케일업 */
+    /* 2. 우측 하단 승강장조작반 (PSL) 패널 */
     .psl-panel-container {
-      width: 44%;
-      min-width: 620px;
-      max-width: 840px;
-      height: 100%;
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
+      width: 580px;
+      max-width: 46vw;
+      height: 520px;
+      max-height: 58vh;
       background: #d6d9dc;
-      padding: 18px;
-      border-left: 5px solid #94a3b8;
-      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.45);
-      overflow-y: auto;
+      padding: 14px;
+      border-radius: 16px;
+      border: 3px solid #94a3b8;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
+      z-index: 20;
       display: flex;
       flex-direction: column;
-    }
-    @media (max-width: 1080px) {
-      .psl-panel-container {
-        width: 100%;
-        min-width: unset;
-        max-width: unset;
-        height: 60%;
-      }
+      overflow-y: auto;
     }
 
     .psl-chassis {
       position: relative;
       flex: 1;
       background: #e3e6e8;
-      border-radius: 14px;
-      border: 3px solid #b0b4b8;
-      box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.18);
-      padding: 20px;
+      border-radius: 12px;
+      border: 2px solid #b0b4b8;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.15);
+      padding: 14px 16px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 16px;
+      gap: 10px;
     }
 
-    /* 볼트 디자인 */
+    /* 볼트 */
     .bolt {
       position: absolute;
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: #94a3b8;
-      border: 1.5px solid #475569;
+      border: 1px solid #475569;
       box-shadow: inset 1px 1px 2px #fff, inset -1px -1px 2px #000;
     }
-    .bolt-tl { top: 8px; left: 10px; }
-    .bolt-tr { top: 8px; right: 10px; }
-    .bolt-bl { bottom: 8px; left: 10px; }
-    .bolt-br { bottom: 8px; right: 10px; }
+    .bolt-tl { top: 6px; left: 8px; }
+    .bolt-tr { top: 6px; right: 8px; }
+    .bolt-bl { bottom: 6px; left: 8px; }
+    .bolt-br { bottom: 6px; right: 8px; }
 
     /* 타이틀 헤더 */
     .panel-header {
@@ -183,69 +198,67 @@
       justify-content: center;
       align-items: center;
       border-bottom: 2px solid #cbd5e1;
-      padding-bottom: 8px;
+      padding-bottom: 4px;
     }
     .panel-title {
-      font-size: 30px;
+      font-size: 24px;
       font-weight: 900;
-      letter-spacing: 0.3em;
-      text-indent: 0.3em;
+      letter-spacing: 0.28em;
+      text-indent: 0.28em;
       color: #1e293b;
       margin: 0;
-      padding-left: 0;
       text-align: center;
     }
 
     /* 통신상태 & HMI 모니터 행 */
     .top-system-row {
       display: grid;
-      grid-template-columns: 160px 1fr;
-      gap: 14px;
+      grid-template-columns: 140px 1fr;
+      gap: 10px;
     }
 
     /* 통신상태 */
     .comm-box {
-      border: 1.5px solid #94a3b8;
+      border: 1px solid #94a3b8;
       background: #dce0e3;
-      border-radius: 10px;
-      padding: 10px;
+      border-radius: 8px;
+      padding: 8px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      font-size: 12px;
+      font-size: 11px;
     }
     .comm-title {
       text-align: center;
       font-weight: bold;
       color: #334155;
       border-bottom: 1px solid #cbd5e1;
-      padding-bottom: 6px;
-      font-size: 13px;
+      padding-bottom: 4px;
     }
     .comm-power {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 8px;
+      padding: 4px 6px;
       font-weight: bold;
       color: #1e293b;
     }
     .led-power {
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background: #22c55e;
-      box-shadow: 0 0 10px #22c55e;
-      border: 1.5px solid #16a34a;
+      box-shadow: 0 0 8px #22c55e;
+      border: 1px solid #16a34a;
     }
     .comm-ports {
       display: flex;
       justify-content: space-around;
       text-align: center;
       font-family: monospace;
-      font-size: 10px;
+      font-size: 9px;
       border-top: 1px solid #cbd5e1;
-      padding-top: 6px;
+      padding-top: 4px;
       color: #475569;
       font-weight: bold;
     }
@@ -253,10 +266,10 @@
     /* HMI 모니터 */
     .hmi-monitor {
       background: #23272d;
-      border: 3.5px solid #475569;
-      border-radius: 10px;
-      padding: 10px 12px;
-      box-shadow: inset 0 3px 10px #000;
+      border: 3px solid #475569;
+      border-radius: 8px;
+      padding: 8px 10px;
+      box-shadow: inset 0 2px 8px #000;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -265,24 +278,24 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 8px;
+      padding-bottom: 6px;
       border-bottom: 1px solid #334155;
     }
     .hmi-btn {
-      padding: 3px 10px;
+      padding: 2px 8px;
       border-radius: 4px;
       background: #f5eccb;
       color: #8a7228;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: bold;
       border: 1px solid #b8a050;
       cursor: pointer;
     }
     .hmi-status-pill {
       flex: 1;
-      margin: 0 12px;
-      height: 20px;
-      border-radius: 10px;
+      margin: 0 10px;
+      height: 18px;
+      border-radius: 9px;
       background: rgba(186, 196, 217, 0.25);
       border: 1px solid #475569;
       display: flex;
@@ -290,7 +303,7 @@
       justify-content: center;
       color: #cbd5e1;
       font-family: monospace;
-      font-size: 11px;
+      font-size: 9.5px;
       font-weight: bold;
     }
 
@@ -298,19 +311,19 @@
     .hmi-grid-container {
       display: flex;
       flex-direction: column;
-      gap: 7px;
-      margin-top: 8px;
+      gap: 5px;
+      margin-top: 6px;
     }
     .hmi-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     .hmi-legend {
-      width: 54px;
-      font-size: 9px;
+      width: 48px;
+      font-size: 8px;
       font-weight: bold;
-      line-height: 1.3;
+      line-height: 1.25;
       color: #94a3b8;
     }
     .hmi-legend .red { color: #f87171; }
@@ -321,7 +334,7 @@
       flex: 1;
       display: grid;
       grid-template-columns: repeat(6, 1fr);
-      gap: 4px;
+      gap: 3px;
     }
     .pd-cell {
       display: flex;
@@ -330,7 +343,7 @@
     }
     .pd-label {
       font-family: monospace;
-      font-size: 9.5px;
+      font-size: 8px;
       font-weight: bold;
       color: #cbd5e1;
     }
@@ -338,26 +351,26 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 2.5px;
-      margin-top: 3px;
+      gap: 2px;
+      margin-top: 2px;
     }
     .pd-bar {
-      height: 9px;
-      border-radius: 1.5px;
+      height: 7px;
+      border-radius: 1px;
       border: 1px solid rgba(0, 0, 0, 0.5);
       background-color: #38d368;
       transition: background-color 0.2s, box-shadow 0.2s;
     }
     .pd-bar.open {
       background-color: #ef4444;
-      box-shadow: 0 0 6px #ef4444;
+      box-shadow: 0 0 5px #ef4444;
     }
 
     /* 하단 조작부: 인터폰 + 제어/상태표시 */
     .bottom-control-row {
       display: grid;
-      grid-template-columns: 160px 1fr;
-      gap: 14px;
+      grid-template-columns: 130px 1fr;
+      gap: 10px;
       align-items: stretch;
     }
 
@@ -365,8 +378,8 @@
     .interphone-box {
       background: #c8cccf;
       border: 2px solid #94a3b8;
-      border-radius: 10px;
-      padding: 10px;
+      border-radius: 8px;
+      padding: 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -374,96 +387,95 @@
       box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
     }
     .handset {
-      width: 80px;
-      height: 180px;
+      width: 66px;
+      height: 150px;
       background: #ffffff;
-      border-radius: 10px;
-      border: 1.5px solid #cbd5e1;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      padding: 6px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
     }
-    .handset-ear { width: 54px; height: 22px; background: #f1f5f9; border-radius: 5px; border: 1px solid #e2e8f0; }
-    .handset-mouth { width: 54px; height: 24px; background: #f1f5f9; border-radius: 5px; border: 1px solid #e2e8f0; }
-    .handset-buttons { width: 100%; display: flex; flex-direction: column; gap: 5px; }
-    .handset-btn-line { height: 5px; background: #e2e8f0; border-radius: 2px; }
+    .handset-ear { width: 44px; height: 18px; background: #f1f5f9; border-radius: 4px; border: 1px solid #e2e8f0; }
+    .handset-mouth { width: 44px; height: 20px; background: #f1f5f9; border-radius: 4px; border: 1px solid #e2e8f0; }
+    .handset-buttons { width: 100%; display: flex; flex-direction: column; gap: 4px; }
+    .handset-btn-line { height: 4px; background: #e2e8f0; border-radius: 2px; }
 
     /* 제어 및 상태표시 컨테이너 */
     .controls-wrapper {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 8px;
       justify-content: space-between;
     }
 
     /* 1. 상태표시 */
     .section-box {
-      border: 1.5px solid #94a3b8;
+      border: 1px solid #94a3b8;
       background: #dbe0e3;
-      border-radius: 10px;
-      padding: 10px 14px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+      border-radius: 8px;
+      padding: 8px 10px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       position: relative;
     }
     .section-title {
-      font-size: 13px;
+      font-size: 11.5px;
       font-weight: bold;
       color: #334155;
       text-align: center;
-      border-bottom: 1.5px solid #cbd5e1;
-      padding-bottom: 4px;
-      margin-bottom: 10px;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 3px;
+      margin-bottom: 6px;
     }
     .indicator-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
+      gap: 8px;
       text-align: center;
     }
     .ind-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
     .ind-label {
-      font-size: 11.5px;
+      font-size: 10px;
       font-weight: bold;
       color: #334155;
     }
-    /* 상태표시 램프 크기 대폭 확대 (28px -> 38px) */
     .pilot-lamp {
-      width: 38px;
-      height: 38px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      border: 3px solid #334155;
+      border: 2px solid #334155;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.15s ease;
       background: #334155;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
     .pilot-lamp::after {
       content: '';
-      width: 14px;
-      height: 14px;
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.35);
     }
     .lamp-red-off { background: #5c1c1c; opacity: 0.65; }
-    .lamp-red-on { background: #ef4444 !important; box-shadow: 0 0 18px #ef4444; opacity: 1 !important; }
+    .lamp-red-on { background: #ef4444 !important; box-shadow: 0 0 14px #ef4444; opacity: 1 !important; }
     .lamp-green-off { background: #14492d; opacity: 0.65; }
-    .lamp-green-on { background: #10b981 !important; box-shadow: 0 0 18px #10b981; opacity: 1 !important; }
+    .lamp-green-on { background: #10b981 !important; box-shadow: 0 0 14px #10b981; opacity: 1 !important; }
 
     /* 2. 제어 스위치 & 버튼 그리드 */
     .controls-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      gap: 8px;
       text-align: center;
     }
     .ctrl-item {
@@ -473,55 +485,55 @@
       justify-content: center;
     }
     .ctrl-label {
-      font-size: 12px;
+      font-size: 10.5px;
       font-weight: bold;
       color: #1e293b;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
-    /* 회전 노브 스위치 확대 (38px -> 46px) */
+    /* 회전 노브 스위치 */
     .knob-container {
       position: relative;
-      margin: 6px 0;
+      margin: 4px 0;
     }
     .rotary-knob {
-      width: 46px;
-      height: 46px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       background: #0f172a;
-      border: 3px solid #475569;
+      border: 2.5px solid #475569;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
       transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
     .knob-pointer {
-      width: 4px;
-      height: 28px;
+      width: 3.5px;
+      height: 24px;
       background: #f8fafc;
       border-radius: 2px;
-      box-shadow: 0 0 3px #fff;
+      box-shadow: 0 0 2px #fff;
     }
 
-    /* 푸시 버튼 확대 (38px -> 48px) */
+    /* 푸시 버튼 */
     .push-btn {
-      width: 48px;
-      height: 48px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      border: 3px solid #0f172a;
+      border: 2.5px solid #0f172a;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
       transition: transform 0.08s, box-shadow 0.08s;
       outline: none;
     }
     .push-btn:active, .push-btn.pressed {
       transform: scale(0.92);
-      box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.65);
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
     }
     .btn-red { background: #ef4444; }
     .btn-red:hover { background: #f87171; }
@@ -531,19 +543,19 @@
     .btn-black:hover { background: #475569; }
 
     .btn-inner {
-      width: 32px;
-      height: 32px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
-      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.35);
     }
 
-    /* 인터록 해제 전용 노란색 강조 박스 */
+    /* 인터록 해제 박스 */
     .interlock-box {
       border: 2px solid #dc2626;
       background: #fef08a;
-      border-radius: 8px;
-      padding: 6px;
-      box-shadow: 0 3px 8px rgba(220, 38, 38, 0.25);
+      border-radius: 6px;
+      padding: 4px;
+      box-shadow: 0 2px 6px rgba(220, 38, 38, 0.2);
     }
     .interlock-box .ctrl-label {
       color: #991b1b;
@@ -553,18 +565,18 @@
     /* 툴팁 말풍선 */
     .tooltip-bubble {
       position: absolute;
-      top: -34px;
+      top: -30px;
       left: 50%;
       transform: translateX(-50%);
       background: #ea580c;
       color: #ffffff;
-      padding: 6px 14px;
+      padding: 5px 12px;
       border-radius: 6px;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: bold;
       border: 1px solid #fdba74;
       white-space: nowrap;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       animation: floatTooltip 1.2s infinite alternate ease-in-out;
       display: none;
       z-index: 50;
@@ -577,30 +589,40 @@
 </head>
 <body>
 
-<div class="app-container">
-  <!-- 1. 승강장 화면 뷰포트 -->
-  <div class="viewport-section" id="viewportSection">
-    <canvas id="metroCanvas"></canvas>
+  <!-- 1. 배경 승강장 전체 뷰포트 (12도어 와이드 캔버스) -->
+  <canvas id="metroCanvas"></canvas>
 
-    <!-- 좌측 상단 안내 박스 -->
-    <div class="hud-badge">
-      <div class="badge-title">
-        <span class="pulse-dot"></span>
-        인천2호선 승강장 PSD 시뮬레이터 (4량 12도어 규격)
-      </div>
-      <div class="badge-sub">
-        <span class="tag tag-ext">0-1 ~ 0-3 / 3-1 ~ 3-3: 4량 연장구역</span>
-        <span class="tag tag-base">1-1 ~ 2-3: 2량 기본운행구역</span>
-      </div>
+  <!-- 좌측 상단 HUD 안내 -->
+  <div class="hud-badge">
+    <div class="badge-title">
+      <span class="pulse-dot"></span>
+      인천2호선 승강장 PSD 시뮬레이터 (4량 12도어 규격)
     </div>
+    <div class="badge-sub">
+      <span class="tag tag-ext">0-1 ~ 0-3 / 3-1 ~ 3-3: 4량 연장구역</span>
+      <span class="tag tag-base">1-1 ~ 2-3: 2량 기본운행구역</span>
+    </div>
+  </div>
 
-    <div class="hud-status-bar">
-      <div>개방된 출입문: <strong id="openDoorCountText" style="color:#fb923c; font-size:15px; margin-left:4px;">0 / 12</strong></div>
+  <!-- 좌측 하단 조작 가이드 & 상태 HUD -->
+  <div class="hud-guide-box">
+    <div class="guide-title">
+      <span>📋 승강장조작반 취급 요령 (교육 가이드)</span>
+    </div>
+    <ul class="guide-steps">
+      <li><span class="step-num">1.</span> 운전모드 스위치가 <strong>[-]</strong> 위치인지 확인합니다.</li>
+      <li><span class="step-num">2.</span> <strong>[차량선택]</strong> 스위치를 2량 또는 4량 위치로 돌립니다.</li>
+      <li><span class="step-num">3.</span> <strong>[전체열림]</strong> 버튼을 누르면 해당 구역의 PSD가 개방됩니다.</li>
+      <li><span class="step-num">4.</span> <strong>[전체닫힘]</strong> 버튼을 누르면 모든 문이 닫히며 녹색등이 켜집니다.</li>
+      <li><span class="step-num">※</span> <strong>[램프시험]</strong> 버튼은 누르고 있는 동안 모든 램프를 점검합니다.</li>
+    </ul>
+    <div class="guide-status">
+      <div>개방 도어: <strong id="openDoorCountText" style="color:#fb923c; font-size:14px;">0 / 12</strong></div>
       <div id="psdSummaryText" style="font-weight:bold; color:#34d399;">모든 PSD 닫힘 상태</div>
     </div>
   </div>
 
-  <!-- 2. 승강장조작반 (PSL) 실물 전면 패널 (시원하게 커진 비율) -->
+  <!-- 2. 우측 하단 승강장조작반 (PSL) 설비 패널 -->
   <div class="psl-panel-container">
     <div class="psl-chassis">
       <div class="bolt bolt-tl"></div>
@@ -625,7 +647,7 @@
             <div>CAN1<br>TX RX</div>
             <div>CAN2<br>TX RX</div>
           </div>
-          <div style="text-align:center; background:#cbd5e1; border-radius:4px; padding:3px; font-size:9px; font-weight:bold; margin-top:2px;">
+          <div style="text-align:center; background:#cbd5e1; border-radius:3px; padding:2px; font-size:8px; font-weight:bold;">
             DEBUG
           </div>
         </div>
@@ -666,8 +688,8 @@
       <div class="bottom-control-row">
         <!-- 인터폰 그래픽 -->
         <div class="interphone-box">
-          <div style="font-size:11px; font-weight:bold; color:#334155;">KOCOM</div>
-          <div style="font-size:8px; color:#64748b;">KIP-611PG</div>
+          <div style="font-size:10px; font-weight:bold; color:#334155;">KOCOM</div>
+          <div style="font-size:7px; color:#64748b;">KIP-611PG</div>
           <div class="handset">
             <div class="handset-ear"></div>
             <div class="handset-buttons">
@@ -680,7 +702,7 @@
             </div>
             <div class="handset-mouth"></div>
           </div>
-          <div style="width:100%; height:5px; border-top:2px dashed #64748b; margin-top:4px;"></div>
+          <div style="width:100%; height:4px; border-top:2px dashed #64748b; margin-top:3px;"></div>
         </div>
 
         <div class="controls-wrapper">
@@ -712,11 +734,11 @@
             <div class="section-title">제어</div>
             <div class="tooltip-bubble" id="tooltipBubble">💬 원래는 손을 놓으면 복귀되는 스위치입니다</div>
 
-            <div class="controls-grid" style="margin-bottom:10px;">
+            <div class="controls-grid" style="margin-bottom:6px;">
               <!-- 차량선택 로터리 스위치 -->
               <div class="ctrl-item">
                 <span class="ctrl-label">차량선택</span>
-                <div style="display:flex; justify-content:space-between; width:58px; font-size:10px; font-weight:bold; color:#475569;">
+                <div style="display:flex; justify-content:space-between; width:52px; font-size:8px; font-weight:bold; color:#475569;">
                   <span>2량</span><span>4량</span>
                 </div>
                 <div class="knob-container">
@@ -744,11 +766,11 @@
             </div>
 
             <!-- 하단 3개 스위치/버튼 -->
-            <div class="controls-grid" style="border-top:1.5px solid #cbd5e1; padding-top:10px;">
+            <div class="controls-grid" style="border-top:1px solid #cbd5e1; padding-top:6px;">
               <!-- 운전모드 로터리 스위치 -->
               <div class="ctrl-item">
                 <span class="ctrl-label">운전모드</span>
-                <div style="display:flex; justify-content:space-between; width:52px; font-size:10px; font-weight:bold; color:#475569;">
+                <div style="display:flex; justify-content:space-between; width:48px; font-size:8px; font-weight:bold; color:#475569;">
                   <span>-</span><span>정지</span>
                 </div>
                 <div class="knob-container">
@@ -761,7 +783,7 @@
               <!-- 인터록 해제 박스 & 스위치 -->
               <div class="ctrl-item interlock-box">
                 <span class="ctrl-label">인 터 록 해 제</span>
-                <div style="display:flex; justify-content:space-between; width:50px; font-size:9px; font-weight:bold; color:#991b1b;">
+                <div style="display:flex; justify-content:space-between; width:46px; font-size:8px; font-weight:bold; color:#991b1b;">
                   <span>OFF</span><span>ON</span>
                 </div>
                 <div class="knob-container">
@@ -786,25 +808,24 @@
 
     </div>
   </div>
-</div>
 
 <script>
   /* =========================================================================
-     1. 전역 상태 및 데이터 구조
+     1. 전역 상태 및 12개 도어 데이터 (와이드 가로 비율 균등 배치)
      ========================================================================= */
   const DOORS = [
-    { id: 0, label: '0-1', carType: '4CAR_EXT', openProgress: 0, target: 0, x: 26 },
-    { id: 1, label: '0-2', carType: '4CAR_EXT', openProgress: 0, target: 0, x: 62 },
-    { id: 2, label: '0-3', carType: '4CAR_EXT', openProgress: 0, target: 0, x: 98 },
-    { id: 3, label: '1-1', carType: '2CAR', openProgress: 0, target: 0, x: 138 },
-    { id: 4, label: '1-2', carType: '2CAR', openProgress: 0, target: 0, x: 174 },
-    { id: 5, label: '1-3', carType: '2CAR', openProgress: 0, target: 0, x: 210 },
-    { id: 6, label: '2-1', carType: '2CAR', openProgress: 0, target: 0, x: 254 },
-    { id: 7, label: '2-2', carType: '2CAR', openProgress: 0, target: 0, x: 290 },
-    { id: 8, label: '2-3', carType: '2CAR', openProgress: 0, target: 0, x: 326 },
-    { id: 9, label: '3-1', carType: '4CAR_EXT', openProgress: 0, target: 0, x: 366 },
-    { id: 10, label: '3-2', carType: '4CAR_EXT', openProgress: 0, target: 0, x: 402 },
-    { id: 11, label: '3-3', carType: '4CAR_EXT', openProgress: 0, target: 0, x: 438 },
+    { id: 0, label: '0-1', carType: '4CAR_EXT', openProgress: 0, target: 0 },
+    { id: 1, label: '0-2', carType: '4CAR_EXT', openProgress: 0, target: 0 },
+    { id: 2, label: '0-3', carType: '4CAR_EXT', openProgress: 0, target: 0 },
+    { id: 3, label: '1-1', carType: '2CAR', openProgress: 0, target: 0 },
+    { id: 4, label: '1-2', carType: '2CAR', openProgress: 0, target: 0 },
+    { id: 5, label: '1-3', carType: '2CAR', openProgress: 0, target: 0 },
+    { id: 6, label: '2-1', carType: '2CAR', openProgress: 0, target: 0 },
+    { id: 7, label: '2-2', carType: '2CAR', openProgress: 0, target: 0 },
+    { id: 8, label: '2-3', carType: '2CAR', openProgress: 0, target: 0 },
+    { id: 9, label: '3-1', carType: '4CAR_EXT', openProgress: 0, target: 0 },
+    { id: 10, label: '3-2', carType: '4CAR_EXT', openProgress: 0, target: 0 },
+    { id: 11, label: '3-3', carType: '4CAR_EXT', openProgress: 0, target: 0 },
   ];
 
   let carSelectState = 'NEUTRAL'; // '2CAR' | 'NEUTRAL' | '4CAR'
@@ -837,7 +858,7 @@
   }
 
   /* =========================================================================
-     3. 디지털 HMI 모니터 DOM 생성
+     3. HMI 모니터 DOM 생성
      ========================================================================= */
   const hmiRow1 = document.getElementById('hmiDoorsRow1');
   const hmiRow2 = document.getElementById('hmiDoorsRow2');
@@ -861,7 +882,7 @@
   initHmiGrid();
 
   /* =========================================================================
-     4. 스위치 & 버튼 조작 이벤트 바인딩
+     4. 스위치 & 버튼 조작 이벤트
      ========================================================================= */
   const knobCarSelect = document.getElementById('knobCarSelect');
   const tooltipBubble = document.getElementById('tooltipBubble');
@@ -875,7 +896,7 @@
     }, 3200);
   }
 
-  // 1) 차량선택 스위치 (10시: 2량 / 12시: 중립 / 2시: 4량 순환)
+  // 1) 차량선택 스위치
   knobCarSelect.addEventListener('click', () => {
     playBeep(360, 'square', 0.06);
     if (carSelectState === 'NEUTRAL') {
@@ -892,10 +913,9 @@
     }
   });
 
-  // 2) 운전모드 스위치 (10시: RUN / 2시: STOP 고정)
+  // 2) 운전모드 스위치
   const knobDriveMode = document.getElementById('knobDriveMode');
   knobDriveMode.style.transform = 'rotate(-40deg)';
-
   knobDriveMode.addEventListener('click', () => {
     playBeep(320, 'square', 0.06);
     if (driveModeState === 'RUN') {
@@ -907,10 +927,9 @@
     }
   });
 
-  // 3) 인터록 해제 스위치 (10시: OFF / 2시: ON 고정)
+  // 3) 인터록 해제 스위치
   const knobInterlock = document.getElementById('knobInterlock');
   knobInterlock.style.transform = 'rotate(-40deg)';
-
   knobInterlock.addEventListener('click', () => {
     playBeep(300, 'square', 0.06);
     if (interlockState === 'OFF') {
@@ -1028,35 +1047,28 @@
   }
 
   /* =========================================================================
-     6. 고해상도 캔버스 렌더링 & 조명 균형 배치
+     6. 고해상도 캔버스 렌더링 (12개 도어 가로 100% 와이드 뷰포트)
      ========================================================================= */
   const canvas = document.getElementById('metroCanvas');
   const ctx = canvas.getContext('2d');
-  const viewportSection = document.getElementById('viewportSection');
 
-  let logicalWidth = 800;
-  let logicalHeight = 600;
+  let width = window.innerWidth;
+  let height = window.innerHeight;
   let dpr = 1;
 
   function resizeCanvas() {
     dpr = window.devicePixelRatio || 1;
-    const rect = viewportSection.getBoundingClientRect();
-    logicalWidth = rect.width;
-    logicalHeight = rect.height;
+    width = window.innerWidth;
+    height = window.innerHeight;
 
-    canvas.width = Math.round(rect.width * dpr);
-    canvas.height = Math.round(rect.height * dpr);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
   }
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  const V_WIDTH = 480;
-  const V_HEIGHT = 270;
-  const TRACK_Y = 100;
-  const PLATFORM_Y = 175;
-
   function renderLoop() {
-    // 1. 도어 물리 애니메이션 계산
+    // 1. 도어 물리 애니메이션
     DOORS.forEach((door, idx) => {
       const speed = 0.045;
       if (door.openProgress < door.target) {
@@ -1077,61 +1089,60 @@
 
     updateLamps();
 
-    // 2. 고해상도 캔버스 렌더링 시작
+    // 2. 캔버스 그리기
     ctx.save();
     ctx.scale(dpr, dpr);
 
-    const width = logicalWidth;
-    const height = logicalHeight;
-    const scaleX = width / V_WIDTH;
-    const scaleY = height / V_HEIGHT;
-
     ctx.clearRect(0, 0, width, height);
 
-    // 역사 벽면
-    const wallGrad = ctx.createLinearGradient(0, 0, 0, TRACK_Y * scaleY);
+    // 승강장 높이 비율 계산 (상단 38% 선로 및 PSD, 하단 62% 대리석 바닥)
+    const TRACK_TOP_Y = height * 0.16;
+    const PLATFORM_Y = height * 0.38;
+
+    // A. 역사 상단 벽면
+    const wallGrad = ctx.createLinearGradient(0, 0, 0, TRACK_TOP_Y);
     wallGrad.addColorStop(0, '#0a0e14');
     wallGrad.addColorStop(0.6, '#131b26');
     wallGrad.addColorStop(1, '#090d14');
     ctx.fillStyle = wallGrad;
-    ctx.fillRect(0, 0, width, TRACK_Y * scaleY);
+    ctx.fillRect(0, 0, width, TRACK_TOP_Y);
 
     // 타일 줄눈
-    const tileSize = 28 * scaleX;
+    const tileSize = 32;
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
     ctx.lineWidth = 1;
     for (let x = 0; x < width; x += tileSize) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
-      ctx.lineTo(x, TRACK_Y * scaleY);
+      ctx.lineTo(x, TRACK_TOP_Y);
       ctx.stroke();
     }
 
-    // ★ [조명 균형 재배치] 벽면 전체에 조화롭게 4기 배치 (24%, 46%, 68%, 90%)
-    const lampPositions = [0.24, 0.46, 0.68, 0.90];
+    // B. 벽면 펜던트 조명 4기 (가로 전체에 균형 배치: 16%, 38%, 62%, 85%)
+    const lampPositions = [0.16, 0.38, 0.62, 0.85];
     lampPositions.forEach(ratio => {
       const lx = width * ratio;
-      const ly = 30 * scaleY;
-      const lampW = Math.max(68, 76 * (width / 1200));
-      const lampH = Math.max(16, 17 * scaleY);
+      const ly = TRACK_TOP_Y * 0.28;
+      const lampW = Math.max(68, Math.min(90, width * 0.065));
+      const lampH = 16;
 
-      // 천장 연결 듀얼 와이어 (양쪽)
+      // 천장 연결 듀얼 와이어
       ctx.fillStyle = '#1e222a';
       ctx.fillRect(lx - lampW * 0.35 - 1, 0, 2, ly);
       ctx.fillRect(lx + lampW * 0.35 - 1, 0, 2, ly);
 
-      // 부드러운 웜오렌지 Bloom 광원
-      const glow = ctx.createRadialGradient(lx, ly + lampH * 0.6, 6, lx, ly + lampH * 0.6, 130 * scaleY);
+      // 웜오렌지 Bloom 광원
+      const glow = ctx.createRadialGradient(lx, ly + lampH * 0.6, 6, lx, ly + lampH * 0.6, 120);
       glow.addColorStop(0, 'rgba(255, 180, 60, 0.40)');
       glow.addColorStop(0.4, 'rgba(255, 140, 30, 0.14)');
       glow.addColorStop(0.8, 'rgba(255, 110, 20, 0.03)');
       glow.addColorStop(1, 'transparent');
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(lx, ly + lampH * 0.6, 130 * scaleY, 0, Math.PI * 2);
+      ctx.arc(lx, ly + lampH * 0.6, 120, 0, Math.PI * 2);
       ctx.fill();
 
-      // 메탈 하우징 프레임
+      // 메탈 하우징
       ctx.fillStyle = '#22232a';
       ctx.strokeStyle = '#3a3b47';
       ctx.lineWidth = 1.5;
@@ -1140,7 +1151,7 @@
       ctx.fill();
       ctx.stroke();
 
-      // 발광 코어 튜브 (형광등)
+      // 발광 튜브 코어
       const tubeW = lampW - 8;
       const tubeH = lampH - 6;
       ctx.fillStyle = '#fffdf0';
@@ -1152,72 +1163,86 @@
       ctx.shadowBlur = 0;
     });
 
-    // 선로 바닥
+    // C. 선로 바닥 및 레일
     ctx.fillStyle = '#1c1917';
-    ctx.fillRect(0, TRACK_Y * scaleY, width, (PLATFORM_Y - TRACK_Y) * scaleY);
+    ctx.fillRect(0, TRACK_TOP_Y, width, PLATFORM_Y - TRACK_TOP_Y);
     ctx.fillStyle = '#3e3a38';
-    for (let rx = 0; rx < width; rx += 14 * scaleX) {
-      ctx.fillRect(rx, (TRACK_Y + 54) * scaleY, 8 * scaleX, 16 * scaleY);
+    for (let rx = 0; rx < width; rx += 22) {
+      ctx.fillRect(rx, PLATFORM_Y - 26, 10, 22);
     }
     ctx.fillStyle = '#94a3b8';
-    ctx.fillRect(0, (TRACK_Y + 58) * scaleY, width, 3 * scaleY);
-    ctx.fillRect(0, (TRACK_Y + 64) * scaleY, width, 3 * scaleY);
+    ctx.fillRect(0, PLATFORM_Y - 20, width, 4);
+    ctx.fillRect(0, PLATFORM_Y - 12, width, 4);
 
-    // 승강장 플랫폼 대리석 바닥
-    const floorStartY = PLATFORM_Y * scaleY;
-    const floorH = height - floorStartY;
-    const flrGrad = ctx.createLinearGradient(0, floorStartY, 0, height);
+    // D. 승강장 대리석 플랫폼 바닥 (하단 전체)
+    const floorH = height - PLATFORM_Y;
+    const flrGrad = ctx.createLinearGradient(0, PLATFORM_Y, 0, height);
     flrGrad.addColorStop(0, '#e5ecf3');
-    flrGrad.addColorStop(0.4, '#d8e2ec');
+    flrGrad.addColorStop(0.35, '#d8e2ec');
     flrGrad.addColorStop(1, '#c8d4e2');
     ctx.fillStyle = flrGrad;
-    ctx.fillRect(0, floorStartY, width, floorH);
+    ctx.fillRect(0, PLATFORM_Y, width, floorH);
 
-    // 노란색 입체 점자블록
-    const tactileH = 10 * scaleY;
+    // 바닥 타일 줄눈
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+    ctx.lineWidth = 1;
+    for (let tx = 0; tx < width; tx += 64) {
+      ctx.beginPath();
+      ctx.moveTo(tx, PLATFORM_Y);
+      ctx.lineTo(tx, height);
+      ctx.stroke();
+    }
+
+    // E. 노란색 입체 점자 안전선 (Tactile Paving)
+    const tactileH = 14;
     ctx.fillStyle = '#f59e0b';
-    ctx.fillRect(0, floorStartY + 2 * scaleY, width, tactileH);
+    ctx.fillRect(0, PLATFORM_Y + 2, width, tactileH);
     ctx.fillStyle = '#fef08a';
-    ctx.fillRect(0, floorStartY + 2 * scaleY, width, 1.5 * scaleY);
+    ctx.fillRect(0, PLATFORM_Y + 2, width, 2);
     ctx.fillStyle = '#b45309';
-    ctx.fillRect(0, floorStartY + 2 * scaleY + tactileH - 1.5 * scaleY, width, 1.5 * scaleY);
+    ctx.fillRect(0, PLATFORM_Y + 2 + tactileH - 2, width, 2);
 
-    // PSD 상단 주황색 헤더 띠
-    const psdTopY = (TRACK_Y + 8) * scaleY;
-    const psdHeight = (PLATFORM_Y - TRACK_Y - 4) * scaleY;
+    // F. PSD 상단 주황색 헤더 프레임
+    const psdTopY = TRACK_TOP_Y + 12;
+    const psdHeight = PLATFORM_Y - psdTopY;
     ctx.fillStyle = '#F37321';
-    ctx.fillRect(0, psdTopY, width, 13 * scaleY);
+    ctx.fillRect(0, psdTopY, width, 26);
     ctx.fillStyle = '#c2410c';
-    ctx.fillRect(0, psdTopY + 11 * scaleY, width, 2 * scaleY);
+    ctx.fillRect(0, psdTopY + 23, width, 3);
 
-    // 12개 PSD 슬라이딩 도어 고해상도 렌더링
-    DOORS.forEach(door => {
-      const dx = door.x * scaleX;
-      const dw = 26 * scaleX;
-      const slide = door.openProgress * 10 * scaleX;
+    // G. 12개 PSD 도어 와이드 가로 균등 렌더링
+    const sideMargin = width * 0.035;
+    const usableWidth = width - sideMargin * 2;
+    const doorSpacing = usableWidth / 12;
+    const doorW = Math.min(68, doorSpacing * 0.65);
+
+    DOORS.forEach((door, idx) => {
+      const centerX = sideMargin + doorSpacing * (idx + 0.5);
+      const dx = centerX - doorW / 2;
+      const slide = door.openProgress * (doorW * 0.42);
       const is2Car = door.carType === '2CAR';
 
-      // 도어 번호 명판
+      // 도어 번호 명판 (상단 주황 띠 위)
       ctx.fillStyle = is2Car ? '#ffffff' : '#cbd5e1';
-      ctx.font = `bold ${Math.max(10, Math.floor(8.5 * scaleX))}px "Pretendard", sans-serif`;
+      ctx.font = `bold ${Math.max(13, Math.min(18, width * 0.012))}px "Pretendard", sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(door.label, dx + dw / 2, psdTopY + 6.5 * scaleY);
+      ctx.fillText(door.label, centerX, psdTopY + 13);
 
       // 도어 상단 LED
       const ledColor = door.openProgress > 0.05 ? '#ef4444' : '#22c55e';
       ctx.fillStyle = ledColor;
       ctx.shadowColor = ledColor;
-      ctx.shadowBlur = 6;
-      ctx.fillRect(dx + dw / 2 - 2 * scaleX, psdTopY + 15 * scaleY, 4 * scaleX, 4 * scaleY);
+      ctx.shadowBlur = 8;
+      ctx.fillRect(centerX - 3.5, psdTopY + 30, 7, 7);
       ctx.shadowBlur = 0;
 
-      // 좌/우 슬라이딩 유리문
-      const glassTopY = psdTopY + 21 * scaleY;
-      const glassH = psdHeight - 17 * scaleY;
-      const halfW = dw / 2;
+      // 유리문 리프
+      const glassTopY = psdTopY + 42;
+      const glassH = psdHeight - 44;
+      const halfW = doorW / 2;
 
-      ctx.fillStyle = 'rgba(148, 163, 184, 0.42)';
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.45)';
       ctx.strokeStyle = '#64748b';
       ctx.lineWidth = 1.5;
 
@@ -1231,15 +1256,15 @@
 
       // 도어 손잡이 바
       ctx.fillStyle = '#cbd5e1';
-      ctx.fillRect(dx + halfW - 3 * scaleX - slide, glassTopY + 20 * scaleY, 2 * scaleX, 22 * scaleY);
-      ctx.fillRect(dx + halfW + 1 * scaleX + slide, glassTopY + 20 * scaleY, 2 * scaleX, 22 * scaleY);
+      ctx.fillRect(dx + halfW - 3 - slide, glassTopY + 28, 2, 34);
+      ctx.fillRect(dx + halfW + 1 + slide, glassTopY + 28, 2, 34);
 
-      // 승강장 바닥 승하차 유도 삼각 화살표
-      ctx.fillStyle = is2Car ? 'rgba(243, 115, 33, 0.75)' : 'rgba(148, 163, 184, 0.35)';
+      // 승강장 바닥 승하차 유도 화살표
+      ctx.fillStyle = is2Car ? 'rgba(243, 115, 33, 0.85)' : 'rgba(148, 163, 184, 0.4)';
       ctx.beginPath();
-      ctx.moveTo(dx + dw / 2, floorStartY + 14 * scaleY);
-      ctx.lineTo(dx + dw / 2 - 5 * scaleX, floorStartY + 24 * scaleY);
-      ctx.lineTo(dx + dw / 2 + 5 * scaleX, floorStartY + 24 * scaleY);
+      ctx.moveTo(centerX, PLATFORM_Y + 22);
+      ctx.lineTo(centerX - 7, PLATFORM_Y + 36);
+      ctx.lineTo(centerX + 7, PLATFORM_Y + 36);
       ctx.closePath();
       ctx.fill();
     });
