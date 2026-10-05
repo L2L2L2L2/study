@@ -1201,28 +1201,44 @@
       ctx.fillRect(left, windowBandY, carW, windowBandH);
 
       // 출입문 사이 승객석 창문 (중간 검은 바 없는 단일 와이드 통유리창)
+      // 공통 창문 렌더러
+      const drawWindow = (wx, wy, ww, wh) => {
+        if (ww <= 8) return;
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(wx, wy, ww, wh);
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(wx, wy, ww, wh);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+        ctx.fillRect(wx + 2, wy + 2, ww - 4, 3);
+      };
+
+      const winY = windowBandY + 3;
+      const winH = windowBandH - 6;
+
+      // 1) 출입문 사이 대형 통유리창
       for (let i = 0; i < carDoorIndices.length - 1; i++) {
         const d1Center = doorCenters[carDoorIndices[i]];
         const d2Center = doorCenters[carDoorIndices[i + 1]];
         const winX = d1Center + doorW / 2 + 5;
         const winW = (d2Center - doorW / 2 - 5) - winX;
-        const winY = windowBandY + 3;
-        const winH = windowBandH - 6;
+        drawWindow(winX, winY, winW, winH);
+      }
 
-        if (winW > 10) {
-          // 실내 웜톤 조명 통유리창
-          ctx.fillStyle = '#fef08a';
-          ctx.fillRect(winX, winY, winW, winH);
+      // 2) ★ [추가] 열차 맨 뒤쪽 유리창 (2호차 2-3 도어 좌측)
+      if (isTail) {
+        const firstDoorCenter = doorCenters[carDoorIndices[0]];
+        const winX = left + 4;
+        const winW = (firstDoorCenter - doorW / 2 - 5) - winX;
+        drawWindow(winX, winY, winW, winH);
+      }
 
-          // 통유리 슬림 외곽 프레임
-          ctx.strokeStyle = '#475569';
-          ctx.lineWidth = 1.2;
-          ctx.strokeRect(winX, winY, winW, winH);
-
-          // 통유리 상단 은은한 빛반사 하이라이트
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
-          ctx.fillRect(winX + 2, winY + 2, winW - 4, 3);
-        }
+      // 3) ★ [추가] 열차 맨 앞쪽 유리창 (1호차 1-1 도어 우측)
+      if (isLead) {
+        const lastDoorCenter = doorCenters[carDoorIndices[carDoorIndices.length - 1]];
+        const winX = lastDoorCenter + doorW / 2 + 5;
+        const winW = (right - 4) - winX;
+        drawWindow(winX, winY, winW, winH);
       }
 
       ctx.fillStyle = ORANGE_COLOR;
