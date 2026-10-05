@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>인천2호선 승강장조작반(PSL) 교육용 시뮬레이터</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      background-color: #020617;
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Malgun Gothic", sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* 전체 화면 레이아웃 (좌: 승강장 애니메이션, 우: 조작반 패널) */
+    .app-container {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      height: 100%;
+    }
+    @media (max-width: 960px) {
+      .app-container {
+        flex-direction: column;
+      }
+    }
+
+    /* 1. 승강장 뷰어 영역 */
+    .viewport-section {
+      flex: 1;
+      position: relative;
+      height: 100%;
+      background: #090d16;
+      border-right: 3px solid #1e293b;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .hud-badge {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 10;
+      max-width: 440px;
+    }
+    .badge-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(249, 115, 22, 0.55);
+      backdrop-filter: blur(10px);
+      padding: 7px 14px;
+      border-radius: 8px;
+      color: #fed7aa;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+      width: fit-content;
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #f97316;
+      box-shadow: 0 0 10px #f97316;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.5; }
+    }
+    .badge-sub {
+      display: flex;
+      gap: 6px;
+      font-size: 11px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      padding: 4px 9px;
+      border-radius: 5px;
+      font-weight: 600;
+      backdrop-filter: blur(6px);
+    }
+    .tag-ext {
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      color: #fde047;
+    }
+    .tag-base {
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+      color: #6ee7b7;
+    }
+
+    .hud-status-bar {
+      position: absolute;
+      bottom: 14px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid #334155;
+      padding: 9px 18px;
+      border-radius: 8px;
+      color: #cbd5e1;
+      font-size: 12px;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+    }
+
+    /* 2. 승강장조작반 (PSL) 패널 */
+    .psl-panel-container {
+      width: 580px;
+      min-width: 520px;
+      height: 100%;
+      background: #d6d9dc;
+      padding: 16px;
+      border-left: 4px solid #94a3b8;
+      box-shadow: -8px 0 25px rgba(0, 0, 0, 0.4);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    @media (max-width: 960px) {
+      .psl-panel-container {
+        width: 100%;
+        min-width: unset;
+        height: 60%;
+      }
+    }
+
+    .psl-chassis {
+      position: relative;
+      flex: 1;
+      background: #e3e6e8;
+      border-radius: 12px;
+      border: 2px solid #b0b4b8;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.15);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    /* 볼트 디자인 */
+    .bolt {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #94a3b8;
+      border: 1px solid #475569;
+      box-shadow: inset 1px 1px 2px #fff, inset -1px -1px 2px #000;
+    }
+    .bolt-tl { top: 6px; left: 8px; }
+    .bolt-tr { top: 6px; right: 8px; }
+    .bolt-bl { bottom: 6px; left: 8px; }
+    .bolt-br { bottom: 6px; right: 8px; }
+
+    /* 타이틀 헤더 */
+    .panel-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-bottom: 2px solid #cbd5e1;
+      padding-bottom: 6px;
+    }
+    .panel-title {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 0.25em;
+      text-indent: 0.25em;
+      color: #1e293b;
+      margin: 0;
+      padding-left: 0;
+      text-align: center;
+    }
+
+    /* 통신상태 & HMI 모니터 행 */
+    .top-system-row {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 10px;
+    }
+
+    /* 통신상태 */
+    .comm-box {
+      border: 1px solid #94a3b8;
+      background: #dce0e3;
+      border-radius: 8px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+    .comm-title {
+      text-align: center;
+      font-weight: bold;
+      color: #334155;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 4px;
+    }
+    .comm-power {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 6px;
+    }
+    .led-power {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+      border: 1px solid #16a34a;
+    }
+    .comm-ports {
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+      font-family: monospace;
+      font-size: 9px;
+      border-top: 1px solid #cbd5e1;
+      padding-top: 4px;
+      color: #475569;
+    }
+
+    /* HMI 모니터 */
+    .hmi-monitor {
+      background: #23272d;
+      border: 3px solid #475569;
+      border-radius: 8px;
+      padding: 8px;
+      box-shadow: inset 0 2px 8px #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .hmi-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #334155;
+    }
+    .hmi-btn {
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #f5eccb;
+      color: #8a7228;
+      font-size: 10px;
+      font-weight: bold;
+      border: 1px solid #b8a050;
+      cursor: pointer;
+    }
+    .hmi-status-pill {
+      flex: 1;
+      margin: 0 10px;
+      height: 18px;
+      border-radius: 9px;
+      background: rgba(186, 196, 217, 0.25);
+      border: 1px solid #475569;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #cbd5e1;
+      font-family: monospace;
+      font-size: 9px;
+    }
+
+    /* 12도어 3단 그리드 */
+    .hmi-grid-container {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 6px;
+    }
+    .hmi-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hmi-legend {
+      width: 48px;
+      font-size: 8px;
+      font-weight: bold;
+      line-height: 1.2;
+      color: #94a3b8;
+    }
+    .hmi-legend .red { color: #f87171; }
+    .hmi-legend .green { color: #4ade80; }
+    .hmi-legend .yellow { color: #fde047; }
+
+    .hmi-doors {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 3px;
+    }
+    .pd-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .pd-label {
+      font-family: monospace;
+      font-size: 8px;
+      font-weight: bold;
+      color: #cbd5e1;
+    }
+    .pd-bars {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-top: 2px;
+    }
+    .pd-bar {
+      height: 7px;
+      border-radius: 1px;
+      border: 1px solid rgba(0, 0, 0, 0.4);
+      background-color: #38d368;
+      transition: background-color 0.2s, box-shadow 0.2s;
+    }
+    .pd-bar.open {
+      background-color: #ef4444;
+      box-shadow: 0 0 5px #ef4444;
+    }
+
+    /* 하단 조작부: 인터폰 + 제어/상태표시 */
+    .bottom-control-row {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 10px;
+    }
+
+    /* 인터폰 수화기 */
+    .interphone-box {
+      background: #c8cccf;
+      border: 2px solid #94a3b8;
+      border-radius: 8px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .handset {
+      width: 68px;
+      height: 155px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .handset-ear { width: 44px; height: 18px; background: #f1f5f9; border-radius: 4px; border: 1px solid #e2e8f0; }
+    .handset-mouth { width: 44px; height: 20px; background: #f1f5f9; border-radius: 4px; border: 1px solid #e2e8f0; }
+    .handset-buttons { width: 100%; display: flex; flex-direction: column; gap: 4px; }
+    .handset-btn-line { height: 4px; background: #e2e8f0; border-radius: 2px; }
+
+    /* 제어 및 상태표시 컨테이너 */
+    .controls-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* 1. 상태표시 */
+    .section-box {
+      border: 1px solid #94a3b8;
+      background: #dbe0e3;
+      border-radius: 8px;
+      padding: 8px 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: bold;
+      color: #334155;
+      text-align: center;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 3px;
+      margin-bottom: 8px;
+    }
+    .indicator-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+    .ind-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .ind-label {
+      font-size: 10px;
+      font-weight: bold;
+      color: #334155;
+    }
+    .pilot-lamp {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      background: #334155;
+    }
+    .pilot-lamp::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+    }
+    /* 램프 점등 색상 */
+    .lamp-red-off { background: #5c1c1c; opacity: 0.6; }
+    .lamp-red-on { background: #ef4444 !important; box-shadow: 0 0 14px #ef4444; opacity: 1 !important; }
+    .lamp-green-off { background: #14492d; opacity: 0.6; }
+    .lamp-green-on { background: #10b981 !important; box-shadow: 0 0 14px #10b981; opacity: 1 !important; }
+
+    /* 2. 제어 스위치 & 버튼 그리드 */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+    .ctrl-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .ctrl-label {
+      font-size: 10px;
+      font-weight: bold;
+      color: #1e293b;
+      margin-bottom: 2px;
+    }
+
+    /* 회전 노브 스위치 */
+    .knob-container {
+      position: relative;
+      margin: 4px 0;
+    }
+    .rotary-knob {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #0f172a;
+      border: 2px solid #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+      transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .knob-pointer {
+      width: 3px;
+      height: 22px;
+      background: #f8fafc;
+      border-radius: 2px;
+      box-shadow: 0 0 2px #fff;
+    }
+
+    /* 푸시 버튼 공통 */
+    .push-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2px solid #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: transform 0.08s, box-shadow 0.08s;
+      outline: none;
+    }
+    .push-btn:active, .push-btn.pressed {
+      transform: scale(0.92);
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
+    }
+    .btn-red { background: #ef4444; }
+    .btn-red:hover { background: #f87171; }
+    .btn-green { background: #10b981; }
+    .btn-green:hover { background: #34d399; }
+    .btn-black { background: #334155; }
+    .btn-black:hover { background: #475569; }
+
+    .btn-inner {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* 인터록 해제 전용 노란색 강조 박스 */
+    .interlock-box {
+      border: 2px solid #dc2626;
+      background: #fef08a;
+      border-radius: 6px;
+      padding: 4px;
+      box-shadow: 0 2px 6px rgba(220, 38, 38, 0.2);
+    }
+    .interlock-box .ctrl-label {
+      color: #991b1b;
+      font-weight: 900;
+    }
+
+    /* 툴팁 말풍선 */
+    .tooltip-bubble {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ea580c;
+      color: #ffffff;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: bold;
+      border: 1px solid #fdba74;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      animation: floatTooltip 1.2s infinite alternate ease-in-out;
+      display: none;
+      z-index: 50;
+    }
+    @keyframes floatTooltip {
+      from { transform: translate(-50%, 0); }
+      to { transform: translate(-50%, -4px); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- 1. 승강장 화면 뷰포트 -->
+  <div class="viewport-section" id="viewportSection">
+    <canvas id="metroCanvas"></canvas>
+
+    <!-- 좌측 상단 안내 박스 (우측 조명과 겹치지 않도록 컴팩트하게 정렬) -->
+    <div class="hud-badge">
+      <div class="badge-title">
+        <span class="pulse-dot"></span>
+        인천2호선 승강장 PSD 시뮬레이터 (4량 12도어 규격)
+      </div>
+      <div class="badge-sub">
+        <span class="tag tag-ext">0-1 ~ 0-3 / 3-1 ~ 3-3: 4량 연장구역</span>
+        <span class="tag tag-base">1-1 ~ 2-3: 2량 기본운행구역</span>
+      </div>
+    </div>
+
+    <div class="hud-status-bar">
+      <div>개방된 출입문: <strong id="openDoorCountText" style="color:#fb923c; font-size:14px;">0 / 12</strong></div>
+      <div id="psdSummaryText" style="font-weight:bold; color:#34d399;">모든 PSD 닫힘 상태</div>
+    </div>
+  </div>
+
+  <!-- 2. 승강장조작반 (PSL) 실물 전면 패널 -->
+  <div class="psl-panel-container">
+    <div class="psl-chassis">
+      <div class="bolt bolt-tl"></div>
+      <div class="bolt bolt-tr"></div>
+      <div class="bolt bolt-bl"></div>
+      <div class="bolt bolt-br"></div>
+
+      <!-- 상단 제목 (중앙 배치) -->
+      <div class="panel-header">
+        <h1 class="panel-title">승강장조작반</h1>
+      </div>
+
+      <!-- 통신상태 & 디지털 HMI 모니터 -->
+      <div class="top-system-row">
+        <div class="comm-box">
+          <div class="comm-title">통신상태</div>
+          <div class="comm-power">
+            <span>전원</span>
+            <span class="led-power"></span>
+          </div>
+          <div class="comm-ports">
+            <div>CAN1<br>TX RX</div>
+            <div>CAN2<br>TX RX</div>
+          </div>
+          <div style="text-align:center; background:#cbd5e1; border-radius:3px; padding:2px; font-size:8px; font-weight:bold;">
+            DEBUG
+          </div>
+        </div>
+
+        <div class="hmi-monitor">
+          <div class="hmi-top-bar">
+            <button class="hmi-btn">바이패스</button>
+            <div class="hmi-status-pill" id="hmiSysStatus">NORMAL READY</div>
+            <button class="hmi-btn">정비모드</button>
+          </div>
+
+          <!-- 12도어 디지털 상태 그리드 (PD 1 ~ 12) -->
+          <div class="hmi-grid-container">
+            <!-- 1행: PD 1 ~ PD 6 -->
+            <div class="hmi-row">
+              <div class="hmi-legend">
+                <span class="red">열림</span>/<span class="green">닫힘</span><br>
+                <span class="yellow">수동</span>/<span class="green">자동</span><br>
+                <span class="red">장애</span>/<span class="green">정상</span>
+              </div>
+              <div class="hmi-doors" id="hmiDoorsRow1"></div>
+            </div>
+
+            <!-- 2행: PD 7 ~ PD 12 -->
+            <div class="hmi-row">
+              <div class="hmi-legend">
+                <span class="red">열림</span>/<span class="green">닫힘</span><br>
+                <span class="yellow">수동</span>/<span class="green">자동</span><br>
+                <span class="red">장애</span>/<span class="green">정상</span>
+              </div>
+              <div class="hmi-doors" id="hmiDoorsRow2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 인터폰 & 제어 조작부 -->
+      <div class="bottom-control-row">
+        <!-- 인터폰 그래픽 -->
+        <div class="interphone-box">
+          <div style="font-size:9px; font-weight:bold; color:#334155;">KOCOM</div>
+          <div style="font-size:7px; color:#64748b;">KIP-611PG</div>
+          <div class="handset">
+            <div class="handset-ear"></div>
+            <div class="handset-buttons">
+              <div class="handset-btn-line"></div>
+              <div class="handset-btn-line"></div>
+              <div class="handset-btn-line"></div>
+              <div class="handset-btn-line"></div>
+              <div class="handset-btn-line"></div>
+              <div class="handset-btn-line"></div>
+            </div>
+            <div class="handset-mouth"></div>
+          </div>
+          <div style="width:100%; height:4px; border-top:2px dashed #64748b; margin-top:4px;"></div>
+        </div>
+
+        <div class="controls-wrapper">
+          <!-- 1. 상태표시 4구 파일럿 램프 -->
+          <div class="section-box">
+            <div class="section-title">상태표시</div>
+            <div class="indicator-row">
+              <div class="ind-item">
+                <span class="ind-label">전체열림</span>
+                <div class="pilot-lamp lamp-red-off" id="lampAllOpen"></div>
+              </div>
+              <div class="ind-item">
+                <span class="ind-label">전체닫힘</span>
+                <div class="pilot-lamp lamp-green-on" id="lampAllClose"></div>
+              </div>
+              <div class="ind-item">
+                <span class="ind-label">장애</span>
+                <div class="pilot-lamp lamp-red-off" id="lampFault"></div>
+              </div>
+              <div class="ind-item">
+                <span class="ind-label">인터록해제</span>
+                <div class="pilot-lamp lamp-red-off" id="lampInterlock"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. 제어 스위치 & 버튼부 -->
+          <div class="section-box" style="flex:1;">
+            <div class="section-title">제어</div>
+            <div class="tooltip-bubble" id="tooltipBubble">💬 원래는 손을 놓으면 복귀되는 스위치입니다</div>
+
+            <div class="controls-grid" style="margin-bottom:8px;">
+              <!-- 차량선택 로터리 스위치 -->
+              <div class="ctrl-item">
+                <span class="ctrl-label">차량선택</span>
+                <div style="display:flex; justify-content:space-between; width:50px; font-size:8px; font-weight:bold; color:#475569;">
+                  <span>2량</span><span>4량</span>
+                </div>
+                <div class="knob-container">
+                  <div class="rotary-knob" id="knobCarSelect" title="클릭하여 2량 / 4량 / 중립 전환">
+                    <div class="knob-pointer"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 전체열림 버튼 -->
+              <div class="ctrl-item">
+                <span class="ctrl-label">전체열림</span>
+                <button type="button" class="push-btn btn-red" id="btnAllOpen" title="선택된 차량 규격에 맞춰 PSD 개방">
+                  <div class="btn-inner"></div>
+                </button>
+              </div>
+
+              <!-- 전체닫힘 버튼 -->
+              <div class="ctrl-item">
+                <span class="ctrl-label">전체닫힘</span>
+                <button type="button" class="push-btn btn-green" id="btnAllClose" title="열려 있는 모든 PSD 닫힘">
+                  <div class="btn-inner"></div>
+                </button>
+              </div>
+            </div>
+
+            <!-- 하단 3개 스위치/버튼 -->
+            <div class="controls-grid" style="border-top:1px solid #cbd5e1; padding-top:8px;">
+              <!-- 운전모드 로터리 스위치 -->
+              <div class="ctrl-item">
+                <span class="ctrl-label">운전모드</span>
+                <div style="display:flex; justify-content:space-between; width:46px; font-size:8px; font-weight:bold; color:#475569;">
+                  <span>-</span><span>정지</span>
+                </div>
+                <div class="knob-container">
+                  <div class="rotary-knob" id="knobDriveMode" title="클릭하여 운전모드 / 정지 고정">
+                    <div class="knob-pointer"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 인터록 해제 박스 & 스위치 -->
+              <div class="ctrl-item interlock-box">
+                <span class="ctrl-label">인 터 록 해 제</span>
+                <div style="display:flex; justify-content:space-between; width:44px; font-size:8px; font-weight:bold; color:#991b1b;">
+                  <span>OFF</span><span>ON</span>
+                </div>
+                <div class="knob-container">
+                  <div class="rotary-knob" id="knobInterlock" title="클릭하여 인터록 OFF / ON 고정">
+                    <div class="knob-pointer"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 램프시험 버튼 -->
+              <div class="ctrl-item">
+                <span class="ctrl-label">램프시험</span>
+                <button type="button" class="push-btn btn-black" id="btnLampTest" title="누르고 있는 동안 모든 상태표시등이 점등됩니다">
+                  <div class="btn-inner"></div>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  /* =========================================================================
+     1. 전역 상태 및 데이터 구조
+     ========================================================================= */
+  const DOORS = [
+    { id: 0, label: '0-1', carType: '4CAR_EXT', openProgress: 0, target: 0, x: 26 },
+    { id: 1, label: '0-2', carType: '4CAR_EXT', openProgress: 0, target: 0, x: 62 },
+    { id: 2, label: '0-3', carType: '4CAR_EXT', openProgress: 0, target: 0, x: 98 },
+    { id: 3, label: '1-1', carType: '2CAR', openProgress: 0, target: 0, x: 138 },
+    { id: 4, label: '1-2', carType: '2CAR', openProgress: 0, target: 0, x: 174 },
+    { id: 5, label: '1-3', carType: '2CAR', openProgress: 0, target: 0, x: 210 },
+    { id: 6, label: '2-1', carType: '2CAR', openProgress: 0, target: 0, x: 254 },
+    { id: 7, label: '2-2', carType: '2CAR', openProgress: 0, target: 0, x: 290 },
+    { id: 8, label: '2-3', carType: '2CAR', openProgress: 0, target: 0, x: 326 },
+    { id: 9, label: '3-1', carType: '4CAR_EXT', openProgress: 0, target: 0, x: 366 },
+    { id: 10, label: '3-2', carType: '4CAR_EXT', openProgress: 0, target: 0, x: 402 },
+    { id: 11, label: '3-3', carType: '4CAR_EXT', openProgress: 0, target: 0, x: 438 },
+  ];
+
+  let carSelectState = 'NEUTRAL'; // '2CAR' | 'NEUTRAL' | '4CAR'
+  let driveModeState = 'RUN';     // 'RUN'(-) | 'STOP'(정지)
+  let interlockState = 'OFF';    // 'OFF' | 'ON'
+  let isLampTestPressed = false;
+  let tooltipTimeout = null;
+
+  /* =========================================================================
+     2. Web Audio API
+     ========================================================================= */
+  let audioCtx = null;
+  function playBeep(freq = 440, type = 'sine', duration = 0.08) {
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch (e) {}
+  }
+
+  /* =========================================================================
+     3. 디지털 HMI 모니터 DOM 생성
+     ========================================================================= */
+  const hmiRow1 = document.getElementById('hmiDoorsRow1');
+  const hmiRow2 = document.getElementById('hmiDoorsRow2');
+
+  function initHmiGrid() {
+    DOORS.forEach((door, idx) => {
+      const cell = document.createElement('div');
+      cell.className = 'pd-cell';
+      cell.innerHTML = `
+        <span class="pd-label">PD ${idx + 1}</span>
+        <div class="pd-bars">
+          <div class="pd-bar" id="hmiBarDoor_${idx}"></div>
+          <div class="pd-bar"></div>
+          <div class="pd-bar"></div>
+        </div>
+      `;
+      if (idx < 6) hmiRow1.appendChild(cell);
+      else hmiRow2.appendChild(cell);
+    });
+  }
+  initHmiGrid();
+
+  /* =========================================================================
+     4. 스위치 & 버튼 조작 이벤트 바인딩
+     ========================================================================= */
+  const knobCarSelect = document.getElementById('knobCarSelect');
+  const tooltipBubble = document.getElementById('tooltipBubble');
+
+  function showTooltip(msg) {
+    tooltipBubble.textContent = `💬 ${msg}`;
+    tooltipBubble.style.display = 'block';
+    if (tooltipTimeout) clearTimeout(tooltipTimeout);
+    tooltipTimeout = setTimeout(() => {
+      tooltipBubble.style.display = 'none';
+    }, 3200);
+  }
+
+  // 1) 차량선택 스위치 (10시: 2량 / 12시: 중립 / 2시: 4량 순환)
+  knobCarSelect.addEventListener('click', () => {
+    playBeep(360, 'square', 0.06);
+    if (carSelectState === 'NEUTRAL') {
+      carSelectState = '2CAR';
+      knobCarSelect.style.transform = 'rotate(-45deg)';
+      showTooltip('원래는 손을 놓으면 복귀되는 스위치입니다');
+    } else if (carSelectState === '2CAR') {
+      carSelectState = '4CAR';
+      knobCarSelect.style.transform = 'rotate(45deg)';
+      showTooltip('원래는 손을 놓으면 복귀되는 스위치입니다');
+    } else {
+      carSelectState = 'NEUTRAL';
+      knobCarSelect.style.transform = 'rotate(0deg)';
+    }
+  });
+
+  // 2) 운전모드 스위치 (10시: RUN / 2시: STOP 고정)
+  const knobDriveMode = document.getElementById('knobDriveMode');
+  knobDriveMode.style.transform = 'rotate(-40deg)';
+
+  knobDriveMode.addEventListener('click', () => {
+    playBeep(320, 'square', 0.06);
+    if (driveModeState === 'RUN') {
+      driveModeState = 'STOP';
+      knobDriveMode.style.transform = 'rotate(40deg)';
+    } else {
+      driveModeState = 'RUN';
+      knobDriveMode.style.transform = 'rotate(-40deg)';
+    }
+  });
+
+  // 3) 인터록 해제 스위치 (10시: OFF / 2시: ON 고정)
+  const knobInterlock = document.getElementById('knobInterlock');
+  knobInterlock.style.transform = 'rotate(-40deg)';
+
+  knobInterlock.addEventListener('click', () => {
+    playBeep(300, 'square', 0.06);
+    if (interlockState === 'OFF') {
+      interlockState = 'ON';
+      knobInterlock.style.transform = 'rotate(40deg)';
+    } else {
+      interlockState = 'OFF';
+      knobInterlock.style.transform = 'rotate(-40deg)';
+    }
+    updateLamps();
+  });
+
+  // 4) 전체열림 버튼
+  const btnAllOpen = document.getElementById('btnAllOpen');
+  btnAllOpen.addEventListener('mousedown', () => {
+    btnAllOpen.classList.add('pressed');
+    if (driveModeState === 'STOP') {
+      alert('운전모드가 [정지] 상태입니다. 전체열림 조작이 불가능합니다.');
+      return;
+    }
+    if (carSelectState === 'NEUTRAL') {
+      showTooltip('차량선택 스위치(2량 또는 4량)를 먼저 설정하세요!');
+      return;
+    }
+    playBeep(640, 'triangle', 0.12);
+    if (carSelectState === '2CAR') {
+      DOORS.forEach((d, i) => {
+        d.target = (i >= 3 && i <= 8) ? 1 : 0;
+      });
+    } else if (carSelectState === '4CAR') {
+      DOORS.forEach(d => { d.target = 1; });
+    }
+  });
+  window.addEventListener('mouseup', () => btnAllOpen.classList.remove('pressed'));
+
+  // 5) 전체닫힘 버튼
+  const btnAllClose = document.getElementById('btnAllClose');
+  btnAllClose.addEventListener('mousedown', () => {
+    btnAllClose.classList.add('pressed');
+    if (driveModeState === 'STOP') {
+      alert('운전모드가 [정지] 상태입니다. 전체닫힘 조작이 불가능합니다.');
+      return;
+    }
+    playBeep(480, 'triangle', 0.12);
+    DOORS.forEach(d => { d.target = 0; });
+  });
+  window.addEventListener('mouseup', () => btnAllClose.classList.remove('pressed'));
+
+  // 6) 램프시험 버튼
+  const btnLampTest = document.getElementById('btnLampTest');
+  btnLampTest.addEventListener('mousedown', () => {
+    isLampTestPressed = true;
+    btnLampTest.classList.add('pressed');
+    playBeep(520, 'sine', 0.1);
+    updateLamps();
+  });
+  window.addEventListener('mouseup', () => {
+    if (isLampTestPressed) {
+      isLampTestPressed = false;
+      btnLampTest.classList.remove('pressed');
+      updateLamps();
+    }
+  });
+
+  /* =========================================================================
+     5. 파일럿 램프 상태 갱신 로직
+     ========================================================================= */
+  const lampAllOpen = document.getElementById('lampAllOpen');
+  const lampAllClose = document.getElementById('lampAllClose');
+  const lampFault = document.getElementById('lampFault');
+  const lampInterlock = document.getElementById('lampInterlock');
+  const openDoorCountText = document.getElementById('openDoorCountText');
+  const psdSummaryText = document.getElementById('psdSummaryText');
+  const hmiSysStatus = document.getElementById('hmiSysStatus');
+
+  function updateLamps() {
+    const openCount = DOORS.filter(d => d.openProgress > 0.85).length;
+    const isMoving = DOORS.some(d => d.openProgress > 0.05 && d.openProgress < 0.95);
+    const isAllClosed = DOORS.every(d => d.openProgress <= 0.05);
+
+    if (isLampTestPressed || (openCount > 0 && !isAllClosed)) {
+      lampAllOpen.className = 'pilot-lamp lamp-red-on';
+    } else {
+      lampAllOpen.className = 'pilot-lamp lamp-red-off';
+    }
+
+    if (isLampTestPressed || (isAllClosed && !isMoving)) {
+      lampAllClose.className = 'pilot-lamp lamp-green-on';
+    } else {
+      lampAllClose.className = 'pilot-lamp lamp-green-off';
+    }
+
+    if (isLampTestPressed) {
+      lampFault.className = 'pilot-lamp lamp-red-on';
+    } else {
+      lampFault.className = 'pilot-lamp lamp-red-off';
+    }
+
+    if (isLampTestPressed || interlockState === 'ON') {
+      lampInterlock.className = 'pilot-lamp lamp-red-on';
+    } else {
+      lampInterlock.className = 'pilot-lamp lamp-red-off';
+    }
+
+    openDoorCountText.textContent = `${openCount} / 12`;
+    if (isAllClosed) {
+      psdSummaryText.textContent = '모든 PSD 닫힘 상태';
+      psdSummaryText.style.color = '#34d399';
+      hmiSysStatus.textContent = 'NORMAL READY';
+    } else {
+      psdSummaryText.textContent = 'PSD 개방/동작 중';
+      psdSummaryText.style.color = '#f87171';
+      hmiSysStatus.textContent = 'PSD OPEN ACTIVE';
+    }
+  }
+
+  /* =========================================================================
+     6. ★ [핵심 개선] 고해상도(HiDPI/Retina) Canvas 렌더링 & 조명 재배치
+     ========================================================================= */
+  const canvas = document.getElementById('metroCanvas');
+  const ctx = canvas.getContext('2d');
+  const viewportSection = document.getElementById('viewportSection');
+
+  let logicalWidth = 800;
+  let logicalHeight = 600;
+  let dpr = 1;
+
+  function resizeCanvas() {
+    dpr = window.devicePixelRatio || 1;
+    const rect = viewportSection.getBoundingClientRect();
+    logicalWidth = rect.width;
+    logicalHeight = rect.height;
+
+    // 실제 캔버스 내부 픽셀 해상도를 디바이스 픽셀 비율만큼 곱하여 극도로 선명하게 설정
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  const V_WIDTH = 480;
+  const V_HEIGHT = 270;
+  const TRACK_Y = 100;
+  const PLATFORM_Y = 175;
+
+  function renderLoop() {
+    // 1. 도어 물리 애니메이션 계산
+    DOORS.forEach((door, idx) => {
+      const speed = 0.045;
+      if (door.openProgress < door.target) {
+        door.openProgress = Math.min(door.target, door.openProgress + speed);
+      } else if (door.openProgress > door.target) {
+        door.openProgress = Math.max(door.target, door.openProgress - speed);
+      }
+
+      const hmiBar = document.getElementById(`hmiBarDoor_${idx}`);
+      if (hmiBar) {
+        if (door.openProgress > 0.15) {
+          hmiBar.classList.add('open');
+        } else {
+          hmiBar.classList.remove('open');
+        }
+      }
+    });
+
+    updateLamps();
+
+    // 2. 고해상도 캔버스 렌더링 시작
+    ctx.save();
+    ctx.scale(dpr, dpr); // 고해상도 배율 적용
+
+    const width = logicalWidth;
+    const height = logicalHeight;
+    const scaleX = width / V_WIDTH;
+    const scaleY = height / V_HEIGHT;
+
+    ctx.clearRect(0, 0, width, height);
+
+    // 역사 벽면
+    const wallGrad = ctx.createLinearGradient(0, 0, 0, TRACK_Y * scaleY);
+    wallGrad.addColorStop(0, '#0a0e14');
+    wallGrad.addColorStop(0.6, '#131b26');
+    wallGrad.addColorStop(1, '#090d14');
+    ctx.fillStyle = wallGrad;
+    ctx.fillRect(0, 0, width, TRACK_Y * scaleY);
+
+    // 타일 줄눈
+    const tileSize = 28 * scaleX;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < width; x += tileSize) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, TRACK_Y * scaleY);
+      ctx.stroke();
+    }
+
+    // ★ [조명 위치 이동] 좌측 안내 박스 영역을 완전히 비우고, 우측 여백 [48%, 72%, 92%]에 조명 배치!
+    const lampPositions = [0.48, 0.72, 0.92];
+    lampPositions.forEach(ratio => {
+      const lx = width * ratio;
+      const ly = 32 * scaleY;
+      const lampW = Math.max(60, 68 * scaleX);
+      const lampH = Math.max(14, 15 * scaleY);
+
+      // 천장 연결 브래킷 파이프
+      ctx.fillStyle = '#1c1b22';
+      ctx.fillRect(lx - 2, 0, 4, ly);
+
+      // 넓게 퍼지는 부드러운 웜오렌지 Bloom 조명광
+      const glow = ctx.createRadialGradient(lx, ly + lampH * 0.5, 8, lx, ly + lampH * 0.5, 140 * scaleY);
+      glow.addColorStop(0, 'rgba(255, 185, 60, 0.42)');
+      glow.addColorStop(0.35, 'rgba(255, 140, 30, 0.16)');
+      glow.addColorStop(0.8, 'rgba(255, 110, 20, 0.04)');
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(lx, ly + lampH * 0.5, 140 * scaleY, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 메탈 하우징 프레임
+      ctx.fillStyle = '#22232a';
+      ctx.strokeStyle = '#3a3b47';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(lx - lampW / 2, ly, lampW, lampH, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      // 발광 코어 튜브 (형광등)
+      const tubeW = lampW - 8;
+      const tubeH = lampH - 6;
+      ctx.fillStyle = '#fffdf0';
+      ctx.shadowColor = 'rgba(255, 170, 50, 0.95)';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.roundRect(lx - tubeW / 2, ly + 3, tubeW, tubeH, 2);
+      ctx.fill();
+      ctx.shadowBlur = 0; // 그림자 초기화
+    });
+
+    // 선로 바닥
+    ctx.fillStyle = '#1c1917';
+    ctx.fillRect(0, TRACK_Y * scaleY, width, (PLATFORM_Y - TRACK_Y) * scaleY);
+    ctx.fillStyle = '#3e3a38';
+    for (let rx = 0; rx < width; rx += 14 * scaleX) {
+      ctx.fillRect(rx, (TRACK_Y + 54) * scaleY, 8 * scaleX, 16 * scaleY);
+    }
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(0, (TRACK_Y + 58) * scaleY, width, 3 * scaleY);
+    ctx.fillRect(0, (TRACK_Y + 64) * scaleY, width, 3 * scaleY);
+
+    // 승강장 플랫폼 대리석 바닥
+    const floorStartY = PLATFORM_Y * scaleY;
+    const floorH = height - floorStartY;
+    const flrGrad = ctx.createLinearGradient(0, floorStartY, 0, height);
+    flrGrad.addColorStop(0, '#e5ecf3');
+    flrGrad.addColorStop(0.4, '#d8e2ec');
+    flrGrad.addColorStop(1, '#c8d4e2');
+    ctx.fillStyle = flrGrad;
+    ctx.fillRect(0, floorStartY, width, floorH);
+
+    // 노란색 입체 점자블록
+    const tactileH = 10 * scaleY;
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(0, floorStartY + 2 * scaleY, width, tactileH);
+    ctx.fillStyle = '#fef08a';
+    ctx.fillRect(0, floorStartY + 2 * scaleY, width, 1.5 * scaleY);
+    ctx.fillStyle = '#b45309';
+    ctx.fillRect(0, floorStartY + 2 * scaleY + tactileH - 1.5 * scaleY, width, 1.5 * scaleY);
+
+    // PSD 상단 주황색 헤더 띠
+    const psdTopY = (TRACK_Y + 8) * scaleY;
+    const psdHeight = (PLATFORM_Y - TRACK_Y - 4) * scaleY;
+    ctx.fillStyle = '#F37321';
+    ctx.fillRect(0, psdTopY, width, 13 * scaleY);
+    ctx.fillStyle = '#c2410c';
+    ctx.fillRect(0, psdTopY + 11 * scaleY, width, 2 * scaleY);
+
+    // 12개 PSD 슬라이딩 도어 고해상도 렌더링
+    DOORS.forEach(door => {
+      const dx = door.x * scaleX;
+      const dw = 26 * scaleX;
+      const slide = door.openProgress * 10 * scaleX;
+      const is2Car = door.carType === '2CAR';
+
+      // 도어 번호 명판 (고해상도 앤티앨리어싱)
+      ctx.fillStyle = is2Car ? '#ffffff' : '#cbd5e1';
+      ctx.font = `bold ${Math.max(10, Math.floor(8.5 * scaleX))}px "Pretendard", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(door.label, dx + dw / 2, psdTopY + 6.5 * scaleY);
+
+      // 도어 상단 LED (열림: 빨강, 닫힘: 초록)
+      const ledColor = door.openProgress > 0.05 ? '#ef4444' : '#22c55e';
+      ctx.fillStyle = ledColor;
+      ctx.shadowColor = ledColor;
+      ctx.shadowBlur = 6;
+      ctx.fillRect(dx + dw / 2 - 2 * scaleX, psdTopY + 15 * scaleY, 4 * scaleX, 4 * scaleY);
+      ctx.shadowBlur = 0;
+
+      // 좌/우 슬라이딩 유리문
+      const glassTopY = psdTopY + 21 * scaleY;
+      const glassH = psdHeight - 17 * scaleY;
+      const halfW = dw / 2;
+
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.42)';
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1.5;
+
+      // 좌측 도어
+      ctx.fillRect(dx - slide, glassTopY, halfW - 1, glassH);
+      ctx.strokeRect(dx - slide, glassTopY, halfW - 1, glassH);
+
+      // 우측 도어
+      ctx.fillRect(dx + halfW + slide, glassTopY, halfW - 1, glassH);
+      ctx.strokeRect(dx + halfW + slide, glassTopY, halfW - 1, glassH);
+
+      // 도어 손잡이 바
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(dx + halfW - 3 * scaleX - slide, glassTopY + 20 * scaleY, 2 * scaleX, 22 * scaleY);
+      ctx.fillRect(dx + halfW + 1 * scaleX + slide, glassTopY + 20 * scaleY, 2 * scaleX, 22 * scaleY);
+
+      // 승강장 바닥 승하차 유도 삼각 화살표
+      ctx.fillStyle = is2Car ? 'rgba(243, 115, 33, 0.75)' : 'rgba(148, 163, 184, 0.35)';
+      ctx.beginPath();
+      ctx.moveTo(dx + dw / 2, floorStartY + 14 * scaleY);
+      ctx.lineTo(dx + dw / 2 - 5 * scaleX, floorStartY + 24 * scaleY);
+      ctx.lineTo(dx + dw / 2 + 5 * scaleX, floorStartY + 24 * scaleY);
+      ctx.closePath();
+      ctx.fill();
+    });
+
+    ctx.restore(); // 캔버스 상태 복원
+
+    requestAnimationFrame(renderLoop);
+  }
+
+  requestAnimationFrame(renderLoop);
+</script>
+
+</body>
+</html>
