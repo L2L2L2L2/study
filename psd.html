@@ -986,8 +986,11 @@
     const openCount = DOORS.filter(d => d.openProgress > 0.85).length;
     const isMoving = DOORS.some(d => d.openProgress > 0.05 && d.openProgress < 0.95);
     const isAllClosed = DOORS.every(d => d.openProgress <= 0.05);
+    // 전체열림 램프 (수정: 수동 개방이 아닌, 최소 2량 6개 도어 이상 모두 열렸을 때만 점등)
+    const isManualOnly = (emergencyHandleLeft.isPulled || emergencyHandleRight.isPulled) && openCount < 6;
+    const isAllOpened = openCount >= 6 && !isManualOnly;
 
-    if (isLampTestPressed || (openCount > 0 && !isAllClosed)) {
+    if (isLampTestPressed || isAllOpened) {
       lampAllOpen.className = 'pilot-lamp lamp-red-on';
     } else {
       lampAllOpen.className = 'pilot-lamp lamp-red-off';
