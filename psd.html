@@ -839,7 +839,7 @@
     } catch(e) {}
   }
 
-  /* =========================================================================
+/* =========================================================================
      3. HMI 모니터 DOM 생성
      ========================================================================= */
   const hmiRow1 = document.getElementById('hmiDoorsRow1');
@@ -853,7 +853,7 @@
         <span class="pd-label">PD ${idx + 1}</span>
         <div class="pd-bars">
           <div class="pd-bar" id="hmiBarDoor_${idx}"></div>
-          <div class="pd-bar"></div>
+          <div class="pd-bar" id="hmiBarMode_${idx}"></div> <!-- ★ 여기에 id 추가 -->
           <div class="pd-bar"></div>
         </div>
       `;
@@ -1338,6 +1338,7 @@
   });
 
   function renderLoop() {
+// 1. 도어 물리 애니메이션
     DOORS.forEach((door, idx) => {
       const speed = 0.045;
       if (door.openProgress < door.target) {
@@ -1346,12 +1347,24 @@
         door.openProgress = Math.max(door.target, door.openProgress - speed);
       }
 
+      // 1번째 칸 (열림/닫힘)
       const hmiBar = document.getElementById(`hmiBarDoor_${idx}`);
       if (hmiBar) {
         if (door.openProgress > 0.15) {
           hmiBar.classList.add('open');
         } else {
           hmiBar.classList.remove('open');
+        }
+      }
+
+      // ★ [추가] 2번째 칸 (수동/개별모드: 비상핸들로 열렸을 때 빨간색 점등)
+      const hmiModeBar = document.getElementById(`hmiBarMode_${idx}`);
+      if (hmiModeBar) {
+        const isManual = (idx === 4 && emergencyHandleLeft.isPulled) || (idx === 7 && emergencyHandleRight.isPulled);
+        if (isManual) {
+          hmiModeBar.classList.add('open');
+        } else {
+          hmiModeBar.classList.remove('open');
         }
       }
     });
