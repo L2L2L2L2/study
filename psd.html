@@ -1200,24 +1200,29 @@
       ctx.fillStyle = '#090d16';
       ctx.fillRect(left, windowBandY, carW, windowBandH);
 
-      // 출입문 사이 승객석 창문
+      // 출입문 사이 승객석 창문 (중간 검은 바 없는 단일 와이드 통유리창)
       for (let i = 0; i < carDoorIndices.length - 1; i++) {
         const d1Center = doorCenters[carDoorIndices[i]];
         const d2Center = doorCenters[carDoorIndices[i + 1]];
-        const betweenLeft = d1Center + doorW / 2 + 4;
-        const betweenRight = d2Center - doorW / 2 - 4;
-        const betweenW = betweenRight - betweenLeft;
-        const winSingleW = (betweenW - 8) / 2;
+        const winX = d1Center + doorW / 2 + 5;
+        const winW = (d2Center - doorW / 2 - 5) - winX;
+        const winY = windowBandY + 3;
+        const winH = windowBandH - 6;
 
-        [betweenLeft, betweenLeft + winSingleW + 8].forEach(wx => {
+        if (winW > 10) {
+          // 실내 웜톤 조명 통유리창
           ctx.fillStyle = '#fef08a';
-          ctx.fillRect(wx, windowBandY + 4, winSingleW, windowBandH - 8);
+          ctx.fillRect(winX, winY, winW, winH);
+
+          // 통유리 슬림 외곽 프레임
           ctx.strokeStyle = '#475569';
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(wx, windowBandY + 4, winSingleW, windowBandH - 8);
-          ctx.fillStyle = 'rgba(71, 85, 105, 0.45)';
-          ctx.fillRect(wx + winSingleW / 2 - 1, windowBandY + 4, 2, windowBandH - 8);
-        });
+          ctx.lineWidth = 1.2;
+          ctx.strokeRect(winX, winY, winW, winH);
+
+          // 통유리 상단 은은한 빛반사 하이라이트
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+          ctx.fillRect(winX + 2, winY + 2, winW - 4, 3);
+        }
       }
 
       ctx.fillStyle = ORANGE_COLOR;
