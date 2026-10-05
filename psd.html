@@ -91,13 +91,13 @@
       color: #6ee7b7;
     }
 
-    /* 좌측 하단 교육 실습 가이드 HUD */
+    /* 좌측 하단 교육 실습 가이드 HUD (기본: 화면 반으로 쓸 때) */
     .hud-guide-box {
       position: absolute;
       left: 20px;
       bottom: 20px;
       width: 400px;
-      background: rgba(15, 23, 42, 0.90);
+      background: rgba(15, 23, 42, 0.92);
       border: 1.5px solid rgba(71, 85, 105, 0.6);
       border-radius: 12px;
       padding: 14px 16px;
@@ -105,6 +105,7 @@
       backdrop-filter: blur(12px);
       z-index: 10;
       color: #cbd5e1;
+      transition: all 0.2s ease-in-out;
     }
     .guide-title {
       font-size: 13px;
@@ -141,6 +142,57 @@
       justify-content: space-between;
       align-items: center;
       font-size: 12px;
+    }
+
+    /* ★ [추가] 전체화면(화면 폭 1400px 이상)일 때 글자 및 박스 대폭 확대 */
+    @media (min-width: 1400px) {
+      .hud-guide-box {
+        width: min(580px, calc(100vw - 640px)); /* 우측 휑한 여백을 채우며 시원하게 확장 */
+        padding: 18px 22px;
+        border-radius: 14px;
+      }
+      .guide-title {
+        font-size: 17px; /* 13px -> 17px */
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+      }
+      .guide-steps {
+        font-size: 14.5px; /* 11.5px -> 14.5px */
+        line-height: 1.75;
+        gap: 7px;
+      }
+      .step-num {
+        font-size: 15px;
+      }
+      .guide-status {
+        margin-top: 14px;
+        padding-top: 12px;
+        font-size: 14.5px; /* 12px -> 14.5px */
+      }
+      .guide-status strong {
+        font-size: 18px !important; /* 숫자 강조 */
+      }
+    }
+
+    /* ★ [추가] 4K / QHD 초고해상도(1900px 이상)일 때 시니어/다인 교육용 특대형 확대 */
+    @media (min-width: 1900px) {
+      .hud-guide-box {
+        width: min(680px, calc(100vw - 660px));
+        padding: 22px 26px;
+      }
+      .guide-title {
+        font-size: 19px;
+      }
+      .guide-steps {
+        font-size: 16px;
+        gap: 9px;
+      }
+      .guide-status {
+        font-size: 16px;
+      }
+      .guide-status strong {
+        font-size: 20px !important;
+      }
     }
 
     /* 2. 우측 하단 승강장조작반 (PSL) 패널 - 스크롤바 완전 차단 및 컴팩트 핏 */
