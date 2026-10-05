@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>인천2호선 승강장조작반(PSL) 교육용 시뮬레이터</title>
+  <title>인천2호선 승강장조작반(PSD) 교육용 시뮬레이터</title>
   <style>
     * {
       box-sizing: border-box;
@@ -21,7 +21,7 @@
       position: relative;
     }
 
-    /* 1. 배경 전체 캔버스 (상단 PSD 12도어 + 하단 승강장 바닥) */
+    /* 1. 배경 전체 캔버스 (상단 열차 & PSD 12도어 + 하단 승강장 바닥) */
     #metroCanvas {
       position: absolute;
       top: 0;
@@ -366,7 +366,7 @@
       box-shadow: 0 0 5px #ef4444;
     }
 
-    /* 하단 조작부: 인터폰 + 제어/상태표시 */
+    /* 하단 조작부 */
     .bottom-control-row {
       display: grid;
       grid-template-columns: 130px 1fr;
@@ -374,7 +374,6 @@
       align-items: stretch;
     }
 
-    /* 인터폰 수화기 */
     .interphone-box {
       background: #c8cccf;
       border: 2px solid #94a3b8;
@@ -404,7 +403,6 @@
     .handset-buttons { width: 100%; display: flex; flex-direction: column; gap: 4px; }
     .handset-btn-line { height: 4px; background: #e2e8f0; border-radius: 2px; }
 
-    /* 제어 및 상태표시 컨테이너 */
     .controls-wrapper {
       display: flex;
       flex-direction: column;
@@ -412,7 +410,6 @@
       justify-content: space-between;
     }
 
-    /* 1. 상태표시 */
     .section-box {
       border: 1px solid #94a3b8;
       background: #dbe0e3;
@@ -471,7 +468,6 @@
     .lamp-green-off { background: #14492d; opacity: 0.65; }
     .lamp-green-on { background: #10b981 !important; box-shadow: 0 0 14px #10b981; opacity: 1 !important; }
 
-    /* 2. 제어 스위치 & 버튼 그리드 */
     .controls-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -491,7 +487,6 @@
       margin-bottom: 2px;
     }
 
-    /* 회전 노브 스위치 */
     .knob-container {
       position: relative;
       margin: 4px 0;
@@ -517,7 +512,6 @@
       box-shadow: 0 0 2px #fff;
     }
 
-    /* 푸시 버튼 */
     .push-btn {
       width: 40px;
       height: 40px;
@@ -549,7 +543,6 @@
       border: 1px solid rgba(255, 255, 255, 0.35);
     }
 
-    /* 인터록 해제 박스 */
     .interlock-box {
       border: 2px solid #dc2626;
       background: #fef08a;
@@ -562,7 +555,6 @@
       font-weight: 900;
     }
 
-    /* 툴팁 말풍선 */
     .tooltip-bubble {
       position: absolute;
       top: -30px;
@@ -589,7 +581,7 @@
 </head>
 <body>
 
-  <!-- 1. 배경 승강장 전체 뷰포트 (12도어 와이드 캔버스) -->
+  <!-- 1. 배경 승강장 캔버스 (선로, 열차, PSD 도어, 바닥 통합 렌더링) -->
   <canvas id="metroCanvas"></canvas>
 
   <!-- 좌측 상단 HUD 안내 -->
@@ -600,7 +592,7 @@
     </div>
     <div class="badge-sub">
       <span class="tag tag-ext">0-1 ~ 0-3 / 3-1 ~ 3-3: 4량 연장구역</span>
-      <span class="tag tag-base">1-1 ~ 2-3: 2량 기본운행구역</span>
+      <span class="tag tag-base">1-1 ~ 2-3: 2량 열차 정차구역</span>
     </div>
   </div>
 
@@ -610,10 +602,11 @@
       <span>📋 승강장조작반 취급 요령 (교육 가이드)</span>
     </div>
     <ul class="guide-steps">
-      <li><span class="step-num">1.</span> <strong>[차량선택]</strong> 스위치를 2량 또는 4량 위치로 돌립니다.</li>
-      <li><span class="step-num">2.</span> <strong>[전체열림]</strong> 버튼을 누르면 해당 구역의 PSD가 개방됩니다.</li>
-      <li><span class="step-num">3.</span> <strong>[전체닫힘]</strong> 버튼을 누르면 모든 문이 닫히며 녹색등이 켜집니다.</li>
-      <li><span class="step-num">※</span> <strong>[주의]</strong> 실제 차량선택 스위치는 손을 놓으면 원래 위치로 돌아갑니다.</li>
+      <li><span class="step-num">1.</span> 운전모드 스위치가 <strong>[-]</strong> 위치인지 확인합니다.</li>
+      <li><span class="step-num">2.</span> <strong>[차량선택]</strong> 스위치를 2량 또는 4량 위치로 돌립니다.</li>
+      <li><span class="step-num">3.</span> <strong>[전체열림]</strong> 버튼을 누르면 해당 구역 PSD 및 열차 문이 열립니다.</li>
+      <li><span class="step-num">4.</span> <strong>[전체닫힘]</strong> 버튼을 누르면 모든 문이 닫히며 녹색등이 켜집니다.</li>
+      <li><span class="step-num">※</span> <strong>[램프시험]</strong> 버튼은 누르고 있는 동안 모든 램프를 점검합니다.</li>
     </ul>
     <div class="guide-status">
       <div>개방 도어: <strong id="openDoorCountText" style="color:#fb923c; font-size:14px;">0 / 12</strong></div>
@@ -685,7 +678,6 @@
 
       <!-- 인터폰 & 제어 조작부 -->
       <div class="bottom-control-row">
-        <!-- 인터폰 그래픽 -->
         <div class="interphone-box">
           <div style="font-size:10px; font-weight:bold; color:#334155;">KOCOM</div>
           <div style="font-size:7px; color:#64748b;">KIP-611PG</div>
@@ -810,7 +802,7 @@
 
 <script>
   /* =========================================================================
-     1. 전역 상태 및 12개 도어 데이터 (와이드 가로 비율 균등 배치)
+     1. 전역 상태 및 12개 도어 데이터
      ========================================================================= */
   const DOORS = [
     { id: 0, label: '0-1', carType: '4CAR_EXT', openProgress: 0, target: 0 },
@@ -895,7 +887,6 @@
     }, 3200);
   }
 
-  // 1) 차량선택 스위치
   knobCarSelect.addEventListener('click', () => {
     playBeep(360, 'square', 0.06);
     if (carSelectState === 'NEUTRAL') {
@@ -912,7 +903,6 @@
     }
   });
 
-  // 2) 운전모드 스위치
   const knobDriveMode = document.getElementById('knobDriveMode');
   knobDriveMode.style.transform = 'rotate(-40deg)';
   knobDriveMode.addEventListener('click', () => {
@@ -926,7 +916,6 @@
     }
   });
 
-  // 3) 인터록 해제 스위치
   const knobInterlock = document.getElementById('knobInterlock');
   knobInterlock.style.transform = 'rotate(-40deg)';
   knobInterlock.addEventListener('click', () => {
@@ -941,7 +930,6 @@
     updateLamps();
   });
 
-  // 4) 전체열림 버튼
   const btnAllOpen = document.getElementById('btnAllOpen');
   btnAllOpen.addEventListener('mousedown', () => {
     btnAllOpen.classList.add('pressed');
@@ -964,7 +952,6 @@
   });
   window.addEventListener('mouseup', () => btnAllOpen.classList.remove('pressed'));
 
-  // 5) 전체닫힘 버튼
   const btnAllClose = document.getElementById('btnAllClose');
   btnAllClose.addEventListener('mousedown', () => {
     btnAllClose.classList.add('pressed');
@@ -977,7 +964,6 @@
   });
   window.addEventListener('mouseup', () => btnAllClose.classList.remove('pressed'));
 
-  // 6) 램프시험 버튼
   const btnLampTest = document.getElementById('btnLampTest');
   btnLampTest.addEventListener('mousedown', () => {
     isLampTestPressed = true;
@@ -1046,7 +1032,133 @@
   }
 
   /* =========================================================================
-     6. 고해상도 캔버스 렌더링 (12개 도어 가로 100% 와이드 뷰포트)
+     6. ★ [핵심] 인천 2호선 열차 렌더러 (PSD 뒤 선로 위 배치)
+     ========================================================================= */
+  function drawIncheonTrain(ctx, startDoorCenterX, endDoorCenterX, trackTopY, platformY, doorCenters, doorW) {
+    const ORANGE_COLOR = '#F37321';
+    const SILVER_BODY = '#cbd5e1';
+    const DARK_GREY = '#334155';
+    const CAB_GLASS = '#1e293b';
+
+    // 1-1 도어부터 2-3 도어까지의 간격을 기준으로 2량 열차 본체 배치
+    const totalTrainW = (endDoorCenterX - startDoorCenterX) + doorW * 2.8;
+    const trainX = startDoorCenterX - doorW * 1.4;
+    const trainY = trackTopY + 12;
+    const trainH = platformY - trainY - 4;
+
+    const carW = (totalTrainW - 16) / 2; // 차량 2량 분할 및 갱웨이 16px
+    const gangwayX = trainX + carW;
+
+    // 단일 차량 그리기 함수 (isLead: 선두차량, isTail: 후미차량)
+    const drawCar = (cx, cy, cw, ch, isLead, isTail, carDoorIndices) => {
+      // 1. 하부 대차(바퀴/기계부)
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(cx + 12, cy + ch - 5, 24, 7);
+      ctx.fillRect(cx + cw - 36, cy + ch - 5, 24, 7);
+
+      // 2. 은색 차체 메인 바디
+      ctx.fillStyle = SILVER_BODY;
+      ctx.fillRect(cx, cy + 8, cw, ch - 12);
+
+      // 3. 지붕 루프 및 공조기
+      ctx.fillStyle = DARK_GREY;
+      ctx.fillRect(cx + 4, cy + 2, cw - 8, 8);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(cx + 20, cy, cw - 40, 4);
+
+      // 4. 주황색 시그니처 스트라이프 띠
+      ctx.fillStyle = ORANGE_COLOR;
+      ctx.fillRect(cx, cy + ch * 0.52, cw, 7);
+      ctx.fillStyle = '#c2410c';
+      ctx.fillRect(cx, cy + ch * 0.52 + 7, cw, 1.5);
+
+      // 5. 측면 윈도우 블랙 밴드
+      const winY = cy + 12;
+      const winH = ch * 0.28;
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(cx + 4, winY, cw - 8, winH);
+
+      // 6. 창문 실내 따뜻한 노란 조명
+      ctx.fillStyle = '#fef08a';
+      const winCount = 4;
+      const winW = (cw - 30) / winCount;
+      for (let w = 0; w < winCount; w++) {
+        ctx.fillRect(cx + 15 + w * winW, winY + 2, winW - 10, winH - 4);
+      }
+
+      // 7. 열차 출입문 3개 (PSD 도어와 연동되어 슬라이딩 개방)
+      carDoorIndices.forEach(doorIdx => {
+        const door = DOORS[doorIdx];
+        const dcX = doorCenters[doorIdx];
+        const trainDoorW = doorW * 0.72;
+        const tdx = dcX - trainDoorW / 2;
+        const slide = door.openProgress * (trainDoorW * 0.42);
+
+        // 출입문 뒤 실내 공간 (열렸을 때 보이는 밝은 실내)
+        ctx.fillStyle = '#fef9c3';
+        ctx.fillRect(tdx, winY, trainDoorW, ch - winY - 4);
+
+        // 좌/우 열차 도어 리프
+        const halfTDW = trainDoorW / 2;
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(tdx - slide, winY, halfTDW - 0.5, ch - winY - 4);
+        ctx.fillRect(tdx + halfTDW + slide, winY, halfTDW - 0.5, ch - winY - 4);
+
+        // 도어 창문
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(tdx + 2 - slide, winY + 4, halfTDW - 4, winH - 6);
+        ctx.fillRect(tdx + halfTDW + 2 + slide, winY + 4, halfTDW - 4, winH - 6);
+
+        // 도어 중앙 주황 띠
+        ctx.fillStyle = ORANGE_COLOR;
+        ctx.fillRect(tdx - slide, cy + ch * 0.52, halfTDW, 7);
+        ctx.fillRect(tdx + halfTDW + slide, cy + ch * 0.52, halfTDW, 7);
+      });
+
+      // 8. 전면부 / 후미부 운전실 캡 (선두/후미 유선형 캡 글래스 & 라이트)
+      if (isLead) {
+        ctx.fillStyle = DARK_GREY;
+        ctx.fillRect(cx - 10, cy + 10, 10, ch - 16);
+        ctx.fillStyle = CAB_GLASS;
+        ctx.fillRect(cx - 8, cy + 14, 8, winH + 4);
+        // 헤드라이트 (밝은 백색 빔)
+        ctx.fillStyle = '#fef08a';
+        ctx.shadowColor = 'rgba(254, 240, 138, 0.8)';
+        ctx.shadowBlur = 10;
+        ctx.fillRect(cx - 9, cy + ch * 0.62, 5, 5);
+        ctx.shadowBlur = 0;
+      }
+      if (isTail) {
+        ctx.fillStyle = DARK_GREY;
+        ctx.fillRect(cx + cw, cy + 10, 10, ch - 16);
+        ctx.fillStyle = CAB_GLASS;
+        ctx.fillRect(cx + cw, cy + 14, 8, winH + 4);
+        // 후미등 (빨간 불빛)
+        ctx.fillStyle = '#ef4444';
+        ctx.shadowColor = 'rgba(239, 68, 68, 0.8)';
+        ctx.shadowBlur = 8;
+        ctx.fillRect(cx + cw + 4, cy + ch * 0.62, 5, 5);
+        ctx.shadowBlur = 0;
+      }
+    };
+
+    // 1호차 (1-1 ~ 1-3 구역: 도어 인덱스 3, 4, 5)
+    drawCar(trainX, trainY, carW, trainH, true, false, [3, 4, 5]);
+
+    // 갱웨이 (1호차와 2호차 사이 연결통로)
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(gangwayX, trainY + 8, 16, trainH - 12);
+    for (let gy = trainY + 12; gy < trainY + trainH - 10; gy += 5) {
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(gangwayX + 2, gy, 12, 2.5);
+    }
+
+    // 2호차 (2-1 ~ 2-3 구역: 도어 인덱스 6, 7, 8)
+    drawCar(gangwayX + 16, trainY, carW, trainH, false, true, [6, 7, 8]);
+  }
+
+  /* =========================================================================
+     7. 고해상도 캔버스 렌더링 루프
      ========================================================================= */
   const canvas = document.getElementById('metroCanvas');
   const ctx = canvas.getContext('2d');
@@ -1088,13 +1200,11 @@
 
     updateLamps();
 
-    // 2. 캔버스 그리기
+    // 2. 캔버스 렌더링
     ctx.save();
     ctx.scale(dpr, dpr);
-
     ctx.clearRect(0, 0, width, height);
 
-    // 승강장 높이 비율 계산 (상단 38% 선로 및 PSD, 하단 62% 대리석 바닥)
     const TRACK_TOP_Y = height * 0.16;
     const PLATFORM_Y = height * 0.38;
 
@@ -1117,7 +1227,7 @@
       ctx.stroke();
     }
 
-    // B. 벽면 펜던트 조명 4기 (가로 전체에 균형 배치: 16%, 38%, 62%, 85%)
+    // B. 벽면 펜던트 조명 4기 (와이드 균형 배치)
     const lampPositions = [0.16, 0.38, 0.62, 0.85];
     lampPositions.forEach(ratio => {
       const lx = width * ratio;
@@ -1125,12 +1235,10 @@
       const lampW = Math.max(68, Math.min(90, width * 0.065));
       const lampH = 16;
 
-      // 천장 연결 듀얼 와이어
       ctx.fillStyle = '#1e222a';
       ctx.fillRect(lx - lampW * 0.35 - 1, 0, 2, ly);
       ctx.fillRect(lx + lampW * 0.35 - 1, 0, 2, ly);
 
-      // 웜오렌지 Bloom 광원
       const glow = ctx.createRadialGradient(lx, ly + lampH * 0.6, 6, lx, ly + lampH * 0.6, 120);
       glow.addColorStop(0, 'rgba(255, 180, 60, 0.40)');
       glow.addColorStop(0.4, 'rgba(255, 140, 30, 0.14)');
@@ -1141,7 +1249,6 @@
       ctx.arc(lx, ly + lampH * 0.6, 120, 0, Math.PI * 2);
       ctx.fill();
 
-      // 메탈 하우징
       ctx.fillStyle = '#22232a';
       ctx.strokeStyle = '#3a3b47';
       ctx.lineWidth = 1.5;
@@ -1150,7 +1257,6 @@
       ctx.fill();
       ctx.stroke();
 
-      // 발광 튜브 코어
       const tubeW = lampW - 8;
       const tubeH = lampH - 6;
       ctx.fillStyle = '#fffdf0';
@@ -1162,7 +1268,7 @@
       ctx.shadowBlur = 0;
     });
 
-    // C. 선로 바닥 및 레일
+    // C. 선로 바닥 & 레일
     ctx.fillStyle = '#1c1917';
     ctx.fillRect(0, TRACK_TOP_Y, width, PLATFORM_Y - TRACK_TOP_Y);
     ctx.fillStyle = '#3e3a38';
@@ -1173,7 +1279,17 @@
     ctx.fillRect(0, PLATFORM_Y - 20, width, 4);
     ctx.fillRect(0, PLATFORM_Y - 12, width, 4);
 
-    // D. 승강장 대리석 플랫폼 바닥 (하단 전체)
+    // 12개 PSD 위치 좌표 계산
+    const sideMargin = width * 0.035;
+    const usableWidth = width - sideMargin * 2;
+    const doorSpacing = usableWidth / 12;
+    const doorW = Math.min(68, doorSpacing * 0.65);
+    const doorCenters = DOORS.map((_, idx) => sideMargin + doorSpacing * (idx + 0.5));
+
+    // ★ D. 인천 2호선 2량 열차 렌더링 (1-1 ~ 2-3 구역 뒤에 안착)
+    drawIncheonTrain(ctx, doorCenters[3], doorCenters[8], TRACK_TOP_Y, PLATFORM_Y, doorCenters, doorW);
+
+    // E. 승강장 대리석 플랫폼 바닥 (하단 전체)
     const floorH = height - PLATFORM_Y;
     const flrGrad = ctx.createLinearGradient(0, PLATFORM_Y, 0, height);
     flrGrad.addColorStop(0, '#e5ecf3');
@@ -1192,7 +1308,7 @@
       ctx.stroke();
     }
 
-    // E. 노란색 입체 점자 안전선 (Tactile Paving)
+    // F. 노란색 입체 점자 안전선 (Tactile Paving)
     const tactileH = 14;
     ctx.fillStyle = '#f59e0b';
     ctx.fillRect(0, PLATFORM_Y + 2, width, tactileH);
@@ -1201,7 +1317,7 @@
     ctx.fillStyle = '#b45309';
     ctx.fillRect(0, PLATFORM_Y + 2 + tactileH - 2, width, 2);
 
-    // F. PSD 상단 주황색 헤더 프레임
+    // G. PSD 상단 주황색 헤더 프레임
     const psdTopY = TRACK_TOP_Y + 12;
     const psdHeight = PLATFORM_Y - psdTopY;
     ctx.fillStyle = '#F37321';
@@ -1209,19 +1325,14 @@
     ctx.fillStyle = '#c2410c';
     ctx.fillRect(0, psdTopY + 23, width, 3);
 
-    // G. 12개 PSD 도어 와이드 가로 균등 렌더링
-    const sideMargin = width * 0.035;
-    const usableWidth = width - sideMargin * 2;
-    const doorSpacing = usableWidth / 12;
-    const doorW = Math.min(68, doorSpacing * 0.65);
-
+    // H. 12개 PSD 슬라이딩 도어 전면 렌더링
     DOORS.forEach((door, idx) => {
-      const centerX = sideMargin + doorSpacing * (idx + 0.5);
+      const centerX = doorCenters[idx];
       const dx = centerX - doorW / 2;
       const slide = door.openProgress * (doorW * 0.42);
       const is2Car = door.carType === '2CAR';
 
-      // 도어 번호 명판 (상단 주황 띠 위)
+      // 도어 번호 명판
       ctx.fillStyle = is2Car ? '#ffffff' : '#cbd5e1';
       ctx.font = `bold ${Math.max(13, Math.min(18, width * 0.012))}px "Pretendard", sans-serif`;
       ctx.textAlign = 'center';
@@ -1236,12 +1347,12 @@
       ctx.fillRect(centerX - 3.5, psdTopY + 30, 7, 7);
       ctx.shadowBlur = 0;
 
-      // 유리문 리프
+      // 투명 슬라이딩 유리문
       const glassTopY = psdTopY + 42;
       const glassH = psdHeight - 44;
       const halfW = doorW / 2;
 
-      ctx.fillStyle = 'rgba(148, 163, 184, 0.45)';
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.42)';
       ctx.strokeStyle = '#64748b';
       ctx.lineWidth = 1.5;
 
