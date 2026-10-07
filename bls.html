@@ -1109,7 +1109,7 @@
       if (currentStep === 2) {
         appendRadioLog('안전요원', '관제, 안전요원입니다. 선로 진입을 위해 BLS 취급하겠습니다.', false, () => {
           setTimeout(() => {
-            appendRadioLog('관제실', '관제 확인. BLS 단전 취급을 승인합니다. 취급하십시오.', false, () => {
+            appendRadioLog('관제실', '네. BLS 취급 승인합니다. 취급하십시오.', false, () => {
               currentStep = 3;
               updateStepsUI();
               autoHangupHandset();
@@ -1118,7 +1118,7 @@
         });
       } 
       else if (currentStep === 5) {
-        appendRadioLog('안전요원', '관제, BLS 취급(비상정지 및 단전) 완료 확인했습니다.', false, () => {
+        appendRadioLog('안전요원', '관제, BLS 취급 완료했습니다.', false, () => {
           setTimeout(() => {
             appendRadioLog('관제실', 'BLS 취급 확인했습니다. BLS 복귀하십시오.', false, () => {
               currentStep = 6;
@@ -1463,7 +1463,7 @@
           officer.state = 'inside';
           officer.active = false;
           
-          appendRadioLog('안전요원', '차내 진입 완료! 안전 확보를 위해 안에서 출입문을 닫습니다.', true);
+          appendRadioLog('안전요원', '차내 진입 완료! 출입문을 닫습니다.', true);
 
           setTimeout(() => {
             playDoorChime();
@@ -1472,15 +1472,15 @@
             emergencyHandleRight.isPulled = false;
 
             setTimeout(() => {
-              appendRadioLog('안전요원', '출입문 닫힘 완료. 차내 승객 안전조치를 개시합니다.', true);
+              appendRadioLog('관제실', '확인했습니다. 선로로 나온 승객 없는 것 확인하셨죠? 운전대 개방하세요. 급전해도 될까요?', true);
 
               // 1) 안전조치 완료 ➔ 관제 급전 요청
               setTimeout(() => {
-                appendRadioLog('안전요원', '관제, 차내 안전조치 완료되었습니다. 해당 구간 급전 요청합니다.', false, () => {
+                appendRadioLog('안전요원', '관제, 승객 모두 객실에 있습니다. 운전대 개방했습니다. 급전 요청합니다.', false, () => {
                   
                   // 2) 관제실 답변
                   setTimeout(() => {
-                    appendRadioLog('관제실', '확인했습니다. 안전 확인 완료. 해당 구간 급전 투입합니다.', false, () => {
+                    appendRadioLog('관제실', '확인했습니다. 안전 확인 완료. 해당 구간 급전합니다.', false, () => {
                       
                       // 3) ★ 관제실 음성 종료 후 비로소 급전 투입! (외함 닫힌 상태에서도 램프 점등 확인됨)
                       setTimeout(() => {
@@ -1491,7 +1491,7 @@
 
                         // 4) 안전요원 발차 보고
                         setTimeout(() => {
-                          appendRadioLog('안전요원', '급전 투입 확인. 열차 서서히 발차합니다.', false, () => {
+                          appendRadioLog('안전요원', '급전 확인. 열차 수동으로 운행하겠습니다.', false, () => {
                             
                             // 5) 안전요원 음성 종료 후 경적 울리며 열차 출발
                             setTimeout(() => {
