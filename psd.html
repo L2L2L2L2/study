@@ -1254,7 +1254,7 @@
         const tdx = dcX - tDoorW / 2;
         const slide = door.openProgress * (tDoorW * 0.44);
 
-        ctx.fillStyle = '#FCED5E';
+        ctx.fillStyle = '#FEF9C3';
         ctx.fillRect(tdx, windowBandY, tDoorW, trainH - (windowBandY - trainTopY) - 2);
 
         const halfTDW = tDoorW / 2;
@@ -1263,7 +1263,7 @@
         ctx.fillRect(tdx - slide, windowBandY, halfTDW - 0.5, trainH - (windowBandY - trainTopY) - 2);
         ctx.fillRect(tdx + halfTDW + slide, windowBandY, halfTDW - 0.5, trainH - (windowBandY - trainTopY) - 2);
 
-        ctx.fillStyle = '#fef08a';
+        ctx.fillStyle = '#FCED5E';
         ctx.fillRect(tdx + 3 - slide, windowBandY + 4, halfTDW - 6, windowBandH - 8);
         ctx.fillRect(tdx + halfTDW + 3 + slide, windowBandY + 4, halfTDW - 6, windowBandH - 8);
 
