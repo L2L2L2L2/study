@@ -1456,21 +1456,31 @@
     const TRACK_TOP_Y = height * 0.16;
     const PLATFORM_Y = height * 0.38;
 
-    // 벽면
+    // A. 역사 상단 벽면 (톤업 및 선명한 가로/세로 타일 격자)
     const wallGrad = ctx.createLinearGradient(0, 0, 0, TRACK_TOP_Y);
-    wallGrad.addColorStop(0, '#0a0e14');
-    wallGrad.addColorStop(0.6, '#131b26');
-    wallGrad.addColorStop(1, '#090d14');
+    wallGrad.addColorStop(0, '#0f172a');
+    wallGrad.addColorStop(0.5, '#1e293b');
+    wallGrad.addColorStop(1, '#0f172a');
     ctx.fillStyle = wallGrad;
     ctx.fillRect(0, 0, width, TRACK_TOP_Y);
 
-    const tileSize = 32;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+    // 타일 줄눈 (가로 + 세로 28px 격자)
+    const wallTileSize = 28;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'; // 선명한 밝은 줄눈
     ctx.lineWidth = 1;
-    for (let x = 0; x < width; x += tileSize) {
+
+    // 세로줄
+    for (let x = 0; x < width; x += wallTileSize) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, TRACK_TOP_Y);
+      ctx.stroke();
+    }
+    // 가로줄
+    for (let y = 0; y < TRACK_TOP_Y; y += wallTileSize) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
       ctx.stroke();
     }
 
@@ -1548,32 +1558,74 @@
     emergencyHandleRight.y = handleY;
     drawEmergencyHandle(ctx, emergencyHandleRight);
 
-    // 승강장 대리석 플랫폼 바닥
+    // E. 승강장 플랫폼 사각 타일 바닥 (두 번째 이미지의 화사한 연하늘빛)
     const floorH = height - PLATFORM_Y;
     const flrGrad = ctx.createLinearGradient(0, PLATFORM_Y, 0, height);
-    flrGrad.addColorStop(0, '#e5ecf3');
-    flrGrad.addColorStop(0.35, '#d8e2ec');
-    flrGrad.addColorStop(1, '#c8d4e2');
+    flrGrad.addColorStop(0, '#e2ebf3');
+    flrGrad.addColorStop(0.35, '#d6e4ee');
+    flrGrad.addColorStop(1, '#c5d5e2');
     ctx.fillStyle = flrGrad;
     ctx.fillRect(0, PLATFORM_Y, width, floorH);
 
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+    // 바닥 정사각형 타일 줄눈 (가로 + 세로 36px 격자)
+    const floorTileSize = 36;
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
     ctx.lineWidth = 1;
-    for (let tx = 0; tx < width; tx += 64) {
+
+    // 세로 타일선
+    for (let tx = 0; tx < width; tx += floorTileSize) {
       ctx.beginPath();
       ctx.moveTo(tx, PLATFORM_Y);
       ctx.lineTo(tx, height);
       ctx.stroke();
     }
+    // 가로 타일선
+    for (let ty = PLATFORM_Y; ty < height; ty += floorTileSize) {
+      ctx.beginPath();
+      ctx.moveTo(0, ty);
+      ctx.lineTo(width, ty);
+      ctx.stroke();
+    }
 
-    // 노란색 점자 안전선
-    const tactileH = 14;
+    // F. ★ [두 번째 이미지 스타일] 3D 입체 노란 점자 안전선 (2단 딤플 돌기)
+    const tactileY = PLATFORM_Y + 2;
+    const tactileH = 16;
+
+    // 점자블록 베이스
     ctx.fillStyle = '#f59e0b';
-    ctx.fillRect(0, PLATFORM_Y + 2, width, tactileH);
+    ctx.fillRect(0, tactileY, width, tactileH);
+
+    // 상단 하이라이트 & 하단 그림자 림
     ctx.fillStyle = '#fef08a';
-    ctx.fillRect(0, PLATFORM_Y + 2, width, 2);
+    ctx.fillRect(0, tactileY, width, 1.5);
     ctx.fillStyle = '#b45309';
-    ctx.fillRect(0, PLATFORM_Y + 2 + tactileH - 2, width, 2);
+    ctx.fillRect(0, tactileY + tactileH - 1.5, width, 1.5);
+
+    // 동글동글한 3D 입체 점자 돌기 (Stud) 2열 렌더링
+    const studSpacing = 11;
+    const studRadius = 2.2;
+    for (let sx = 6; sx < width; sx += studSpacing) {
+      const sy1 = tactileY + tactileH * 0.32;
+      const sy2 = tactileY + tactileH * 0.68;
+
+      [sy1, sy2].forEach(sy => {
+        // 돌기 밑면 그림자
+        ctx.fillStyle = '#78350f';
+        ctx.beginPath();
+        ctx.arc(sx, sy + 0.8, studRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 돌기 입체 광원 그라데이션
+        const studGrad = ctx.createRadialGradient(sx - 0.6, sy - 0.6, 0.3, sx, sy, studRadius);
+        studGrad.addColorStop(0, '#fef9c3');
+        studGrad.addColorStop(0.6, '#fbbf24');
+        studGrad.addColorStop(1, '#d97706');
+        ctx.fillStyle = studGrad;
+        ctx.beginPath();
+        ctx.arc(sx, sy, studRadius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
 
     // H. PSD 상단 주황색 헤더 프레임 (높이를 40px로 키워 조명을 안쪽에 완벽 내장)
     const psdTopY = TRACK_TOP_Y + 6;
