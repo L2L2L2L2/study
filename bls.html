@@ -895,6 +895,7 @@
     setTimeout(() => playTone(587.33, 'triangle', 0.15, 0.1), 100);
   }
 
+  // ★ [Edge/Chrome 완벽 호환] 남/여 음성 자동 매칭 TTS 함수
   let currentUtterance = null;
   function speakTTS(text, role, onEnd = null) {
     let finished = false;
@@ -918,22 +919,49 @@
 
     const utter = new SpeechSynthesisUtterance(cleanText);
     currentUtterance = utter;
-    utter.lang = 'ko-KR';
 
-    const voices = window.speechSynthesis.getVoices().filter(v => v.lang.includes('ko') || v.lang.includes('KR'));
-    const maleVoice = voices.find(v => v.name.includes('InJoon') || v.name.includes('Male') || v.name.includes('남성'));
-    const femaleVoice = voices.find(v => v.name.includes('SunHi') || v.name.includes('Heami') || v.name.includes('Female') || v.name.includes('여성') || v.name.includes('Google'));
+    // 현재 브라우저에 등록된 모든 한국어 음성 탐색
+    const allVoices = window.speechSynthesis.getVoices();
+    const koVoices = allVoices.filter(v => 
+      (v.lang && (v.lang.toLowerCase().includes('ko') || v.lang.toLowerCase().includes('kr'))) ||
+      v.name.includes('Korean') || v.name.includes('한국')
+    );
+
+    // Edge & Chrome 남성 음성 식별 (대소문자 무시: InJoon, BongJin, GookMin, Male 등)
+    const maleVoice = koVoices.find(v => {
+      const n = v.name.toLowerCase();
+      return n.includes('injoon') || n.includes('bongjin') || n.includes('gookmin') || 
+             n.includes('male') || n.includes('남성') || n.includes('daejin');
+    });
+
+    // 여성 음성 식별 (SunHi, Heami, Google, Female 등)
+    const femaleVoice = koVoices.find(v => {
+      const n = v.name.toLowerCase();
+      return n.includes('sunhi') || n.includes('heami') || n.includes('yujin') || 
+             n.includes('female') || n.includes('여성') || n.includes('google');
+    });
 
     if (role === '관제실') {
-      if (femaleVoice) utter.voice = femaleVoice;
-      utter.pitch = 1.25;
-      utter.rate = 1.05;
-    } else {
-      if (maleVoice) {
-        utter.voice = maleVoice;
-        utter.pitch = 0.9;
+      // [관제실: 여성 음성]
+      if (femaleVoice) {
+        utter.voice = femaleVoice;
+        utter.lang = femaleVoice.lang;
       } else {
-        utter.pitch = 0.72;
+        utter.lang = 'ko-KR';
+      }
+      utter.pitch = 1.2;
+      utter.rate = 1.02;
+    } else {
+      // [안전요원: 남성 음성]
+      if (maleVoice) {
+        // ★ Edge의 InJoon 또는 BongJin 남성 음성 우선 지정!
+        utter.voice = maleVoice;
+        utter.lang = maleVoice.lang;
+        utter.pitch = 1.0;
+      } else {
+        // 만약 PC에 남성 음성이 전혀 없는 특수 환경일 경우, 피치를 대폭 낮춰 남성톤 시뮬레이션
+        utter.lang = 'ko-KR';
+        utter.pitch = 0.55;
       }
       utter.rate = 0.95;
     }
