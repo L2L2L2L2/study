@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>인천2호선 BLS(Blue Light System) 조작 및 비상진입 시뮬레이터</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      background-color: #020617;
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Malgun Gothic", sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    #metroCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+    }
+
+    /* 좌측 상단 HUD */
+    .hud-badge {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 10;
+    }
+    .badge-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(56, 189, 248, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 8px;
+      color: #e0f2fe;
+      font-size: 13.5px;
+      font-weight: 800;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+    }
+    .pulse-dot-blue {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background-color: #0ea5e9;
+      box-shadow: 0 0 12px #38bdf8;
+      animation: pulseBlue 1.5s infinite;
+    }
+    @keyframes pulseBlue {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.5; }
+    }
+
+    /* 좌측 하단 교육 실습 가이드 HUD */
+    .hud-guide-box {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      width: 440px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1.5px solid rgba(56, 189, 248, 0.5);
+      border-radius: 12px;
+      padding: 16px 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(12px);
+      z-index: 10;
+      color: #cbd5e1;
+      transition: all 0.2s ease-in-out;
+    }
+    .guide-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 6px;
+    }
+    .guide-steps {
+      list-style: none;
+      font-size: 12px;
+      line-height: 1.65;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .guide-steps li {
+      display: flex;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .guide-steps li.active {
+      color: #fef08a;
+      font-weight: bold;
+      transform: translateX(4px);
+    }
+    .guide-steps li.done {
+      color: #64748b;
+      text-decoration: line-through;
+    }
+    .step-num {
+      color: #38bdf8;
+      font-weight: bold;
+    }
+    .radio-dialogue {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: rgba(2, 132, 199, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-size: 12px;
+      color: #bae6fd;
+      line-height: 1.4;
+      display: none;
+    }
+
+    @media (min-width: 1400px) {
+      .hud-guide-box { width: 520px; padding: 20px 22px; }
+      .guide-title { font-size: 16px; }
+      .guide-steps { font-size: 13.5px; gap: 7px; }
+      .radio-dialogue { font-size: 13px; }
+    }
+
+    /* 2. 우측 하단 BLS 함체 실물 인터페이스 */
+    .bls-station-container {
+      position: absolute;
+      right: 25px;
+      bottom: 20px;
+      width: 460px;
+      max-width: 40vw;
+      height: 560px;
+      max-height: 65vh;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* 함체 지붕 위 파란색 회전 사이렌 경광등 (Beacon Light) */
+    .beacon-light-wrapper {
+      position: relative;
+      width: 70px;
+      height: 38px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      z-index: 25;
+    }
+    .beacon-glass {
+      width: 44px;
+      height: 32px;
+      border-radius: 22px 22px 4px 4px;
+      background: #0284c7;
+      border: 2px solid #38bdf8;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+      position: relative;
+      overflow: hidden;
+    }
+    .beacon-glass.rotating {
+      background: #38bdf8;
+      box-shadow: 0 0 35px #38bdf8, 0 0 60px #0284c7;
+      animation: beaconRotate 0.6s infinite linear;
+    }
+    @keyframes beaconRotate {
+      0% { opacity: 0.6; filter: brightness(1); }
+      50% { opacity: 1; filter: brightness(2); transform: scale(1.05); }
+      100% { opacity: 0.6; filter: brightness(1); }
+    }
+    .beacon-base {
+      width: 60px;
+      height: 8px;
+      background: #475569;
+      border-radius: 2px 2px 0 0;
+      border-top: 1px solid #94a3b8;
+    }
+
+    /* BLS 본체 외함 (스테인리스 스틸 재질감) */
+    .bls-outer-box {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 50%, #64748b 100%);
+      border-radius: 12px;
+      border: 3px solid #cbd5e1;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 외함 도어 커버 (닫힘/열림 토글) */
+    .bls-door-cover {
+      position: absolute;
+      inset: 10px;
+      background: linear-gradient(145deg, #e2e8f0 0%, #cbd5e1 60%, #94a3b8 100%);
+      border-radius: 8px;
+      border: 2px solid #64748b;
+      box-shadow: inset 0 2px 4px #ffffff, 0 6px 15px rgba(0, 0, 0, 0.4);
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      cursor: pointer;
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s;
+      transform-origin: left center;
+    }
+    .bls-door-cover.open {
+      transform: perspective(1000px) rotateY(-105deg);
+      pointer-events: none;
+      opacity: 0.05;
+    }
+    .door-window {
+      width: 82%;
+      flex: 1;
+      background: rgba(15, 23, 42, 0.15);
+      border: 6px solid #475569;
+      border-radius: 16px;
+      box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(255, 255, 255, 0.5);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .door-window::after {
+      content: '투명 유리창 (클릭하여 외함 열기)';
+      font-size: 11px;
+      font-weight: bold;
+      color: #334155;
+      background: rgba(255, 255, 255, 0.75);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .door-handle {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 60px;
+      background: #e2e8f0;
+      border: 2px solid #475569;
+      border-radius: 6px;
+      box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.3);
+    }
+    .cover-nameplate {
+      margin-top: 10px;
+      background: #ffffff;
+      border: 2px solid #475569;
+      padding: 4px 18px;
+      border-radius: 4px;
+      font-weight: 900;
+      font-size: 14px;
+      color: #0f172a;
+      letter-spacing: 2px;
+    }
+
+    /* BLS 내부 조작 패널 (사진 2 완벽 재현) */
+    .bls-inner-panel {
+      position: relative;
+      flex: 1;
+      background: linear-gradient(180deg, #d8dee4 0%, #cbd5e1 100%);
+      border-radius: 8px;
+      border: 2px solid #94a3b8;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.25);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* 외함 닫기 버튼 */
+    .btn-close-cover {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      font-size: 10px;
+      font-weight: bold;
+      background: #e2e8f0;
+      border: 1px solid #64748b;
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #1e293b;
+      z-index: 10;
+    }
+    .btn-close-cover:hover { background: #cbd5e1; }
+
+    /* 상단 BLS 명판 */
+    .bls-inner-title {
+      align-self: center;
+      background: #ffffff;
+      border: 2px solid #475569;
+      padding: 2px 24px;
+      border-radius: 4px;
+      font-weight: 900;
+      font-size: 15px;
+      color: #0f172a;
+      letter-spacing: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* 급전상태 전구 */
+    .power-status-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 4px 0;
+    }
+    .tag-label {
+      font-size: 9px;
+      font-weight: bold;
+      color: #1e293b;
+      background: #e2e8f0;
+      border: 1px solid #94a3b8;
+      padding: 1px 6px;
+      border-radius: 3px;
+      margin-bottom: 3px;
+    }
+    .lamp-power-status {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid #334155;
+      background: #ef4444;
+      box-shadow: 0 0 12px #ef4444;
+      transition: all 0.2s;
+    }
+    .lamp-power-status.off {
+      background: #451a1a;
+      box-shadow: none;
+      opacity: 0.6;
+    }
+
+    /* 5구 상태표시등/버튼 라인 */
+    .indicator-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      text-align: center;
+      padding: 6px 0;
+      border-top: 1px solid #cbd5e1;
+      border-bottom: 1px solid #cbd5e1;
+    }
+    .ind-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .ind-tag {
+      font-size: 7.5px;
+      font-weight: 800;
+      color: #334155;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 1px 2px;
+      border-radius: 2px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.1;
+      width: 100%;
+    }
+    .round-lamp {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #334155;
+      background: #475569;
+      transition: all 0.15s;
+    }
+    /* 램프 점등 색상 */
+    .lamp-white-on { background: #f8fafc; box-shadow: 0 0 10px #ffffff; }
+    .lamp-green-off { background: #14492d; opacity: 0.6; }
+    .lamp-green-on { background: #10b981; box-shadow: 0 0 12px #10b981; }
+    .lamp-yellow-off { background: #5c4d14; opacity: 0.6; }
+    .lamp-yellow-on { background: #eab308; box-shadow: 0 0 14px #facc15; }
+
+    /* 하단 조작부: 좌측 스위치류 + 우측 취급절차판 및 수화기 */
+    .control-sub-grid {
+      display: grid;
+      grid-template-columns: 90px 1fr 60px;
+      gap: 8px;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    /* 좌측 키 스위치 및 E-STOP 버튼 */
+    .sw-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .key-sw-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .key-rotary {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #0f172a;
+      border: 2px solid #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+      transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .key-rotary.on { transform: rotate(45deg); }
+    .key-stem {
+      width: 5px;
+      height: 24px;
+      background: #e2e8f0;
+      border-radius: 2px;
+    }
+
+    .estop-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .estop-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #dc2626;
+      border: 3px solid #7f1d1d;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.4), inset 0 2px 4px #fca5a5;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s;
+    }
+    .estop-btn.pressed {
+      transform: scale(0.9);
+      box-shadow: inset 0 4px 8px #450a0a;
+      background: #991b1b;
+    }
+    .estop-inner {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1.5px dashed rgba(255,255,255,0.6);
+    }
+
+    /* 취급 절차 판 */
+    .procedure-plate {
+      background: #ffffff;
+      border: 1.5px solid #64748b;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 8px;
+      color: #1e293b;
+      line-height: 1.35;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .proc-title {
+      text-align: center;
+      font-weight: 900;
+      font-size: 9.5px;
+      margin-bottom: 3px;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 2px;
+    }
+
+    /* 수화기 */
+    .handset-hook-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .bls-handset {
+      width: 42px;
+      height: 125px;
+      background: #1e293b;
+      border-radius: 12px;
+      border: 2px solid #475569;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .bls-handset.lifted {
+      transform: translateY(-16px) scale(1.05);
+      border-color: #38bdf8;
+      box-shadow: 0 10px 20px rgba(56, 189, 248, 0.4);
+    }
+    .h-ear { width: 28px; height: 16px; background: #334155; border-radius: 6px; }
+    .h-mouth { width: 28px; height: 18px; background: #334155; border-radius: 6px; }
+    .h-bar { width: 14px; height: 50px; background: #0f172a; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <!-- 1. 배경 캔버스 (선로, 열차, 비상핸들, 승강장 바닥, 안전요원 애니메이션) -->
+  <canvas id="metroCanvas"></canvas>
+
+  <!-- 좌측 상단 HUD -->
+  <div class="hud-badge">
+    <div class="badge-title">
+      <span class="pulse-dot-blue"></span>
+      인천2호선 BLS(Blue Light System) 현장 단전·비상정지 시뮬레이터
+    </div>
+  </div>
+
+  <!-- 좌측 하단 조작 가이드 & 상태 HUD -->
+  <div class="hud-guide-box">
+    <div class="guide-title">
+      <span>📋 BLS 현장 표준 취급 절차 (실습 가이드)</span>
+    </div>
+    <ul class="guide-steps" id="guideStepsList">
+      <li id="step1" class="active"><span class="step-num">1.</span> <strong>[외함 열기]</strong> BLS함 유리창을 클릭하여 외함 도어를 엽니다.</li>
+      <li id="step2"><span class="step-num">2.</span> <strong>[관제 협의]</strong> 우측 수화기를 들어 관제실과 통화합니다.</li>
+      <li id="step3"><span class="step-num">3.</span> <strong>[KEY ON]</strong> 관제 허가 후 키 스위치를 ON 위치로 돌립니다.</li>
+      <li id="step4"><span class="step-num">4.</span> <strong>[E-STOP 누름]</strong> 빨간색 비상정지 버튼을 누릅니다. (경광등 작동·단전)</li>
+      <li id="step5"><span class="step-num">5.</span> <strong>[완료 보고]</strong> 다시 수화기를 들어 관제에 취급 완료를 보고합니다.</li>
+      <li id="step6"><span class="step-num">6.</span> <strong>[복귀 & 도어 닫기]</strong> E-STOP 버튼 리셋(회전) ➔ KEY OFF ➔ 도어를 닫습니다.</li>
+      <li id="step7"><span class="step-num">7.</span> <strong>[안전요원 출동]</strong> 안전요원이 출동하여 열차 비상핸들을 열고 진입합니다!</li>
+    </ul>
+
+    <!-- 관제 무전 대화창 -->
+    <div class="radio-dialogue" id="radioDialogue">
+      <strong id="radioSpeaker">관제실</strong>: <span id="radioMessage">내용</span>
+    </div>
+  </div>
+
+  <!-- 2. 우측 하단 BLS 함체 인터페이스 -->
+  <div class="bls-station-container">
+    <!-- 지붕 위 파란색 회전 사이렌 경광등 -->
+    <div class="beacon-light-wrapper">
+      <div class="beacon-glass" id="beaconGlass"></div>
+    </div>
+    <div class="beacon-base"></div>
+
+    <!-- BLS 외함 바디 -->
+    <div class="bls-outer-box">
+      <!-- A. 닫혀있는 외함 도어 커버 (클릭 시 열림) -->
+      <div class="bls-door-cover" id="blsDoorCover" title="클릭하여 외함을 엽니다">
+        <div class="door-handle"></div>
+        <div class="cover-nameplate">BLS</div>
+        <div class="door-window"></div>
+      </div>
+
+      <!-- B. 내부 조작 패널 (사진 2 완벽 구현) -->
+      <div class="bls-inner-panel">
+        <button type="button" class="btn-close-cover" id="btnCloseCover" title="외함 도어를 닫습니다">외함 닫기</button>
+
+        <!-- 상단 BLS 명판 -->
+        <div class="bls-inner-title">BLS</div>
+
+        <!-- 급전상태 램프 -->
+        <div class="power-status-row">
+          <span class="tag-label">급전상태</span>
+          <div class="lamp-power-status" id="lampPowerStatus" title="현재 급전 상태 (단전 시 소등)"></div>
+        </div>
+
+        <!-- 5구 상태표시등/버튼 -->
+        <div class="indicator-row">
+          <div class="ind-item">
+            <span class="ind-tag">MAIN<br>POWER</span>
+            <div class="round-lamp lamp-white-on" title="상시 전원"></div>
+          </div>
+          <div class="ind-item">
+            <span class="ind-tag">PHONE<br>SIGNAL</span>
+            <div class="round-lamp lamp-green-off" id="lampPhoneSignal" title="수화기를 들면 점등"></div>
+          </div>
+          <div class="ind-item">
+            <span class="ind-tag">BLS SYSTEM<br>RUN</span>
+            <div class="round-lamp lamp-green-on" title="시스템 동작 중"></div>
+          </div>
+          <div class="ind-item">
+            <span class="ind-tag">EMERGENCY<br>STOP</span>
+            <div class="round-lamp lamp-yellow-off" id="lampEmergencyStop" title="비상정지 작동 시 점등"></div>
+          </div>
+          <div class="ind-item">
+            <span class="ind-tag">LAMP<br>TEST</span>
+            <button type="button" class="round-lamp lamp-green-off" id="btnLampTest" style="cursor:pointer;" title="누르고 있는 동안 모든 램프 점검"></button>
+          </div>
+        </div>
+
+        <!-- 하단: 스위치, E-STOP, 취급절차판, 수화기 -->
+        <div class="control-sub-grid">
+          <!-- 좌측: KEY S/W & E-STOP -->
+          <div class="sw-col">
+            <div class="key-sw-wrapper">
+              <span style="font-size:8px; font-weight:bold; color:#1e293b;">KEY S/W</span>
+              <div style="display:flex; justify-content:space-between; width:34px; font-size:7px; font-weight:bold; color:#475569;">
+                <span>OFF</span><span>ON</span>
+              </div>
+              <div class="key-rotary" id="keyRotary" title="키 스위치 (클릭하여 OFF / ON 전환)">
+                <div class="key-stem"></div>
+              </div>
+            </div>
+
+            <div class="estop-wrapper">
+              <span style="font-size:8px; font-weight:bold; color:#991b1b;">EMERGENCY STOP</span>
+              <div class="estop-btn" id="btnEstop" title="비상정지 버튼 (클릭하여 누름/복귀)">
+                <div class="estop-inner"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 중앙: 취급 절차 아크릴판 -->
+          <div class="procedure-plate">
+            <div class="proc-title">- 취 급 절 차 -</div>
+            1. 비상상황 발생 시 수화기를 듭니다.<br>
+            2. 관제실 통화 후 KEY S/W를 ON으로 하고 비상정지 버튼을 누르면 단전 차단됩니다.<br>
+            3. BLS 전면 급전표시 램프가 꺼진 후 안전조치합니다.<br>
+            4. 상황 종료 후 비상정지버튼을 돌려 복귀합니다.
+          </div>
+
+          <!-- 우측: 수화기 -->
+          <div class="handset-hook-wrapper">
+            <div class="bls-handset" id="blsHandset" title="수화기 (클릭하여 들기/내려놓기)">
+              <div class="h-ear"></div>
+              <div class="h-bar"></div>
+              <div class="h-mouth"></div>
+            </div>
+            <span style="font-size:7.5px; font-weight:bold; color:#475569; margin-top:2px;">수화기</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+  /* =========================================================================
+     1. 시뮬레이터 상태 및 데이터 구조
+     ========================================================================= */
+  let currentStep = 1; // 1 ~ 7 단계
+  let isCoverOpen = false;
+  let isHandsetLifted = false;
+  let isKeyOn = false;
+  let isEstopPressed = false;
+  let isPowerFed = true; // 급전상태 (true: 급전, false: 단전)
+  let isLampTestPressed = false;
+
+  // 비상핸들 상태 (1-2 위치: 0도 수평 -> 90도 수직)
+  const emergencyHandle = { x: 0, y: 0, radius: 8.5, currentAngle: 0, targetAngle: 0, isPulled: false };
+
+  // 열차 출입문 개폐 (0: 닫힘 ~ 1: 열림)
+  let trainDoorProgress = 0;
+  let trainDoorTarget = 0;
+
+  // ★ 하얀 안전모 + 형광조끼 + 출동가방 안전요원 캐릭터 상태
+  const officer = {
+    active: false,
+    x: -40,
+    y: 0,
+    targetX: 0,
+    state: 'hidden', // 'hidden' | 'running' | 'pulling' | 'entering' | 'inside'
+    animFrame: 0,
+    facing: 1,
+    scale: 1.0,
+  };
+
+  /* =========================================================================
+     2. Web Audio API 사운드 생성기
+     ========================================================================= */
+  let audioCtx = null;
+  function playTone(freq, type = 'sine', duration = 0.1, vol = 0.08) {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+  }
+
+  function playClick() { playTone(420, 'square', 0.05, 0.06); }
+  function playThud() { playTone(120, 'sawtooth', 0.2, 0.15); }
+  function playPhone() { playTone(480, 'sine', 0.15, 0.08); }
+
+  /* =========================================================================
+     3. 인터랙션 및 조작 로직 (단계별 시나리오 제어)
+     ========================================================================= */
+  const blsDoorCover = document.getElementById('blsDoorCover');
+  const btnCloseCover = document.getElementById('btnCloseCover');
+  const blsHandset = document.getElementById('blsHandset');
+  const keyRotary = document.getElementById('keyRotary');
+  const btnEstop = document.getElementById('btnEstop');
+  const beaconGlass = document.getElementById('beaconGlass');
+  const lampPowerStatus = document.getElementById('lampPowerStatus');
+  const lampPhoneSignal = document.getElementById('lampPhoneSignal');
+  const lampEmergencyStop = document.getElementById('lampEmergencyStop');
+  const btnLampTest = document.getElementById('btnLampTest');
+
+  const radioDialogue = document.getElementById('radioDialogue');
+  const radioSpeaker = document.getElementById('radioSpeaker');
+  const radioMessage = document.getElementById('radioMessage');
+
+  function showRadio(speaker, msg, dur = 3500) {
+    radioDialogue.style.display = 'block';
+    radioSpeaker.textContent = speaker;
+    radioMessage.textContent = msg;
+    playTone(700, 'sine', 0.08, 0.05);
+    setTimeout(() => { radioDialogue.style.display = 'none'; }, dur);
+  }
+
+  function updateStepsUI() {
+    for (let s = 1; s <= 7; s++) {
+      const el = document.getElementById(`step${s}`);
+      if (!el) continue;
+      if (s < currentStep) {
+        el.className = 'done';
+      } else if (s === currentStep) {
+        el.className = 'active';
+      } else {
+        el.className = '';
+      }
+    }
+  }
+
+  // 1) 외함 열기
+  blsDoorCover.addEventListener('click', () => {
+    if (isCoverOpen) return;
+    playClick();
+    isCoverOpen = true;
+    blsDoorCover.classList.add('open');
+    if (currentStep === 1) {
+      currentStep = 2;
+      updateStepsUI();
+    }
+  });
+
+  // 외함 닫기 버튼
+  btnCloseCover.addEventListener('click', (e) => {
+    e.stopPropagation();
+    playClick();
+    isCoverOpen = false;
+    blsDoorCover.classList.remove('open');
+
+    // 6단계 완료 후 도어 닫기 시 -> 안전요원 출동 개시!
+    if (currentStep === 6 && !isEstopPressed && !isKeyOn) {
+      currentStep = 7;
+      updateStepsUI();
+      triggerOfficerDispatch();
+    }
+  });
+
+  // 2) 수화기 들기/내려놓기
+  blsHandset.addEventListener('click', () => {
+    playPhone();
+    isHandsetLifted = !isHandsetLifted;
+    blsHandset.classList.toggle('lifted', isHandsetLifted);
+    lampPhoneSignal.className = isHandsetLifted ? 'round-lamp lamp-green-on' : 'round-lamp lamp-green-off';
+
+    if (isHandsetLifted) {
+      if (currentStep === 2) {
+        showRadio('관제실', '통화 연결되었습니다. "관제실, 현장 안전요원입니다. 단전 조치 후 BLS 취급하겠습니다."');
+        setTimeout(() => {
+          showRadio('관제실', '관제 확인. 선로 진입을 위해 BLS 취급을 승인합니다. 취급하십시오.');
+          currentStep = 3;
+          updateStepsUI();
+        }, 1800);
+      } else if (currentStep === 5) {
+        showRadio('관제실', '통화 연결되었습니다. "관제실, BLS 취급(비상정지 및 단전) 완료 확인했습니다."');
+        setTimeout(() => {
+          showRadio('관제실', '확인 완료. 안전조치 후 BLS 복귀 및 도어를 닫고 열차로 진입하십시오.');
+          currentStep = 6;
+          updateStepsUI();
+        }, 1800);
+      }
+    }
+  });
+
+  // 3) KEY S/W 조작 (OFF <-> ON)
+  keyRotary.addEventListener('click', () => {
+    playClick();
+    isKeyOn = !isKeyOn;
+    keyRotary.classList.toggle('on', isKeyOn);
+
+    if (isKeyOn && currentStep === 3) {
+      currentStep = 4;
+      updateStepsUI();
+    }
+  });
+
+  // 4) E-STOP 누름 / 복귀 조작
+  btnEstop.addEventListener('click', () => {
+    if (!isEstopPressed) {
+      // 누름 (체결)
+      if (!isKeyOn) {
+        alert('먼저 KEY S/W를 ON 위치로 돌려야 비상정지가 작동합니다!');
+        return;
+      }
+      playThud();
+      isEstopPressed = true;
+      btnEstop.classList.add('pressed');
+
+      // 파란 사이렌 경광등 회전 시작
+      beaconGlass.classList.add('rotating');
+      // EMERGENCY STOP 노란등 점등
+      lampEmergencyStop.className = 'round-lamp lamp-yellow-on';
+      // 급전상태 등 꺼짐 (단전 완료)
+      isPowerFed = false;
+      lampPowerStatus.classList.add('off');
+
+      if (currentStep === 4) {
+        currentStep = 5;
+        updateStepsUI();
+      }
+    } else {
+      // 회전 복귀 (Reset)
+      playClick();
+      isEstopPressed = false;
+      btnEstop.classList.remove('pressed');
+
+      // 사이렌 정지
+      beaconGlass.classList.remove('rotating');
+      lampEmergencyStop.className = 'round-lamp lamp-yellow-off';
+      // 급전 복구
+      isPowerFed = true;
+      lampPowerStatus.classList.remove('off');
+    }
+  });
+
+  // 램프 시험 버튼
+  btnLampTest.addEventListener('mousedown', () => {
+    playClick();
+    isLampTestPressed = true;
+    updateLampTestUI();
+  });
+  window.addEventListener('mouseup', () => {
+    if (isLampTestPressed) {
+      isLampTestPressed = false;
+      updateLampTestUI();
+    }
+  });
+
+  function updateLampTestUI() {
+    if (isLampTestPressed) {
+      lampPowerStatus.classList.remove('off');
+      lampPhoneSignal.className = 'round-lamp lamp-green-on';
+      lampEmergencyStop.className = 'round-lamp lamp-yellow-on';
+    } else {
+      lampPowerStatus.classList.toggle('off', !isPowerFed);
+      lampPhoneSignal.className = isHandsetLifted ? 'round-lamp lamp-green-on' : 'round-lamp lamp-green-off';
+      lampEmergencyStop.className = isEstopPressed ? 'round-lamp lamp-yellow-on' : 'round-lamp lamp-yellow-off';
+    }
+  }
+
+  /* =========================================================================
+     4. ★ 안전요원 출동 & 비상핸들 조작 & 열차 진입 시퀀스
+     ========================================================================= */
+  function triggerOfficerDispatch() {
+    officer.active = true;
+    officer.x = 20;
+    officer.y = window.innerHeight * 0.44;
+    officer.state = 'running';
+    officer.targetX = emergencyHandle.x - 12; // 비상핸들 앞 위치
+    showRadio('안전요원', '안전요원 출동! 열차 측면 비상핸들을 개방하고 진입합니다.', 3000);
+  }
+
+  /* =========================================================================
+     5. 캔버스 그래픽 렌더링 (PSD 제거 / 순수 선로·열차·안전요원)
+     ========================================================================= */
+  const canvas = document.getElementById('metroCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let width = window.innerWidth;
+  let height = window.innerHeight;
+  let dpr = 1;
+
+  function resizeCanvas() {
+    dpr = window.devicePixelRatio || 1;
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  // 열차 출입문 및 핸들 좌표 설정
+  const doorCenters = [];
+  function calcDoorPositions() {
+    doorCenters.length = 0;
+    const sideMargin = width * 0.04;
+    const usableWidth = width - sideMargin * 2;
+    const doorSpacing = usableWidth / 12;
+    for (let i = 0; i < 12; i++) {
+      doorCenters.push(sideMargin + doorSpacing * (i + 0.5));
+    }
+  }
+
+  // 비상핸들 그리기 (축소형 8.5px 정밀 렌더러)
+  function drawEmergencyHandle(c, hx, hy, r, angle) {
+    const rad = (angle * Math.PI) / 180;
+    c.save();
+    c.translate(hx, hy);
+
+    // 흰색 림
+    c.fillStyle = '#ffffff';
+    c.beginPath();
+    c.arc(0, 0, r + 1.6, 0, Math.PI * 2);
+    c.fill();
+    c.strokeStyle = '#94a3b8';
+    c.lineWidth = 0.8;
+    c.stroke();
+
+    // 빨간 원판
+    c.fillStyle = '#be123c';
+    c.beginPath();
+    c.arc(0, 0, r, 0, Math.PI * 2);
+    c.fill();
+
+    // 텍스트
+    c.fillStyle = '#1e293b';
+    c.font = 'bold 3.2px sans-serif';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText('잠금', -0.5, -r * 0.58);
+    c.fillText('비상', -0.5, r * 0.58);
+
+    // 회전 레버
+    c.rotate(rad);
+    c.fillStyle = '#dc2626';
+    c.strokeStyle = '#881337';
+    c.lineWidth = 0.8;
+    c.beginPath();
+    c.roundRect(-r * 0.85, -1.5, (r * 0.85) * 2, 3, 1.5);
+    c.fill();
+    c.stroke();
+
+    c.fillStyle = '#cbd5e1';
+    c.beginPath();
+    c.roundRect(-1.5, -1.5, 3, 3, 0.6);
+    c.fill();
+
+    c.restore();
+  }
+
+  // ★ 하얀 안전모 + 형광조끼 + 크로스백 안전요원 캐릭터 렌더러
+  function drawOfficer(c, ox, oy, frame, state) {
+    c.save();
+    c.translate(ox, oy);
+
+    const isRun = state === 'running';
+    const legSwing = isRun ? Math.sin(frame * 0.35) * 7 : 0;
+    const bodyBob = isRun ? Math.abs(Math.sin(frame * 0.35)) * 2 : 0;
+
+    // 1. 다리 및 안전화 (감청색 바지 + 검은 안전화)
+    c.fillStyle = '#1e293b';
+    // 왼다리
+    c.fillRect(-4 + legSwing, -14 - bodyBob, 3.5, 12);
+    c.fillStyle = '#0f172a';
+    c.fillRect(-5 + legSwing, -3 - bodyBob, 5, 4);
+
+    // 오른다리
+    c.fillStyle = '#1e293b';
+    c.fillRect(1 - legSwing, -14 - bodyBob, 3.5, 12);
+    c.fillStyle = '#0f172a';
+    c.fillRect(0 - legSwing, -3 - bodyBob, 5, 4);
+
+    // 2. 몸통 & 형광 조끼 (Fluorescent Yellow-Green Vest)
+    // 이너 네이비 셔츠
+    c.fillStyle = '#0f172a';
+    c.fillRect(-5, -28 - bodyBob, 11, 15);
+
+    // 형광 연두 조끼
+    c.fillStyle = '#84cc16';
+    c.fillRect(-5, -27 - bodyBob, 11, 13);
+    // 은색 반사띠
+    c.fillStyle = '#e2e8f0';
+    c.fillRect(-5, -22 - bodyBob, 11, 2);
+    c.fillRect(-2, -27 - bodyBob, 2, 13);
+
+    // 3. 옆으로 메는 출동가방 (크로스 스트랩 & 블랙/카키 공구가방)
+    c.strokeStyle = '#18181b';
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.moveTo(-4, -27 - bodyBob);
+    c.lineTo(4, -17 - bodyBob);
+    c.stroke();
+
+    // 옆구리 출동가방 본체
+    c.fillStyle = '#3f3f46';
+    c.fillRect(2, -19 - bodyBob, 6, 6);
+    c.fillStyle = '#f59e0b';
+    c.fillRect(4, -18 - bodyBob, 2, 2); // 반사 패치
+
+    // 4. 팔 (달리기 스윙 or 비상핸들 조작 손 뻗기)
+    c.fillStyle = '#84cc16';
+    if (state === 'pulling') {
+      // 비상핸들을 향해 오른손을 위로 뻗음
+      c.fillRect(-4, -26 - bodyBob, 3, 9);
+      c.fillStyle = '#fed7aa';
+      c.fillRect(3, -33 - bodyBob, 4, 4); // 장갑/손
+      c.strokeStyle = '#84cc16';
+      c.lineWidth = 3;
+      c.beginPath();
+      c.moveTo(2, -25 - bodyBob);
+      c.lineTo(5, -31 - bodyBob);
+      c.stroke();
+    } else {
+      // 달리기 팔 스윙
+      c.fillRect(-6 - legSwing * 0.4, -26 - bodyBob, 3, 9);
+      c.fillRect(4 + legSwing * 0.4, -26 - bodyBob, 3, 9);
+    }
+
+    // 5. 얼굴 & 하얀 안전모 (White Helmet with Visor)
+    c.fillStyle = '#fed7aa'; // 피부톤
+    c.fillRect(-3, -34 - bodyBob, 7, 7);
+
+    // 하얀 안전모 본체
+    c.fillStyle = '#ffffff';
+    c.shadowColor = 'rgba(0,0,0,0.2)';
+    c.shadowBlur = 4;
+    c.beginPath();
+    c.roundRect(-5, -40 - bodyBob, 11, 7, [5, 5, 2, 2]);
+    c.fill();
+    c.shadowBlur = 0;
+
+    // 안전모 앞챙 (Visor)
+    c.fillStyle = '#e2e8f0';
+    c.fillRect(-5.5, -34 - bodyBob, 12, 2);
+    // 녹색 안전 십자 마크 (Green Cross)
+    c.fillStyle = '#16a34a';
+    c.fillRect(-1, -38 - bodyBob, 3, 1);
+    c.fillRect(0, -39 - bodyBob, 1, 3);
+
+    c.restore();
+  }
+
+  /* =========================================================================
+     6. 애니메이션 렌더 루프
+     ========================================================================= */
+  let frameCount = 0;
+
+  function renderLoop() {
+    frameCount++;
+    calcDoorPositions();
+
+    // 1. 도어 및 핸들 애니메이션
+    const rotSpeed = 8;
+    if (emergencyHandle.currentAngle < emergencyHandle.targetAngle) {
+      emergencyHandle.currentAngle = Math.min(emergencyHandle.targetAngle, emergencyHandle.currentAngle + rotSpeed);
+    } else if (emergencyHandle.currentAngle > emergencyHandle.targetAngle) {
+      emergencyHandle.currentAngle = Math.max(emergencyHandle.targetAngle, emergencyHandle.currentAngle - rotSpeed);
+    }
+
+    const doorSpeed = 0.04;
+    if (trainDoorProgress < trainDoorTarget) {
+      trainDoorProgress = Math.min(trainDoorTarget, trainDoorProgress + doorSpeed);
+    } else if (trainDoorProgress > trainDoorTarget) {
+      trainDoorProgress = Math.max(trainDoorTarget, trainDoorProgress - doorSpeed);
+    }
+
+    // 2. 안전요원 이동 및 행동 시퀀스
+    if (officer.active) {
+      if (officer.state === 'running') {
+        const dx = officer.targetX - officer.x;
+        if (dx > 2) {
+          officer.x += 2.6;
+        } else {
+          // 비상핸들 앞 도착 ➔ 비상핸들 돌리기
+          officer.state = 'pulling';
+          setTimeout(() => {
+            playTone(180, 'sawtooth', 0.15, 0.12);
+            emergencyHandle.targetAngle = 90;
+            emergencyHandle.isPulled = true;
+            trainDoorTarget = 1; // 열차 출입문 개방
+
+            setTimeout(() => {
+              // 열린 문 안으로 진입
+              officer.state = 'entering';
+            }, 800);
+          }, 600);
+        }
+      } else if (officer.state === 'entering') {
+        // 열차 문 안쪽으로 이동 후 소멸(탑승 완료)
+        officer.y -= 1.4;
+        officer.scale -= 0.02;
+        if (officer.y < height * 0.38 - 10 || officer.scale <= 0.4) {
+          officer.state = 'inside';
+          officer.active = false;
+          showRadio('안전요원', '열차 내부 진입 완료! 차량 안전조치 및 승객 안내를 개시합니다.', 4000);
+        }
+      }
+    }
+
+    // 3. 캔버스 렌더링
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, width, height);
+
+    const TRACK_TOP_Y = height * 0.16;
+    const PLATFORM_Y = height * 0.38;
+
+    // A. 역사 상단 벽면 (선명한 타일 격자)
+    const wallGrad = ctx.createLinearGradient(0, 0, 0, TRACK_TOP_Y);
+    wallGrad.addColorStop(0, '#0f172a');
+    wallGrad.addColorStop(0.5, '#1e293b');
+    wallGrad.addColorStop(1, '#0f172a');
+    ctx.fillStyle = wallGrad;
+    ctx.fillRect(0, 0, width, TRACK_TOP_Y);
+
+    const wallTileSize = 28;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < width; x += wallTileSize) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, TRACK_TOP_Y); ctx.stroke();
+    }
+    for (let y = 0; y < TRACK_TOP_Y; y += wallTileSize) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+    }
+
+    // 벽면 조명 4기
+    const lampPositions = [0.16, 0.38, 0.62, 0.85];
+    lampPositions.forEach(ratio => {
+      const lx = width * ratio;
+      const ly = TRACK_TOP_Y * 0.32;
+      const glow = ctx.createRadialGradient(lx, ly, 4, lx, ly, 110);
+      glow.addColorStop(0, 'rgba(255, 180, 60, 0.35)');
+      glow.addColorStop(0.5, 'rgba(255, 140, 30, 0.1)');
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(lx, ly, 110, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = '#22232a';
+      ctx.fillRect(lx - 34, ly - 6, 68, 12);
+      ctx.fillStyle = '#fffdf0';
+      ctx.fillRect(lx - 30, ly - 3, 60, 6);
+    });
+
+    // B. 선로 & 침목
+    ctx.fillStyle = '#1c1917';
+    ctx.fillRect(0, TRACK_TOP_Y, width, PLATFORM_Y - TRACK_TOP_Y);
+    ctx.fillStyle = '#3e3a38';
+    for (let rx = 0; rx < width; rx += 22) {
+      ctx.fillRect(rx, PLATFORM_Y - 26, 10, 22);
+    }
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(0, PLATFORM_Y - 20, width, 4);
+    ctx.fillRect(0, PLATFORM_Y - 12, width, 4);
+
+    // C. 인천 2호선 전동차 렌더링 (PSD 없이 선로 위에 온전히 노출)
+    const trainTopY = TRACK_TOP_Y - 8;
+    const trainH = PLATFORM_Y - trainTopY;
+    const windowBandY = trainTopY + trainH * 0.22;
+    const windowBandH = trainH * 0.32;
+    const orangeStripeY = trainTopY + trainH * 0.58;
+    const orangeStripeH = 10;
+    const doorW = 54;
+
+    const car2Left = doorCenters[3] - doorW * 1.5;
+    const car2Right = (doorCenters[5] + doorCenters[6]) / 2 - 8;
+    const car1Left = (doorCenters[5] + doorCenters[6]) / 2 + 8;
+    const car1Right = doorCenters[8] + doorW * 1.5;
+
+    const renderCar = (left, right, isLead, isTail, carDoorIndices) => {
+      const cw = right - left;
+
+      // 대차
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(left + 24, PLATFORM_Y - 3, 36, 6);
+      ctx.fillRect(right - 60, PLATFORM_Y - 3, 36, 6);
+
+      // 바디
+      const bodyGrad = ctx.createLinearGradient(0, trainTopY, 0, PLATFORM_Y);
+      bodyGrad.addColorStop(0, '#e2e8f0');
+      bodyGrad.addColorStop(0.5, '#cbd5e1');
+      bodyGrad.addColorStop(1, '#94a3b8');
+      ctx.fillStyle = bodyGrad;
+      ctx.fillRect(left, trainTopY + 12, cw, trainH - 12);
+
+      // 루프 공조기
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(left + 10, trainTopY + 4, cw - 20, 8);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(left + 30, trainTopY, cw - 60, 5);
+
+      // 블랙 윈도우 밴드
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(left, windowBandY, cw, windowBandH);
+
+      // 통유리창
+      for (let i = 0; i < carDoorIndices.length - 1; i++) {
+        const d1 = doorCenters[carDoorIndices[i]];
+        const d2 = doorCenters[carDoorIndices[i + 1]];
+        const wx = d1 + doorW / 2 + 5;
+        const ww = (d2 - doorW / 2 - 5) - wx;
+        if (ww > 10) {
+          ctx.fillStyle = '#38bdf8';
+          ctx.fillRect(wx, windowBandY + 3, ww, windowBandH - 6);
+          ctx.strokeStyle = '#475569';
+          ctx.strokeRect(wx, windowBandY + 3, ww, windowBandH - 6);
+        }
+      }
+
+      // 오렌지 스트라이프
+      ctx.fillStyle = '#F37321';
+      ctx.fillRect(left, orangeStripeY, cw, orangeStripeH);
+      ctx.fillStyle = '#c2410c';
+      ctx.fillRect(left, orangeStripeY + orangeStripeH - 2, cw, 2);
+
+      // 출입문들
+      carDoorIndices.forEach(dIdx => {
+        const dcX = doorCenters[dIdx];
+        const tDoorW = doorW * 0.76;
+        const tdx = dcX - tDoorW / 2;
+
+        // 1-2(index 7) 도어만 안전요원 비상개방 연동
+        const slide = (dIdx === 7) ? trainDoorProgress * (tDoorW * 0.44) : 0;
+
+        // 실내 공간 (열렸을 때)
+        ctx.fillStyle = '#FEF9C3';
+        ctx.fillRect(tdx, windowBandY, tDoorW, trainH - (windowBandY - trainTopY) - 2);
+
+        // 도어 리프
+        const halfTDW = tDoorW / 2;
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(tdx - slide, windowBandY, halfTDW - 0.5, trainH - (windowBandY - trainTopY) - 2);
+        ctx.fillRect(tdx + halfTDW + slide, windowBandY, halfTDW - 0.5, trainH - (windowBandY - trainTopY) - 2);
+
+        // 도어 창문
+        ctx.fillStyle = '#FCED5E';
+        ctx.fillRect(tdx + 3 - slide, windowBandY + 4, halfTDW - 6, windowBandH - 8);
+        ctx.fillRect(tdx + halfTDW + 3 + slide, windowBandY + 4, halfTDW - 6, windowBandH - 8);
+
+        // 도어 오렌지 띠
+        ctx.fillStyle = '#F37321';
+        ctx.fillRect(tdx - slide, orangeStripeY, halfTDW, orangeStripeH);
+        ctx.fillRect(tdx + halfTDW + slide, orangeStripeY, halfTDW, orangeStripeH);
+      });
+
+      // 전두부/후미부 캡
+      if (isLead) {
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.moveTo(right, trainTopY + 12);
+        ctx.lineTo(right + 16, trainTopY + 28);
+        ctx.lineTo(right + 16, PLATFORM_Y);
+        ctx.lineTo(right, PLATFORM_Y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(right, windowBandY + 2, 12, windowBandH);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(right + 8, orangeStripeY + 2, 6, 6); // 라이트
+      }
+      if (isTail) {
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.moveTo(left, trainTopY + 12);
+        ctx.lineTo(left - 16, trainTopY + 28);
+        ctx.lineTo(left - 16, PLATFORM_Y);
+        ctx.lineTo(left, PLATFORM_Y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(left - 12, windowBandY + 2, 12, windowBandH);
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(left - 14, orangeStripeY + 2, 6, 6);
+      }
+    };
+
+    // 2호차(좌) + 1호차(우) + 연결통로
+    renderCar(car2Left, car2Right, false, true, [3, 4, 5]);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(car2Right, trainTopY + 14, car1Left - car2Right, trainH - 16);
+    renderCar(car1Left, car1Right, true, false, [6, 7, 8]);
+
+    // D. 1-2 전동차 측면 비상핸들
+    emergencyHandle.x = (doorCenters[7] + doorCenters[8]) / 2;
+    emergencyHandle.y = PLATFORM_Y - 26;
+    drawEmergencyHandle(ctx, emergencyHandle.x, emergencyHandle.y, emergencyHandle.radius, emergencyHandle.currentAngle);
+
+    // E. 승강장 플랫폼 사각 타일 바닥
+    const flrGrad = ctx.createLinearGradient(0, PLATFORM_Y, 0, height);
+    flrGrad.addColorStop(0, '#e2ebf3');
+    flrGrad.addColorStop(0.35, '#d6e4ee');
+    flrGrad.addColorStop(1, '#c5d5e2');
+    ctx.fillStyle = flrGrad;
+    ctx.fillRect(0, PLATFORM_Y, width, height - PLATFORM_Y);
+
+    const floorTileSize = 36;
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+    ctx.lineWidth = 1;
+    for (let tx = 0; tx < width; tx += floorTileSize) {
+      ctx.beginPath(); ctx.moveTo(tx, PLATFORM_Y); ctx.lineTo(tx, height); ctx.stroke();
+    }
+    for (let ty = PLATFORM_Y; ty < height; ty += floorTileSize) {
+      ctx.beginPath(); ctx.moveTo(0, ty); ctx.lineTo(width, ty); ctx.stroke();
+    }
+
+    // F. 3D 입체 노란 점자 안전선 (2단 돌기)
+    const tactileY = PLATFORM_Y + 2;
+    const tactileH = 16;
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(0, tactileY, width, tactileH);
+    ctx.fillStyle = '#fef08a';
+    ctx.fillRect(0, tactileY, width, 1.5);
+    ctx.fillStyle = '#b45309';
+    ctx.fillRect(0, tactileY + tactileH - 1.5, width, 1.5);
+
+    const studSpacing = 11;
+    for (let sx = 6; sx < width; sx += studSpacing) {
+      [tactileY + tactileH * 0.32, tactileY + tactileH * 0.68].forEach(sy => {
+        ctx.fillStyle = '#78350f';
+        ctx.beginPath(); ctx.arc(sx, sy + 0.8, 2.2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath(); ctx.arc(sx, sy, 2.2, 0, Math.PI * 2); ctx.fill();
+      });
+    }
+
+    // G. ★ 안전요원 캐릭터 렌더링 (하얀 안전모 + 형광조끼 + 출동가방)
+    if (officer.active) {
+      drawOfficer(ctx, officer.x, officer.y, frameCount, officer.state);
+    }
+
+    ctx.restore();
+    requestAnimationFrame(renderLoop);
+  }
+
+  requestAnimationFrame(renderLoop);
+</script>
+
+</body>
+</html>
