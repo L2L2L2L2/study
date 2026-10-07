@@ -813,7 +813,6 @@
   let trainDoorProgress = 0;
   let trainDoorTarget = 0;
 
-  // ★ [추가] 열차 우측 발차 애니메이션 변수
   let trainOffsetX = 0;
   let trainSpeed = 0;
   let isTrainDeparting = false;
@@ -829,7 +828,7 @@
   };
 
   /* =========================================================================
-     2. 사운드 생성기 & Web Speech TTS 엔진
+     2. 사운드 생성기 & Web Speech TTS 엔진 (완벽한 음성 종료 감지 onend 탑재)
      ========================================================================= */
   let audioCtx = null;
   function playTone(freq, type = 'sine', duration = 0.1, vol = 0.08) {
@@ -866,14 +865,30 @@
     setTimeout(() => playTone(587.33, 'triangle', 0.15, 0.1), 100);
   }
 
-  function speakTTS(text, role) {
-    if (!('speechSynthesis' in window)) return;
-    if (role === '시스템') return;
+  // ★ [수정] 음성이 완전히 끝난 후 다음 동작을 실행하는 onEnd 콜백 지원 TTS 함수
+  let currentUtterance = null;
+  function speakTTS(text, role, onEnd = null) {
+    let finished = false;
+    const finishOnce = () => {
+      if (!finished) {
+        finished = true;
+        if (onEnd) onEnd();
+      }
+    };
+
+    if (!('speechSynthesis' in window) || role === '시스템') {
+      finishOnce();
+      return;
+    }
 
     const cleanText = text.replace(/[\u{1F600}-\u{1F6FF}]/gu, '').replace(/[🎉🚨📋※•*~]/g, '').trim();
-    if (!cleanText) return;
+    if (!cleanText) {
+      finishOnce();
+      return;
+    }
 
     const utter = new SpeechSynthesisUtterance(cleanText);
+    currentUtterance = utter;
     utter.lang = 'ko-KR';
 
     const voices = window.speechSynthesis.getVoices().filter(v => v.lang.includes('ko') || v.lang.includes('KR'));
@@ -893,6 +908,14 @@
       }
       utter.rate = 0.95;
     }
+
+    // 말이 완전히 끝났을 때만 finishOnce 호출
+    utter.onend = finishOnce;
+    utter.onerror = finishOnce;
+
+    // 만약 브라우저 오류로 onend가 누락될 경우를 대비한 안전 타임아웃
+    const fallbackDuration = Math.max(2500, cleanText.length * 300);
+    setTimeout(finishOnce, fallbackDuration);
 
     window.speechSynthesis.speak(utter);
   }
@@ -937,7 +960,8 @@
     blsStationContainer.classList.add('mobile-hidden');
   });
 
-  function appendRadioLog(role, text, skipTTS = false) {
+  // ★ [수정] onEnd 콜백 지원
+  function appendRadioLog(role, text, skipTTS = false, onEnd = null) {
     if (logEmptyNotice) logEmptyNotice.style.display = 'none';
 
     const item = document.createElement('div');
@@ -952,7 +976,9 @@
     playTone(650, 'sine', 0.08, 0.05);
 
     if (!skipTTS) {
-      speakTTS(text, role);
+      speakTTS(text, role, onEnd);
+    } else {
+      if (onEnd) onEnd();
     }
   }
 
@@ -1009,7 +1035,6 @@
     trainDoorTarget = 0;
     trainDoorProgress = 0;
 
-    // ★ [리셋] 열차 발차 위치 초기화
     trainOffsetX = 0;
     trainSpeed = 0;
     isTrainDeparting = false;
@@ -1046,6 +1071,7 @@
     }
   });
 
+  // ★ [수정] 음성이 완전히 끝난 후 다음 대사가 나오도록 연동
   blsHandset.addEventListener('click', () => {
     playPhone();
     isHandsetLifted = !isHandsetLifted;
@@ -1054,32 +1080,38 @@
 
     if (isHandsetLifted) {
       if (currentStep === 2) {
-        appendRadioLog('안전요원', '관제, 안전요원입니다. 선로 진입을 위해 BLS 취급하겠습니다.');
-        setTimeout(() => {
-          appendRadioLog('관제실', '관제 확인. BLS 단전 취급을 승인합니다. 취급하십시오.');
-          currentStep = 3;
-          updateStepsUI();
-        }, 1200);
+        appendRadioLog('안전요원', '관제, 안전요원입니다. 선로 진입을 위해 BLS 취급하겠습니다.', false, () => {
+          setTimeout(() => {
+            appendRadioLog('관제실', '관제 확인. BLS 단전 취급을 승인합니다. 취급하십시오.', false, () => {
+              currentStep = 3;
+              updateStepsUI();
+            });
+          }, 350);
+        });
       } 
       else if (currentStep === 5) {
-        appendRadioLog('안전요원', '관제, BLS 취급(비상정지 및 단전) 완료 확인했습니다.');
-        setTimeout(() => {
-          appendRadioLog('관제실', 'BLS 취급 확인했습니다. BLS 복귀하십시오.');
-          currentStep = 6;
-          updateStepsUI();
-        }, 1200);
+        appendRadioLog('안전요원', '관제, BLS 취급(비상정지 및 단전) 완료 확인했습니다.', false, () => {
+          setTimeout(() => {
+            appendRadioLog('관제실', 'BLS 취급 확인했습니다. BLS 복귀하십시오.', false, () => {
+              currentStep = 6;
+              updateStepsUI();
+            });
+          }, 350);
+        });
       } 
       else if (currentStep === 6) {
         if (isEstopPressed || isKeyOn) {
           alert('먼저 E-STOP 버튼을 리셋(회전)하고 KEY S/W를 OFF로 돌린 후 복귀 보고를 하십시오!');
           return;
         }
-        appendRadioLog('안전요원', '관제, BLS 복귀했습니다.');
-        setTimeout(() => {
-          appendRadioLog('관제실', 'BLS 복귀 확인했습니다. BLS 도어 잘 닫아주시고 열차로 안전하게 진입하십시오.');
-          currentStep = 7;
-          updateStepsUI();
-        }, 1200);
+        appendRadioLog('안전요원', '관제, BLS 복귀했습니다.', false, () => {
+          setTimeout(() => {
+            appendRadioLog('관제실', 'BLS 복귀 확인했습니다. BLS 도어 잘 닫아주시고 열차로 안전하게 진입하십시오.', false, () => {
+              currentStep = 7;
+              updateStepsUI();
+            });
+          }, 350);
+        });
       }
     }
   });
@@ -1152,7 +1184,7 @@
   }
 
   /* =========================================================================
-     4. 안전요원 출동 & 차내 진입 후 문 닫기 & ★ 열차 우측 발차 시퀀스
+     4. 안전요원 출동 & 차내 진입 후 문 닫기 & 발차 시퀀스
      ========================================================================= */
   function triggerOfficerDispatch() {
     officer.active = true;
@@ -1374,13 +1406,13 @@
       trainDoorProgress = Math.max(trainDoorTarget, trainDoorProgress - doorSpeed);
     }
 
-    // ★ [발차 물리 가속] 열차 우측 이동 애니메이션
+    // 열차 발차 시 서서히 가속
     if (isTrainDeparting) {
-      trainSpeed += 0.055; // 서서히 부드럽게 가속
+      trainSpeed += 0.055;
       trainOffsetX += trainSpeed;
     }
 
-    // 안전요원 시퀀스 ➔ 차내 진입 ➔ 안에서 문 닫기 ➔ 관제 급전 요청 ➔ ★ 열차 우측 발차!
+    // ★ [핵심] 음성이 100% 끝난 후 순차적으로 실행되는 완벽한 시퀀스
     if (officer.active) {
       if (officer.state === 'running') {
         const dx = officer.targetX - officer.x;
@@ -1411,44 +1443,53 @@
 
           setTimeout(() => {
             playDoorChime();
-            trainDoorTarget = 0; // 안에서 출입문 닫기
-            emergencyHandleRight.targetAngle = 0; // 비상핸들 복귀
+            trainDoorTarget = 0; // 안에서 문 닫기
+            emergencyHandleRight.targetAngle = 0;
             emergencyHandleRight.isPulled = false;
 
             setTimeout(() => {
               appendRadioLog('안전요원', '출입문 닫힘 완료. 차내 승객 안전조치를 개시합니다.', true);
 
-              // 안전조치 완료 ➔ 관제 급전 요청
+              // 1) 안전조치 완료 ➔ 관제 급전 요청 (음성 송출)
               setTimeout(() => {
-                appendRadioLog('안전요원', '관제, 차내 안전조치 완료되었습니다. 해당 구간 급전 요청합니다.', false);
-
-                setTimeout(() => {
-                  appendRadioLog('관제실', '확인했습니다. 안전 확인 완료. 해당 구간 급전 투입합니다.', false);
-
-                  // 관제 급전 투입 ➔ 램프 점등
+                appendRadioLog('안전요원', '관제, 차내 안전조치 완료되었습니다. 해당 구간 급전 요청합니다.', false, () => {
+                  
+                  // 2) 안전요원 음성이 완전히 끝난 후 ➔ 관제실 답변 (음성 송출)
                   setTimeout(() => {
-                    playPowerOnSound();
-                    isPowerFed = true;
-                    lampPowerStatus.classList.remove('off');
-
-                    // ★ [열차 우측 발차 시퀀스 시작]
-                    setTimeout(() => {
-                      appendRadioLog('안전요원', '급전 투입 확인. 열차 서서히 발차합니다.', false);
-                      isTrainDeparting = true; // 가속 이동 시작!
-
-                      // 열차 출발 경적 사운드 (뿌우우~🎵)
-                      playTone(349.23, 'sawtooth', 0.4, 0.12);
-                      setTimeout(() => playTone(440.00, 'sawtooth', 0.4, 0.12), 60);
-
+                    appendRadioLog('관제실', '확인했습니다. 안전 확인 완료. 해당 구간 급전 투입합니다.', false, () => {
+                      
+                      // 3) ★ 관제실 음성이 완전히 끝난 후에야 비로소 급전 투입!
                       setTimeout(() => {
-                        appendRadioLog('시스템', '🎉 [실습 완료] 열차가 정상 발차하고 모든 비상조치가 완료되었습니다. 상단 \'실습 초기화\' 버튼을 눌러 다시 실습할 수 있습니다.', true);
-                      }, 4000);
-                    }, 1400);
+                        playPowerOnSound();
+                        isPowerFed = true;
+                        lampPowerStatus.classList.remove('off'); // 램프 점등
 
-                  }, 800);
+                        // 4) 안전요원 발차 보고 (음성 송출)
+                        setTimeout(() => {
+                          appendRadioLog('안전요원', '급전 투입 확인. 열차 서서히 발차합니다.', false, () => {
+                            
+                            // 5) ★ 안전요원 음성이 완전히 끝난 후 경적 울리며 열차 출발!
+                            setTimeout(() => {
+                              playTone(349.23, 'sawtooth', 0.45, 0.12);
+                              setTimeout(() => playTone(440.00, 'sawtooth', 0.45, 0.12), 70);
 
-                }, 1800);
-              }, 1400);
+                              isTrainDeparting = true; // 가속 이동 시작!
+
+                              setTimeout(() => {
+                                appendRadioLog('시스템', '🎉 [실습 완료] 열차가 정상 발차하고 모든 비상조치가 완료되었습니다. 상단 \'실습 초기화\' 버튼을 눌러 다시 실습할 수 있습니다.', true);
+                              }, 4000);
+                            }, 500);
+
+                          });
+                        }, 800);
+
+                      }, 600);
+
+                    });
+                  }, 400);
+
+                });
+              }, 1200);
 
             }, 1200);
           }, 1200);
@@ -1510,7 +1551,7 @@
     ctx.fillRect(0, PLATFORM_Y - 18, width, 4);
     ctx.fillRect(0, PLATFORM_Y - 10, width, 4);
 
-    // ★ C. [우측 발차 오프셋 trainOffsetX 적용] 인천 2호선 전동차 렌더링
+    // C. 인천 2호선 전동차
     const trainTopY = TRACK_TOP_Y - (isMobile ? 6 : 10);
     const trainH = PLATFORM_Y - trainTopY;
     const windowBandY = trainTopY + trainH * 0.22;
@@ -1527,12 +1568,10 @@
     const renderCar = (left, right, isLead, isTail, carDoorIndices) => {
       const cw = right - left;
 
-      // 대차
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(left + (isMobile ? 16 : 28), PLATFORM_Y - 4, (isMobile ? 26 : 44), 8);
       ctx.fillRect(right - (isMobile ? 42 : 72), PLATFORM_Y - 4, (isMobile ? 26 : 44), 8);
 
-      // 바디
       const bodyGrad = ctx.createLinearGradient(0, trainTopY, 0, PLATFORM_Y);
       bodyGrad.addColorStop(0, '#e2e8f0');
       bodyGrad.addColorStop(0.5, '#cbd5e1');
@@ -1546,7 +1585,6 @@
       ctx.fillStyle = '#090d16';
       ctx.fillRect(left, windowBandY, cw, windowBandH);
 
-      // 통유리창
       for (let i = 0; i < carDoorIndices.length - 1; i++) {
         const d1 = doorCenters[carDoorIndices[i]] + trainOffsetX;
         const d2 = doorCenters[carDoorIndices[i + 1]] + trainOffsetX;
@@ -1564,7 +1602,6 @@
       ctx.fillStyle = '#F37321';
       ctx.fillRect(left, orangeStripeY, cw, orangeStripeH);
 
-      // 출입문
       carDoorIndices.forEach(dIdx => {
         const dcX = doorCenters[dIdx] + trainOffsetX;
         const tDoorW = doorW * 0.78;
@@ -1624,7 +1661,7 @@
     ctx.fillRect(car2Right, trainTopY + 14, car1Left - car2Right, trainH - 16);
     renderCar(car1Left, car1Right, true, false, [6, 7, 8]);
 
-    // ★ D. 비상핸들 (열차와 함께 우측으로 이동)
+    // D. 비상핸들
     const handleRadius = isMobile ? 7 : 11;
     emergencyHandleLeft.x = (doorCenters[3] + doorCenters[4]) / 2 + trainOffsetX;
     emergencyHandleLeft.y = PLATFORM_Y - (isMobile ? 20 : 30);
