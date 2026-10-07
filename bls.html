@@ -68,7 +68,7 @@
       50% { transform: scale(1.4); opacity: 0.5; }
     }
 
-    /* 좌측 하단 교육 실습 가이드 & 통화 로그 (데스크톱 기준) */
+    /* 좌측 하단 교육 실습 가이드 & 통화 로그 */
     .hud-guide-box {
       position: absolute;
       left: 22px;
@@ -127,11 +127,11 @@
 
     .guide-steps {
       list-style: none;
-      font-size: 14px;
-      line-height: 1.7;
+      font-size: 13.5px;
+      line-height: 1.65;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
     .guide-steps li {
       display: flex;
@@ -152,6 +152,7 @@
       font-weight: bold;
     }
 
+    /* 관제 통화 기록 영구 보존 로그 */
     .radio-log-container {
       background: rgba(2, 6, 23, 0.75);
       border: 1.5px solid rgba(56, 189, 248, 0.35);
@@ -175,11 +176,11 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 130px;
+      max-height: 140px;
       overflow-y: auto;
     }
     .log-item {
-      font-size: 13px;
+      font-size: 12.5px;
       line-height: 1.5;
       padding: 5px 10px;
       border-radius: 6px;
@@ -206,7 +207,13 @@
       padding: 4px 0;
     }
 
-    /* 2. 우측 하단 BLS 함체 인터페이스 (데스크톱 기준) */
+    @media (min-width: 1500px) {
+      .hud-guide-box { width: 600px; padding: 22px 26px; }
+      .guide-title { font-size: 17.5px; }
+      .guide-steps { font-size: 14.5px; }
+    }
+
+    /* 2. 우측 하단 BLS 함체 인터페이스 */
     .bls-station-container {
       position: absolute;
       right: 25px;
@@ -474,6 +481,7 @@
       align-items: center;
     }
 
+    /* KEY S/W: 기본 OFF 10시 방향(-45deg) */
     .key-rotary {
       width: 44px;
       height: 44px;
@@ -580,25 +588,15 @@
     .h-mouth { width: 34px; height: 20px; background: #334155; border-radius: 7px; }
     .h-bar { width: 16px; height: 60px; background: #0f172a; border-radius: 4px; }
 
-    /* ★ [모바일 전용 하단 탭 바] 기본은 데스크톱에서 숨김 */
+    /* 모바일 전용 탭 바 */
     .mobile-tab-bar {
       display: none;
     }
 
-    /* =========================================================================
-       ★ [핵심 개선] 모바일 스마트폰 세로 화면 반응형 레이아웃 (@media)
-       ========================================================================= */
     @media (max-width: 960px) {
-      .hud-badge {
-        top: 10px;
-        left: 12px;
-      }
-      .badge-title {
-        font-size: 12px;
-        padding: 6px 12px;
-      }
+      .hud-badge { top: 10px; left: 12px; }
+      .badge-title { font-size: 12px; padding: 6px 12px; }
 
-      /* 모바일 전용 탭 바 노출 */
       .mobile-tab-bar {
         display: flex;
         position: absolute;
@@ -622,7 +620,6 @@
         align-items: center;
         justify-content: center;
         gap: 6px;
-        transition: all 0.2s;
       }
       .mobile-tab-btn.active {
         color: #38bdf8;
@@ -630,125 +627,32 @@
         border-top: 3px solid #38bdf8;
       }
 
-      /* 모바일에서 BLS 조작반: 하단에 꽉 차게 안착 */
       .bls-station-container {
-        right: 0;
-        left: 0;
-        bottom: 48px;
-        width: 100%;
-        max-width: 100vw;
-        height: calc(62vh - 48px);
-        max-height: calc(62vh - 48px);
+        right: 0; left: 0; bottom: 48px; width: 100%; max-width: 100vw;
+        height: calc(62vh - 48px); max-height: calc(62vh - 48px);
         padding: 0 10px;
         transition: transform 0.25s ease-in-out, opacity 0.2s;
       }
       .bls-station-container.mobile-hidden {
-        transform: translateY(120%);
-        pointer-events: none;
-        opacity: 0;
+        transform: translateY(120%); pointer-events: none; opacity: 0;
       }
 
-      .beacon-light-wrapper {
-        width: 68px;
-        height: 36px;
-      }
-      .beacon-glass {
-        width: 44px;
-        height: 32px;
-      }
-
-      .bls-outer-box {
-        padding: 8px;
-        border-radius: 10px;
-      }
-      .bls-inner-panel {
-        padding: 10px 12px;
-        gap: 6px;
-      }
-      .door-window {
-        min-height: 140px;
-      }
-      .door-handle {
-        height: 50px;
-      }
-      .cover-nameplate, .bls-inner-title {
-        font-size: 14px;
-        padding: 2px 18px;
-      }
-      .lamp-power-status {
-        width: 22px;
-        height: 22px;
-      }
-      .round-lamp {
-        width: 20px;
-        height: 20px;
-      }
-      .ind-tag {
-        font-size: 7.5px;
-        height: 22px;
-      }
-      .control-sub-grid {
-        grid-template-columns: 80px 1fr 50px;
-        gap: 6px;
-      }
-      .key-rotary {
-        width: 36px;
-        height: 36px;
-      }
-      .estop-btn {
-        width: 42px;
-        height: 42px;
-      }
-      .procedure-plate {
-        font-size: 8px;
-        line-height: 1.3;
-        padding: 6px;
-      }
-      .bls-handset {
-        width: 40px;
-        height: 110px;
-      }
-
-      /* 모바일에서 가이드 박스: 하단에 탭 형태로 전환 */
       .hud-guide-box {
-        left: 10px;
-        right: 10px;
-        bottom: 48px;
-        width: calc(100vw - 20px);
-        max-width: 100vw;
-        height: calc(62vh - 48px);
-        max-height: calc(62vh - 48px);
-        padding: 14px 16px;
-        border-radius: 12px;
+        left: 10px; right: 10px; bottom: 48px; width: calc(100vw - 20px); max-width: 100vw;
+        height: calc(62vh - 48px); max-height: calc(62vh - 48px);
+        padding: 14px 16px; border-radius: 12px;
         transition: transform 0.25s ease-in-out, opacity 0.2s;
       }
       .hud-guide-box.mobile-hidden {
-        transform: translateY(120%);
-        pointer-events: none;
-        opacity: 0;
+        transform: translateY(120%); pointer-events: none; opacity: 0;
       }
-      .guide-title {
-        font-size: 13.5px;
-      }
-      .guide-steps {
-        font-size: 12px;
-        line-height: 1.55;
-      }
-      .radio-log-container {
-        padding: 8px 10px;
-      }
-      .radio-log-header {
-        font-size: 11.5px;
-      }
-      .log-item {
-        font-size: 11.5px;
-      }
+      .guide-title { font-size: 13.5px; }
+      .guide-steps { font-size: 12px; line-height: 1.55; }
     }
   </style>
 </head>
 <body>
 
-  <!-- 1. 배경 캔버스 (상단 승강장 뷰) -->
   <canvas id="metroCanvas"></canvas>
 
   <div class="hud-badge">
@@ -758,7 +662,6 @@
     </div>
   </div>
 
-  <!-- 좌측 하단 교육 실습 가이드 & 통화 로그 -->
   <div class="hud-guide-box" id="hudGuideBox">
     <div class="guide-header-row">
       <div class="guide-title">
@@ -769,14 +672,15 @@
       </button>
     </div>
 
+    <!-- ★ [절차 세분화 반영] -->
     <ul class="guide-steps" id="guideStepsList">
       <li id="step1" class="active"><span class="step-num">1.</span> <strong>[외함 열기]</strong> BLS함 유리창을 클릭하여 외함 도어를 엽니다.</li>
-      <li id="step2"><span class="step-num">2.</span> <strong>[관제 협의]</strong> 우측 수화기를 들어 관제실과 통화합니다.</li>
+      <li id="step2"><span class="step-num">2.</span> <strong>[관제 협의]</strong> 우측 수화기를 들어 관제실과 통화(취급 승인)합니다.</li>
       <li id="step3"><span class="step-num">3.</span> <strong>[KEY ON]</strong> 관제 허가 후 키 스위치를 ON 위치로 돌립니다.</li>
       <li id="step4"><span class="step-num">4.</span> <strong>[E-STOP 누름]</strong> 빨간색 비상정지 버튼을 누릅니다. (경광등 작동·단전)</li>
-      <li id="step5"><span class="step-num">5.</span> <strong>[완료 보고]</strong> 다시 수화기를 들어 관제에 취급 완료를 보고합니다.</li>
-      <li id="step6"><span class="step-num">6.</span> <strong>[복귀 & 도어 닫기]</strong> E-STOP 버튼 리셋(회전) ➔ KEY OFF ➔ 도어를 닫습니다.</li>
-      <li id="step7"><span class="step-num">7.</span> <strong>[안전요원 출동]</strong> 안전요원이 출동하여 열차 비상핸들을 열고 진입합니다!</li>
+      <li id="step5"><span class="step-num">5.</span> <strong>[취급 보고]</strong> 수화기를 들어 관제에 취급 완료를 보고하고 복귀 지시를 받습니다.</li>
+      <li id="step6"><span class="step-num">6.</span> <strong>[복귀 & 복귀보고]</strong> E-STOP 리셋 ➔ KEY OFF ➔ 수화기로 복귀 완료를 보고합니다.</li>
+      <li id="step7"><span class="step-num">7.</span> <strong>[도어 닫기 & 출동]</strong> 외함 도어를 닫고 안전요원이 열차로 출동 진입합니다!</li>
     </ul>
 
     <div class="radio-log-container">
@@ -787,7 +691,6 @@
     </div>
   </div>
 
-  <!-- 2. BLS 함체 인터페이스 -->
   <div class="bls-station-container" id="blsStationContainer">
     <div class="beacon-light-wrapper">
       <div class="beacon-glass" id="beaconGlass"></div>
@@ -876,14 +779,9 @@
     </div>
   </div>
 
-  <!-- ★ [모바일 전용 하단 전환 탭 바] 스마트폰 화면일 때만 나타남 -->
   <div class="mobile-tab-bar">
-    <button type="button" class="mobile-tab-btn active" id="tabBtnBls">
-      <span>🎛️</span> BLS 조작반
-    </button>
-    <button type="button" class="mobile-tab-btn" id="tabBtnGuide">
-      <span>📋</span> 취급가이드 & 무전
-    </button>
+    <button type="button" class="mobile-tab-btn active" id="tabBtnBls"><span>🎛️</span> BLS 조작반</button>
+    <button type="button" class="mobile-tab-btn" id="tabBtnGuide"><span>📋</span> 취급가이드 & 무전</button>
   </div>
 
 <script>
@@ -984,7 +882,7 @@
   }
 
   /* =========================================================================
-     3. 인터랙션 및 모바일 탭 제어 로직
+     3. 인터랙션 및 통화 기록 로직
      ========================================================================= */
   const blsDoorCover = document.getElementById('blsDoorCover');
   const btnCloseCover = document.getElementById('btnCloseCover');
@@ -1000,13 +898,11 @@
   const logEmptyNotice = document.getElementById('logEmptyNotice');
   const btnResetSimulation = document.getElementById('btnResetSimulation');
 
-  // 모바일 탭 요소
   const tabBtnBls = document.getElementById('tabBtnBls');
   const tabBtnGuide = document.getElementById('tabBtnGuide');
   const blsStationContainer = document.getElementById('blsStationContainer');
   const hudGuideBox = document.getElementById('hudGuideBox');
 
-  // 모바일 탭 전환 이벤트
   tabBtnBls.addEventListener('click', () => {
     tabBtnBls.classList.add('active');
     tabBtnGuide.classList.remove('active');
@@ -1021,7 +917,8 @@
     blsStationContainer.classList.add('mobile-hidden');
   });
 
-  function appendRadioLog(role, text) {
+  // ★ [수정] skipTTS 파라미터 지원: true일 경우 텍스트 로그만 남기고 음성 출력 생략
+  function appendRadioLog(role, text, skipTTS = false) {
     if (logEmptyNotice) logEmptyNotice.style.display = 'none';
 
     const item = document.createElement('div');
@@ -1035,7 +932,9 @@
     radioLogList.scrollTop = radioLogList.scrollHeight;
     playTone(650, 'sine', 0.08, 0.05);
 
-    speakTTS(text, role);
+    if (!skipTTS) {
+      speakTTS(text, role);
+    }
   }
 
   function updateStepsUI() {
@@ -1112,19 +1011,19 @@
     }
   });
 
+  // 외함 닫기 버튼: 7단계(복귀보고까지 완료) 상태에서 닫으면 안전요원 출동!
   btnCloseCover.addEventListener('click', (e) => {
     e.stopPropagation();
     playClick();
     isCoverOpen = false;
     blsDoorCover.classList.remove('open');
 
-    if (currentStep === 6 && !isEstopPressed && !isKeyOn) {
-      currentStep = 7;
-      updateStepsUI();
+    if (currentStep === 7 && !isEstopPressed && !isKeyOn) {
       triggerOfficerDispatch();
     }
   });
 
+  // ★ [수정] 관제 ↔ 안전요원 3단계 표준 통화 절차 구현
   blsHandset.addEventListener('click', () => {
     playPhone();
     isHandsetLifted = !isHandsetLifted;
@@ -1132,6 +1031,7 @@
     lampPhoneSignal.className = isHandsetLifted ? 'round-lamp lamp-green-on' : 'round-lamp lamp-green-off';
 
     if (isHandsetLifted) {
+      // 2단계: 취급 협의 통화
       if (currentStep === 2) {
         appendRadioLog('안전요원', '관제, 안전요원입니다. 선로 진입을 위해 BLS 취급하겠습니다.');
         setTimeout(() => {
@@ -1139,11 +1039,26 @@
           currentStep = 3;
           updateStepsUI();
         }, 1200);
-      } else if (currentStep === 5) {
+      } 
+      // 5단계: 취급 완료 보고 ➔ 복귀 지시 수신
+      else if (currentStep === 5) {
         appendRadioLog('안전요원', '관제, BLS 취급(비상정지 및 단전) 완료 확인했습니다.');
         setTimeout(() => {
-          appendRadioLog('관제실', '확인했습니다. BLS 복귀하시고 도어를 닫고 열차로 안전하게 진입하십시오.');
+          appendRadioLog('관제실', 'BLS 취급 확인했습니다. BLS 복귀하십시오.');
           currentStep = 6;
+          updateStepsUI();
+        }, 1200);
+      } 
+      // 6단계: 복귀 조치(E-STOP 리셋 + KEY OFF) 후 ➔ 복귀 완료 보고
+      else if (currentStep === 6) {
+        if (isEstopPressed || isKeyOn) {
+          alert('먼저 E-STOP 버튼을 리셋(회전)하고 KEY S/W를 OFF로 돌린 후 복귀 보고를 하십시오!');
+          return;
+        }
+        appendRadioLog('안전요원', '관제, BLS 복귀했습니다.');
+        setTimeout(() => {
+          appendRadioLog('관제실', 'BLS 복귀 확인했습니다. BLS 도어 잘 닫아주시고 열차로 안전하게 진입하십시오.');
+          currentStep = 7;
           updateStepsUI();
         }, 1200);
       }
@@ -1181,6 +1096,7 @@
         updateStepsUI();
       }
     } else {
+      // 복귀 조치 (회전 복귀)
       playClick();
       isEstopPressed = false;
       btnEstop.classList.remove('pressed');
@@ -1230,7 +1146,7 @@
   }
 
   /* =========================================================================
-     5. 캔버스 그래픽 렌더링 (모바일 화면 비율 자동 대응)
+     5. 캔버스 그래픽 렌더링
      ========================================================================= */
   const canvas = document.getElementById('metroCanvas');
   const ctx = canvas.getContext('2d');
@@ -1253,7 +1169,6 @@
   function calcDoorPositions() {
     doorCenters.length = 0;
     const isMobile = width <= 960;
-    // 모바일에서는 열차가 덜 잘리도록 좌우 여백을 컴팩트하게 압축
     const sideMargin = isMobile ? width * 0.015 : width * 0.035;
     const usableWidth = width - sideMargin * 2;
     const doorSpacing = usableWidth / 12;
@@ -1304,6 +1219,7 @@
     c.restore();
   }
 
+  // 실제 관절 회전 기반의 자연스러운 달리기/보행 렌더러
   function drawOfficer(c, ox, oy, frame, state) {
     c.save();
     c.translate(ox, oy);
@@ -1317,7 +1233,7 @@
     const armAngle = -legAngle * 0.85;
     const bodyBounce = isRun ? Math.abs(Math.sin(frame * 0.24)) * 2.2 : 0;
 
-    // 왼다리
+    // 1. 왼다리
     c.save();
     c.translate(-1.5, -22 - bodyBounce);
     c.rotate(-legAngle);
@@ -1327,7 +1243,7 @@
     c.fillRect(-2, 17, 6.5, 4.5);
     c.restore();
 
-    // 왼팔
+    // 2. 왼팔
     c.save();
     c.translate(-1, -38 - bodyBounce);
     c.rotate(-armAngle);
@@ -1337,13 +1253,14 @@
     c.fillRect(-2, 13, 4, 4);
     c.restore();
 
-    // 몸통 & 형광 조끼
+    // 3. 몸통 & 조끼 & 가방
     c.save();
     c.translate(0, -22 - bodyBounce);
     if (isRun) c.rotate(0.1);
 
     c.fillStyle = '#0f172a';
     c.fillRect(-6, -18, 12, 18);
+
     c.fillStyle = '#84cc16';
     c.fillRect(-6, -17, 12, 16);
     c.fillStyle = '#f8fafc';
@@ -1363,7 +1280,7 @@
     c.fillRect(5, -7, 3, 3);
     c.restore();
 
-    // 오른다리
+    // 4. 오른다리
     c.save();
     c.translate(2.5, -22 - bodyBounce);
     c.rotate(legAngle);
@@ -1373,7 +1290,7 @@
     c.fillRect(-2, 17, 6.5, 4.5);
     c.restore();
 
-    // 오른팔
+    // 5. 오른팔
     c.save();
     c.translate(2, -38 - bodyBounce);
     if (state === 'pulling') {
@@ -1391,7 +1308,7 @@
     }
     c.restore();
 
-    // 얼굴 & 안전모
+    // 6. 얼굴 & 안전모
     c.save();
     c.translate(0, -bodyBounce);
     c.fillStyle = '#fed7aa';
@@ -1439,7 +1356,7 @@
       trainDoorProgress = Math.max(trainDoorTarget, trainDoorProgress - doorSpeed);
     }
 
-    // 안전요원 이동 및 동작
+    // ★ [핵심] 차내 진입 후 출입문 닫기 시퀀스 & TTS 선택적 제외 처리
     if (officer.active) {
       if (officer.state === 'running') {
         const dx = officer.targetX - officer.x;
@@ -1465,18 +1382,21 @@
         if (officer.y < limitY || officer.scale <= 0.6) {
           officer.state = 'inside';
           officer.active = false;
-          appendRadioLog('안전요원', '차내 진입 완료! 안전 확보를 위해 안에서 출입문을 닫습니다.');
+          
+          // ★ 요청사항: 로그창에는 남기되, TTS는 제외 (skipTTS = true)
+          appendRadioLog('안전요원', '차내 진입 완료! 안전 확보를 위해 안에서 출입문을 닫습니다.', true);
 
           setTimeout(() => {
             playDoorChime();
-            trainDoorTarget = 0;
-            emergencyHandleRight.targetAngle = 0;
+            trainDoorTarget = 0; // 안에서 출입문 닫기
+            emergencyHandleRight.targetAngle = 0; // 비상핸들 복귀
             emergencyHandleRight.isPulled = false;
 
             setTimeout(() => {
-              appendRadioLog('안전요원', '출입문 닫힘 완료. 차내 승객 안전조치를 개시합니다.');
+              // ★ 요청사항: 로그창에는 남기되, TTS는 제외 (skipTTS = true)
+              appendRadioLog('안전요원', '출입문 닫힘 완료. 차내 승객 안전조치를 개시합니다.', true);
               setTimeout(() => {
-                appendRadioLog('시스템', '🎉 [실습 완료] 모든 비상조치가 끝났습니다. \'실습 초기화\'를 눌러 다시 실습할 수 있습니다.');
+                appendRadioLog('시스템', '🎉 [실습 완료] 모든 비상조치가 끝났습니다. 상단 \'실습 초기화\' 버튼을 눌러 다시 실습할 수 있습니다.', true);
               }, 1000);
             }, 1200);
           }, 1200);
@@ -1488,7 +1408,6 @@
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    // 모바일/데스크톱 높이 비율 자동 전환
     const TRACK_TOP_Y = isMobile ? height * 0.11 : height * 0.14;
     const PLATFORM_Y = isMobile ? height * 0.36 : height * 0.40;
 
@@ -1696,7 +1615,7 @@
         ctx.fillStyle = '#78350f';
         ctx.beginPath(); ctx.arc(sx, sy + 0.8, studR, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#fef08a';
-        ctx.beginPath(); ctx.arc(sx, sy, studR, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(sx, sy, 2.6, 0, Math.PI * 2); ctx.fill();
       });
     }
 
