@@ -68,7 +68,7 @@
       50% { transform: scale(1.4); opacity: 0.5; }
     }
 
-    /* 좌측 하단 교육 실습 가이드 & 통화 로그 (1.5배 스케일업) */
+    /* 좌측 하단 교육 실습 가이드 & 통화 로그 */
     .hud-guide-box {
       position: absolute;
       left: 22px;
@@ -89,6 +89,13 @@
       max-height: 56vh;
       overflow-y: auto;
     }
+    .guide-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1.5px solid #334155;
+      padding-bottom: 8px;
+    }
     .guide-title {
       font-size: 16px;
       font-weight: 800;
@@ -96,10 +103,32 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      border-bottom: 1.5px solid #334155;
-      padding-bottom: 8px;
       margin: 0;
     }
+    /* 실습 초기화 버튼 */
+    .btn-reset {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(56, 189, 248, 0.18);
+      color: #38bdf8;
+      border: 1.5px solid rgba(56, 189, 248, 0.55);
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-reset:hover {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+    }
+    .btn-reset:active {
+      transform: scale(0.95);
+    }
+
     .guide-steps {
       list-style: none;
       font-size: 14px;
@@ -170,6 +199,12 @@
       border-left: 3.5px solid #facc15;
       color: #fef08a;
     }
+    .log-item.system {
+      background: rgba(16, 185, 129, 0.2);
+      border-left: 3.5px solid #10b981;
+      color: #6ee7b7;
+      font-weight: bold;
+    }
     .log-item.empty {
       color: #64748b;
       font-style: italic;
@@ -179,12 +214,13 @@
     @media (min-width: 1500px) {
       .hud-guide-box { width: 600px; padding: 22px 26px; }
       .guide-title { font-size: 17.5px; }
+      .btn-reset { font-size: 13.5px; padding: 6px 14px; }
       .guide-steps { font-size: 15px; }
       .radio-log-header { font-size: 14px; }
       .log-item { font-size: 14px; }
     }
 
-    /* 2. 우측 하단 BLS 함체 인터페이스 (1.5배 시원한 스케일업) */
+    /* 2. 우측 하단 BLS 함체 인터페이스 */
     .bls-station-container {
       position: absolute;
       right: 25px;
@@ -199,7 +235,6 @@
       align-items: center;
     }
 
-    /* 함체 지붕 위 경광등 (1.5배) */
     .beacon-light-wrapper {
       position: relative;
       width: 86px;
@@ -237,7 +272,6 @@
       border-top: 1.5px solid #94a3b8;
     }
 
-    /* BLS 본체 외함 */
     .bls-outer-box {
       position: relative;
       width: 100%;
@@ -250,7 +284,6 @@
       flex-direction: column;
     }
 
-    /* 외함 도어 커버 (우측 경첩 기준) */
     .bls-door-cover {
       position: absolute;
       inset: 12px;
@@ -319,7 +352,6 @@
       letter-spacing: 3px;
     }
 
-    /* BLS 내부 조작 패널 (1.5배 큼직한 레이아웃) */
     .bls-inner-panel {
       position: relative;
       width: 100%;
@@ -456,6 +488,8 @@
       flex-direction: column;
       align-items: center;
     }
+
+    /* KEY S/W: 기본 OFF 10시 방향(-45deg) */
     .key-rotary {
       width: 44px;
       height: 44px;
@@ -467,9 +501,12 @@
       align-items: center;
       justify-content: center;
       box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+      transform: rotate(-45deg);
       transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
-    .key-rotary.on { transform: rotate(45deg); }
+    .key-rotary.on {
+      transform: rotate(45deg);
+    }
     .key-stem {
       width: 6px;
       height: 28px;
@@ -512,7 +549,7 @@
       border: 1.5px solid #64748b;
       border-radius: 6px;
       padding: 8px 10px;
-      font-size: 9.5px;
+      font-size: 9px;
       color: #1e293b;
       line-height: 1.45;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -524,6 +561,10 @@
       margin-bottom: 4px;
       border-bottom: 1px solid #cbd5e1;
       padding-bottom: 3px;
+    }
+    .highlight-red {
+      color: #dc2626;
+      font-weight: bold;
     }
 
     .handset-hook-wrapper {
@@ -568,9 +609,16 @@
   </div>
 
   <div class="hud-guide-box">
-    <div class="guide-title">
-      <span>📋 BLS 현장 표준 취급 절차 (실습 가이드)</span>
+    <div class="guide-header-row">
+      <div class="guide-title">
+        <span>📋 BLS 현장 표준 취급 절차 (실습 가이드)</span>
+      </div>
+      <!-- 실습 초기화 버튼 -->
+      <button type="button" class="btn-reset" id="btnResetSimulation" title="모든 설비와 단계를 처음 상태로 리셋합니다">
+        🔄 실습 초기화
+      </button>
     </div>
+
     <ul class="guide-steps" id="guideStepsList">
       <li id="step1" class="active"><span class="step-num">1.</span> <strong>[외함 열기]</strong> BLS함 유리창을 클릭하여 외함 도어를 엽니다.</li>
       <li id="step2"><span class="step-num">2.</span> <strong>[관제 협의]</strong> 우측 수화기를 들어 관제실과 통화합니다.</li>
@@ -596,7 +644,7 @@
     <div class="beacon-base"></div>
 
     <div class="bls-outer-box">
-      <!-- 외함 도어 커버 (우측 경첩 기준) -->
+      <!-- 외함 도어 커버 -->
       <div class="bls-door-cover" id="blsDoorCover" title="클릭하여 외함을 엽니다">
         <div class="door-handle"></div>
         <div class="cover-nameplate">BLS</div>
@@ -659,10 +707,16 @@
 
           <div class="procedure-plate">
             <div class="proc-title">- 취 급 절 차 -</div>
-            1. 비상상황 발생 시 수화기를 듭니다.<br>
-            2. 관제실 통화 후 KEY S/W를 ON으로 하고 비상정지 버튼을 누르면 단전 차단됩니다.<br>
-            3. BLS 전면 급전표시 램프가 꺼진 후 안전조치합니다.<br>
-            4. 상황 종료 후 비상정지버튼을 돌려 복귀합니다.
+            1. 비상상황이 발생시 수화기를 듭니다<br>
+            2. 관제실과 통화한 후 KEY S/W를 ON으로 하고 <span class="highlight-red">비상정지버튼</span>을 취급하면 차량운행이 중단되고 급전이 차단 됩니다<br>
+            3. BLS전면의 급전표시 램프가 꺼진 후 선로에 진입 하십시오<br>
+            4. 비상상황이 종료된 후 <span class="highlight-red">비상정지버튼</span>을 오른쪽으로 돌리게 되면 정상복귀가 됩니다.
+            <div style="font-size:7px; color:#64748b; margin-top:4px; line-height:1.25; border-top:1px dashed #cbd5e1; padding-top:3px;">
+              1. Pick up the handset emergency situation occurs<br>
+              2. Rotate KEY S/W After calls, press <span class="highlight-red">emergency stop button</span><br>
+              3. After power supply indicator is off, enter track<br>
+              4. Turn <span class="highlight-red">emergency stop button</span> to right to return
+            </div>
           </div>
 
           <div class="handset-hook-wrapper">
@@ -691,21 +745,21 @@
   let isPowerFed = true;
   let isLampTestPressed = false;
 
-  // 비상핸들 상태 (반지름 11px 비례 확대)
-  const emergencyHandle = { x: 0, y: 0, radius: 11, currentAngle: 0, targetAngle: 0, isPulled: false };
+  const emergencyHandleLeft = { x: 0, y: 0, radius: 11, currentAngle: 0, targetAngle: 0, isPulled: false, label: '2-2' };
+  const emergencyHandleRight = { x: 0, y: 0, radius: 11, currentAngle: 0, targetAngle: 0, isPulled: false, label: '1-2' };
 
   let trainDoorProgress = 0;
   let trainDoorTarget = 0;
 
-  // ★ 150% 뷰에 맞춘 늠름한 2.2배 스케일 안전요원 캐릭터
+  // 안전요원 캐릭터 상태
   const officer = {
     active: false,
     x: -40,
     y: 0,
     targetX: 0,
-    state: 'hidden',
+    state: 'hidden', // 'hidden' | 'running' | 'pulling' | 'entering' | 'inside'
     animFrame: 0,
-    scale: 2.2,
+    scale: 2.0,
   };
 
   /* =========================================================================
@@ -732,6 +786,16 @@
   function playClick() { playTone(420, 'square', 0.05, 0.06); }
   function playThud() { playTone(120, 'sawtooth', 0.2, 0.15); }
   function playPhone() { playTone(480, 'sine', 0.15, 0.08); }
+  function playResetChime() {
+    playTone(523.25, 'triangle', 0.08, 0.06);
+    setTimeout(() => playTone(659.25, 'triangle', 0.08, 0.06), 80);
+    setTimeout(() => playTone(783.99, 'triangle', 0.15, 0.08), 160);
+  }
+  // 도어 닫힘 경고 부저음 (삐- 삐-)
+  function playDoorChime() {
+    playTone(880, 'sine', 0.15, 0.09);
+    setTimeout(() => playTone(880, 'sine', 0.15, 0.09), 250);
+  }
 
   /* =========================================================================
      3. 인터랙션 및 통화 기록 로직
@@ -748,12 +812,14 @@
   const btnLampTest = document.getElementById('btnLampTest');
   const radioLogList = document.getElementById('radioLogList');
   const logEmptyNotice = document.getElementById('logEmptyNotice');
+  const btnResetSimulation = document.getElementById('btnResetSimulation');
 
   function appendRadioLog(role, text) {
     if (logEmptyNotice) logEmptyNotice.style.display = 'none';
 
     const item = document.createElement('div');
-    item.className = `log-item ${role === '안전요원' ? 'officer' : 'control'}`;
+    const roleClass = role === '안전요원' ? 'officer' : role === '관제실' ? 'control' : 'system';
+    item.className = `log-item ${roleClass}`;
     const now = new Date();
     const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
     item.innerHTML = `<strong>[${timeStr}] ${role}:</strong> ${text}`;
@@ -776,6 +842,53 @@
       }
     }
   }
+
+  // 실습 완전 초기화 리셋 함수
+  function resetSimulation() {
+    playResetChime();
+
+    currentStep = 1;
+    updateStepsUI();
+
+    isCoverOpen = false;
+    blsDoorCover.classList.remove('open');
+
+    isHandsetLifted = false;
+    blsHandset.classList.remove('lifted');
+    lampPhoneSignal.className = 'round-lamp lamp-green-off';
+
+    isKeyOn = false;
+    keyRotary.classList.remove('on');
+
+    isEstopPressed = false;
+    btnEstop.classList.remove('pressed');
+    beaconGlass.classList.remove('rotating');
+    lampEmergencyStop.className = 'round-lamp lamp-yellow-off';
+
+    isPowerFed = true;
+    lampPowerStatus.classList.remove('off');
+    isLampTestPressed = false;
+
+    emergencyHandleLeft.isPulled = false;
+    emergencyHandleLeft.currentAngle = 0;
+    emergencyHandleLeft.targetAngle = 0;
+
+    emergencyHandleRight.isPulled = false;
+    emergencyHandleRight.currentAngle = 0;
+    emergencyHandleRight.targetAngle = 0;
+
+    trainDoorTarget = 0;
+    trainDoorProgress = 0;
+
+    officer.active = false;
+    officer.x = -40;
+    officer.state = 'hidden';
+    officer.scale = 2.0;
+
+    radioLogList.innerHTML = '<div class="log-item empty" id="logEmptyNotice">통화 내역이 여기에 기록됩니다.</div>';
+  }
+
+  btnResetSimulation.addEventListener('click', resetSimulation);
 
   blsDoorCover.addEventListener('click', () => {
     if (isCoverOpen) return;
@@ -893,19 +1006,19 @@
   }
 
   /* =========================================================================
-     4. 안전요원 출동 & 비상핸들 조작 & 열차 진입 시퀀스
+     4. 안전요원 출동 & 차내 진입 후 문 닫기 시퀀스
      ========================================================================= */
   function triggerOfficerDispatch() {
     officer.active = true;
     officer.x = -30;
-    officer.y = window.innerHeight * 0.40 + 34; // 승강장 점자블록 위 보행 레벨
+    officer.y = window.innerHeight * 0.40 + 36;
     officer.state = 'running';
-    officer.targetX = emergencyHandle.x - 26;
+    officer.targetX = emergencyHandleRight.x - 24;
     appendRadioLog('안전요원', '안전요원 출동 개시! 열차 측면 비상핸들을 개방하고 차내로 진입합니다.');
   }
 
   /* =========================================================================
-     5. 캔버스 그래픽 렌더링 (1.5배 웅장한 승강장 & 열차 비례)
+     5. 캔버스 그래픽 렌더링
      ========================================================================= */
   const canvas = document.getElementById('metroCanvas');
   const ctx = canvas.getContext('2d');
@@ -977,81 +1090,123 @@
     c.restore();
   }
 
+  // ★ [전면 재작성] 실제 관절 회전 기반의 자연스러운 달리기/보행 렌더러
   function drawOfficer(c, ox, oy, frame, state) {
     c.save();
     c.translate(ox, oy);
-    c.scale(2.2, 2.2); // ★ 2.2배 듬직한 안전요원 캐릭터
+    c.scale(2.0, 2.0); // 2.0배 스케일
 
     const isRun = state === 'running';
-    const legSwing = isRun ? Math.sin(frame * 0.35) * 6.5 : 0;
-    const bodyBob = isRun ? Math.abs(Math.sin(frame * 0.35)) * 1.8 : 0;
+    // 자연스러운 달리기 관절 각도 (진자 운동)
+    const legCycle = isRun ? Math.sin(frame * 0.24) : 0;
+    const legAngle = legCycle * 0.52; // 약 30도 스윙
+    const armAngle = -legAngle * 0.85; // 다리와 반대로 팔 스윙
+    const bodyBounce = isRun ? Math.abs(Math.sin(frame * 0.24)) * 2.2 : 0;
 
-    // 1. 다리 및 안전화
+    // 1. 왼다리 (뒤쪽 다리)
+    c.save();
+    c.translate(-1.5, -22 - bodyBounce);
+    c.rotate(-legAngle);
     c.fillStyle = '#1e293b';
-    c.fillRect(-4 + legSwing, -13 - bodyBob, 3.5, 12);
+    c.fillRect(-2, 0, 4, 18); // 바지
     c.fillStyle = '#0f172a';
-    c.fillRect(-5 + legSwing, -2 - bodyBob, 5, 3.5);
+    c.fillRect(-2, 17, 6.5, 4.5); // 안전화
+    c.restore();
 
-    c.fillStyle = '#1e293b';
-    c.fillRect(1 - legSwing, -13 - bodyBob, 3.5, 12);
+    // 2. 왼팔 (뒤쪽 팔)
+    c.save();
+    c.translate(-1, -38 - bodyBounce);
+    c.rotate(-armAngle);
+    c.fillStyle = '#65a30d';
+    c.fillRect(-1.5, 0, 3.5, 14);
+    c.fillStyle = '#fed7aa';
+    c.fillRect(-2, 13, 4, 4); // 손
+    c.restore();
+
+    // 3. 몸통 & 형광 조끼 & 출동가방
+    c.save();
+    c.translate(0, -22 - bodyBounce);
+    if (isRun) c.rotate(0.1); // 달릴 때 자연스럽게 상체 살짝 숙임
+
+    // 네이비 기동복
     c.fillStyle = '#0f172a';
-    c.fillRect(0 - legSwing, -2 - bodyBob, 5, 3.5);
+    c.fillRect(-6, -18, 12, 18);
 
-    // 2. 몸통 & 형광 안전조끼
-    c.fillStyle = '#0f172a';
-    c.fillRect(-5, -26 - bodyBob, 11, 14);
-
+    // 형광 연두 조끼
     c.fillStyle = '#84cc16';
-    c.fillRect(-5, -25 - bodyBob, 11, 12);
+    c.fillRect(-6, -17, 12, 16);
+    // 은색 반사띠
     c.fillStyle = '#f8fafc';
-    c.fillRect(-5, -20 - bodyBob, 11, 2);
-    c.fillRect(-2, -25 - bodyBob, 2, 12);
+    c.fillRect(-6, -11, 12, 2.5);
+    c.fillRect(-2, -17, 2.5, 16);
 
-    // 3. 크로스 출동가방
+    // 크로스 출동가방
     c.strokeStyle = '#18181b';
-    c.lineWidth = 1.5;
+    c.lineWidth = 1.8;
     c.beginPath();
-    c.moveTo(-4, -25 - bodyBob);
-    c.lineTo(4, -16 - bodyBob);
+    c.moveTo(-5, -17);
+    c.lineTo(5, -6);
     c.stroke();
 
     c.fillStyle = '#334155';
-    c.fillRect(2, -18 - bodyBob, 6.5, 6);
+    c.fillRect(3, -9, 8, 8);
     c.fillStyle = '#f59e0b';
-    c.fillRect(4, -17 - bodyBob, 2.5, 2);
+    c.fillRect(5, -7, 3, 3);
+    c.restore();
 
-    // 4. 팔
-    c.fillStyle = '#84cc16';
+    // 4. 오른다리 (앞쪽 다리)
+    c.save();
+    c.translate(2.5, -22 - bodyBounce);
+    c.rotate(legAngle);
+    c.fillStyle = '#1e293b';
+    c.fillRect(-2, 0, 4, 18);
+    c.fillStyle = '#0f172a';
+    c.fillRect(-2, 17, 6.5, 4.5);
+    c.restore();
+
+    // 5. 오른팔 (앞쪽 팔: 달리기 or 비상핸들 조작)
+    c.save();
+    c.translate(2, -38 - bodyBounce);
     if (state === 'pulling') {
-      c.fillRect(-4, -24 - bodyBob, 3, 8);
+      // 핸들을 향해 손을 뻗어 잡음
+      c.rotate(-0.85);
+      c.fillStyle = '#84cc16';
+      c.fillRect(-1.5, 0, 3.5, 16);
       c.fillStyle = '#fed7aa';
-      c.fillRect(4, -30 - bodyBob, 4.5, 4.5);
-      c.strokeStyle = '#84cc16';
-      c.lineWidth = 3;
-      c.beginPath();
-      c.moveTo(2, -23 - bodyBob);
-      c.lineTo(6, -28 - bodyBob);
-      c.stroke();
+      c.fillRect(-2, 15, 5, 5);
     } else {
-      c.fillRect(-6 - legSwing * 0.4, -24 - bodyBob, 3, 8);
-      c.fillRect(4 + legSwing * 0.4, -24 - bodyBob, 3, 8);
+      c.rotate(armAngle);
+      c.fillStyle = '#84cc16';
+      c.fillRect(-1.5, 0, 3.5, 14);
+      c.fillStyle = '#fed7aa';
+      c.fillRect(-2, 13, 4, 4);
     }
+    c.restore();
 
-    // 5. 얼굴 & 안전모
+    // 6. 목, 얼굴 & 하얀 안전모
+    c.save();
+    c.translate(0, -bodyBounce);
+
+    // 얼굴 피부톤
     c.fillStyle = '#fed7aa';
-    c.fillRect(-3, -32 - bodyBob, 7, 7);
+    c.fillRect(-3.5, -46, 8, 8);
 
+    // 하얀 안전모 본체
     c.fillStyle = '#ffffff';
     c.beginPath();
-    c.roundRect(-5, -38 - bodyBob, 11, 7, [5, 5, 2, 2]);
+    c.roundRect(-5.5, -53, 12, 8, [6, 6, 2, 2]);
     c.fill();
 
+    // 안전모 앞챙 (Visor)
     c.fillStyle = '#e2e8f0';
-    c.fillRect(-5.5, -32.5 - bodyBob, 12, 2);
-    c.fillStyle = '#16a34a';
-    c.fillRect(-1, -36.5 - bodyBob, 3, 1);
-    c.fillRect(0, -37.5 - bodyBob, 1, 3);
+    c.fillRect(-6.5, -46.5, 14, 2.5);
 
+    // 녹색 안전 십자 마크
+    c.fillStyle = '#16a34a';
+    c.fillRect(-1, -51.5, 3.5, 1.2);
+    c.fillRect(0, -52.5, 1.2, 3.2);
+
+    c.restore();
     c.restore();
   }
 
@@ -1065,11 +1220,13 @@
     calcDoorPositions();
 
     const rotSpeed = 8;
-    if (emergencyHandle.currentAngle < emergencyHandle.targetAngle) {
-      emergencyHandle.currentAngle = Math.min(emergencyHandle.targetAngle, emergencyHandle.currentAngle + rotSpeed);
-    } else if (emergencyHandle.currentAngle > emergencyHandle.targetAngle) {
-      emergencyHandle.currentAngle = Math.max(emergencyHandle.targetAngle, emergencyHandle.currentAngle - rotSpeed);
-    }
+    [emergencyHandleLeft, emergencyHandleRight].forEach(h => {
+      if (h.currentAngle < h.targetAngle) {
+        h.currentAngle = Math.min(h.targetAngle, h.currentAngle + rotSpeed);
+      } else if (h.currentAngle > h.targetAngle) {
+        h.currentAngle = Math.max(h.targetAngle, h.currentAngle - rotSpeed);
+      }
+    });
 
     const doorSpeed = 0.04;
     if (trainDoorProgress < trainDoorTarget) {
@@ -1078,18 +1235,19 @@
       trainDoorProgress = Math.max(trainDoorTarget, trainDoorProgress - doorSpeed);
     }
 
+    // ★ [핵심] 안전요원 출동 ➔ 진입 ➔ 안에서 문 닫기 풀 시퀀스
     if (officer.active) {
       if (officer.state === 'running') {
         const dx = officer.targetX - officer.x;
         if (dx > 2) {
-          officer.x += 3.2;
+          officer.x += 2.8; // 자연스러운 보폭 속도
         } else {
           officer.state = 'pulling';
           setTimeout(() => {
             playTone(180, 'sawtooth', 0.15, 0.12);
-            emergencyHandle.targetAngle = 90;
-            emergencyHandle.isPulled = true;
-            trainDoorTarget = 1;
+            emergencyHandleRight.targetAngle = 90;
+            emergencyHandleRight.isPulled = true;
+            trainDoorTarget = 1; // 열차 출입문 개방
 
             setTimeout(() => {
               officer.state = 'entering';
@@ -1097,12 +1255,28 @@
           }, 600);
         }
       } else if (officer.state === 'entering') {
-        officer.y -= 1.8;
+        // 차내로 걸어 올라감
+        officer.y -= 1.4;
         officer.scale -= 0.02;
-        if (officer.y < height * 0.40 - 12 || officer.scale <= 0.4) {
+        if (officer.y < height * 0.40 - 8 || officer.scale <= 0.6) {
           officer.state = 'inside';
           officer.active = false;
-          appendRadioLog('안전요원', '열차 내부 진입 완료! 전동차 차내 안전조치 및 승객 안내를 개시합니다.');
+          appendRadioLog('안전요원', '차내 진입 완료! 안전 확보를 위해 안에서 출입문을 닫습니다.');
+
+          // ★ [추가] 1.2초 후 안에서 출입문 닫기 실행!
+          setTimeout(() => {
+            playDoorChime(); // 문 닫힘 부저음
+            trainDoorTarget = 0; // 출입문 닫힘
+            emergencyHandleRight.targetAngle = 0; // 비상핸들 정상 복귀
+            emergencyHandleRight.isPulled = false;
+
+            setTimeout(() => {
+              appendRadioLog('안전요원', '출입문 닫힘 완료. 차내 승객 안전조치를 개시합니다.');
+              setTimeout(() => {
+                appendRadioLog('시스템', '🎉 [실습 완료] 모든 비상조치가 끝났습니다. 상단 \'실습 초기화\' 버튼을 눌러 다시 실습할 수 있습니다.');
+              }, 1000);
+            }, 1200);
+          }, 1200);
         }
       }
     }
@@ -1111,9 +1285,8 @@
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    // ★ [1.5배 화면 비례] 열차 높이와 승강장 위치 재조정
     const TRACK_TOP_Y = height * 0.14;
-    const PLATFORM_Y = height * 0.40; // 듬직한 전동차 높이 형성
+    const PLATFORM_Y = height * 0.40;
 
     // A. 역사 상단 벽면
     const wallGrad = ctx.createLinearGradient(0, 0, 0, TRACK_TOP_Y);
@@ -1162,14 +1335,14 @@
     ctx.fillRect(0, PLATFORM_Y - 22, width, 4.5);
     ctx.fillRect(0, PLATFORM_Y - 13, width, 4.5);
 
-    // C. 1.5배 듬직해진 인천 2호선 전동차
+    // C. 인천 2호선 전동차
     const trainTopY = TRACK_TOP_Y - 10;
     const trainH = PLATFORM_Y - trainTopY;
     const windowBandY = trainTopY + trainH * 0.22;
     const windowBandH = trainH * 0.32;
     const orangeStripeY = trainTopY + trainH * 0.58;
     const orangeStripeH = 12;
-    const doorW = 70; // ★ 출입문 너비 확대
+    const doorW = 70;
 
     const car2Left = doorCenters[3] - doorW * 1.5;
     const car2Right = (doorCenters[5] + doorCenters[6]) / 2 - 10;
@@ -1179,12 +1352,10 @@
     const renderCar = (left, right, isLead, isTail, carDoorIndices) => {
       const cw = right - left;
 
-      // 대차
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(left + 28, PLATFORM_Y - 4, 44, 8);
       ctx.fillRect(right - 72, PLATFORM_Y - 4, 44, 8);
 
-      // 바디
       const bodyGrad = ctx.createLinearGradient(0, trainTopY, 0, PLATFORM_Y);
       bodyGrad.addColorStop(0, '#e2e8f0');
       bodyGrad.addColorStop(0.5, '#cbd5e1');
@@ -1192,17 +1363,15 @@
       ctx.fillStyle = bodyGrad;
       ctx.fillRect(left, trainTopY + 14, cw, trainH - 14);
 
-      // 루프 공조기
       ctx.fillStyle = '#334155';
       ctx.fillRect(left + 12, trainTopY + 4, cw - 24, 10);
       ctx.fillStyle = '#475569';
       ctx.fillRect(left + 36, trainTopY, cw - 72, 6);
 
-      // 블랙 윈도우 밴드
       ctx.fillStyle = '#090d16';
       ctx.fillRect(left, windowBandY, cw, windowBandH);
 
-      // 승객석 와이드 통유리창
+      // 통유리창
       for (let i = 0; i < carDoorIndices.length - 1; i++) {
         const d1 = doorCenters[carDoorIndices[i]];
         const d2 = doorCenters[carDoorIndices[i + 1]];
@@ -1282,10 +1451,14 @@
     ctx.fillRect(car2Right, trainTopY + 16, car1Left - car2Right, trainH - 18);
     renderCar(car1Left, car1Right, true, false, [6, 7, 8]);
 
-    // D. 1-2 비상핸들
-    emergencyHandle.x = (doorCenters[7] + doorCenters[8]) / 2;
-    emergencyHandle.y = PLATFORM_Y - 30;
-    drawEmergencyHandle(ctx, emergencyHandle.x, emergencyHandle.y, emergencyHandle.radius, emergencyHandle.currentAngle);
+    // D. 2개 비상핸들
+    emergencyHandleLeft.x = (doorCenters[3] + doorCenters[4]) / 2;
+    emergencyHandleLeft.y = PLATFORM_Y - 30;
+    drawEmergencyHandle(ctx, emergencyHandleLeft.x, emergencyHandleLeft.y, emergencyHandleLeft.radius, emergencyHandleLeft.currentAngle);
+
+    emergencyHandleRight.x = (doorCenters[7] + doorCenters[8]) / 2;
+    emergencyHandleRight.y = PLATFORM_Y - 30;
+    drawEmergencyHandle(ctx, emergencyHandleRight.x, emergencyHandleRight.y, emergencyHandleRight.radius, emergencyHandleRight.currentAngle);
 
     // E. 승강장 대리석 타일 바닥
     const flrGrad = ctx.createLinearGradient(0, PLATFORM_Y, 0, height);
@@ -1295,7 +1468,7 @@
     ctx.fillStyle = flrGrad;
     ctx.fillRect(0, PLATFORM_Y, width, height - PLATFORM_Y);
 
-    const floorTileSize = 42; // 타일 크기 확대
+    const floorTileSize = 42;
     ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
     ctx.lineWidth = 1;
     for (let tx = 0; tx < width; tx += floorTileSize) {
@@ -1305,7 +1478,7 @@
       ctx.beginPath(); ctx.moveTo(0, ty); ctx.lineTo(width, ty); ctx.stroke();
     }
 
-    // F. 3D 입체 노란 점자 안전선 (2단 돌기)
+    // F. 3D 입체 노란 점자 안전선
     const tactileY = PLATFORM_Y + 2;
     const tactileH = 18;
     ctx.fillStyle = '#f59e0b';
@@ -1325,7 +1498,7 @@
       });
     }
 
-    // G. 안전요원 캐릭터 렌더링
+    // G. ★ 자연스러운 보행/달리기 관절 애니메이션 안전요원
     if (officer.active) {
       drawOfficer(ctx, officer.x, officer.y, frameCount, officer.state);
     }
