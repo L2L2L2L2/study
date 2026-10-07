@@ -922,16 +922,16 @@
 
     if (isHandsetLifted) {
       if (currentStep === 2) {
-        appendRadioLog('안전요원', '관제실, 현장 안전요원입니다. 선로 진입을 위해 BLS 취급하겠습니다.');
+        appendRadioLog('안전요원', '관제, 안전요원입니다. 선로 진입을 위해 BLS 취급하겠습니다.');
         setTimeout(() => {
-          appendRadioLog('관제실', '관제 확인. 선로 진입 및 BLS 단전 취급을 승인합니다. 취급하십시오.');
+          appendRadioLog('관제실', '관제 확인. BLS 단전 취급을 승인합니다. 취급하십시오.');
           currentStep = 3;
           updateStepsUI();
         }, 1200);
       } else if (currentStep === 5) {
-        appendRadioLog('안전요원', '관제실, BLS 취급(비상정지 및 단전) 완료 확인했습니다.');
+        appendRadioLog('안전요원', '관제, BLS 취급(비상정지 및 단전) 완료 확인했습니다.');
         setTimeout(() => {
-          appendRadioLog('관제실', '확인 완료. 안전조치 후 BLS 복귀 및 도어를 닫고 열차로 진입하십시오.');
+          appendRadioLog('관제실', '확인했습니다. BLS 복귀하시고 도어를 닫고 열차로 안전하게 진입하십시오.');
           currentStep = 6;
           updateStepsUI();
         }, 1200);
@@ -1014,7 +1014,7 @@
     officer.y = window.innerHeight * 0.40 + 36;
     officer.state = 'running';
     officer.targetX = emergencyHandleRight.x - 24;
-    appendRadioLog('안전요원', '안전요원 출동 개시! 열차 측면 비상핸들을 개방하고 차내로 진입합니다.');
+    appendRadioLog('안전요원', '안전요원 출동! 열차 측면 비상핸들을 개방하고 차내로 진입합니다.');
   }
 
   /* =========================================================================
