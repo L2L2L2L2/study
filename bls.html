@@ -364,19 +364,30 @@
       gap: 10px;
     }
 
+    /* ★ [시인성 개선] 외함 닫기 버튼: 또렷하고 큼직한 네이비/스카이블루 버튼 */
     .btn-close-cover {
       position: absolute;
       top: 8px;
       right: 10px;
-      font-size: 11.5px;
-      font-weight: bold;
-      background: #e2e8f0;
-      border: 1.5px solid #64748b;
-      padding: 3px 10px;
-      border-radius: 5px;
+      font-size: 13px;
+      font-weight: 800;
+      background: #0f172a;
+      border: 1.5px solid #0284c7;
+      color: #38bdf8;
+      padding: 5px 12px;
+      border-radius: 6px;
       cursor: pointer;
-      color: #1e293b;
-      z-index: 10;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      transition: all 0.15s;
+      z-index: 15;
+    }
+    .btn-close-cover:hover {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
     }
 
     .bls-inner-title {
@@ -467,6 +478,24 @@
     .lamp-yellow-off { background: #5c4d14; opacity: 0.6; }
     .lamp-yellow-on { background: #eab308; box-shadow: 0 0 16px #facc15; }
 
+    /* ★ [인지성 개선] LAMP TEST 전용 묵직한 3D 인더스트리얼 에메랄드 그린 푸시 버튼 */
+    .lamp-test-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #10b981 0%, #059669 50%, #064e3b 100%);
+      border: 2.5px solid #0f172a;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      outline: none;
+      transition: transform 0.08s, filter 0.08s;
+    }
+    .lamp-test-btn:active {
+      transform: scale(0.92);
+      background: #047857;
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.65);
+    }
+
     .control-sub-grid {
       display: grid;
       grid-template-columns: 110px 1fr 70px;
@@ -487,7 +516,6 @@
       align-items: center;
     }
 
-    /* KEY S/W: 기본 OFF 10시 방향 */
     .key-rotary {
       width: 44px;
       height: 44px;
@@ -710,7 +738,8 @@
       </div>
 
       <div class="bls-inner-panel">
-        <button type="button" class="btn-close-cover" id="btnCloseCover" title="외함 도어를 닫습니다">외함 닫기</button>
+        <!-- ★ [개선] 폰트 확대 및 또렷한 네이비/스카이블루 외함 닫기 버튼 -->
+        <button type="button" class="btn-close-cover" id="btnCloseCover" title="외함 도어를 닫습니다">🚪 외함 닫기</button>
 
         <div class="bls-inner-title">BLS</div>
 
@@ -738,7 +767,8 @@
           </div>
           <div class="ind-item">
             <span class="ind-tag">LAMP<br>TEST</span>
-            <button type="button" class="round-lamp lamp-green-off" id="btnLampTest" style="cursor:pointer;" title="누르고 있는 동안 모든 램프 점검"></button>
+            <!-- ★ [개선] 묵직하고 선명한 3D 에메랄드 그린 푸시 버튼 -->
+            <button type="button" class="lamp-test-btn" id="btnLampTest" title="누르고 있는 동안 모든 램프 점검"></button>
           </div>
         </div>
 
@@ -828,7 +858,7 @@
   };
 
   /* =========================================================================
-     2. 사운드 생성기 & Web Speech TTS 엔진 (완벽한 음성 종료 감지 onend 탑재)
+     2. 사운드 생성기 & Web Speech TTS 엔진
      ========================================================================= */
   let audioCtx = null;
   function playTone(freq, type = 'sine', duration = 0.1, vol = 0.08) {
@@ -865,7 +895,6 @@
     setTimeout(() => playTone(587.33, 'triangle', 0.15, 0.1), 100);
   }
 
-  // ★ [수정] 음성이 완전히 끝난 후 다음 동작을 실행하는 onEnd 콜백 지원 TTS 함수
   let currentUtterance = null;
   function speakTTS(text, role, onEnd = null) {
     let finished = false;
@@ -909,11 +938,9 @@
       utter.rate = 0.95;
     }
 
-    // 말이 완전히 끝났을 때만 finishOnce 호출
     utter.onend = finishOnce;
     utter.onerror = finishOnce;
 
-    // 만약 브라우저 오류로 onend가 누락될 경우를 대비한 안전 타임아웃
     const fallbackDuration = Math.max(2500, cleanText.length * 300);
     setTimeout(finishOnce, fallbackDuration);
 
@@ -925,7 +952,7 @@
   }
 
   /* =========================================================================
-     3. 인터랙션 및 통화 기록 로직
+     3. 인터랙션 및 수화기 자동 거치(Auto-Hangup) 로직
      ========================================================================= */
   const blsDoorCover = document.getElementById('blsDoorCover');
   const btnCloseCover = document.getElementById('btnCloseCover');
@@ -960,7 +987,17 @@
     blsStationContainer.classList.add('mobile-hidden');
   });
 
-  // ★ [수정] onEnd 콜백 지원
+  // ★ [추가] 수화기 자동 거치 함수 (대화 완료 시 자동 호출)
+  function autoHangupHandset() {
+    if (!isHandsetLifted) return;
+    setTimeout(() => {
+      playPhone(); // 수화기 내려놓는 달칵음
+      isHandsetLifted = false;
+      blsHandset.classList.remove('lifted');
+      lampPhoneSignal.className = 'round-lamp lamp-green-off';
+    }, 450);
+  }
+
   function appendRadioLog(role, text, skipTTS = false, onEnd = null) {
     if (logEmptyNotice) logEmptyNotice.style.display = 'none';
 
@@ -1071,7 +1108,7 @@
     }
   });
 
-  // ★ [수정] 음성이 완전히 끝난 후 다음 대사가 나오도록 연동
+  // ★ [개선] 각 대화 완료 시 자동으로 수화기 거치(autoHangupHandset) 실행
   blsHandset.addEventListener('click', () => {
     playPhone();
     isHandsetLifted = !isHandsetLifted;
@@ -1085,6 +1122,7 @@
             appendRadioLog('관제실', '관제 확인. BLS 단전 취급을 승인합니다. 취급하십시오.', false, () => {
               currentStep = 3;
               updateStepsUI();
+              autoHangupHandset(); // ★ 대화 끝나면 자동 거치!
             });
           }, 350);
         });
@@ -1095,6 +1133,7 @@
             appendRadioLog('관제실', 'BLS 취급 확인했습니다. BLS 복귀하십시오.', false, () => {
               currentStep = 6;
               updateStepsUI();
+              autoHangupHandset(); // ★ 대화 끝나면 자동 거치!
             });
           }, 350);
         });
@@ -1109,6 +1148,7 @@
             appendRadioLog('관제실', 'BLS 복귀 확인했습니다. BLS 도어 잘 닫아주시고 열차로 안전하게 진입하십시오.', false, () => {
               currentStep = 7;
               updateStepsUI();
+              autoHangupHandset(); // ★ 대화 끝나면 자동 거치!
             });
           }, 350);
         });
@@ -1406,13 +1446,11 @@
       trainDoorProgress = Math.max(trainDoorTarget, trainDoorProgress - doorSpeed);
     }
 
-    // 열차 발차 시 서서히 가속
     if (isTrainDeparting) {
       trainSpeed += 0.055;
       trainOffsetX += trainSpeed;
     }
 
-    // ★ [핵심] 음성이 100% 끝난 후 순차적으로 실행되는 완벽한 시퀀스
     if (officer.active) {
       if (officer.state === 'running') {
         const dx = officer.targetX - officer.x;
@@ -1443,7 +1481,7 @@
 
           setTimeout(() => {
             playDoorChime();
-            trainDoorTarget = 0; // 안에서 문 닫기
+            trainDoorTarget = 0;
             emergencyHandleRight.targetAngle = 0;
             emergencyHandleRight.isPulled = false;
 
@@ -1454,26 +1492,26 @@
               setTimeout(() => {
                 appendRadioLog('안전요원', '관제, 차내 안전조치 완료되었습니다. 해당 구간 급전 요청합니다.', false, () => {
                   
-                  // 2) 안전요원 음성이 완전히 끝난 후 ➔ 관제실 답변 (음성 송출)
+                  // 2) 관제실 답변 (음성 송출)
                   setTimeout(() => {
                     appendRadioLog('관제실', '확인했습니다. 안전 확인 완료. 해당 구간 급전 투입합니다.', false, () => {
                       
-                      // 3) ★ 관제실 음성이 완전히 끝난 후에야 비로소 급전 투입!
+                      // 3) 관제실 음성 종료 후 급전 투입
                       setTimeout(() => {
                         playPowerOnSound();
                         isPowerFed = true;
-                        lampPowerStatus.classList.remove('off'); // 램프 점등
+                        lampPowerStatus.classList.remove('off');
 
                         // 4) 안전요원 발차 보고 (음성 송출)
                         setTimeout(() => {
                           appendRadioLog('안전요원', '급전 투입 확인. 열차 서서히 발차합니다.', false, () => {
                             
-                            // 5) ★ 안전요원 음성이 완전히 끝난 후 경적 울리며 열차 출발!
+                            // 5) 안전요원 음성 종료 후 경적 울리며 열차 출발
                             setTimeout(() => {
                               playTone(349.23, 'sawtooth', 0.45, 0.12);
                               setTimeout(() => playTone(440.00, 'sawtooth', 0.45, 0.12), 70);
 
-                              isTrainDeparting = true; // 가속 이동 시작!
+                              isTrainDeparting = true;
 
                               setTimeout(() => {
                                 appendRadioLog('시스템', '🎉 [실습 완료] 열차가 정상 발차하고 모든 비상조치가 완료되었습니다. 상단 \'실습 초기화\' 버튼을 눌러 다시 실습할 수 있습니다.', true);
