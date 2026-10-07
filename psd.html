@@ -69,29 +69,8 @@
       0%, 100% { transform: scale(1); opacity: 1; }
       50% { transform: scale(1.4); opacity: 0.5; }
     }
-    .badge-sub {
-      display: flex;
-      gap: 6px;
-      font-size: 11px;
-    }
-    .tag {
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-weight: 600;
-      backdrop-filter: blur(6px);
-    }
-    .tag-ext {
-      background: rgba(245, 158, 11, 0.2);
-      border: 1px solid rgba(245, 158, 11, 0.5);
-      color: #fde047;
-    }
-    .tag-base {
-      background: rgba(16, 185, 129, 0.2);
-      border: 1px solid rgba(16, 185, 129, 0.5);
-      color: #6ee7b7;
-    }
 
-    /* 좌측 하단 교육 실습 가이드 HUD (기본: 화면 반으로 쓸 때) */
+    /* 좌측 하단 교육 실습 가이드 HUD (반응형 핏) */
     .hud-guide-box {
       position: absolute;
       left: 20px;
@@ -144,20 +123,20 @@
       font-size: 12px;
     }
 
-    /* ★ [추가] 전체화면(화면 폭 1400px 이상)일 때 글자 및 박스 대폭 확대 */
+    /* 전체화면일 때 글자 및 박스 대폭 확대 */
     @media (min-width: 1400px) {
       .hud-guide-box {
-        width: min(580px, calc(100vw - 640px)); /* 우측 휑한 여백을 채우며 시원하게 확장 */
+        width: min(580px, calc(100vw - 640px));
         padding: 18px 22px;
         border-radius: 14px;
       }
       .guide-title {
-        font-size: 17px; /* 13px -> 17px */
+        font-size: 17px;
         margin-bottom: 12px;
         padding-bottom: 8px;
       }
       .guide-steps {
-        font-size: 14.5px; /* 11.5px -> 14.5px */
+        font-size: 14.5px;
         line-height: 1.75;
         gap: 7px;
       }
@@ -167,35 +146,14 @@
       .guide-status {
         margin-top: 14px;
         padding-top: 12px;
-        font-size: 14.5px; /* 12px -> 14.5px */
+        font-size: 14.5px;
       }
       .guide-status strong {
-        font-size: 18px !important; /* 숫자 강조 */
+        font-size: 18px !important;
       }
     }
 
-    /* ★ [추가] 4K / QHD 초고해상도(1900px 이상)일 때 시니어/다인 교육용 특대형 확대 */
-    @media (min-width: 1900px) {
-      .hud-guide-box {
-        width: min(680px, calc(100vw - 660px));
-        padding: 22px 26px;
-      }
-      .guide-title {
-        font-size: 19px;
-      }
-      .guide-steps {
-        font-size: 16px;
-        gap: 9px;
-      }
-      .guide-status {
-        font-size: 16px;
-      }
-      .guide-status strong {
-        font-size: 20px !important;
-      }
-    }
-
-    /* 2. 우측 하단 승강장조작반 (PSL) 패널 - 스크롤바 완전 차단 및 컴팩트 핏 */
+    /* 2. 우측 하단 승강장조작반 (PSL) 패널 - 스크롤바 완전 차단 */
     .psl-panel-container {
       position: absolute;
       right: 20px;
@@ -211,7 +169,7 @@
       z-index: 20;
       display: flex;
       flex-direction: column;
-      overflow: hidden; /* ★ 스크롤바 생성 원천 차단 */
+      overflow: hidden;
     }
 
     .psl-chassis {
@@ -827,17 +785,16 @@
     { id: 1, label: '3-2', carType: '4CAR_EXT', openProgress: 0, target: 0 },
     { id: 2, label: '3-1', carType: '4CAR_EXT', openProgress: 0, target: 0 },
     { id: 3, label: '2-3', carType: '2CAR', openProgress: 0, target: 0 },
-    { id: 4, label: '2-2', carType: '2CAR', openProgress: 0, target: 0 }, // 좌측 비상핸들 연동 도어 (index 4)
+    { id: 4, label: '2-2', carType: '2CAR', openProgress: 0, target: 0 },
     { id: 5, label: '2-1', carType: '2CAR', openProgress: 0, target: 0 },
     { id: 6, label: '1-3', carType: '2CAR', openProgress: 0, target: 0 },
-    { id: 7, label: '1-2', carType: '2CAR', openProgress: 0, target: 0 }, // 우측 비상핸들 연동 도어 (index 7)
+    { id: 7, label: '1-2', carType: '2CAR', openProgress: 0, target: 0 },
     { id: 8, label: '1-1', carType: '2CAR', openProgress: 0, target: 0 },
     { id: 9, label: '0-3', carType: '4CAR_EXT', openProgress: 0, target: 0 },
     { id: 10, label: '0-2', carType: '4CAR_EXT', openProgress: 0, target: 0 },
     { id: 11, label: '0-1', carType: '4CAR_EXT', openProgress: 0, target: 0 },
   ];
 
-  // ★ [50% 축소 적용: radius 17 -> 8.5]
   const emergencyHandleLeft = { x: 0, y: 0, radius: 8.5, currentAngle: 0, targetAngle: 0, isPulled: false, doorIndex: 4, label: '2-2' };
   const emergencyHandleRight = { x: 0, y: 0, radius: 8.5, currentAngle: 0, targetAngle: 0, isPulled: false, doorIndex: 7, label: '1-2' };
 
@@ -846,6 +803,11 @@
   let interlockState = 'OFF';
   let isLampTestPressed = false;
   let tooltipTimeout = null;
+
+  // 전역 상태 변수 (캔버스 미니 조작반에서도 안전하게 참조)
+  let isAllOpened = false;
+  let isAllClosed = true;
+  let isMoving = false;
 
   /* =========================================================================
      2. Web Audio API
@@ -887,7 +849,7 @@
     } catch(e) {}
   }
 
-/* =========================================================================
+  /* =========================================================================
      3. HMI 모니터 DOM 생성
      ========================================================================= */
   const hmiRow1 = document.getElementById('hmiDoorsRow1');
@@ -901,7 +863,7 @@
         <span class="pd-label">PD ${idx + 1}</span>
         <div class="pd-bars">
           <div class="pd-bar" id="hmiBarDoor_${idx}"></div>
-          <div class="pd-bar" id="hmiBarMode_${idx}"></div> <!-- ★ 여기에 id 추가 -->
+          <div class="pd-bar" id="hmiBarMode_${idx}"></div>
           <div class="pd-bar"></div>
         </div>
       `;
@@ -1033,11 +995,11 @@
 
   function updateLamps() {
     const openCount = DOORS.filter(d => d.openProgress > 0.85).length;
-    const isMoving = DOORS.some(d => d.openProgress > 0.05 && d.openProgress < 0.95);
-    const isAllClosed = DOORS.every(d => d.openProgress <= 0.05);
-    // 전체열림 램프 (수정: 수동 개방이 아닌, 최소 2량 6개 도어 이상 모두 열렸을 때만 점등)
+    isMoving = DOORS.some(d => d.openProgress > 0.05 && d.openProgress < 0.95);
+    isAllClosed = DOORS.every(d => d.openProgress <= 0.05);
+
     const isManualOnly = (emergencyHandleLeft.isPulled || emergencyHandleRight.isPulled) && openCount < 6;
-    const isAllOpened = openCount >= 6 && !isManualOnly;
+    isAllOpened = openCount >= 6 && !isManualOnly;
 
     if (isLampTestPressed || isAllOpened) {
       lampAllOpen.className = 'pilot-lamp lamp-red-on';
@@ -1076,18 +1038,17 @@
   }
 
   /* =========================================================================
-     6. ★ [50% 축소 렌더러] 출입문 비상핸들 (반지름 8.5px에 맞춤 정밀 렌더링)
+     6. 출입문 비상핸들 렌더러
      ========================================================================= */
   function drawEmergencyHandle(ctx, handle) {
     const hx = handle.x;
     const hy = handle.y;
-    const r = handle.radius; // 8.5px
+    const r = handle.radius;
     const rad = (handle.currentAngle * Math.PI) / 180;
 
     ctx.save();
     ctx.translate(hx, hy);
 
-    // 1. 외곽 흰색 테두리 림
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
     ctx.arc(0, 0, r + 1.6, 0, Math.PI * 2);
@@ -1096,7 +1057,6 @@
     ctx.lineWidth = 0.8;
     ctx.stroke();
 
-    // 2. 내부 붉은색 원판
     const baseGrad = ctx.createRadialGradient(-1, -1, 1, 0, 0, r);
     baseGrad.addColorStop(0, '#e11d48');
     baseGrad.addColorStop(0.7, '#be123c');
@@ -1106,7 +1066,6 @@
     ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fill();
 
-    // 3. 고정 기호 및 텍스트 (축소 비례 3px 폰트)
     ctx.fillStyle = '#1e293b';
     ctx.font = 'bold 3.2px "Pretendard", sans-serif';
     ctx.textAlign = 'center';
@@ -1115,7 +1074,6 @@
     ctx.fillText('잠금', -0.5, -r * 0.58);
     ctx.fillText('비상', -0.5, r * 0.58);
 
-    // 2시 방향 은색 육각 볼트
     ctx.fillStyle = '#e2e8f0';
     ctx.strokeStyle = '#64748b';
     ctx.lineWidth = 0.5;
@@ -1124,14 +1082,11 @@
     ctx.fill();
     ctx.stroke();
 
-    // 4. 중앙 회전 손잡이 레버 (시계방향 90도 회전)
     ctx.rotate(rad);
 
-    // 레버 그림자
     ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
     ctx.fillRect(-r * 0.85 + 0.5, -1.5 + 0.8, (r * 0.85) * 2, 3);
 
-    // 일자 핸들 바 (빨간색)
     ctx.fillStyle = '#dc2626';
     ctx.strokeStyle = '#881337';
     ctx.lineWidth = 0.8;
@@ -1140,7 +1095,6 @@
     ctx.fill();
     ctx.stroke();
 
-    // 레버 중앙 은색 축 코어
     ctx.fillStyle = '#cbd5e1';
     ctx.strokeStyle = '#475569';
     ctx.lineWidth = 0.6;
@@ -1168,12 +1122,10 @@
     const orangeStripeY = trainTopY + trainH * 0.58;
     const orangeStripeH = 10;
 
-    // 좌측: 2호차 구간 (2-3 ~ 2-1: index 3, 4, 5)
     const car2DoorStart = doorCenters[3];
     const car2Left = car2DoorStart - doorW * 1.5;
     const car2Right = (doorCenters[5] + doorCenters[6]) / 2 - 8;
 
-    // 우측: 1호차 구간 (1-3 ~ 1-1: index 6, 7, 8)
     const car1Left = (doorCenters[5] + doorCenters[6]) / 2 + 8;
     const car1DoorEnd = doorCenters[8];
     const car1Right = car1DoorEnd + doorW * 1.5;
@@ -1200,8 +1152,6 @@
       ctx.fillStyle = '#090d16';
       ctx.fillRect(left, windowBandY, carW, windowBandH);
 
-      // 출입문 사이 승객석 창문 (중간 검은 바 없는 단일 와이드 통유리창)
-      // 공통 창문 렌더러
       const drawWindow = (wx, wy, ww, wh) => {
         if (ww <= 8) return;
         ctx.fillStyle = '#38bdf8';
@@ -1216,7 +1166,6 @@
       const winY = windowBandY + 3;
       const winH = windowBandH - 6;
 
-      // 1) 출입문 사이 대형 통유리창
       for (let i = 0; i < carDoorIndices.length - 1; i++) {
         const d1Center = doorCenters[carDoorIndices[i]];
         const d2Center = doorCenters[carDoorIndices[i + 1]];
@@ -1225,7 +1174,6 @@
         drawWindow(winX, winY, winW, winH);
       }
 
-      // 2) ★ [추가] 열차 맨 뒤쪽 유리창 (2호차 2-3 도어 좌측)
       if (isTail) {
         const firstDoorCenter = doorCenters[carDoorIndices[0]];
         const winX = left + 4;
@@ -1233,7 +1181,6 @@
         drawWindow(winX, winY, winW, winH);
       }
 
-      // 3) ★ [추가] 열차 맨 앞쪽 유리창 (1호차 1-1 도어 우측)
       if (isLead) {
         const lastDoorCenter = doorCenters[carDoorIndices[carDoorIndices.length - 1]];
         const winX = lastDoorCenter + doorW / 2 + 5;
@@ -1246,7 +1193,6 @@
       ctx.fillStyle = '#c2410c';
       ctx.fillRect(left, orangeStripeY + orangeStripeH - 2, carW, 2);
 
-      // 출입문
       carDoorIndices.forEach(doorIdx => {
         const door = DOORS[doorIdx];
         const dcX = doorCenters[doorIdx];
@@ -1277,7 +1223,6 @@
         ctx.strokeRect(tdx + halfTDW + slide, windowBandY, halfTDW - 0.5, trainH - (windowBandY - trainTopY) - 2);
       });
 
-      // 좌측 끝단 (2호차 후미부)
       if (isTail) {
         ctx.fillStyle = DARK_GREY;
         ctx.beginPath();
@@ -1298,7 +1243,6 @@
         ctx.shadowBlur = 0;
       }
 
-      // 우측 끝단 (1호차 1-1 선두부: 헤드라이트)
       if (isLead) {
         ctx.fillStyle = DARK_GREY;
         ctx.beginPath();
@@ -1320,10 +1264,8 @@
       }
     };
 
-    // 좌측: 2호차 (2-3, 2-2, 2-1)
     renderSingleCar(car2Left, car2Right, false, true, [3, 4, 5]);
 
-    // 갱웨이 (2호차와 1호차 사이 연결통로)
     const gangwayW = car1Left - car2Right;
     ctx.fillStyle = '#1e293b';
     ctx.fillRect(car2Right, trainTopY + 14, gangwayW, trainH - 16);
@@ -1332,7 +1274,6 @@
       ctx.fillRect(car2Right + 1, gy, gangwayW - 2, 3);
     }
 
-    // 우측: 1호차 (1-3, 1-2, 1-1)
     renderSingleCar(car1Left, car1Right, true, false, [6, 7, 8]);
   }
 
@@ -1357,7 +1298,6 @@
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  // 마우스 호버 및 툴팁 (작아진 핸들도 클릭하기 편하도록 감지 반경 14px 확보)
   canvas.addEventListener('mousemove', e => {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
@@ -1379,7 +1319,6 @@
     }
   });
 
-  // 비상핸들 클릭 시 해당 도어 단독 개폐
   canvas.addEventListener('click', e => {
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
@@ -1389,7 +1328,6 @@
     const distL = Math.hypot(mx - emergencyHandleLeft.x, my - emergencyHandleLeft.y);
     const distR = Math.hypot(mx - emergencyHandleRight.x, my - emergencyHandleRight.y);
 
-    // 좌측 핸들: 2-3과 2-2 사이 -> 2-2(index 4) 도어 개방
     if (distL <= hitRadius) {
       playHandleSound();
       emergencyHandleLeft.isPulled = !emergencyHandleLeft.isPulled;
@@ -1397,7 +1335,6 @@
       DOORS[emergencyHandleLeft.doorIndex].target = emergencyHandleLeft.isPulled ? 1 : 0;
     }
 
-    // 우측 핸들: 1-2와 1-1 사이 -> 1-2(index 7) 도어 개방
     if (distR <= hitRadius) {
       playHandleSound();
       emergencyHandleRight.isPulled = !emergencyHandleRight.isPulled;
@@ -1407,7 +1344,6 @@
   });
 
   function renderLoop() {
-// 1. 도어 물리 애니메이션
     DOORS.forEach((door, idx) => {
       const speed = 0.045;
       if (door.openProgress < door.target) {
@@ -1416,7 +1352,6 @@
         door.openProgress = Math.max(door.target, door.openProgress - speed);
       }
 
-      // 1번째 칸 (열림/닫힘)
       const hmiBar = document.getElementById(`hmiBarDoor_${idx}`);
       if (hmiBar) {
         if (door.openProgress > 0.15) {
@@ -1426,7 +1361,6 @@
         }
       }
 
-      // ★ [추가] 2번째 칸 (수동/개별모드: 비상핸들로 열렸을 때 빨간색 점등)
       const hmiModeBar = document.getElementById(`hmiBarMode_${idx}`);
       if (hmiModeBar) {
         const isManual = (idx === 4 && emergencyHandleLeft.isPulled) || (idx === 7 && emergencyHandleRight.isPulled);
@@ -1456,7 +1390,7 @@
     const TRACK_TOP_Y = height * 0.16;
     const PLATFORM_Y = height * 0.38;
 
-    // A. 역사 상단 벽면 (톤업 및 선명한 가로/세로 타일 격자)
+    // A. 역사 상단 벽면
     const wallGrad = ctx.createLinearGradient(0, 0, 0, TRACK_TOP_Y);
     wallGrad.addColorStop(0, '#0f172a');
     wallGrad.addColorStop(0.5, '#1e293b');
@@ -1464,19 +1398,16 @@
     ctx.fillStyle = wallGrad;
     ctx.fillRect(0, 0, width, TRACK_TOP_Y);
 
-    // 타일 줄눈 (가로 + 세로 28px 격자)
     const wallTileSize = 28;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'; // 선명한 밝은 줄눈
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.lineWidth = 1;
 
-    // 세로줄
     for (let x = 0; x < width; x += wallTileSize) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, TRACK_TOP_Y);
       ctx.stroke();
     }
-    // 가로줄
     for (let y = 0; y < TRACK_TOP_Y; y += wallTileSize) {
       ctx.beginPath();
       ctx.moveTo(0, y);
@@ -1484,7 +1415,7 @@
       ctx.stroke();
     }
 
-    // 조명 4기
+    // B. 벽면 조명 4기
     const lampPositions = [0.16, 0.38, 0.62, 0.85];
     lampPositions.forEach(ratio => {
       const lx = width * ratio;
@@ -1525,7 +1456,7 @@
       ctx.shadowBlur = 0;
     });
 
-    // 선로 바닥 & 레일
+    // C. 선로 바닥 & 레일
     ctx.fillStyle = '#1c1917';
     ctx.fillRect(0, TRACK_TOP_Y, width, PLATFORM_Y - TRACK_TOP_Y);
     ctx.fillStyle = '#3e3a38';
@@ -1542,23 +1473,20 @@
     const doorW = Math.min(68, doorSpacing * 0.65);
     const doorCenters = DOORS.map((_, idx) => sideMargin + doorSpacing * (idx + 0.5));
 
-    // 인천 2호선 전동차 렌더링
+    // D. 인천 2호선 전동차 렌더링
     drawIncheonTrain(ctx, doorCenters, doorW, PLATFORM_Y, TRACK_TOP_Y);
 
-    // ★ 50% 축소된 비상핸들 2개 렌더링 (차체 하단 높이로 자연스럽게 정돈)
+    // E. 비상핸들 2개 렌더링
     const handleY = PLATFORM_Y - 28;
-
-    // 좌측 핸들: 2-3(idx 3)과 2-2(idx 4) 사이
     emergencyHandleLeft.x = (doorCenters[3] + doorCenters[4]) / 2;
     emergencyHandleLeft.y = handleY;
     drawEmergencyHandle(ctx, emergencyHandleLeft);
 
-    // 우측 핸들: 1-2(idx 7)과 1-1(idx 8) 사이
     emergencyHandleRight.x = (doorCenters[7] + doorCenters[8]) / 2;
     emergencyHandleRight.y = handleY;
     drawEmergencyHandle(ctx, emergencyHandleRight);
 
-    // E. 승강장 플랫폼 사각 타일 바닥 (두 번째 이미지의 화사한 연하늘빛)
+    // F. 승강장 대리석 플랫폼 바닥
     const floorH = height - PLATFORM_Y;
     const flrGrad = ctx.createLinearGradient(0, PLATFORM_Y, 0, height);
     flrGrad.addColorStop(0, '#e2ebf3');
@@ -1567,19 +1495,16 @@
     ctx.fillStyle = flrGrad;
     ctx.fillRect(0, PLATFORM_Y, width, floorH);
 
-    // 바닥 정사각형 타일 줄눈 (가로 + 세로 36px 격자)
     const floorTileSize = 36;
     ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
     ctx.lineWidth = 1;
 
-    // 세로 타일선
     for (let tx = 0; tx < width; tx += floorTileSize) {
       ctx.beginPath();
       ctx.moveTo(tx, PLATFORM_Y);
       ctx.lineTo(tx, height);
       ctx.stroke();
     }
-    // 가로 타일선
     for (let ty = PLATFORM_Y; ty < height; ty += floorTileSize) {
       ctx.beginPath();
       ctx.moveTo(0, ty);
@@ -1587,21 +1512,18 @@
       ctx.stroke();
     }
 
-    // F. ★ [두 번째 이미지 스타일] 3D 입체 노란 점자 안전선 (2단 딤플 돌기)
+    // G. 3D 입체 노란 점자 안전선
     const tactileY = PLATFORM_Y + 2;
     const tactileH = 16;
 
-    // 점자블록 베이스
     ctx.fillStyle = '#f59e0b';
     ctx.fillRect(0, tactileY, width, tactileH);
 
-    // 상단 하이라이트 & 하단 그림자 림
     ctx.fillStyle = '#fef08a';
     ctx.fillRect(0, tactileY, width, 1.5);
     ctx.fillStyle = '#b45309';
     ctx.fillRect(0, tactileY + tactileH - 1.5, width, 1.5);
 
-    // 동글동글한 3D 입체 점자 돌기 (Stud) 2열 렌더링
     const studSpacing = 11;
     const studRadius = 2.2;
     for (let sx = 6; sx < width; sx += studSpacing) {
@@ -1609,13 +1531,11 @@
       const sy2 = tactileY + tactileH * 0.68;
 
       [sy1, sy2].forEach(sy => {
-        // 돌기 밑면 그림자
         ctx.fillStyle = '#78350f';
         ctx.beginPath();
         ctx.arc(sx, sy + 0.8, studRadius, 0, Math.PI * 2);
         ctx.fill();
 
-        // 돌기 입체 광원 그라데이션
         const studGrad = ctx.createRadialGradient(sx - 0.6, sy - 0.6, 0.3, sx, sy, studRadius);
         studGrad.addColorStop(0, '#fef9c3');
         studGrad.addColorStop(0.6, '#fbbf24');
@@ -1627,30 +1547,75 @@
       });
     }
 
-    // H. PSD 상단 주황색 헤더 프레임 (높이를 40px로 키워 조명을 안쪽에 완벽 내장)
+    // H. PSD 상단 주황색 헤더 프레임
     const psdTopY = TRACK_TOP_Y + 6;
-    const psdBarH = 40; // 두께를 넉넉하게 확장
-    const psdHeight = PLATFORM_Y - psdTopY;
+    const psdBarH = 40;
     ctx.fillStyle = '#F37321';
     ctx.fillRect(0, psdTopY, width, psdBarH);
     ctx.fillStyle = '#c2410c';
     ctx.fillRect(0, psdTopY + psdBarH - 3, width, 3);
 
-    // I. 12개 PSD 도어 및 4번째 이미지 스타일 수직 구조물 렌더링
+    // I. 12개 PSD 도어 렌더링
     DOORS.forEach((door, idx) => {
       const centerX = doorCenters[idx];
       const dx = centerX - doorW / 2;
       const slide = door.openProgress * (doorW * 0.42);
       const is2Car = door.carType === '2CAR';
-      
-      // ★ [추가] 1-3과 2-1 사이 승강장 실제 위치의 미니 승강장조작반(PSL) 스탠드 모형
-    const miniPslX = (doorCenters[5] + doorCenters[6]) / 2; // 2-1과 1-3 정중앙
-    const miniPslW = 30; // 가로 크기
-    const miniPslH = 40; // 세로 크기
+
+      ctx.fillStyle = is2Car ? '#ffffff' : '#cbd5e1';
+      ctx.font = `bold ${Math.max(13, Math.min(18, width * 0.012))}px "Pretendard", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(door.label, centerX, psdTopY + 14);
+
+      const ledColor = door.openProgress > 0.05 ? '#ef4444' : '#22c55e';
+      ctx.fillStyle = ledColor;
+      ctx.shadowColor = ledColor;
+      ctx.shadowBlur = 8;
+      ctx.fillRect(centerX - 3.5, psdTopY + 26, 7, 7);
+      ctx.shadowBlur = 0;
+
+      const glassTopY = psdTopY + psdBarH;
+      const glassH = PLATFORM_Y - glassTopY - 2;
+      const halfW = doorW / 2;
+
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(dx - 3, glassTopY, 3, glassH);
+      ctx.fillRect(dx + doorW, glassTopY, 3, glassH);
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(dx - 2, glassTopY, 1, glassH);
+      ctx.fillRect(dx + doorW + 1, glassTopY, 1, glassH);
+
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.42)';
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1.5;
+
+      ctx.fillRect(dx - slide, glassTopY, halfW - 1, glassH);
+      ctx.strokeRect(dx - slide, glassTopY, halfW - 1, glassH);
+
+      ctx.fillRect(dx + halfW + slide, glassTopY, halfW - 1, glassH);
+      ctx.strokeRect(dx + halfW + slide, glassTopY, halfW - 1, glassH);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(dx + halfW - 3 - slide, glassTopY + 28, 2, 34);
+      ctx.fillRect(dx + halfW + 1 + slide, glassTopY + 28, 2, 34);
+
+      ctx.fillStyle = is2Car ? 'rgba(243, 115, 33, 0.85)' : 'rgba(148, 163, 184, 0.4)';
+      ctx.beginPath();
+      ctx.moveTo(centerX, PLATFORM_Y + 22);
+      ctx.lineTo(centerX - 7, PLATFORM_Y + 36);
+      ctx.lineTo(centerX + 7, PLATFORM_Y + 36);
+      ctx.closePath();
+      ctx.fill();
+    });
+
+    // ★ J. [수정 완료: DOORS.forEach 바깥에 딱 1번만 안전하게 렌더링] 미니 승강장조작반 모형
+    const miniPslX = (doorCenters[5] + doorCenters[6]) / 2;
+    const miniPslW = 30;
+    const miniPslH = 40;
     const miniPslTopY = psdTopY + psdBarH + 2;
     const miniPslBottomY = miniPslTopY + miniPslH;
 
-    // 1) 바닥까지 이어지는 하단 메탈 지지대 기둥 (스탠드 폴)
     ctx.fillStyle = '#1e293b';
     ctx.fillRect(miniPslX - 3, miniPslBottomY, 6, PLATFORM_Y - miniPslBottomY);
     for (let gy = miniPslBottomY + 3; gy < PLATFORM_Y - 2; gy += 4) {
@@ -1658,7 +1623,6 @@
       ctx.fillRect(miniPslX - 2.5, gy, 5, 2);
     }
 
-    // 2) 미니 조작반 본체 섀시 (입체 그림자 & 메탈 바디)
     ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
     ctx.fillRect(miniPslX - miniPslW / 2 + 1.5, miniPslTopY + 1.5, miniPslW, miniPslH);
 
@@ -1668,114 +1632,49 @@
     ctx.lineWidth = 1;
     ctx.strokeRect(miniPslX - miniPslW / 2, miniPslTopY, miniPslW, miniPslH);
 
-    // 3) 상단 초미니 명판 "승강장조작반"
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 3.5px "Pretendard", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('승강장조작반', miniPslX, miniPslTopY + 4.5);
 
-    // 4) 디지털 HMI 미니 모니터 (우측 상단 검은 액정)
     ctx.fillStyle = '#1e293b';
     ctx.fillRect(miniPslX - 1, miniPslTopY + 6.5, 14, 11);
-    // 모니터 내부 도어 LED (문 열리면 빨간 점, 닫히면 초록 점 연동)
     const miniLedColor = isAllClosed ? '#22c55e' : '#ef4444';
     ctx.fillStyle = miniLedColor;
     ctx.fillRect(miniPslX + 1, miniPslTopY + 8.5, 10, 2);
     ctx.fillRect(miniPslX + 1, miniPslTopY + 12, 10, 2);
 
-    // 5) 좌측 미니 인터폰 수화기
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(miniPslX - miniPslW / 2 + 2.5, miniPslTopY + 7, 7, 16);
     ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 0.5;
     ctx.strokeRect(miniPslX - miniPslW / 2 + 2.5, miniPslTopY + 7, 7, 16);
 
-    // 6) 상태표시 램프 (메인 조작반의 전체열림/닫힘 상태와 실시간 동기화)
-    // 전체열림(빨강)
     ctx.fillStyle = isAllOpened ? '#ef4444' : '#5c1c1c';
     ctx.beginPath();
     ctx.arc(miniPslX + 2, miniPslTopY + 21, 1.8, 0, Math.PI * 2);
     ctx.fill();
 
-    // 전체닫힘(초록)
     ctx.fillStyle = (isAllClosed && !isMoving) ? '#10b981' : '#14492d';
     ctx.beginPath();
     ctx.arc(miniPslX + 7, miniPslTopY + 21, 1.8, 0, Math.PI * 2);
     ctx.fill();
 
-    // 7) 하단 제어 버튼 및 스위치 (노브, 푸시버튼, 노란 인터록 박스)
-    ctx.fillStyle = '#dc2626'; // 빨간 열림 버튼
+    ctx.fillStyle = '#dc2626';
     ctx.beginPath();
     ctx.arc(miniPslX + 5, miniPslTopY + 27, 2, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#10b981'; // 초록 닫힘 버튼
+    ctx.fillStyle = '#10b981';
     ctx.beginPath();
     ctx.arc(miniPslX + 10, miniPslTopY + 27, 2, 0, Math.PI * 2);
     ctx.fill();
 
-    // 노란색 인터록 해제 박스 & 스위치
     ctx.fillStyle = '#fef08a';
     ctx.fillRect(miniPslX + 3, miniPslTopY + 31.5, 7, 6);
     ctx.strokeStyle = '#dc2626';
     ctx.lineWidth = 0.5;
     ctx.strokeRect(miniPslX + 3, miniPslTopY + 31.5, 7, 6);
-      
-      // 1) 도어 번호 명판 (주황 바 상단)
-      ctx.fillStyle = is2Car ? '#ffffff' : '#cbd5e1';
-      ctx.font = `bold ${Math.max(13, Math.min(18, width * 0.012))}px "Pretendard", sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(door.label, centerX, psdTopY + 14);
-
-      // 2) 도어 상단 LED (★ 주황 바 안쪽 하단에 안정적으로 안착)
-      const ledColor = door.openProgress > 0.05 ? '#ef4444' : '#22c55e';
-      ctx.fillStyle = ledColor;
-      ctx.shadowColor = ledColor;
-      ctx.shadowBlur = 8;
-      ctx.fillRect(centerX - 3.5, psdTopY + 26, 7, 7);
-      ctx.shadowBlur = 0;
-
-      // 3) 유리문 및 수직 프레임 위치 계산
-      const glassTopY = psdTopY + psdBarH;
-      const glassH = PLATFORM_Y - glassTopY - 2;
-      const halfW = doorW / 2;
-
-      // ★ [4번째 이미지 구조물] 출입문 좌우의 튼튼한 PSD 메탈 수직 포스트 기둥
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(dx - 3, glassTopY, 3, glassH);
-      ctx.fillRect(dx + doorW, glassTopY, 3, glassH);
-      ctx.fillStyle = '#64748b';
-      ctx.fillRect(dx - 2, glassTopY, 1, glassH);
-      ctx.fillRect(dx + doorW + 1, glassTopY, 1, glassH);
-
-      // 4) 슬라이딩 투명 유리문
-      ctx.fillStyle = 'rgba(148, 163, 184, 0.42)';
-      ctx.strokeStyle = '#64748b';
-      ctx.lineWidth = 1.5;
-
-      // 좌측 도어 리프 (열리면 좌측 기둥 쪽으로 슬라이딩)
-      ctx.fillRect(dx - slide, glassTopY, halfW - 1, glassH);
-      ctx.strokeRect(dx - slide, glassTopY, halfW - 1, glassH);
-
-      // 우측 도어 리프 (열리면 우측 기둥 쪽으로 슬라이딩)
-      ctx.fillRect(dx + halfW + slide, glassTopY, halfW - 1, glassH);
-      ctx.strokeRect(dx + halfW + slide, glassTopY, halfW - 1, glassH);
-
-      // 도어 손잡이 바
-      ctx.fillStyle = '#cbd5e1';
-      ctx.fillRect(dx + halfW - 3 - slide, glassTopY + 28, 2, 34);
-      ctx.fillRect(dx + halfW + 1 + slide, glassTopY + 28, 2, 34);
-
-      // 승강장 바닥 승하차 유도 화살표
-      ctx.fillStyle = is2Car ? 'rgba(243, 115, 33, 0.85)' : 'rgba(148, 163, 184, 0.4)';
-      ctx.beginPath();
-      ctx.moveTo(centerX, PLATFORM_Y + 22);
-      ctx.lineTo(centerX - 7, PLATFORM_Y + 36);
-      ctx.lineTo(centerX + 7, PLATFORM_Y + 36);
-      ctx.closePath();
-      ctx.fill();
-    });
 
     ctx.restore();
 
