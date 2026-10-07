@@ -1119,7 +1119,7 @@
       if (currentStep === 2) {
         appendRadioLog('안전요원', '관제, 안전요원입니다. 선로 진입을 위해 BLS 취급하겠습니다.', false, () => {
           setTimeout(() => {
-            appendRadioLog('관제실', '관제 확인. BLS 단전 취급을 승인합니다. 취급하십시오.', false, () => {
+            appendRadioLog('관제실', '관제입니다. BLS 단전 취급을 승인합니다. 취급하십시오.', false, () => {
               currentStep = 3;
               updateStepsUI();
               autoHangupHandset(); // ★ 대화 끝나면 자동 거치!
@@ -1128,7 +1128,7 @@
         });
       } 
       else if (currentStep === 5) {
-        appendRadioLog('안전요원', '관제, BLS 취급(비상정지 및 단전) 완료 확인했습니다.', false, () => {
+        appendRadioLog('안전요원', '관제, BLS 취급 완료했습니다.', false, () => {
           setTimeout(() => {
             appendRadioLog('관제실', 'BLS 취급 확인했습니다. BLS 복귀하십시오.', false, () => {
               currentStep = 6;
@@ -1145,7 +1145,7 @@
         }
         appendRadioLog('안전요원', '관제, BLS 복귀했습니다.', false, () => {
           setTimeout(() => {
-            appendRadioLog('관제실', 'BLS 복귀 확인했습니다. BLS 도어 잘 닫아주시고 열차로 안전하게 진입하십시오.', false, () => {
+            appendRadioLog('관제실', 'BLS 복귀 확인했습니다. BLS 도어 잘 닫아주시고 열차로 안전하게 이동하여 진입하십시오.', false, () => {
               currentStep = 7;
               updateStepsUI();
               autoHangupHandset(); // ★ 대화 끝나면 자동 거치!
