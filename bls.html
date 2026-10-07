@@ -73,8 +73,8 @@
       position: absolute;
       left: 22px;
       bottom: 22px;
-      width: 620px; /* 기존 520px에서 100px 대폭 확장 */
-      max-width: calc(100vw - 600px); /* 우측 BLS 함체와 겹침 방지 */
+      width: 620px;
+      max-width: calc(100vw - 600px);
       background: rgba(15, 23, 42, 0.95);
       border: 2px solid rgba(56, 189, 248, 0.55);
       border-radius: 16px;
@@ -137,13 +137,8 @@
       display: flex;
       align-items: baseline;
       gap: 8px;
-      word-break: keep-all; /* ★ 글자가 낱글자로 쪼개지는 현상 방지 */
+      word-break: keep-all;
       transition: all 0.2s;
-    }
-    /* 스텝 제목(대괄호)이 중간에 잘리지 않도록 보호 */
-    .guide-steps li strong {
-      white-space: nowrap;
-      flex-shrink: 0;
     }
     .guide-steps li.active {
       color: #fef08a;
@@ -153,6 +148,10 @@
     .guide-steps li.done {
       color: #64748b;
       text-decoration: line-through;
+    }
+    .guide-steps li strong {
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .step-num {
       color: #38bdf8;
@@ -215,11 +214,7 @@
     }
 
     @media (min-width: 1500px) {
-      .hud-guide-box { 
-        width: 680px; 
-        max-width: calc(100vw - 620px); 
-        padding: 20px 24px; 
-      }
+      .hud-guide-box { width: 680px; max-width: calc(100vw - 620px); padding: 20px 24px; }
       .guide-title { font-size: 17.5px; }
       .guide-steps { font-size: 14.5px; }
     }
@@ -492,7 +487,7 @@
       align-items: center;
     }
 
-    /* KEY S/W: 기본 OFF 10시 방향(-45deg) */
+    /* KEY S/W: 기본 OFF 10시 방향 */
     .key-rotary {
       width: 44px;
       height: 44px;
@@ -683,7 +678,6 @@
       </button>
     </div>
 
-    <!-- ★ [절차 최신화: 복귀 후 단전 유지 확인 및 관제 급전 요청 명시] -->
     <ul class="guide-steps" id="guideStepsList">
       <li id="step1" class="active"><span class="step-num">1.</span> <strong>[외함 열기]</strong> <span>BLS함 유리창을 클릭하여 외함 도어를 엽니다.</span></li>
       <li id="step2"><span class="step-num">2.</span> <strong>[관제 협의]</strong> <span>우측 수화기를 들어 관제실과 통화(취급 승인)합니다.</span></li>
@@ -691,7 +685,7 @@
       <li id="step4"><span class="step-num">4.</span> <strong>[E-STOP 누름]</strong> <span>빨간색 비상정지 버튼을 누릅니다. (경광등 작동·단전 확인)</span></li>
       <li id="step5"><span class="step-num">5.</span> <strong>[취급 보고]</strong> <span>수화기를 들어 관제에 취급 완료를 보고하고 복귀 지시를 받습니다.</span></li>
       <li id="step6"><span class="step-num">6.</span> <strong>[복귀 & 보고]</strong> <span>E-STOP 리셋 ➔ KEY OFF (단전 유지) ➔ 수화기로 복귀 완료 보고합니다.</span></li>
-      <li id="step7"><span class="step-num">7.</span> <strong>[출동 & 급전요청]</strong> <span>도어 닫기 ➔ 열차 진입 및 문 닫기 ➔ 관제 급전 요청 ➔ <strong>급전 투입 완료</strong>!</span></li>
+      <li id="step7"><span class="step-num">7.</span> <strong>[출동 ➔ 급전 ➔ 발차]</strong> <span>도어 닫기 ➔ 열차 진입 ➔ 관제 급전 투입 ➔ <strong>열차 발차 완료</strong>!</span></li>
     </ul>
 
     <div class="radio-log-container">
@@ -774,6 +768,12 @@
             2. 관제실과 통화한 후 KEY S/W를 ON으로 하고 <span class="highlight-red">비상정지버튼</span>을 취급하면 차량운행이 중단되고 급전이 차단 됩니다<br>
             3. BLS전면의 급전표시 램프가 꺼진 후 선로에 진입 하십시오<br>
             4. 비상상황이 종료된 후 <span class="highlight-red">비상정지버튼</span>을 오른쪽으로 돌리게 되면 정상복귀가 됩니다.
+            <div style="font-size:7px; color:#64748b; margin-top:4px; line-height:1.25; border-top:1px dashed #cbd5e1; padding-top:3px;">
+              1. Pick up the handset emergency situation occurs<br>
+              2. Rotate KEY S/W After calls, press <span class="highlight-red">emergency stop button</span><br>
+              3. After power supply indicator is off, enter track<br>
+              4. Turn <span class="highlight-red">emergency stop button</span> to right to return
+            </div>
           </div>
 
           <div class="handset-hook-wrapper">
@@ -804,7 +804,7 @@
   let isHandsetLifted = false;
   let isKeyOn = false;
   let isEstopPressed = false;
-  let isPowerFed = true; // ★ 급전 상태 관리 플래그 (true: 급전 점등, false: 단전 소등)
+  let isPowerFed = true;
   let isLampTestPressed = false;
 
   const emergencyHandleLeft = { x: 0, y: 0, radius: 11, currentAngle: 0, targetAngle: 0, isPulled: false, label: '2-2' };
@@ -812,6 +812,11 @@
 
   let trainDoorProgress = 0;
   let trainDoorTarget = 0;
+
+  // ★ [추가] 열차 우측 발차 애니메이션 변수
+  let trainOffsetX = 0;
+  let trainSpeed = 0;
+  let isTrainDeparting = false;
 
   const officer = {
     active: false,
@@ -856,7 +861,6 @@
     playTone(880, 'sine', 0.15, 0.09);
     setTimeout(() => playTone(880, 'sine', 0.15, 0.09), 250);
   }
-  // ★ 관제 급전 투입 시 중후한 고압 전력 인가 사운드
   function playPowerOnSound() {
     playTone(110, 'sine', 0.35, 0.15);
     setTimeout(() => playTone(587.33, 'triangle', 0.15, 0.1), 100);
@@ -990,7 +994,6 @@
     beaconGlass.classList.remove('rotating');
     lampEmergencyStop.className = 'round-lamp lamp-yellow-off';
 
-    // ★ 초기 급전 상태 복원
     isPowerFed = true;
     lampPowerStatus.classList.remove('off');
     isLampTestPressed = false;
@@ -1005,6 +1008,11 @@
 
     trainDoorTarget = 0;
     trainDoorProgress = 0;
+
+    // ★ [리셋] 열차 발차 위치 초기화
+    trainOffsetX = 0;
+    trainSpeed = 0;
+    isTrainDeparting = false;
 
     officer.active = false;
     officer.x = -40;
@@ -1027,7 +1035,6 @@
     }
   });
 
-  // 외함 닫기 버튼: 6단계 복귀보고 완료(7단계 진입) 상태에서 닫으면 출동!
   btnCloseCover.addEventListener('click', (e) => {
     e.stopPropagation();
     playClick();
@@ -1039,7 +1046,6 @@
     }
   });
 
-  // 관제 ↔ 안전요원 3단계 표준 통화 절차
   blsHandset.addEventListener('click', () => {
     playPhone();
     isHandsetLifted = !isHandsetLifted;
@@ -1047,7 +1053,6 @@
     lampPhoneSignal.className = isHandsetLifted ? 'round-lamp lamp-green-on' : 'round-lamp lamp-green-off';
 
     if (isHandsetLifted) {
-      // 2단계: 취급 협의 통화
       if (currentStep === 2) {
         appendRadioLog('안전요원', '관제, 안전요원입니다. 선로 진입을 위해 BLS 취급하겠습니다.');
         setTimeout(() => {
@@ -1056,7 +1061,6 @@
           updateStepsUI();
         }, 1200);
       } 
-      // 5단계: 취급 완료 보고 ➔ 복귀 지시 수신
       else if (currentStep === 5) {
         appendRadioLog('안전요원', '관제, BLS 취급(비상정지 및 단전) 완료 확인했습니다.');
         setTimeout(() => {
@@ -1065,7 +1069,6 @@
           updateStepsUI();
         }, 1200);
       } 
-      // 6단계: 복귀 조치 후 ➔ 복귀 완료 보고
       else if (currentStep === 6) {
         if (isEstopPressed || isKeyOn) {
           alert('먼저 E-STOP 버튼을 리셋(회전)하고 KEY S/W를 OFF로 돌린 후 복귀 보고를 하십시오!');
@@ -1092,7 +1095,6 @@
     }
   });
 
-  // E-STOP 버튼 누름 / 회전 복귀 조작
   btnEstop.addEventListener('click', () => {
     if (!isEstopPressed) {
       if (!isKeyOn) {
@@ -1106,7 +1108,6 @@
       beaconGlass.classList.add('rotating');
       lampEmergencyStop.className = 'round-lamp lamp-yellow-on';
 
-      // ★ [단전 발생] 급전상태 램프 소등
       isPowerFed = false;
       lampPowerStatus.classList.add('off');
 
@@ -1115,7 +1116,6 @@
         updateStepsUI();
       }
     } else {
-      // ★ [핵심] E-STOP을 복귀해도 단전 상태(isPowerFed = false)는 그대로 유지!
       playClick();
       isEstopPressed = false;
       btnEstop.classList.remove('pressed');
@@ -1123,12 +1123,10 @@
       beaconGlass.classList.remove('rotating');
       lampEmergencyStop.className = 'round-lamp lamp-yellow-off';
 
-      // 램프는 여전히 꺼져 있음 (단전 유지!)
       lampPowerStatus.classList.add('off');
     }
   });
 
-  // 램프 시험
   btnLampTest.addEventListener('mousedown', () => {
     playClick();
     isLampTestPressed = true;
@@ -1141,21 +1139,20 @@
     }
   });
 
-  // ★ 급전상태 등 점등 조건 판단 (시험 시 점등, 손 떼면 현재 isPowerFed 상태 반영)
   function updateLampTestUI() {
     if (isLampTestPressed) {
-      lampPowerStatus.classList.remove('off'); // 테스트 시 점등
+      lampPowerStatus.classList.remove('off');
       lampPhoneSignal.className = 'round-lamp lamp-green-on';
       lampEmergencyStop.className = 'round-lamp lamp-yellow-on';
     } else {
-      lampPowerStatus.classList.toggle('off', !isPowerFed); // 현재 단전 중이면 소등 유지
+      lampPowerStatus.classList.toggle('off', !isPowerFed);
       lampPhoneSignal.className = isHandsetLifted ? 'round-lamp lamp-green-on' : 'round-lamp lamp-green-off';
       lampEmergencyStop.className = isEstopPressed ? 'round-lamp lamp-yellow-on' : 'round-lamp lamp-yellow-off';
     }
   }
 
   /* =========================================================================
-     4. 안전요원 출동 & 차내 진입 후 문 닫기 & ★ 관제 급전 요청 시퀀스
+     4. 안전요원 출동 & 차내 진입 후 문 닫기 & ★ 열차 우측 발차 시퀀스
      ========================================================================= */
   function triggerOfficerDispatch() {
     officer.active = true;
@@ -1254,7 +1251,7 @@
     const armAngle = -legAngle * 0.85;
     const bodyBounce = isRun ? Math.abs(Math.sin(frame * 0.24)) * 2.2 : 0;
 
-    // 1. 왼다리
+    // 왼다리
     c.save();
     c.translate(-1.5, -22 - bodyBounce);
     c.rotate(-legAngle);
@@ -1264,7 +1261,7 @@
     c.fillRect(-2, 17, 6.5, 4.5);
     c.restore();
 
-    // 2. 왼팔
+    // 왼팔
     c.save();
     c.translate(-1, -38 - bodyBounce);
     c.rotate(-armAngle);
@@ -1274,7 +1271,7 @@
     c.fillRect(-2, 13, 4, 4);
     c.restore();
 
-    // 3. 몸통 & 조끼 & 가방
+    // 몸통 & 조끼
     c.save();
     c.translate(0, -22 - bodyBounce);
     if (isRun) c.rotate(0.1);
@@ -1301,7 +1298,7 @@
     c.fillRect(5, -7, 3, 3);
     c.restore();
 
-    // 4. 오른다리
+    // 오른다리
     c.save();
     c.translate(2.5, -22 - bodyBounce);
     c.rotate(legAngle);
@@ -1311,7 +1308,7 @@
     c.fillRect(-2, 17, 6.5, 4.5);
     c.restore();
 
-    // 5. 오른팔
+    // 오른팔
     c.save();
     c.translate(2, -38 - bodyBounce);
     if (state === 'pulling') {
@@ -1329,7 +1326,7 @@
     }
     c.restore();
 
-    // 6. 얼굴 & 안전모
+    // 얼굴 & 안전모
     c.save();
     c.translate(0, -bodyBounce);
     c.fillStyle = '#fed7aa';
@@ -1377,7 +1374,13 @@
       trainDoorProgress = Math.max(trainDoorTarget, trainDoorProgress - doorSpeed);
     }
 
-    // ★ [핵심] 차내 진입 ➔ 안에서 문 닫기 ➔ ★ 관제 급전 요청 ➔ ★ 급전상태 램프 점등 시퀀스
+    // ★ [발차 물리 가속] 열차 우측 이동 애니메이션
+    if (isTrainDeparting) {
+      trainSpeed += 0.055; // 서서히 부드럽게 가속
+      trainOffsetX += trainSpeed;
+    }
+
+    // 안전요원 시퀀스 ➔ 차내 진입 ➔ 안에서 문 닫기 ➔ 관제 급전 요청 ➔ ★ 열차 우측 발차!
     if (officer.active) {
       if (officer.state === 'running') {
         const dx = officer.targetX - officer.x;
@@ -1404,7 +1407,7 @@
           officer.state = 'inside';
           officer.active = false;
           
-          appendRadioLog('안전요원', '차내 진입 완료! 안에서 출입문을 닫습니다.', true);
+          appendRadioLog('안전요원', '차내 진입 완료! 안전 확보를 위해 안에서 출입문을 닫습니다.', true);
 
           setTimeout(() => {
             playDoorChime();
@@ -1415,22 +1418,33 @@
             setTimeout(() => {
               appendRadioLog('안전요원', '출입문 닫힘 완료. 차내 승객 안전조치를 개시합니다.', true);
 
-              // ★ [추가] 차내 안전조치 완료 ➔ 관제에 급전 요청!
+              // 안전조치 완료 ➔ 관제 급전 요청
               setTimeout(() => {
-                appendRadioLog('안전요원', '관제, 안전요원 11편성 탑승 완료했습니다. 해당 구간 급전 요청합니다.', false);
+                appendRadioLog('안전요원', '관제, 차내 안전조치 완료되었습니다. 해당 구간 급전 요청합니다.', false);
 
                 setTimeout(() => {
                   appendRadioLog('관제실', '확인했습니다. 안전 확인 완료. 해당 구간 급전 투입합니다.', false);
 
-                  // ★ [핵심] 관제실이 급전을 투입하는 순간, BLS 함체의 [급전상태] 램프가 다시 점등!
+                  // 관제 급전 투입 ➔ 램프 점등
                   setTimeout(() => {
-                    playPowerOnSound(); // 고압 전력 투입 사운드
+                    playPowerOnSound();
                     isPowerFed = true;
-                    lampPowerStatus.classList.remove('off'); // 급전상태 빨간 램프 점등!
+                    lampPowerStatus.classList.remove('off');
 
+                    // ★ [열차 우측 발차 시퀀스 시작]
                     setTimeout(() => {
-                      appendRadioLog('시스템', '🎉 [실습 완료] 해당 구간 급전이 정상 투입되고 모든 조치가 완료되었습니다. 상단 \'실습 초기화\' 버튼을 눌러 다시 실습할 수 있습니다.', true);
-                    }, 1200);
+                      appendRadioLog('안전요원', '급전 투입 확인. 열차 서서히 발차합니다.', false);
+                      isTrainDeparting = true; // 가속 이동 시작!
+
+                      // 열차 출발 경적 사운드 (뿌우우~🎵)
+                      playTone(349.23, 'sawtooth', 0.4, 0.12);
+                      setTimeout(() => playTone(440.00, 'sawtooth', 0.4, 0.12), 60);
+
+                      setTimeout(() => {
+                        appendRadioLog('시스템', '🎉 [실습 완료] 열차가 정상 발차하고 모든 비상조치가 완료되었습니다. 상단 \'실습 초기화\' 버튼을 눌러 다시 실습할 수 있습니다.', true);
+                      }, 4000);
+                    }, 1400);
+
                   }, 800);
 
                 }, 1800);
@@ -1496,7 +1510,7 @@
     ctx.fillRect(0, PLATFORM_Y - 18, width, 4);
     ctx.fillRect(0, PLATFORM_Y - 10, width, 4);
 
-    // C. 인천 2호선 전동차
+    // ★ C. [우측 발차 오프셋 trainOffsetX 적용] 인천 2호선 전동차 렌더링
     const trainTopY = TRACK_TOP_Y - (isMobile ? 6 : 10);
     const trainH = PLATFORM_Y - trainTopY;
     const windowBandY = trainTopY + trainH * 0.22;
@@ -1505,18 +1519,20 @@
     const orangeStripeH = isMobile ? 8 : 12;
     const doorW = isMobile ? 44 : 70;
 
-    const car2Left = doorCenters[3] - doorW * 1.5;
-    const car2Right = (doorCenters[5] + doorCenters[6]) / 2 - (isMobile ? 6 : 10);
-    const car1Left = (doorCenters[5] + doorCenters[6]) / 2 + (isMobile ? 6 : 10);
-    const car1Right = doorCenters[8] + doorW * 1.5;
+    const car2Left = doorCenters[3] - doorW * 1.5 + trainOffsetX;
+    const car2Right = (doorCenters[5] + doorCenters[6]) / 2 - (isMobile ? 6 : 10) + trainOffsetX;
+    const car1Left = (doorCenters[5] + doorCenters[6]) / 2 + (isMobile ? 6 : 10) + trainOffsetX;
+    const car1Right = doorCenters[8] + doorW * 1.5 + trainOffsetX;
 
     const renderCar = (left, right, isLead, isTail, carDoorIndices) => {
       const cw = right - left;
 
+      // 대차
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(left + (isMobile ? 16 : 28), PLATFORM_Y - 4, (isMobile ? 26 : 44), 8);
       ctx.fillRect(right - (isMobile ? 42 : 72), PLATFORM_Y - 4, (isMobile ? 26 : 44), 8);
 
+      // 바디
       const bodyGrad = ctx.createLinearGradient(0, trainTopY, 0, PLATFORM_Y);
       bodyGrad.addColorStop(0, '#e2e8f0');
       bodyGrad.addColorStop(0.5, '#cbd5e1');
@@ -1532,8 +1548,8 @@
 
       // 통유리창
       for (let i = 0; i < carDoorIndices.length - 1; i++) {
-        const d1 = doorCenters[carDoorIndices[i]];
-        const d2 = doorCenters[carDoorIndices[i + 1]];
+        const d1 = doorCenters[carDoorIndices[i]] + trainOffsetX;
+        const d2 = doorCenters[carDoorIndices[i + 1]] + trainOffsetX;
         const wx = d1 + doorW / 2 + 4;
         const ww = (d2 - doorW / 2 - 4) - wx;
         if (ww > 6) {
@@ -1550,7 +1566,7 @@
 
       // 출입문
       carDoorIndices.forEach(dIdx => {
-        const dcX = doorCenters[dIdx];
+        const dcX = doorCenters[dIdx] + trainOffsetX;
         const tDoorW = doorW * 0.78;
         const tdx = dcX - tDoorW / 2;
 
@@ -1608,13 +1624,13 @@
     ctx.fillRect(car2Right, trainTopY + 14, car1Left - car2Right, trainH - 16);
     renderCar(car1Left, car1Right, true, false, [6, 7, 8]);
 
-    // D. 비상핸들
+    // ★ D. 비상핸들 (열차와 함께 우측으로 이동)
     const handleRadius = isMobile ? 7 : 11;
-    emergencyHandleLeft.x = (doorCenters[3] + doorCenters[4]) / 2;
+    emergencyHandleLeft.x = (doorCenters[3] + doorCenters[4]) / 2 + trainOffsetX;
     emergencyHandleLeft.y = PLATFORM_Y - (isMobile ? 20 : 30);
     drawEmergencyHandle(ctx, emergencyHandleLeft.x, emergencyHandleLeft.y, handleRadius, emergencyHandleLeft.currentAngle);
 
-    emergencyHandleRight.x = (doorCenters[7] + doorCenters[8]) / 2;
+    emergencyHandleRight.x = (doorCenters[7] + doorCenters[8]) / 2 + trainOffsetX;
     emergencyHandleRight.y = PLATFORM_Y - (isMobile ? 20 : 30);
     drawEmergencyHandle(ctx, emergencyHandleRight.x, emergencyHandleRight.y, handleRadius, emergencyHandleRight.currentAngle);
 
