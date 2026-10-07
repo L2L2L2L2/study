@@ -73,8 +73,8 @@
       position: absolute;
       left: 22px;
       bottom: 22px;
-      width: 520px;
-      max-width: 44vw;
+      width: 620px; /* 기존 520px에서 100px 대폭 확장 */
+      max-width: calc(100vw - 600px); /* 우측 BLS 함체와 겹침 방지 */
       background: rgba(15, 23, 42, 0.95);
       border: 2px solid rgba(56, 189, 248, 0.55);
       border-radius: 16px;
@@ -128,15 +128,22 @@
     .guide-steps {
       list-style: none;
       font-size: 13.5px;
-      line-height: 1.65;
+      line-height: 1.6;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 6px;
     }
     .guide-steps li {
       display: flex;
+      align-items: baseline;
       gap: 8px;
+      word-break: keep-all; /* ★ 글자가 낱글자로 쪼개지는 현상 방지 */
       transition: all 0.2s;
+    }
+    /* 스텝 제목(대괄호)이 중간에 잘리지 않도록 보호 */
+    .guide-steps li strong {
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .guide-steps li.active {
       color: #fef08a;
@@ -208,7 +215,11 @@
     }
 
     @media (min-width: 1500px) {
-      .hud-guide-box { width: 600px; padding: 22px 26px; }
+      .hud-guide-box { 
+        width: 680px; 
+        max-width: calc(100vw - 620px); 
+        padding: 20px 24px; 
+      }
       .guide-title { font-size: 17.5px; }
       .guide-steps { font-size: 14.5px; }
     }
@@ -674,13 +685,13 @@
 
     <!-- ★ [절차 최신화: 복귀 후 단전 유지 확인 및 관제 급전 요청 명시] -->
     <ul class="guide-steps" id="guideStepsList">
-      <li id="step1" class="active"><span class="step-num">1.</span> <strong>[외함 열기]</strong> BLS함 유리창을 클릭하여 외함 도어를 엽니다.</li>
-      <li id="step2"><span class="step-num">2.</span> <strong>[관제 협의]</strong> 우측 수화기를 들어 관제실과 통화(취급 승인)합니다.</li>
-      <li id="step3"><span class="step-num">3.</span> <strong>[KEY ON]</strong> 관제 허가 후 키 스위치를 ON 위치로 돌립니다.</li>
-      <li id="step4"><span class="step-num">4.</span> <strong>[E-STOP 누름]</strong> 빨간색 비상정지 버튼을 누릅니다. (경광등 작동·단전 확인)</li>
-      <li id="step5"><span class="step-num">5.</span> <strong>[취급 보고]</strong> 수화기를 들어 관제에 취급 완료를 보고하고 복귀 지시를 받습니다.</li>
-      <li id="step6"><span class="step-num">6.</span> <strong>[복귀 & 복귀보고]</strong> E-STOP 리셋 ➔ KEY OFF (단전 유지) ➔ 수화기로 복귀 완료를 보고합니다.</li>
-      <li id="step7"><span class="step-num">7.</span> <strong>[출동 ➔ 차내 급전 요청]</strong> 도어 닫기 ➔ 열차 진입 및 문 닫기 ➔ 관제 급전 요청 ➔ <strong>급전 투입 완료</strong>!</li>
+      <li id="step1" class="active"><span class="step-num">1.</span> <strong>[외함 열기]</strong> <span>BLS함 유리창을 클릭하여 외함 도어를 엽니다.</span></li>
+      <li id="step2"><span class="step-num">2.</span> <strong>[관제 협의]</strong> <span>우측 수화기를 들어 관제실과 통화(취급 승인)합니다.</span></li>
+      <li id="step3"><span class="step-num">3.</span> <strong>[KEY ON]</strong> <span>관제 허가 후 키 스위치를 ON 위치로 돌립니다.</span></li>
+      <li id="step4"><span class="step-num">4.</span> <strong>[E-STOP 누름]</strong> <span>빨간색 비상정지 버튼을 누릅니다. (경광등 작동·단전 확인)</span></li>
+      <li id="step5"><span class="step-num">5.</span> <strong>[취급 보고]</strong> <span>수화기를 들어 관제에 취급 완료를 보고하고 복귀 지시를 받습니다.</span></li>
+      <li id="step6"><span class="step-num">6.</span> <strong>[복귀 & 보고]</strong> <span>E-STOP 리셋 ➔ KEY OFF (단전 유지) ➔ 수화기로 복귀 완료 보고합니다.</span></li>
+      <li id="step7"><span class="step-num">7.</span> <strong>[출동 & 급전요청]</strong> <span>도어 닫기 ➔ 열차 진입 및 문 닫기 ➔ 관제 급전 요청 ➔ <strong>급전 투입 완료</strong>!</span></li>
     </ul>
 
     <div class="radio-log-container">
