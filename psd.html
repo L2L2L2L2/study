@@ -1642,7 +1642,85 @@
       const dx = centerX - doorW / 2;
       const slide = door.openProgress * (doorW * 0.42);
       const is2Car = door.carType === '2CAR';
+      
+      // ★ [추가] 1-3과 2-1 사이 승강장 실제 위치의 미니 승강장조작반(PSL) 스탠드 모형
+    const miniPslX = (doorCenters[5] + doorCenters[6]) / 2; // 2-1과 1-3 정중앙
+    const miniPslW = 30; // 가로 크기
+    const miniPslH = 40; // 세로 크기
+    const miniPslTopY = psdTopY + psdBarH + 2;
+    const miniPslBottomY = miniPslTopY + miniPslH;
 
+    // 1) 바닥까지 이어지는 하단 메탈 지지대 기둥 (스탠드 폴)
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(miniPslX - 3, miniPslBottomY, 6, PLATFORM_Y - miniPslBottomY);
+    for (let gy = miniPslBottomY + 3; gy < PLATFORM_Y - 2; gy += 4) {
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(miniPslX - 2.5, gy, 5, 2);
+    }
+
+    // 2) 미니 조작반 본체 섀시 (입체 그림자 & 메탈 바디)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.fillRect(miniPslX - miniPslW / 2 + 1.5, miniPslTopY + 1.5, miniPslW, miniPslH);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillRect(miniPslX - miniPslW / 2, miniPslTopY, miniPslW, miniPslH);
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(miniPslX - miniPslW / 2, miniPslTopY, miniPslW, miniPslH);
+
+    // 3) 상단 초미니 명판 "승강장조작반"
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 3.5px "Pretendard", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('승강장조작반', miniPslX, miniPslTopY + 4.5);
+
+    // 4) 디지털 HMI 미니 모니터 (우측 상단 검은 액정)
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(miniPslX - 1, miniPslTopY + 6.5, 14, 11);
+    // 모니터 내부 도어 LED (문 열리면 빨간 점, 닫히면 초록 점 연동)
+    const miniLedColor = isAllClosed ? '#22c55e' : '#ef4444';
+    ctx.fillStyle = miniLedColor;
+    ctx.fillRect(miniPslX + 1, miniPslTopY + 8.5, 10, 2);
+    ctx.fillRect(miniPslX + 1, miniPslTopY + 12, 10, 2);
+
+    // 5) 좌측 미니 인터폰 수화기
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(miniPslX - miniPslW / 2 + 2.5, miniPslTopY + 7, 7, 16);
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(miniPslX - miniPslW / 2 + 2.5, miniPslTopY + 7, 7, 16);
+
+    // 6) 상태표시 램프 (메인 조작반의 전체열림/닫힘 상태와 실시간 동기화)
+    // 전체열림(빨강)
+    ctx.fillStyle = isAllOpened ? '#ef4444' : '#5c1c1c';
+    ctx.beginPath();
+    ctx.arc(miniPslX + 2, miniPslTopY + 21, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 전체닫힘(초록)
+    ctx.fillStyle = (isAllClosed && !isMoving) ? '#10b981' : '#14492d';
+    ctx.beginPath();
+    ctx.arc(miniPslX + 7, miniPslTopY + 21, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 7) 하단 제어 버튼 및 스위치 (노브, 푸시버튼, 노란 인터록 박스)
+    ctx.fillStyle = '#dc2626'; // 빨간 열림 버튼
+    ctx.beginPath();
+    ctx.arc(miniPslX + 5, miniPslTopY + 27, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#10b981'; // 초록 닫힘 버튼
+    ctx.beginPath();
+    ctx.arc(miniPslX + 10, miniPslTopY + 27, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 노란색 인터록 해제 박스 & 스위치
+    ctx.fillStyle = '#fef08a';
+    ctx.fillRect(miniPslX + 3, miniPslTopY + 31.5, 7, 6);
+    ctx.strokeStyle = '#dc2626';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(miniPslX + 3, miniPslTopY + 31.5, 7, 6);
+      
       // 1) 도어 번호 명판 (주황 바 상단)
       ctx.fillStyle = is2Car ? '#ffffff' : '#cbd5e1';
       ctx.font = `bold ${Math.max(13, Math.min(18, width * 0.012))}px "Pretendard", sans-serif`;
