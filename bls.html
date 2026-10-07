@@ -672,15 +672,15 @@
       </button>
     </div>
 
-    <!-- ★ [절차 세분화 반영] -->
+    <!-- ★ [절차 최신화: 복귀 후 단전 유지 확인 및 관제 급전 요청 명시] -->
     <ul class="guide-steps" id="guideStepsList">
       <li id="step1" class="active"><span class="step-num">1.</span> <strong>[외함 열기]</strong> BLS함 유리창을 클릭하여 외함 도어를 엽니다.</li>
       <li id="step2"><span class="step-num">2.</span> <strong>[관제 협의]</strong> 우측 수화기를 들어 관제실과 통화(취급 승인)합니다.</li>
       <li id="step3"><span class="step-num">3.</span> <strong>[KEY ON]</strong> 관제 허가 후 키 스위치를 ON 위치로 돌립니다.</li>
-      <li id="step4"><span class="step-num">4.</span> <strong>[E-STOP 누름]</strong> 빨간색 비상정지 버튼을 누릅니다. (경광등 작동·단전)</li>
+      <li id="step4"><span class="step-num">4.</span> <strong>[E-STOP 누름]</strong> 빨간색 비상정지 버튼을 누릅니다. (경광등 작동·단전 확인)</li>
       <li id="step5"><span class="step-num">5.</span> <strong>[취급 보고]</strong> 수화기를 들어 관제에 취급 완료를 보고하고 복귀 지시를 받습니다.</li>
-      <li id="step6"><span class="step-num">6.</span> <strong>[복귀 & 복귀보고]</strong> E-STOP 리셋 ➔ KEY OFF ➔ 수화기로 복귀 완료를 보고합니다.</li>
-      <li id="step7"><span class="step-num">7.</span> <strong>[도어 닫기 & 출동]</strong> 외함 도어를 닫고 안전요원이 열차로 출동 진입합니다!</li>
+      <li id="step6"><span class="step-num">6.</span> <strong>[복귀 & 복귀보고]</strong> E-STOP 리셋 ➔ KEY OFF (단전 유지) ➔ 수화기로 복귀 완료를 보고합니다.</li>
+      <li id="step7"><span class="step-num">7.</span> <strong>[출동 ➔ 차내 급전 요청]</strong> 도어 닫기 ➔ 열차 진입 및 문 닫기 ➔ 관제 급전 요청 ➔ <strong>급전 투입 완료</strong>!</li>
     </ul>
 
     <div class="radio-log-container">
@@ -793,7 +793,7 @@
   let isHandsetLifted = false;
   let isKeyOn = false;
   let isEstopPressed = false;
-  let isPowerFed = true;
+  let isPowerFed = true; // ★ 급전 상태 관리 플래그 (true: 급전 점등, false: 단전 소등)
   let isLampTestPressed = false;
 
   const emergencyHandleLeft = { x: 0, y: 0, radius: 11, currentAngle: 0, targetAngle: 0, isPulled: false, label: '2-2' };
@@ -844,6 +844,11 @@
   function playDoorChime() {
     playTone(880, 'sine', 0.15, 0.09);
     setTimeout(() => playTone(880, 'sine', 0.15, 0.09), 250);
+  }
+  // ★ 관제 급전 투입 시 중후한 고압 전력 인가 사운드
+  function playPowerOnSound() {
+    playTone(110, 'sine', 0.35, 0.15);
+    setTimeout(() => playTone(587.33, 'triangle', 0.15, 0.1), 100);
   }
 
   function speakTTS(text, role) {
@@ -917,7 +922,6 @@
     blsStationContainer.classList.add('mobile-hidden');
   });
 
-  // ★ [수정] skipTTS 파라미터 지원: true일 경우 텍스트 로그만 남기고 음성 출력 생략
   function appendRadioLog(role, text, skipTTS = false) {
     if (logEmptyNotice) logEmptyNotice.style.display = 'none';
 
@@ -975,6 +979,7 @@
     beaconGlass.classList.remove('rotating');
     lampEmergencyStop.className = 'round-lamp lamp-yellow-off';
 
+    // ★ 초기 급전 상태 복원
     isPowerFed = true;
     lampPowerStatus.classList.remove('off');
     isLampTestPressed = false;
@@ -1011,7 +1016,7 @@
     }
   });
 
-  // 외함 닫기 버튼: 7단계(복귀보고까지 완료) 상태에서 닫으면 안전요원 출동!
+  // 외함 닫기 버튼: 6단계 복귀보고 완료(7단계 진입) 상태에서 닫으면 출동!
   btnCloseCover.addEventListener('click', (e) => {
     e.stopPropagation();
     playClick();
@@ -1023,7 +1028,7 @@
     }
   });
 
-  // ★ [수정] 관제 ↔ 안전요원 3단계 표준 통화 절차 구현
+  // 관제 ↔ 안전요원 3단계 표준 통화 절차
   blsHandset.addEventListener('click', () => {
     playPhone();
     isHandsetLifted = !isHandsetLifted;
@@ -1049,7 +1054,7 @@
           updateStepsUI();
         }, 1200);
       } 
-      // 6단계: 복귀 조치(E-STOP 리셋 + KEY OFF) 후 ➔ 복귀 완료 보고
+      // 6단계: 복귀 조치 후 ➔ 복귀 완료 보고
       else if (currentStep === 6) {
         if (isEstopPressed || isKeyOn) {
           alert('먼저 E-STOP 버튼을 리셋(회전)하고 KEY S/W를 OFF로 돌린 후 복귀 보고를 하십시오!');
@@ -1076,6 +1081,7 @@
     }
   });
 
+  // E-STOP 버튼 누름 / 회전 복귀 조작
   btnEstop.addEventListener('click', () => {
     if (!isEstopPressed) {
       if (!isKeyOn) {
@@ -1088,6 +1094,8 @@
 
       beaconGlass.classList.add('rotating');
       lampEmergencyStop.className = 'round-lamp lamp-yellow-on';
+
+      // ★ [단전 발생] 급전상태 램프 소등
       isPowerFed = false;
       lampPowerStatus.classList.add('off');
 
@@ -1096,18 +1104,20 @@
         updateStepsUI();
       }
     } else {
-      // 복귀 조치 (회전 복귀)
+      // ★ [핵심] E-STOP을 복귀해도 단전 상태(isPowerFed = false)는 그대로 유지!
       playClick();
       isEstopPressed = false;
       btnEstop.classList.remove('pressed');
 
       beaconGlass.classList.remove('rotating');
       lampEmergencyStop.className = 'round-lamp lamp-yellow-off';
-      isPowerFed = true;
-      lampPowerStatus.classList.remove('off');
+
+      // 램프는 여전히 꺼져 있음 (단전 유지!)
+      lampPowerStatus.classList.add('off');
     }
   });
 
+  // 램프 시험
   btnLampTest.addEventListener('mousedown', () => {
     playClick();
     isLampTestPressed = true;
@@ -1120,20 +1130,21 @@
     }
   });
 
+  // ★ 급전상태 등 점등 조건 판단 (시험 시 점등, 손 떼면 현재 isPowerFed 상태 반영)
   function updateLampTestUI() {
     if (isLampTestPressed) {
-      lampPowerStatus.classList.remove('off');
+      lampPowerStatus.classList.remove('off'); // 테스트 시 점등
       lampPhoneSignal.className = 'round-lamp lamp-green-on';
       lampEmergencyStop.className = 'round-lamp lamp-yellow-on';
     } else {
-      lampPowerStatus.classList.toggle('off', !isPowerFed);
+      lampPowerStatus.classList.toggle('off', !isPowerFed); // 현재 단전 중이면 소등 유지
       lampPhoneSignal.className = isHandsetLifted ? 'round-lamp lamp-green-on' : 'round-lamp lamp-green-off';
       lampEmergencyStop.className = isEstopPressed ? 'round-lamp lamp-yellow-on' : 'round-lamp lamp-yellow-off';
     }
   }
 
   /* =========================================================================
-     4. 안전요원 출동 & 차내 진입 후 문 닫기 시퀀스
+     4. 안전요원 출동 & 차내 진입 후 문 닫기 & ★ 관제 급전 요청 시퀀스
      ========================================================================= */
   function triggerOfficerDispatch() {
     officer.active = true;
@@ -1219,7 +1230,6 @@
     c.restore();
   }
 
-  // 실제 관절 회전 기반의 자연스러운 달리기/보행 렌더러
   function drawOfficer(c, ox, oy, frame, state) {
     c.save();
     c.translate(ox, oy);
@@ -1356,7 +1366,7 @@
       trainDoorProgress = Math.max(trainDoorTarget, trainDoorProgress - doorSpeed);
     }
 
-    // ★ [핵심] 차내 진입 후 출입문 닫기 시퀀스 & TTS 선택적 제외 처리
+    // ★ [핵심] 차내 진입 ➔ 안에서 문 닫기 ➔ ★ 관제 급전 요청 ➔ ★ 급전상태 램프 점등 시퀀스
     if (officer.active) {
       if (officer.state === 'running') {
         const dx = officer.targetX - officer.x;
@@ -1383,8 +1393,7 @@
           officer.state = 'inside';
           officer.active = false;
           
-          // ★ 요청사항: 로그창에는 남기되, TTS는 제외 (skipTTS = true)
-          appendRadioLog('안전요원', '차내 진입 완료! 안전 확보를 위해 안에서 출입문을 닫습니다.', true);
+          appendRadioLog('안전요원', '차내 진입 완료! 안에서 출입문을 닫습니다.', true);
 
           setTimeout(() => {
             playDoorChime();
@@ -1393,11 +1402,29 @@
             emergencyHandleRight.isPulled = false;
 
             setTimeout(() => {
-              // ★ 요청사항: 로그창에는 남기되, TTS는 제외 (skipTTS = true)
               appendRadioLog('안전요원', '출입문 닫힘 완료. 차내 승객 안전조치를 개시합니다.', true);
+
+              // ★ [추가] 차내 안전조치 완료 ➔ 관제에 급전 요청!
               setTimeout(() => {
-                appendRadioLog('시스템', '🎉 [실습 완료] 모든 비상조치가 끝났습니다. 상단 \'실습 초기화\' 버튼을 눌러 다시 실습할 수 있습니다.', true);
-              }, 1000);
+                appendRadioLog('안전요원', '관제, 안전요원 11편성 탑승 완료했습니다. 해당 구간 급전 요청합니다.', false);
+
+                setTimeout(() => {
+                  appendRadioLog('관제실', '확인했습니다. 안전 확인 완료. 해당 구간 급전 투입합니다.', false);
+
+                  // ★ [핵심] 관제실이 급전을 투입하는 순간, BLS 함체의 [급전상태] 램프가 다시 점등!
+                  setTimeout(() => {
+                    playPowerOnSound(); // 고압 전력 투입 사운드
+                    isPowerFed = true;
+                    lampPowerStatus.classList.remove('off'); // 급전상태 빨간 램프 점등!
+
+                    setTimeout(() => {
+                      appendRadioLog('시스템', '🎉 [실습 완료] 해당 구간 급전이 정상 투입되고 모든 조치가 완료되었습니다. 상단 \'실습 초기화\' 버튼을 눌러 다시 실습할 수 있습니다.', true);
+                    }, 1200);
+                  }, 800);
+
+                }, 1800);
+              }, 1400);
+
             }, 1200);
           }, 1200);
         }
