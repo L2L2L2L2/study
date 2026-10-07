@@ -1257,9 +1257,6 @@
         ctx.fillStyle = '#fef9c3';
         ctx.fillRect(tdx, windowBandY, tDoorW, trainH - (windowBandY - trainTopY) - 2);
 
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillRect(dcX - 1.5, windowBandY + 4, 3, trainH - (windowBandY - trainTopY) - 10);
-
         const halfTDW = tDoorW / 2;
         ctx.fillStyle = '#cbd5e1';
 
@@ -1578,52 +1575,69 @@
     ctx.fillStyle = '#b45309';
     ctx.fillRect(0, PLATFORM_Y + 2 + tactileH - 2, width, 2);
 
-    // PSD 상단 주황색 헤더 프레임
-    const psdTopY = TRACK_TOP_Y + 12;
+    // H. PSD 상단 주황색 헤더 프레임 (높이를 40px로 키워 조명을 안쪽에 완벽 내장)
+    const psdTopY = TRACK_TOP_Y + 6;
+    const psdBarH = 40; // 두께를 넉넉하게 확장
     const psdHeight = PLATFORM_Y - psdTopY;
     ctx.fillStyle = '#F37321';
-    ctx.fillRect(0, psdTopY, width, 26);
+    ctx.fillRect(0, psdTopY, width, psdBarH);
     ctx.fillStyle = '#c2410c';
-    ctx.fillRect(0, psdTopY + 23, width, 3);
+    ctx.fillRect(0, psdTopY + psdBarH - 3, width, 3);
 
-    // 12개 PSD 도어 전면 렌더링
+    // I. 12개 PSD 도어 및 4번째 이미지 스타일 수직 구조물 렌더링
     DOORS.forEach((door, idx) => {
       const centerX = doorCenters[idx];
       const dx = centerX - doorW / 2;
       const slide = door.openProgress * (doorW * 0.42);
       const is2Car = door.carType === '2CAR';
 
+      // 1) 도어 번호 명판 (주황 바 상단)
       ctx.fillStyle = is2Car ? '#ffffff' : '#cbd5e1';
       ctx.font = `bold ${Math.max(13, Math.min(18, width * 0.012))}px "Pretendard", sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(door.label, centerX, psdTopY + 13);
+      ctx.fillText(door.label, centerX, psdTopY + 14);
 
+      // 2) 도어 상단 LED (★ 주황 바 안쪽 하단에 안정적으로 안착)
       const ledColor = door.openProgress > 0.05 ? '#ef4444' : '#22c55e';
       ctx.fillStyle = ledColor;
       ctx.shadowColor = ledColor;
       ctx.shadowBlur = 8;
-      ctx.fillRect(centerX - 3.5, psdTopY + 30, 7, 7);
+      ctx.fillRect(centerX - 3.5, psdTopY + 26, 7, 7);
       ctx.shadowBlur = 0;
 
-      const glassTopY = psdTopY + 42;
-      const glassH = psdHeight - 44;
+      // 3) 유리문 및 수직 프레임 위치 계산
+      const glassTopY = psdTopY + psdBarH;
+      const glassH = PLATFORM_Y - glassTopY - 2;
       const halfW = doorW / 2;
 
+      // ★ [4번째 이미지 구조물] 출입문 좌우의 튼튼한 PSD 메탈 수직 포스트 기둥
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(dx - 3, glassTopY, 3, glassH);
+      ctx.fillRect(dx + doorW, glassTopY, 3, glassH);
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(dx - 2, glassTopY, 1, glassH);
+      ctx.fillRect(dx + doorW + 1, glassTopY, 1, glassH);
+
+      // 4) 슬라이딩 투명 유리문
       ctx.fillStyle = 'rgba(148, 163, 184, 0.42)';
       ctx.strokeStyle = '#64748b';
       ctx.lineWidth = 1.5;
 
+      // 좌측 도어 리프 (열리면 좌측 기둥 쪽으로 슬라이딩)
       ctx.fillRect(dx - slide, glassTopY, halfW - 1, glassH);
       ctx.strokeRect(dx - slide, glassTopY, halfW - 1, glassH);
 
+      // 우측 도어 리프 (열리면 우측 기둥 쪽으로 슬라이딩)
       ctx.fillRect(dx + halfW + slide, glassTopY, halfW - 1, glassH);
       ctx.strokeRect(dx + halfW + slide, glassTopY, halfW - 1, glassH);
 
+      // 도어 손잡이 바
       ctx.fillStyle = '#cbd5e1';
       ctx.fillRect(dx + halfW - 3 - slide, glassTopY + 28, 2, 34);
       ctx.fillRect(dx + halfW + 1 + slide, glassTopY + 28, 2, 34);
 
+      // 승강장 바닥 승하차 유도 화살표
       ctx.fillStyle = is2Car ? 'rgba(243, 115, 33, 0.85)' : 'rgba(148, 163, 184, 0.4)';
       ctx.beginPath();
       ctx.moveTo(centerX, PLATFORM_Y + 22);
