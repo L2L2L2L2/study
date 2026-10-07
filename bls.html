@@ -34,8 +34,8 @@
     /* 좌측 상단 HUD */
     .hud-badge {
       position: absolute;
-      top: 16px;
-      left: 20px;
+      top: 18px;
+      left: 22px;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -44,23 +44,23 @@
     .badge-title {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      background: rgba(15, 23, 42, 0.92);
-      border: 1px solid rgba(56, 189, 248, 0.6);
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.94);
+      border: 1.5px solid rgba(56, 189, 248, 0.65);
       backdrop-filter: blur(10px);
-      padding: 8px 16px;
-      border-radius: 8px;
+      padding: 10px 20px;
+      border-radius: 10px;
       color: #e0f2fe;
-      font-size: 13.5px;
+      font-size: 15px;
       font-weight: 800;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
     }
     .pulse-dot-blue {
-      width: 9px;
-      height: 9px;
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
       background-color: #0ea5e9;
-      box-shadow: 0 0 12px #38bdf8;
+      box-shadow: 0 0 14px #38bdf8;
       animation: pulseBlue 1.5s infinite;
     }
     @keyframes pulseBlue {
@@ -68,44 +68,45 @@
       50% { transform: scale(1.4); opacity: 0.5; }
     }
 
-    /* 좌측 하단 교육 실습 가이드 HUD & 통화 로그 */
+    /* 좌측 하단 교육 실습 가이드 & 통화 로그 (1.5배 스케일업) */
     .hud-guide-box {
       position: absolute;
-      left: 20px;
-      bottom: 20px;
-      width: 440px;
-      background: rgba(15, 23, 42, 0.94);
-      border: 1.5px solid rgba(56, 189, 248, 0.5);
-      border-radius: 14px;
-      padding: 16px 18px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+      left: 22px;
+      bottom: 22px;
+      width: 520px;
+      max-width: 44vw;
+      background: rgba(15, 23, 42, 0.95);
+      border: 2px solid rgba(56, 189, 248, 0.55);
+      border-radius: 16px;
+      padding: 18px 22px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(14px);
       z-index: 10;
       color: #cbd5e1;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      max-height: 52vh;
+      gap: 12px;
+      max-height: 56vh;
       overflow-y: auto;
     }
     .guide-title {
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 800;
       color: #38bdf8;
       display: flex;
       align-items: center;
-      gap: 6px;
-      border-bottom: 1px solid #334155;
-      padding-bottom: 6px;
+      gap: 8px;
+      border-bottom: 1.5px solid #334155;
+      padding-bottom: 8px;
       margin: 0;
     }
     .guide-steps {
       list-style: none;
-      font-size: 12px;
-      line-height: 1.6;
+      font-size: 14px;
+      line-height: 1.7;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
     }
     .guide-steps li {
       display: flex;
@@ -126,101 +127,101 @@
       font-weight: bold;
     }
 
-    /* ★ [추가] 관제 통화 기록 영구 보존 로그 컨테이너 */
+    /* 관제 통화 기록 영구 보존 로그 */
     .radio-log-container {
-      background: rgba(2, 6, 23, 0.7);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      border-radius: 8px;
-      padding: 10px 12px;
+      background: rgba(2, 6, 23, 0.75);
+      border: 1.5px solid rgba(56, 189, 248, 0.35);
+      border-radius: 10px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
     .radio-log-header {
-      font-size: 11.5px;
+      font-size: 13px;
       font-weight: 800;
       color: #7dd3fc;
       display: flex;
       align-items: center;
       gap: 6px;
       border-bottom: 1px dashed #334155;
-      padding-bottom: 4px;
+      padding-bottom: 5px;
     }
     .radio-log-list {
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 120px;
+      max-height: 130px;
       overflow-y: auto;
     }
     .log-item {
-      font-size: 11.5px;
-      line-height: 1.45;
-      padding: 4px 8px;
-      border-radius: 5px;
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 5px 10px;
+      border-radius: 6px;
     }
     .log-item.officer {
-      background: rgba(56, 189, 248, 0.15);
-      border-left: 3px solid #38bdf8;
+      background: rgba(56, 189, 248, 0.18);
+      border-left: 3.5px solid #38bdf8;
       color: #e0f2fe;
     }
     .log-item.control {
-      background: rgba(234, 179, 8, 0.15);
-      border-left: 3px solid #facc15;
+      background: rgba(234, 179, 8, 0.18);
+      border-left: 3.5px solid #facc15;
       color: #fef08a;
     }
     .log-item.empty {
       color: #64748b;
       font-style: italic;
-      padding: 2px 0;
+      padding: 4px 0;
     }
 
-    @media (min-width: 1400px) {
-      .hud-guide-box { width: 540px; padding: 18px 22px; max-height: 56vh; }
-      .guide-title { font-size: 16px; }
-      .guide-steps { font-size: 13px; }
-      .radio-log-header { font-size: 12.5px; }
-      .log-item { font-size: 12.5px; }
+    @media (min-width: 1500px) {
+      .hud-guide-box { width: 600px; padding: 22px 26px; }
+      .guide-title { font-size: 17.5px; }
+      .guide-steps { font-size: 15px; }
+      .radio-log-header { font-size: 14px; }
+      .log-item { font-size: 14px; }
     }
 
-    /* 2. 우측 하단 BLS 함체 실물 인터페이스 */
+    /* 2. 우측 하단 BLS 함체 인터페이스 (1.5배 시원한 스케일업) */
     .bls-station-container {
       position: absolute;
       right: 25px;
-      bottom: 20px;
-      width: 460px;
-      max-width: 40vw;
-      height: 560px;
-      max-height: 65vh;
+      bottom: 22px;
+      width: 560px;
+      max-width: 46vw;
+      height: auto;
+      max-height: 70vh;
       z-index: 20;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
-    /* 함체 지붕 위 파란색 회전 사이렌 경광등 */
+    /* 함체 지붕 위 경광등 (1.5배) */
     .beacon-light-wrapper {
       position: relative;
-      width: 70px;
-      height: 38px;
+      width: 86px;
+      height: 46px;
       display: flex;
       justify-content: center;
       align-items: flex-end;
       z-index: 25;
     }
     .beacon-glass {
-      width: 44px;
-      height: 32px;
-      border-radius: 22px 22px 4px 4px;
+      width: 56px;
+      height: 40px;
+      border-radius: 28px 28px 6px 6px;
       background: #0284c7;
-      border: 2px solid #38bdf8;
-      box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+      border: 2.5px solid #38bdf8;
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.6);
       position: relative;
       overflow: hidden;
     }
     .beacon-glass.rotating {
       background: #38bdf8;
-      box-shadow: 0 0 35px #38bdf8, 0 0 60px #0284c7;
+      box-shadow: 0 0 40px #38bdf8, 0 0 70px #0284c7;
       animation: beaconRotate 0.6s infinite linear;
     }
     @keyframes beaconRotate {
@@ -229,56 +230,56 @@
       100% { opacity: 0.6; filter: brightness(1); }
     }
     .beacon-base {
-      width: 60px;
-      height: 8px;
+      width: 76px;
+      height: 10px;
       background: #475569;
-      border-radius: 2px 2px 0 0;
-      border-top: 1px solid #94a3b8;
+      border-radius: 3px 3px 0 0;
+      border-top: 1.5px solid #94a3b8;
     }
 
     /* BLS 본체 외함 */
     .bls-outer-box {
       position: relative;
       width: 100%;
-      flex: 1;
       background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 50%, #64748b 100%);
-      border-radius: 12px;
-      border: 3px solid #cbd5e1;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7), inset 0 2px 4px rgba(255, 255, 255, 0.6);
-      padding: 12px;
+      border-radius: 14px;
+      border: 3.5px solid #cbd5e1;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.75), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+      padding: 14px;
       display: flex;
       flex-direction: column;
     }
 
-    /* ★ [수정] 외함 도어 커버 (우측 경첩/힌지 기준으로 오른쪽으로 열림) */
+    /* 외함 도어 커버 (우측 경첩 기준) */
     .bls-door-cover {
       position: absolute;
-      inset: 10px;
+      inset: 12px;
       background: linear-gradient(145deg, #e2e8f0 0%, #cbd5e1 60%, #94a3b8 100%);
-      border-radius: 8px;
-      border: 2px solid #64748b;
-      box-shadow: inset 0 2px 4px #ffffff, 0 6px 15px rgba(0, 0, 0, 0.4);
+      border-radius: 10px;
+      border: 2.5px solid #64748b;
+      box-shadow: inset 0 2px 4px #ffffff, 0 8px 20px rgba(0, 0, 0, 0.45);
       z-index: 30;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 16px;
+      padding: 18px;
       cursor: pointer;
       transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s;
-      transform-origin: right center; /* ★ 우측 힌지(경첩) 기준 축 */
+      transform-origin: right center;
     }
     .bls-door-cover.open {
-      transform: perspective(1000px) rotateY(105deg); /* ★ 오른쪽으로 활짝 열림 */
+      transform: perspective(1000px) rotateY(105deg);
       pointer-events: none;
       opacity: 0.05;
     }
     .door-window {
-      width: 82%;
+      width: 84%;
       flex: 1;
+      min-height: 220px;
       background: rgba(15, 23, 42, 0.15);
-      border: 6px solid #475569;
-      border-radius: 16px;
-      box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(255, 255, 255, 0.5);
+      border: 7px solid #475569;
+      border-radius: 18px;
+      box-shadow: inset 0 4px 14px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(255, 255, 255, 0.5);
       position: relative;
       display: flex;
       align-items: center;
@@ -286,61 +287,62 @@
     }
     .door-window::after {
       content: '투명 유리창 (클릭하여 외함 열기)';
-      font-size: 11px;
+      font-size: 13px;
       font-weight: bold;
       color: #334155;
-      background: rgba(255, 255, 255, 0.85);
-      padding: 4px 10px;
-      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 6px 14px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
     .door-handle {
       position: absolute;
-      left: 14px; /* 좌측에 손잡이 레버 위치 */
+      left: 16px;
       top: 50%;
       transform: translateY(-50%);
-      width: 14px;
-      height: 60px;
+      width: 16px;
+      height: 72px;
       background: #e2e8f0;
       border: 2px solid #475569;
       border-radius: 6px;
-      box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.3);
+      box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.35);
     }
     .cover-nameplate {
-      margin-top: 10px;
+      margin-top: 12px;
       background: #ffffff;
-      border: 2px solid #475569;
-      padding: 4px 18px;
-      border-radius: 4px;
+      border: 2.5px solid #475569;
+      padding: 5px 24px;
+      border-radius: 5px;
       font-weight: 900;
-      font-size: 14px;
+      font-size: 17px;
       color: #0f172a;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
     }
 
-    /* BLS 내부 조작 패널 */
+    /* BLS 내부 조작 패널 (1.5배 큼직한 레이아웃) */
     .bls-inner-panel {
       position: relative;
-      flex: 1;
+      width: 100%;
       background: linear-gradient(180deg, #d8dee4 0%, #cbd5e1 100%);
-      border-radius: 8px;
-      border: 2px solid #94a3b8;
+      border-radius: 10px;
+      border: 2.5px solid #94a3b8;
       box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.25);
-      padding: 12px 14px;
+      padding: 14px 18px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      gap: 10px;
     }
 
     .btn-close-cover {
       position: absolute;
-      top: 6px;
-      right: 8px;
-      font-size: 10px;
+      top: 8px;
+      right: 10px;
+      font-size: 11.5px;
       font-weight: bold;
       background: #e2e8f0;
-      border: 1px solid #64748b;
-      padding: 2px 8px;
-      border-radius: 4px;
+      border: 1.5px solid #64748b;
+      padding: 3px 10px;
+      border-radius: 5px;
       cursor: pointer;
       color: #1e293b;
       z-index: 10;
@@ -350,39 +352,39 @@
     .bls-inner-title {
       align-self: center;
       background: #ffffff;
-      border: 2px solid #475569;
-      padding: 2px 24px;
-      border-radius: 4px;
+      border: 2.5px solid #475569;
+      padding: 3px 32px;
+      border-radius: 5px;
       font-weight: 900;
-      font-size: 15px;
+      font-size: 18px;
       color: #0f172a;
-      letter-spacing: 4px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      letter-spacing: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .power-status-row {
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin: 4px 0;
+      margin: 2px 0;
     }
     .tag-label {
-      font-size: 9px;
+      font-size: 10.5px;
       font-weight: bold;
       color: #1e293b;
       background: #e2e8f0;
       border: 1px solid #94a3b8;
-      padding: 1px 6px;
+      padding: 2px 8px;
       border-radius: 3px;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
     }
     .lamp-power-status {
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
-      border: 2px solid #334155;
+      border: 2.5px solid #334155;
       background: #ef4444;
-      box-shadow: 0 0 12px #ef4444;
+      box-shadow: 0 0 15px #ef4444;
       transition: all 0.2s;
     }
     .lamp-power-status.off {
@@ -394,60 +396,60 @@
     .indicator-row {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
+      gap: 8px;
       text-align: center;
-      padding: 6px 0;
-      border-top: 1px solid #cbd5e1;
-      border-bottom: 1px solid #cbd5e1;
+      padding: 8px 0;
+      border-top: 1.5px solid #cbd5e1;
+      border-bottom: 1.5px solid #cbd5e1;
     }
     .ind-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
     }
     .ind-tag {
-      font-size: 7.5px;
+      font-size: 8.5px;
       font-weight: 800;
       color: #334155;
       background: #f1f5f9;
       border: 1px solid #cbd5e1;
-      padding: 1px 2px;
-      border-radius: 2px;
-      height: 22px;
+      padding: 2px;
+      border-radius: 3px;
+      height: 26px;
       display: flex;
       align-items: center;
       justify-content: center;
-      line-height: 1.1;
+      line-height: 1.15;
       width: 100%;
     }
     .round-lamp {
-      width: 22px;
-      height: 22px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
-      border: 2px solid #334155;
+      border: 2.5px solid #334155;
       background: #475569;
       transition: all 0.15s;
     }
-    .lamp-white-on { background: #f8fafc; box-shadow: 0 0 10px #ffffff; }
+    .lamp-white-on { background: #f8fafc; box-shadow: 0 0 12px #ffffff; }
     .lamp-green-off { background: #14492d; opacity: 0.6; }
-    .lamp-green-on { background: #10b981; box-shadow: 0 0 12px #10b981; }
+    .lamp-green-on { background: #10b981; box-shadow: 0 0 14px #10b981; }
     .lamp-yellow-off { background: #5c4d14; opacity: 0.6; }
-    .lamp-yellow-on { background: #eab308; box-shadow: 0 0 14px #facc15; }
+    .lamp-yellow-on { background: #eab308; box-shadow: 0 0 16px #facc15; }
 
     .control-sub-grid {
       display: grid;
-      grid-template-columns: 90px 1fr 60px;
-      gap: 8px;
+      grid-template-columns: 110px 1fr 70px;
+      gap: 12px;
       align-items: center;
-      margin-top: 6px;
+      margin-top: 4px;
     }
 
     .sw-col {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
     .key-sw-wrapper {
       display: flex;
@@ -455,11 +457,11 @@
       align-items: center;
     }
     .key-rotary {
-      width: 38px;
-      height: 38px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: #0f172a;
-      border: 2px solid #475569;
+      border: 2.5px solid #475569;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -469,8 +471,8 @@
     }
     .key-rotary.on { transform: rotate(45deg); }
     .key-stem {
-      width: 5px;
-      height: 24px;
+      width: 6px;
+      height: 28px;
       background: #e2e8f0;
       border-radius: 2px;
     }
@@ -481,12 +483,12 @@
       align-items: center;
     }
     .estop-btn {
-      width: 44px;
-      height: 44px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       background: #dc2626;
-      border: 3px solid #7f1d1d;
-      box-shadow: 0 5px 10px rgba(0,0,0,0.4), inset 0 2px 4px #fca5a5;
+      border: 3.5px solid #7f1d1d;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.45), inset 0 2px 4px #fca5a5;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -499,29 +501,29 @@
       background: #991b1b;
     }
     .estop-inner {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      border: 1.5px dashed rgba(255,255,255,0.6);
+      border: 1.5px dashed rgba(255,255,255,0.65);
     }
 
     .procedure-plate {
       background: #ffffff;
       border: 1.5px solid #64748b;
       border-radius: 6px;
-      padding: 6px 8px;
-      font-size: 8px;
+      padding: 8px 10px;
+      font-size: 9.5px;
       color: #1e293b;
-      line-height: 1.35;
+      line-height: 1.45;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .proc-title {
       text-align: center;
       font-weight: 900;
-      font-size: 9.5px;
-      margin-bottom: 3px;
+      font-size: 11px;
+      margin-bottom: 4px;
       border-bottom: 1px solid #cbd5e1;
-      padding-bottom: 2px;
+      padding-bottom: 3px;
     }
 
     .handset-hook-wrapper {
@@ -530,36 +532,34 @@
       align-items: center;
     }
     .bls-handset {
-      width: 42px;
-      height: 125px;
+      width: 50px;
+      height: 145px;
       background: #1e293b;
-      border-radius: 12px;
-      border: 2px solid #475569;
+      border-radius: 14px;
+      border: 2.5px solid #475569;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
-      padding: 6px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      padding: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.45);
       transition: transform 0.2s, box-shadow 0.2s;
     }
     .bls-handset.lifted {
-      transform: translateY(-16px) scale(1.05);
+      transform: translateY(-18px) scale(1.05);
       border-color: #38bdf8;
-      box-shadow: 0 10px 20px rgba(56, 189, 248, 0.4);
+      box-shadow: 0 10px 22px rgba(56, 189, 248, 0.45);
     }
-    .h-ear { width: 28px; height: 16px; background: #334155; border-radius: 6px; }
-    .h-mouth { width: 28px; height: 18px; background: #334155; border-radius: 6px; }
-    .h-bar { width: 14px; height: 50px; background: #0f172a; border-radius: 4px; }
+    .h-ear { width: 34px; height: 18px; background: #334155; border-radius: 7px; }
+    .h-mouth { width: 34px; height: 20px; background: #334155; border-radius: 7px; }
+    .h-bar { width: 16px; height: 60px; background: #0f172a; border-radius: 4px; }
   </style>
 </head>
 <body>
 
-  <!-- 1. 배경 캔버스 -->
   <canvas id="metroCanvas"></canvas>
 
-  <!-- 좌측 상단 HUD -->
   <div class="hud-badge">
     <div class="badge-title">
       <span class="pulse-dot-blue"></span>
@@ -567,7 +567,6 @@
     </div>
   </div>
 
-  <!-- 좌측 하단 교육 실습 가이드 & 영구 통화 로그 HUD -->
   <div class="hud-guide-box">
     <div class="guide-title">
       <span>📋 BLS 현장 표준 취급 절차 (실습 가이드)</span>
@@ -582,7 +581,6 @@
       <li id="step7"><span class="step-num">7.</span> <strong>[안전요원 출동]</strong> 안전요원이 출동하여 열차 비상핸들을 열고 진입합니다!</li>
     </ul>
 
-    <!-- ★ [개선] 사라지지 않고 계속 남는 관제 통화 기록 로그 -->
     <div class="radio-log-container">
       <div class="radio-log-header">🎙️ 관제 통화 및 조치 기록 (상시 보존)</div>
       <div class="radio-log-list" id="radioLogList">
@@ -591,7 +589,6 @@
     </div>
   </div>
 
-  <!-- 2. 우측 하단 BLS 함체 인터페이스 -->
   <div class="bls-station-container">
     <div class="beacon-light-wrapper">
       <div class="beacon-glass" id="beaconGlass"></div>
@@ -599,14 +596,14 @@
     <div class="beacon-base"></div>
 
     <div class="bls-outer-box">
-      <!-- A. 외함 도어 커버 (우측 경첩 기준 열림) -->
+      <!-- 외함 도어 커버 (우측 경첩 기준) -->
       <div class="bls-door-cover" id="blsDoorCover" title="클릭하여 외함을 엽니다">
         <div class="door-handle"></div>
         <div class="cover-nameplate">BLS</div>
         <div class="door-window"></div>
       </div>
 
-      <!-- B. 내부 조작 패널 -->
+      <!-- 내부 조작 패널 -->
       <div class="bls-inner-panel">
         <button type="button" class="btn-close-cover" id="btnCloseCover" title="외함 도어를 닫습니다">외함 닫기</button>
 
@@ -643,8 +640,8 @@
         <div class="control-sub-grid">
           <div class="sw-col">
             <div class="key-sw-wrapper">
-              <span style="font-size:8px; font-weight:bold; color:#1e293b;">KEY S/W</span>
-              <div style="display:flex; justify-content:space-between; width:34px; font-size:7px; font-weight:bold; color:#475569;">
+              <span style="font-size:9.5px; font-weight:bold; color:#1e293b;">KEY S/W</span>
+              <div style="display:flex; justify-content:space-between; width:40px; font-size:8px; font-weight:bold; color:#475569;">
                 <span>OFF</span><span>ON</span>
               </div>
               <div class="key-rotary" id="keyRotary" title="키 스위치 (클릭하여 OFF / ON 전환)">
@@ -653,7 +650,7 @@
             </div>
 
             <div class="estop-wrapper">
-              <span style="font-size:8px; font-weight:bold; color:#991b1b;">EMERGENCY STOP</span>
+              <span style="font-size:9px; font-weight:bold; color:#991b1b; text-align:center;">EMERGENCY<br>STOP</span>
               <div class="estop-btn" id="btnEstop" title="비상정지 버튼 (클릭하여 누름/복귀)">
                 <div class="estop-inner"></div>
               </div>
@@ -674,7 +671,7 @@
               <div class="h-bar"></div>
               <div class="h-mouth"></div>
             </div>
-            <span style="font-size:7.5px; font-weight:bold; color:#475569; margin-top:2px;">수화기</span>
+            <span style="font-size:9px; font-weight:bold; color:#475569; margin-top:3px;">수화기</span>
           </div>
         </div>
 
@@ -694,20 +691,21 @@
   let isPowerFed = true;
   let isLampTestPressed = false;
 
-  const emergencyHandle = { x: 0, y: 0, radius: 8.5, currentAngle: 0, targetAngle: 0, isPulled: false };
+  // 비상핸들 상태 (반지름 11px 비례 확대)
+  const emergencyHandle = { x: 0, y: 0, radius: 11, currentAngle: 0, targetAngle: 0, isPulled: false };
 
   let trainDoorProgress = 0;
   let trainDoorTarget = 0;
 
-  // ★ 1.8배 커진 안전요원 캐릭터 상태
+  // ★ 150% 뷰에 맞춘 늠름한 2.2배 스케일 안전요원 캐릭터
   const officer = {
     active: false,
-    x: -60,
+    x: -40,
     y: 0,
     targetX: 0,
-    state: 'hidden', // 'hidden' | 'running' | 'pulling' | 'entering' | 'inside'
+    state: 'hidden',
     animFrame: 0,
-    scale: 1.8, // 1.8배 확대 적용
+    scale: 2.2,
   };
 
   /* =========================================================================
@@ -736,7 +734,7 @@
   function playPhone() { playTone(480, 'sine', 0.15, 0.08); }
 
   /* =========================================================================
-     3. 인터랙션 및 통화 기록 영구 보존 로직
+     3. 인터랙션 및 통화 기록 로직
      ========================================================================= */
   const blsDoorCover = document.getElementById('blsDoorCover');
   const btnCloseCover = document.getElementById('btnCloseCover');
@@ -751,7 +749,6 @@
   const radioLogList = document.getElementById('radioLogList');
   const logEmptyNotice = document.getElementById('logEmptyNotice');
 
-  // ★ [추가] 통화 기록을 누적하여 영구 보존하는 함수
   function appendRadioLog(role, text) {
     if (logEmptyNotice) logEmptyNotice.style.display = 'none';
 
@@ -762,7 +759,6 @@
     item.innerHTML = `<strong>[${timeStr}] ${role}:</strong> ${text}`;
     radioLogList.appendChild(item);
 
-    // 자동 스크롤
     radioLogList.scrollTop = radioLogList.scrollHeight;
     playTone(650, 'sine', 0.08, 0.05);
   }
@@ -781,7 +777,6 @@
     }
   }
 
-  // 1) 외함 열기 (우측 힌지 기준 회전)
   blsDoorCover.addEventListener('click', () => {
     if (isCoverOpen) return;
     playClick();
@@ -793,7 +788,6 @@
     }
   });
 
-  // 외함 닫기 버튼
   btnCloseCover.addEventListener('click', (e) => {
     e.stopPropagation();
     playClick();
@@ -807,7 +801,6 @@
     }
   });
 
-  // 2) 수화기 들기/내려놓기 & 관제 통화
   blsHandset.addEventListener('click', () => {
     playPhone();
     isHandsetLifted = !isHandsetLifted;
@@ -833,7 +826,6 @@
     }
   });
 
-  // 3) KEY S/W 조작
   keyRotary.addEventListener('click', () => {
     playClick();
     isKeyOn = !isKeyOn;
@@ -845,7 +837,6 @@
     }
   });
 
-  // 4) E-STOP 누름 / 복귀 조작
   btnEstop.addEventListener('click', () => {
     if (!isEstopPressed) {
       if (!isKeyOn) {
@@ -877,7 +868,6 @@
     }
   });
 
-  // 램프 시험
   btnLampTest.addEventListener('mousedown', () => {
     playClick();
     isLampTestPressed = true;
@@ -903,20 +893,19 @@
   }
 
   /* =========================================================================
-     4. ★ 안전요원 출동 & 비상핸들 조작 & 열차 진입 시퀀스
+     4. 안전요원 출동 & 비상핸들 조작 & 열차 진입 시퀀스
      ========================================================================= */
   function triggerOfficerDispatch() {
     officer.active = true;
     officer.x = -30;
-    // 승강장 바닥 점자선 바로 위 보행 레벨로 배치
-    officer.y = window.innerHeight * 0.38 + 26;
+    officer.y = window.innerHeight * 0.40 + 34; // 승강장 점자블록 위 보행 레벨
     officer.state = 'running';
-    officer.targetX = emergencyHandle.x - 22; // 핸들 앞 적정 거리
+    officer.targetX = emergencyHandle.x - 26;
     appendRadioLog('안전요원', '안전요원 출동 개시! 열차 측면 비상핸들을 개방하고 차내로 진입합니다.');
   }
 
   /* =========================================================================
-     5. 캔버스 그래픽 렌더링
+     5. 캔버스 그래픽 렌더링 (1.5배 웅장한 승강장 & 열차 비례)
      ========================================================================= */
   const canvas = document.getElementById('metroCanvas');
   const ctx = canvas.getContext('2d');
@@ -938,7 +927,7 @@
   const doorCenters = [];
   function calcDoorPositions() {
     doorCenters.length = 0;
-    const sideMargin = width * 0.04;
+    const sideMargin = width * 0.035;
     const usableWidth = width - sideMargin * 2;
     const doorSpacing = usableWidth / 12;
     for (let i = 0; i < 12; i++) {
@@ -953,10 +942,10 @@
 
     c.fillStyle = '#ffffff';
     c.beginPath();
-    c.arc(0, 0, r + 1.6, 0, Math.PI * 2);
+    c.arc(0, 0, r + 2, 0, Math.PI * 2);
     c.fill();
     c.strokeStyle = '#94a3b8';
-    c.lineWidth = 0.8;
+    c.lineWidth = 1;
     c.stroke();
 
     c.fillStyle = '#be123c';
@@ -965,7 +954,7 @@
     c.fill();
 
     c.fillStyle = '#1e293b';
-    c.font = 'bold 3.2px sans-serif';
+    c.font = 'bold 4px sans-serif';
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     c.fillText('잠금', -0.5, -r * 0.58);
@@ -974,38 +963,35 @@
     c.rotate(rad);
     c.fillStyle = '#dc2626';
     c.strokeStyle = '#881337';
-    c.lineWidth = 0.8;
+    c.lineWidth = 1;
     c.beginPath();
-    c.roundRect(-r * 0.85, -1.5, (r * 0.85) * 2, 3, 1.5);
+    c.roundRect(-r * 0.85, -2, (r * 0.85) * 2, 4, 2);
     c.fill();
     c.stroke();
 
     c.fillStyle = '#cbd5e1';
     c.beginPath();
-    c.roundRect(-1.5, -1.5, 3, 3, 0.6);
+    c.roundRect(-2, -2, 4, 4, 1);
     c.fill();
 
     c.restore();
   }
 
-  // ★ [1.8배 확대 & 고해상도 디테일] 하얀 안전모 + 형광조끼 + 출동가방 안전요원 렌더러
   function drawOfficer(c, ox, oy, frame, state) {
     c.save();
     c.translate(ox, oy);
-    c.scale(1.8, 1.8); // ★ 1.8배 스케일업!
+    c.scale(2.2, 2.2); // ★ 2.2배 듬직한 안전요원 캐릭터
 
     const isRun = state === 'running';
     const legSwing = isRun ? Math.sin(frame * 0.35) * 6.5 : 0;
     const bodyBob = isRun ? Math.abs(Math.sin(frame * 0.35)) * 1.8 : 0;
 
     // 1. 다리 및 안전화
-    c.fillStyle = '#1e293b'; // 네이비 기동복 바지
-    // 왼다리
+    c.fillStyle = '#1e293b';
     c.fillRect(-4 + legSwing, -13 - bodyBob, 3.5, 12);
     c.fillStyle = '#0f172a';
-    c.fillRect(-5 + legSwing, -2 - bodyBob, 5, 3.5); // 검은 안전화
+    c.fillRect(-5 + legSwing, -2 - bodyBob, 5, 3.5);
 
-    // 오른다리
     c.fillStyle = '#1e293b';
     c.fillRect(1 - legSwing, -13 - bodyBob, 3.5, 12);
     c.fillStyle = '#0f172a';
@@ -1015,15 +1001,13 @@
     c.fillStyle = '#0f172a';
     c.fillRect(-5, -26 - bodyBob, 11, 14);
 
-    // 형광 연두 조끼
     c.fillStyle = '#84cc16';
     c.fillRect(-5, -25 - bodyBob, 11, 12);
-    // 은색 반사띠 (가로 & 세로)
     c.fillStyle = '#f8fafc';
     c.fillRect(-5, -20 - bodyBob, 11, 2);
     c.fillRect(-2, -25 - bodyBob, 2, 12);
 
-    // 3. 옆으로 메는 출동가방 (크로스 스트랩 & 블랙 가방)
+    // 3. 크로스 출동가방
     c.strokeStyle = '#18181b';
     c.lineWidth = 1.5;
     c.beginPath();
@@ -1031,19 +1015,17 @@
     c.lineTo(4, -16 - bodyBob);
     c.stroke();
 
-    // 옆구리 출동가방 본체
     c.fillStyle = '#334155';
     c.fillRect(2, -18 - bodyBob, 6.5, 6);
     c.fillStyle = '#f59e0b';
-    c.fillRect(4, -17 - bodyBob, 2.5, 2); // 반사 태그
+    c.fillRect(4, -17 - bodyBob, 2.5, 2);
 
-    // 4. 팔 (달리기 스윙 or 비상핸들 조작 손 뻗기)
+    // 4. 팔
     c.fillStyle = '#84cc16';
     if (state === 'pulling') {
-      // 핸들을 향해 손을 뻗음
       c.fillRect(-4, -24 - bodyBob, 3, 8);
       c.fillStyle = '#fed7aa';
-      c.fillRect(4, -30 - bodyBob, 4.5, 4.5); // 손/장갑
+      c.fillRect(4, -30 - bodyBob, 4.5, 4.5);
       c.strokeStyle = '#84cc16';
       c.lineWidth = 3;
       c.beginPath();
@@ -1051,25 +1033,21 @@
       c.lineTo(6, -28 - bodyBob);
       c.stroke();
     } else {
-      // 달리기 팔 스윙
       c.fillRect(-6 - legSwing * 0.4, -24 - bodyBob, 3, 8);
       c.fillRect(4 + legSwing * 0.4, -24 - bodyBob, 3, 8);
     }
 
-    // 5. 얼굴 & 하얀 안전모
-    c.fillStyle = '#fed7aa'; // 피부톤
+    // 5. 얼굴 & 안전모
+    c.fillStyle = '#fed7aa';
     c.fillRect(-3, -32 - bodyBob, 7, 7);
 
-    // 하얀 안전모 본체
     c.fillStyle = '#ffffff';
     c.beginPath();
     c.roundRect(-5, -38 - bodyBob, 11, 7, [5, 5, 2, 2]);
     c.fill();
 
-    // 안전모 앞챙 (Visor)
     c.fillStyle = '#e2e8f0';
     c.fillRect(-5.5, -32.5 - bodyBob, 12, 2);
-    // 녹색 안전 십자 마크
     c.fillStyle = '#16a34a';
     c.fillRect(-1, -36.5 - bodyBob, 3, 1);
     c.fillRect(0, -37.5 - bodyBob, 1, 3);
@@ -1100,19 +1078,18 @@
       trainDoorProgress = Math.max(trainDoorTarget, trainDoorProgress - doorSpeed);
     }
 
-    // 안전요원 이동 및 행동 시퀀스
     if (officer.active) {
       if (officer.state === 'running') {
         const dx = officer.targetX - officer.x;
         if (dx > 2) {
-          officer.x += 2.8;
+          officer.x += 3.2;
         } else {
           officer.state = 'pulling';
           setTimeout(() => {
             playTone(180, 'sawtooth', 0.15, 0.12);
             emergencyHandle.targetAngle = 90;
             emergencyHandle.isPulled = true;
-            trainDoorTarget = 1; // 열차 문 개방
+            trainDoorTarget = 1;
 
             setTimeout(() => {
               officer.state = 'entering';
@@ -1120,9 +1097,9 @@
           }, 600);
         }
       } else if (officer.state === 'entering') {
-        officer.y -= 1.6;
+        officer.y -= 1.8;
         officer.scale -= 0.02;
-        if (officer.y < height * 0.38 - 10 || officer.scale <= 0.4) {
+        if (officer.y < height * 0.40 - 12 || officer.scale <= 0.4) {
           officer.state = 'inside';
           officer.active = false;
           appendRadioLog('안전요원', '열차 내부 진입 완료! 전동차 차내 안전조치 및 승객 안내를 개시합니다.');
@@ -1130,13 +1107,13 @@
       }
     }
 
-    // 캔버스 그리기
     ctx.save();
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    const TRACK_TOP_Y = height * 0.16;
-    const PLATFORM_Y = height * 0.38;
+    // ★ [1.5배 화면 비례] 열차 높이와 승강장 위치 재조정
+    const TRACK_TOP_Y = height * 0.14;
+    const PLATFORM_Y = height * 0.40; // 듬직한 전동차 높이 형성
 
     // A. 역사 상단 벽면
     const wallGrad = ctx.createLinearGradient(0, 0, 0, TRACK_TOP_Y);
@@ -1146,7 +1123,7 @@
     ctx.fillStyle = wallGrad;
     ctx.fillRect(0, 0, width, TRACK_TOP_Y);
 
-    const wallTileSize = 28;
+    const wallTileSize = 32;
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.lineWidth = 1;
     for (let x = 0; x < width; x += wallTileSize) {
@@ -1156,68 +1133,72 @@
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
     }
 
-    // 조명 4기
+    // 벽면 조명 4기
     const lampPositions = [0.16, 0.38, 0.62, 0.85];
     lampPositions.forEach(ratio => {
       const lx = width * ratio;
-      const ly = TRACK_TOP_Y * 0.32;
-      const glow = ctx.createRadialGradient(lx, ly, 4, lx, ly, 110);
-      glow.addColorStop(0, 'rgba(255, 180, 60, 0.35)');
-      glow.addColorStop(0.5, 'rgba(255, 140, 30, 0.1)');
+      const ly = TRACK_TOP_Y * 0.30;
+      const glow = ctx.createRadialGradient(lx, ly, 6, lx, ly, 130);
+      glow.addColorStop(0, 'rgba(255, 180, 60, 0.38)');
+      glow.addColorStop(0.5, 'rgba(255, 140, 30, 0.12)');
       glow.addColorStop(1, 'transparent');
       ctx.fillStyle = glow;
-      ctx.beginPath(); ctx.arc(lx, ly, 110, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(lx, ly, 130, 0, Math.PI * 2); ctx.fill();
 
       ctx.fillStyle = '#22232a';
-      ctx.fillRect(lx - 34, ly - 6, 68, 12);
+      ctx.fillRect(lx - 42, ly - 7, 84, 14);
       ctx.fillStyle = '#fffdf0';
-      ctx.fillRect(lx - 30, ly - 3, 60, 6);
+      ctx.fillRect(lx - 38, ly - 4, 76, 8);
     });
 
     // B. 선로 & 침목
     ctx.fillStyle = '#1c1917';
     ctx.fillRect(0, TRACK_TOP_Y, width, PLATFORM_Y - TRACK_TOP_Y);
     ctx.fillStyle = '#3e3a38';
-    for (let rx = 0; rx < width; rx += 22) {
-      ctx.fillRect(rx, PLATFORM_Y - 26, 10, 22);
+    for (let rx = 0; rx < width; rx += 24) {
+      ctx.fillRect(rx, PLATFORM_Y - 28, 12, 24);
     }
     ctx.fillStyle = '#94a3b8';
-    ctx.fillRect(0, PLATFORM_Y - 20, width, 4);
-    ctx.fillRect(0, PLATFORM_Y - 12, width, 4);
+    ctx.fillRect(0, PLATFORM_Y - 22, width, 4.5);
+    ctx.fillRect(0, PLATFORM_Y - 13, width, 4.5);
 
-    // C. 인천 2호선 전동차 (PSD 없는 선로 위 뷰)
-    const trainTopY = TRACK_TOP_Y - 8;
+    // C. 1.5배 듬직해진 인천 2호선 전동차
+    const trainTopY = TRACK_TOP_Y - 10;
     const trainH = PLATFORM_Y - trainTopY;
     const windowBandY = trainTopY + trainH * 0.22;
     const windowBandH = trainH * 0.32;
     const orangeStripeY = trainTopY + trainH * 0.58;
-    const orangeStripeH = 10;
-    const doorW = 54;
+    const orangeStripeH = 12;
+    const doorW = 70; // ★ 출입문 너비 확대
 
     const car2Left = doorCenters[3] - doorW * 1.5;
-    const car2Right = (doorCenters[5] + doorCenters[6]) / 2 - 8;
-    const car1Left = (doorCenters[5] + doorCenters[6]) / 2 + 8;
+    const car2Right = (doorCenters[5] + doorCenters[6]) / 2 - 10;
+    const car1Left = (doorCenters[5] + doorCenters[6]) / 2 + 10;
     const car1Right = doorCenters[8] + doorW * 1.5;
 
     const renderCar = (left, right, isLead, isTail, carDoorIndices) => {
       const cw = right - left;
 
+      // 대차
       ctx.fillStyle = '#0f172a';
-      ctx.fillRect(left + 24, PLATFORM_Y - 3, 36, 6);
-      ctx.fillRect(right - 60, PLATFORM_Y - 3, 36, 6);
+      ctx.fillRect(left + 28, PLATFORM_Y - 4, 44, 8);
+      ctx.fillRect(right - 72, PLATFORM_Y - 4, 44, 8);
 
+      // 바디
       const bodyGrad = ctx.createLinearGradient(0, trainTopY, 0, PLATFORM_Y);
       bodyGrad.addColorStop(0, '#e2e8f0');
       bodyGrad.addColorStop(0.5, '#cbd5e1');
       bodyGrad.addColorStop(1, '#94a3b8');
       ctx.fillStyle = bodyGrad;
-      ctx.fillRect(left, trainTopY + 12, cw, trainH - 12);
+      ctx.fillRect(left, trainTopY + 14, cw, trainH - 14);
 
+      // 루프 공조기
       ctx.fillStyle = '#334155';
-      ctx.fillRect(left + 10, trainTopY + 4, cw - 20, 8);
+      ctx.fillRect(left + 12, trainTopY + 4, cw - 24, 10);
       ctx.fillStyle = '#475569';
-      ctx.fillRect(left + 30, trainTopY, cw - 60, 5);
+      ctx.fillRect(left + 36, trainTopY, cw - 72, 6);
 
+      // 블랙 윈도우 밴드
       ctx.fillStyle = '#090d16';
       ctx.fillRect(left, windowBandY, cw, windowBandH);
 
@@ -1225,25 +1206,26 @@
       for (let i = 0; i < carDoorIndices.length - 1; i++) {
         const d1 = doorCenters[carDoorIndices[i]];
         const d2 = doorCenters[carDoorIndices[i + 1]];
-        const wx = d1 + doorW / 2 + 5;
-        const ww = (d2 - doorW / 2 - 5) - wx;
+        const wx = d1 + doorW / 2 + 6;
+        const ww = (d2 - doorW / 2 - 6) - wx;
         if (ww > 10) {
           ctx.fillStyle = '#38bdf8';
-          ctx.fillRect(wx, windowBandY + 3, ww, windowBandH - 6);
+          ctx.fillRect(wx, windowBandY + 4, ww, windowBandH - 8);
           ctx.strokeStyle = '#475569';
-          ctx.strokeRect(wx, windowBandY + 3, ww, windowBandH - 6);
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(wx, windowBandY + 4, ww, windowBandH - 8);
         }
       }
 
       ctx.fillStyle = '#F37321';
       ctx.fillRect(left, orangeStripeY, cw, orangeStripeH);
       ctx.fillStyle = '#c2410c';
-      ctx.fillRect(left, orangeStripeY + orangeStripeH - 2, cw, 2);
+      ctx.fillRect(left, orangeStripeY + orangeStripeH - 2.5, cw, 2.5);
 
       // 출입문
       carDoorIndices.forEach(dIdx => {
         const dcX = doorCenters[dIdx];
-        const tDoorW = doorW * 0.76;
+        const tDoorW = doorW * 0.78;
         const tdx = dcX - tDoorW / 2;
 
         const slide = (dIdx === 7) ? trainDoorProgress * (tDoorW * 0.44) : 0;
@@ -1257,8 +1239,8 @@
         ctx.fillRect(tdx + halfTDW + slide, windowBandY, halfTDW - 0.5, trainH - (windowBandY - trainTopY) - 2);
 
         ctx.fillStyle = '#FCED5E';
-        ctx.fillRect(tdx + 3 - slide, windowBandY + 4, halfTDW - 6, windowBandH - 8);
-        ctx.fillRect(tdx + halfTDW + 3 + slide, windowBandY + 4, halfTDW - 6, windowBandH - 8);
+        ctx.fillRect(tdx + 4 - slide, windowBandY + 5, halfTDW - 8, windowBandH - 10);
+        ctx.fillRect(tdx + halfTDW + 4 + slide, windowBandY + 5, halfTDW - 8, windowBandH - 10);
 
         ctx.fillStyle = '#F37321';
         ctx.fillRect(tdx - slide, orangeStripeY, halfTDW, orangeStripeH);
@@ -1268,41 +1250,41 @@
       if (isLead) {
         ctx.fillStyle = '#334155';
         ctx.beginPath();
-        ctx.moveTo(right, trainTopY + 12);
-        ctx.lineTo(right + 16, trainTopY + 28);
-        ctx.lineTo(right + 16, PLATFORM_Y);
+        ctx.moveTo(right, trainTopY + 14);
+        ctx.lineTo(right + 20, trainTopY + 34);
+        ctx.lineTo(right + 20, PLATFORM_Y);
         ctx.lineTo(right, PLATFORM_Y);
         ctx.closePath();
         ctx.fill();
         ctx.fillStyle = '#0f172a';
-        ctx.fillRect(right, windowBandY + 2, 12, windowBandH);
+        ctx.fillRect(right, windowBandY + 2, 16, windowBandH);
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(right + 8, orangeStripeY + 2, 6, 6);
+        ctx.fillRect(right + 10, orangeStripeY + 2, 8, 8);
       }
       if (isTail) {
         ctx.fillStyle = '#334155';
         ctx.beginPath();
-        ctx.moveTo(left, trainTopY + 12);
-        ctx.lineTo(left - 16, trainTopY + 28);
-        ctx.lineTo(left - 16, PLATFORM_Y);
+        ctx.moveTo(left, trainTopY + 14);
+        ctx.lineTo(left - 20, trainTopY + 34);
+        ctx.lineTo(left - 20, PLATFORM_Y);
         ctx.lineTo(left, PLATFORM_Y);
         ctx.closePath();
         ctx.fill();
         ctx.fillStyle = '#0f172a';
-        ctx.fillRect(left - 12, windowBandY + 2, 12, windowBandH);
+        ctx.fillRect(left - 16, windowBandY + 2, 16, windowBandH);
         ctx.fillStyle = '#ef4444';
-        ctx.fillRect(left - 14, orangeStripeY + 2, 6, 6);
+        ctx.fillRect(left - 18, orangeStripeY + 2, 8, 8);
       }
     };
 
     renderCar(car2Left, car2Right, false, true, [3, 4, 5]);
     ctx.fillStyle = '#1e293b';
-    ctx.fillRect(car2Right, trainTopY + 14, car1Left - car2Right, trainH - 16);
+    ctx.fillRect(car2Right, trainTopY + 16, car1Left - car2Right, trainH - 18);
     renderCar(car1Left, car1Right, true, false, [6, 7, 8]);
 
     // D. 1-2 비상핸들
     emergencyHandle.x = (doorCenters[7] + doorCenters[8]) / 2;
-    emergencyHandle.y = PLATFORM_Y - 26;
+    emergencyHandle.y = PLATFORM_Y - 30;
     drawEmergencyHandle(ctx, emergencyHandle.x, emergencyHandle.y, emergencyHandle.radius, emergencyHandle.currentAngle);
 
     // E. 승강장 대리석 타일 바닥
@@ -1313,7 +1295,7 @@
     ctx.fillStyle = flrGrad;
     ctx.fillRect(0, PLATFORM_Y, width, height - PLATFORM_Y);
 
-    const floorTileSize = 36;
+    const floorTileSize = 42; // 타일 크기 확대
     ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
     ctx.lineWidth = 1;
     for (let tx = 0; tx < width; tx += floorTileSize) {
@@ -1323,27 +1305,27 @@
       ctx.beginPath(); ctx.moveTo(0, ty); ctx.lineTo(width, ty); ctx.stroke();
     }
 
-    // F. 3D 입체 노란 점자 안전선
+    // F. 3D 입체 노란 점자 안전선 (2단 돌기)
     const tactileY = PLATFORM_Y + 2;
-    const tactileH = 16;
+    const tactileH = 18;
     ctx.fillStyle = '#f59e0b';
     ctx.fillRect(0, tactileY, width, tactileH);
     ctx.fillStyle = '#fef08a';
-    ctx.fillRect(0, tactileY, width, 1.5);
+    ctx.fillRect(0, tactileY, width, 2);
     ctx.fillStyle = '#b45309';
-    ctx.fillRect(0, tactileY + tactileH - 1.5, width, 1.5);
+    ctx.fillRect(0, tactileY + tactileH - 2, width, 2);
 
-    const studSpacing = 11;
-    for (let sx = 6; sx < width; sx += studSpacing) {
+    const studSpacing = 13;
+    for (let sx = 8; sx < width; sx += studSpacing) {
       [tactileY + tactileH * 0.32, tactileY + tactileH * 0.68].forEach(sy => {
         ctx.fillStyle = '#78350f';
-        ctx.beginPath(); ctx.arc(sx, sy + 0.8, 2.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(sx, sy + 1, 2.6, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#fef08a';
-        ctx.beginPath(); ctx.arc(sx, sy, 2.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(sx, sy, 2.6, 0, Math.PI * 2); ctx.fill();
       });
     }
 
-    // G. ★ [1.8배 확대] 안전요원 캐릭터 렌더링
+    // G. 안전요원 캐릭터 렌더링
     if (officer.active) {
       drawOfficer(ctx, officer.x, officer.y, frameCount, officer.state);
     }
