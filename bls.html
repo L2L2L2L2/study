@@ -911,7 +911,7 @@
     if (role === '관제실') {
       if (femaleVoice) utter.voice = femaleVoice;
       utter.pitch = 1.25;
-      utter.rate = 1.05;
+      utter.rate = 1.2;
     } else {
       if (maleVoice) {
         utter.voice = maleVoice;
@@ -919,7 +919,7 @@
       } else {
         utter.pitch = 0.72;
       }
-      utter.rate = 0.95;
+      utter.rate = 1.2;
     }
 
     utter.onend = finishOnce;
