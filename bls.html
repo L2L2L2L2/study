@@ -219,6 +219,33 @@
       .guide-steps { font-size: 14.5px; }
     }
 
+    /* ★ [추가] 4K UHD 초고해상도(2560px ~ 3840px) 자동 1.6배 스케일업 */
+    @media (min-width: 2500px) {
+      /* BLS 조작반 본체를 우측 하단 기준 1.65배 확대 */
+      .bls-station-container {
+        transform-origin: right bottom;
+        transform: scale(1.65);
+        right: 40px;
+        bottom: 35px;
+      }
+
+      /* 좌측 하단 가이드 박스를 좌측 하단 기준 1.5배 확대 */
+      .hud-guide-box {
+        transform-origin: left bottom;
+        transform: scale(1.5);
+        left: 35px;
+        bottom: 35px;
+      }
+
+      /* 좌측 상단 HUD 배지 확대 */
+      .hud-badge {
+        transform-origin: left top;
+        transform: scale(1.35);
+        top: 26px;
+        left: 30px;
+      }
+    }
+
     /* 2. 우측 하단 BLS 함체 인터페이스 */
     .bls-station-container {
       position: absolute;
