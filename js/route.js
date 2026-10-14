@@ -82,25 +82,33 @@ function curv(s) {
   }
   return k;
 }
-/* 종단 (레일면 높이 꺾은선) — 역 전후 60m 수평, 사이 구간은 중간 저점(배수) 또는 개요도 구배 */
+/* 종단 (레일면 높이 꺾은선) — 선로개요도의 구배(‰)를 순서대로 적용
+   ※ 개요도는 축척이 없어 각 구배 구간의 위치·길이는 개요도상 비례로 추정. 역 전후 60m는 수평
+   ※ 지상↔지하 전환부는 끝 높이(고가 레일면 / 지하 깊이)를 맞추도록 길이를 계산 */
 const PROFILE = (() => {
-  const P = [[START, 10]];
-  const flat = st => { P.push([st.s - 60, st.y], [st.s + 60, st.y]); };
-  for (let i = 0; i < STN.length; i++) {
-    const st = STN[i], nx = STN[i + 1];
-    flat(st);
-    if (!nx) break;
-    if (st.id === '202') { P.push([st.s + 420, 10], [st.s + 420 + 25 / 0.054, -15]); continue; }         // -54‰ 지하 진입
-    if (st.id === '206') { P.push([st.s + 700, -15], [st.s + 700 + 31 / 0.055, 16]); continue; }         // +55‰ 아라뱃길 교량으로
-    if (st.id === '208') { P.push([st.s + 300, 16], [st.s + 300 + 31 / 0.055, -15]); continue; }         // -55‰ 아시아드경기장으로
-    if (st.id === '225') { P.push([nx.s - 834, -15], [nx.s - 834 + 22 / 0.052, 7]); continue; }         // +52‰ 지상 진출
-    if (st.id === '226') { P.push([st.s + 60 + 19 / 0.034, -12]); continue; }          // -34‰ 운연 방면 지하
-    if (st.type === 'under' && nx.type === 'under') {
-      const d = nx.s - st.s, dip = d > 1000 ? 4 : 2.5;
-      P.push([(st.s + nx.s) / 2, Math.min(st.y, nx.y) - dip]);
-    }
-  }
-  P.push([END, STN[STN.length - 1].y]);
+  const P = [];
+  let y = 10 - 0.052 * 60;
+  const knot = (s, yy) => { const L = P[P.length - 1]; if (L && Math.abs(L[0] - s) < 1e-6) L[1] = yy; else P.push([s, yy]); };
+  const slope = (s0, g, len) => { knot(s0, y); y += g * len; knot(s0 + len, y); };                 // 구배 g로 len m
+  const slopeTo = (s0, g, yEnd) => { knot(s0, y); const len = Math.abs((yEnd - y) / g); y = yEnd; knot(s0 + len, y); };
+  knot(START, y);
+  slope(START, 0.052, 60);                       // 차량기지 → 검단오류 +52‰
+  slopeTo(S('202') + 420, -0.054, -15);          // 왕길 → 검단사거리 -54‰ (지하 진입)
+  slope(S('204') + 445, -0.026, 150);            // 마전 → 완정 -26‰
+  slopeTo(S('206') + 700, 0.055, 16);            // 독정 → 검암 +55‰ (아라뱃길 교량으로)
+  slope(S('207') + 360, 0.029, 140);             // 검암 → 검바위 +29‰ (짧게: 현장 설명상 거의 같은 높이)
+  slopeTo(S('208') + 300, -0.055, -15);          // 검바위 → 아시아드경기장 -55‰
+  slope(S('210') + 1310, -0.019, 280);           // 서구청 → 가정 -19‰
+  slope(S('214') + 582, -0.027, 266);            // 서부여성회관 → 인천가좌 -27‰
+  slope(S('218') + 123, 0.022, 395);             // 주안 → 시민공원 +22‰
+  slope(S('220') + 380, 0.026, 257);             // 석바위시장 → 인천시청 +26‰
+  slope(S('221') + 259, -0.025, 382);            // 인천시청 → 석천사거리 -25‰
+  slope(S('224') + 515, -0.032, 241);            // 만수 → 남동구청 -32‰ (개요도 표기 '-82'로 읽힘, -32로 판단)
+  slope(S('224') + 756, 0.032, 241);             //   〃 V자로 다시 상승
+  { const portal = S('226') - 647, s0 = portal - (-5.3 - y) / 0.052;   // 인천대공원 647m 전 지상 진출
+    slopeTo(s0, 0.052, 7); }                     // 남동구청 → 인천대공원 +52‰
+  slopeTo(S('226') + 60, -0.034, -12);           // 인천대공원 → 운연 -34‰ (지하)
+  knot(END, y);
   return P;
 })();
 
@@ -157,6 +165,7 @@ function at(s) {
   return F;
 }
 const Y = s => at(s).y;
+for (const st of STN) st.y = Y(st.s);           // 역 레일면 높이는 종단(구배 적용) 결과를 따름
 const grade = s => (Y(s + 2) - Y(s - 2)) / 4;
 /* 구간 코드 (1m 단위)
    0 고가교 / 1 고가역 / 2 U형 개착 / 3 박스 터널 / 4 원형 터널 / 5 지하역 승강장 */
