@@ -300,6 +300,31 @@ T.trainSide = canvasTex(512, 128, (g, w, h) => {   // 반대편 열차 측면
   g.fillStyle = '#ef8a1e'; g.fillRect(0, 84, w, 10);
   g.fillStyle = '#9a9c9e'; g.fillRect(0, h - 14, w, 14);
 });
+/* 객실 조명 (발광맵: 창 부분만 밝게, 나머지 검정) */
+function litCabin(g, x, y, w, h) {
+  const gr = g.createLinearGradient(0, y, 0, y + h);   // 천장 조명 → 밝은 내장판 → 좌석 높이
+  gr.addColorStop(0, '#fffdf2'); gr.addColorStop(0.18, '#f4f1e4'); gr.addColorStop(0.55, '#d9dad2'); gr.addColorStop(1, '#b9bcb6');
+  g.fillStyle = gr; g.fillRect(x, y, w, h);
+  g.fillStyle = 'rgba(255,255,250,.95)'; g.fillRect(x, y + h * 0.04, w, h * 0.07);   // 천장 등기구 라인
+  g.fillStyle = 'rgba(120,128,132,.55)';                                              // 반대편 창
+  g.fillRect(x + w * 0.12, y + h * 0.3, w * 0.76, h * 0.28);
+  g.fillStyle = 'rgba(90,96,100,.55)'; g.fillRect(x, y + h * 0.22, w, h * 0.025);
+  g.fillStyle = 'rgba(60,66,70,.5)'; g.fillRect(x, y + h * 0.82, w, h * 0.18);       // 좌석 등받이
+}
+T.trainSideLit = canvasTex(512, 128, (g, w, h) => {
+  g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 4; i++) litCabin(g, 20 + i * 125, 26, 80, 46);
+});
+T.trainFrontLit = canvasTex(256, 320, (g, w, h) => {
+  g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
+  g.save(); g.beginPath(); g.roundRect(18, 26, w - 36, 150, 14); g.clip();
+  litCabin(g, 18, 26, w - 36, 150);
+  g.fillStyle = 'rgba(25,30,34,.85)'; g.fillRect(18, 140, w - 36, 36);                   // 운전대 실루엣
+  g.restore();
+  g.fillStyle = '#1b1f24'; g.fillRect(28, 34, w - 56, 30);                               // 행선 표시기
+  g.fillStyle = '#ff6a1a'; g.font = "bold 22px 'Malgun Gothic'"; g.textAlign = 'center'; g.fillText('검단오류', w / 2, 58);
+  g.fillStyle = '#fefefe'; g.beginPath(); g.arc(46, 250, 14, 0, 7); g.arc(w - 46, 250, 14, 0, 7); g.fill();   // 전조등
+}, { repeat: false });
 
 
 T.mesh = canvasTex(64, 64, (g, w, h) => {          // 마름모 철망
@@ -936,7 +961,9 @@ function buildSkyFar() {
    7c. 반대 방향 열차 (상선, 역마다 정차)
    ===================================================================== */
 function buildOppTrain() {
-  const side = new THREE.MeshLambertMaterial({ map: T.trainSide }), front = new THREE.MeshLambertMaterial({ map: T.trainFront });
+  // 창은 발광맵으로 객실 조명이 켜진 것처럼 (터널에서도 밝게 보임)
+  const side = new THREE.MeshLambertMaterial({ map: T.trainSide, emissive: 0xffffff, emissiveMap: T.trainSideLit, emissiveIntensity: 0.85 });
+  const front = new THREE.MeshLambertMaterial({ map: T.trainFront, emissive: 0xffffff, emissiveMap: T.trainFrontLit, emissiveIntensity: 0.75 });
   const roof = new THREE.MeshLambertMaterial({ color: 0xd9dbdb }), dark = new THREE.MeshLambertMaterial({ color: 0x3a3c3e });
   const geo = new THREE.BoxGeometry(2.75, 3.25, 17.6);
   const cars = [new THREE.Mesh(geo, [side, side, roof, dark, front, dark]), new THREE.Mesh(geo, [side, side, roof, dark, dark, front])];
@@ -986,7 +1013,7 @@ function drawCab(w, h) {
   for (const x of [0.2, 0.36, 0.64, 0.8]) { g.beginPath(); g.arc(x * w, ct + 0.06 * h, h * 0.006, 0, 7); g.fill(); }
   g.fillStyle = 'rgba(40,50,58,.55)'; g.beginPath(); g.roundRect(0.44 * w, ct + 0.05 * h, 0.12 * w, 0.025 * h, 4); g.fill();
   // 창 개구부 뚫기
-  g.save(); g.globalCompositeOperation = 'destination-out'; g.fill(win); g.restore();
+  g.save(); g.globalCompositeOperation = 'destination-out'; g.fillStyle = '#000'; g.fill(win); g.restore();   // 불투명으로 완전히 뚫기
   // 유리 반사 / 상단 차양 그라데이션
   g.save(); g.clip(win);
   const gl = g.createLinearGradient(0, top, 0, bot);
@@ -1143,14 +1170,14 @@ function updateCamera(dt) {
   const sIn = isUnder(c) ? clamp((pd + 5) / 25, 0, 1) : 0;
   inside += (sIn - inside) * Math.min(1, dt / 0.6);
   scene.fog.color.copy(FOG_OUT).lerp(FOG_IN, inside);
-  scene.fog.density = lerp(0.0011, 0.0062, inside);
+  scene.fog.density = lerp(0.0011, 0.0075, inside);
   const st = stationAt(train.s), inSt = st && st.type === 'under' && Math.abs(train.s - st.s) < PLAT / 2 + 40;
-  const target = !isUnder(c) ? 1.0 : inSt ? 1.3 : lerp(1.0, 1.7, clamp(pd / 40, 0, 1));
+  const target = !isUnder(c) ? 1.0 : inSt ? 1.15 : lerp(1.0, 1.4, clamp(pd / 40, 0, 1));
   exposure += (target - exposure) * Math.min(1, dt / 1.4);
   renderer.toneMappingExposure = exposure;
   const wet = glass.rain * (1 - inside);                 // 우천: 시정 저하·흐린 조명
   if (wet > 0.001) { scene.fog.color.lerp(FOG_RAIN, wet); scene.fog.density += 0.0035 * wet; }
-  hemi.intensity = lerp(1.9, 1.2, inside) * (1 - 0.25 * wet); sun.intensity = lerp(2.3, 0.4, inside) * (1 - 0.7 * wet);
+  hemi.intensity = lerp(1.9, 0.95, inside) * (1 - 0.25 * wet); sun.intensity = lerp(2.3, 0.2, inside) * (1 - 0.7 * wet);
 }
 const _b0 = new THREE.Vector3(), _b1 = new THREE.Vector3(), _bx = new THREE.Vector3(), _by = new THREE.Vector3(), _bz = new THREE.Vector3();
 function updateOpp(o, dt) {
@@ -1224,7 +1251,7 @@ function adaptQuality(dt, now) {
    ===================================================================== */
 let opp, sky, far;
 function jumpReset() {
-  const c = zc(train.s); inside = isUnder(c) ? 1 : 0; exposure = isUnder(c) ? 1.7 : 1;
+  const c = zc(train.s); inside = isUnder(c) ? 1 : 0; exposure = isUnder(c) ? 1.4 : 1;
   opp.active = false; opp.cool = 6; glass.drops.length = 0;
   updateChunks(train.s, 99);
 }
