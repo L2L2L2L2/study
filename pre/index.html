@@ -3469,6 +3469,13 @@
       color: #ffffff !important;
       border-color: #4466ff !important;
     }
+    /* 비활성 칩은 빈 칸 (실물 DU처럼 글자 없이 자리만) */
+    .du2-chip-box:not(.active-red):not(.active-blue):not(.active-green) { color: transparent; background: #0c0c0c; border-color: #262626; }
+    .du2-chip-mode { min-width: 40px; }
+    .du2-chip-adc { color: #ffffff !important; }
+    .du2-chip-adc.closed { background: #0022ff !important; border-color: #4466ff !important; }
+    .du2-chip-adc.open { background: #ff0000 !important; border-color: #ff4444 !important; }
+    .du2-chip-adc.open.blink-off { background: #0c0c0c !important; color: #0c0c0c !important; border-color: #262626 !important; }
     .du2-chip-box.active-green {
       background: #00cc00 !important;
       color: #ffffff !important;
@@ -3521,7 +3528,7 @@
     /* 3. 편성 뷰 (2량 차체 그래픽 + 범례) */
     .du2-cars-row {
       display: grid;
-      grid-template-columns: 85px 120px 140px 120px 1fr;
+      grid-template-columns: 1fr auto 3px auto 1fr;   /* Mc1·Mc2 붙여서 한 편성으로 (사이 3px) */
       align-items: center;
       padding: 4px 0;
       border-bottom: 1px solid #333333;
@@ -3938,7 +3945,7 @@
     /* 2. 중앙 메인 영역 (좌: Target Point, 중: 속도계, 우: 플랫폼/도어) */
     .adu2-middle-area {
       display: grid;
-      grid-template-columns: 105px 1fr 140px;
+      grid-template-columns: 90px minmax(0, 1fr) 128px;   /* 510px 안에 속도계(292px)와 우측 정보 칸이 들어가도록 */
       border-bottom: 2px solid #0000aa;
       min-height: 245px;
       background: #000000;
@@ -5245,7 +5252,6 @@
 
             <!-- 시뮬레이터 화면 하단: 좌측 패널(OP2~OP5) 선택 버튼 (OP1은 콘솔에 상시 표시) -->
             <div class="cab-op-overlay-bar" id="cab-op-overlay-bar">
-              <button type="button" class="cab-op-btn" id="btn-op1" onclick="switchRightOp('OP1')" style="display:none;">OP1</button>
               <button type="button" class="cab-op-btn" id="btn-op2" onclick="switchRightOp('OP2')">OP2</button>
               <button type="button" class="cab-op-btn" id="btn-op3" onclick="switchRightOp('OP3')">OP3</button>
               <button type="button" class="cab-op-btn active" id="btn-op4" onclick="switchRightOp('OP4')">OP4</button>
@@ -5288,12 +5294,16 @@
 
                 <!-- 2. 상단 상태 및 측정치 서브 바 -->
                 <div class="du2-sub-bar">
+                  <!-- 운전모드 / 정차제동(HB) / 비상제동(EB) / 주차제동(PB): 해당 상태일 때만 표시 -->
                   <div class="du2-chips-group">
-                    <span class="du2-chip-box" id="du2-chip-hb">HB</span>
-                    <span class="du2-chip-box active-red" id="du2-chip-eb">EB</span>
-                    <span class="du2-chip-box active-blue" id="du2-chip-pb">PB</span>
-                    <span class="du2-chip-box" id="du2-chip-adbs">ADBS</span>
+                    <span class="du2-chip-box du2-chip-mode" id="du2-chip-mode"></span>
+                    <span class="du2-chip-box" id="du2-chip-hb" data-label="HB"></span>
+                    <span class="du2-chip-box" id="du2-chip-eb" data-label="EB"></span>
+                    <span class="du2-chip-box" id="du2-chip-pb" data-label="PB"></span>
                   </div>
+
+                  <!-- ADC (All Door Close): 전 출입문 닫힘 = 파랑, 하나라도 열림 = 적색 깜빡임 -->
+                  <span class="du2-chip-box du2-chip-adc" id="du2-chip-adc">ADC</span>
 
                   <div class="du2-st-dest-wrap">
                     <div>다음역 : <span class="val-green" id="du2-next-st">검단오류</span></div>
@@ -5651,7 +5661,7 @@
                         <span class="side-lbl">L</span>
                         <span class="adu2-sq-box yellow" id="adu2-psd-l1">■</span>
                         <span class="adu2-sq-box yellow" id="adu2-psd-l2">■</span>
-                        <span style="flex:1;"></span>
+                        <span style="width:12px; flex:none;"></span>
                         <span class="adu2-sq-box green" id="adu2-psd-r1">■</span>
                         <span class="adu2-sq-box green" id="adu2-psd-r2">■</span>
                         <span class="side-lbl" style="text-align:right;">R</span>
@@ -5663,7 +5673,7 @@
                         <span class="side-lbl">L</span>
                         <span class="adu2-sq-box yellow" id="adu2-tdoor-l1">■</span>
                         <span class="adu2-sq-box yellow" id="adu2-tdoor-l2">■</span>
-                        <span style="flex:1;"></span>
+                        <span style="width:12px; flex:none;"></span>
                         <span class="adu2-sq-box green" id="adu2-tdoor-r1">■</span>
                         <span class="adu2-sq-box green" id="adu2-tdoor-r2">■</span>
                         <span class="side-lbl" style="text-align:right;">R</span>
@@ -8430,9 +8440,10 @@ function resetRmEmergencyBrake() {
   showTemporaryHudFeedback('ℹ️ [RM 비상제동 완해] 비상제동이 정상 해제되었습니다.', false);
 }
 
-/* ADU 제한속도 (km/h): RM 15 / 그 외 노선 설계속도를 ATP 단계(45·60·80)로 표시 */
+/* ADU 제한속도 (km/h): RM 15 / FM은 제한속도 정보 없음(null) / 그 외 노선 설계속도를 ATP 단계(45·60·80)로 표시 */
 function aduSpeedLimit(driveMode) {
   if (driveMode === 'RM') return 15;
+  if (driveMode === 'FM') return null;
   const design = IC2.curLimit(trainDistance) * 3.6;
   return design <= 45.5 ? 45 : design <= 60.5 ? 60 : 80;
 }
@@ -8462,21 +8473,23 @@ function drawAduSpeedoGauge(speed, driveMode) {
     }
 
     // 1. 제한속도 표시 (흰색 호: 0 ~ 현재 제한속도)
-    //    RM: 15km/h 고정 / 무인·FM·ATPM: 노선 구간 제한 (45·60 구간 외 80)
+    //    RM: 15km/h 고정 / 무인·ATPM: 노선 구간 제한 (45·60 구간 외 80) / FM: 제한속도 정보 없음 → 속도만 표시
     const limit = aduSpeedLimit(driveMode);
-    const over = speed > limit + 0.5;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r + 5, toRad(startDeg), toRad(speedToDeg(limit)));
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = '#ffffff';
-    ctx.stroke();
-    // 제한속도 끝 표시 눈금
-    const ldeg = toRad(speedToDeg(limit));
-    ctx.beginPath();
-    ctx.moveTo(cx + (r + 1) * Math.cos(ldeg), cy + (r + 1) * Math.sin(ldeg));
-    ctx.lineTo(cx + (r + 11) * Math.cos(ldeg), cy + (r + 11) * Math.sin(ldeg));
-    ctx.lineWidth = 3;
-    ctx.stroke();
+    const over = limit !== null && speed > limit + 0.5;
+    if (limit !== null) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 5, toRad(startDeg), toRad(speedToDeg(limit)));
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+      // 제한속도 끝 표시 눈금
+      const ldeg = toRad(speedToDeg(limit));
+      ctx.beginPath();
+      ctx.moveTo(cx + (r + 1) * Math.cos(ldeg), cy + (r + 1) * Math.sin(ldeg));
+      ctx.lineTo(cx + (r + 11) * Math.cos(ldeg), cy + (r + 11) * Math.sin(ldeg));
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
 
     // 2. Ticks and Labels (0 to 120 km/h)
     ctx.fillStyle = '#ffffff';
@@ -8570,33 +8583,53 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const isEmgActive = (isEmgStopLatched && !isEmgReleaseLatched);
     const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB');
 
+    // 운전모드 칩 (FM / RM / ATPM: 청색, 그 외 빈칸)
+    const chipMode = document.getElementById('du2-chip-mode');
+    if (chipMode) {
+      const shown = ['FM', 'RM', 'ATPM'].includes(driveMode);
+      chipMode.textContent = shown ? driveMode : '';
+      chipMode.classList.toggle('active-blue', shown);
+    }
+    // 칩 글자: 활성일 때만 표시
+    const setChip = (el, on) => { if (!el) return; el.classList.toggle('active-red', !!on); el.textContent = on ? el.dataset.label : ''; };
+
     // 정차제동(HB) 칩: 승강장 정차 중일 때 붉은 배경에 흰 글씨 점등
     const chipHb = document.getElementById('du2-chip-hb');
     const isHbActive = (typeof AtoDriverless !== 'undefined' && AtoDriverless.isHoldingBrake) || (window.__HOLDING_BRAKE_ACTIVE === true);
-    if (chipHb) chipHb.classList.toggle('active-red', !!isHbActive);
+    setChip(chipHb, isHbActive);
 
-    const chipEb = document.getElementById('du2-chip-eb');
-    if (chipEb) chipEb.classList.toggle('active-red', isEbActive);
+    // 비상제동(EB)
+    setChip(document.getElementById('du2-chip-eb'), isEbActive);
 
-    const chipPb = document.getElementById('du2-chip-pb');
-    const isPbActive = (cvCompState('SW_PARK_SET') === 'LATCHED') || (trainSpeed <= 0.2 && cvBC() >= 3.5);
-    if (chipPb) chipPb.classList.toggle('active-blue', isPbActive);
+    // 주차제동(PB): 주차제동체결 버튼으로 체결 → 주차제동완해 버튼으로 해제
+    setChip(document.getElementById('du2-chip-pb'), window.__PARK_BRAKE_SET === true);
 
-    const chipAdbs = document.getElementById('du2-chip-adbs');
-    const isAdbsActive = (cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
-    if (chipAdbs) chipAdbs.classList.toggle('active-green', isAdbsActive);
+    // ADC (All Door Close)
+    const chipAdc = document.getElementById('du2-chip-adc');
+    if (chipAdc) {
+      const allClosed = !isDoorOpen && !window.__FAULT_DOOR_FAIL;
+      chipAdc.classList.toggle('closed', allClosed);
+      chipAdc.classList.toggle('open', !allClosed);
+      chipAdc.classList.toggle('blink-off', !allClosed && (now % 1000) >= 500);
+    }
 
     // 3. Stations & Speed & Catenary
     const stInfo = cvStationInfo(trainDistance);
     const distToStation = Math.max(0, Math.round(stInfo ? stInfo.dStart : 0));
+    // 다음역·종착역: FM/RM에서는 신호(ATP) 정보가 올라오지 않아 표시하지 않음
+    const noRouteInfo = (driveMode === 'FM' || driveMode === 'RM');
     const nextStEl = document.getElementById('du2-next-st');
     if (nextStEl) {
-      if (typeof AtoDriverless !== 'undefined' && AtoDriverless.state === 'TERMINATED') {
+      if (noRouteInfo) {
+        nextStEl.innerText = '-';
+      } else if (typeof AtoDriverless !== 'undefined' && AtoDriverless.state === 'TERMINATED') {
         nextStEl.innerText = '운연 (종착)';
       } else {
         nextStEl.innerText = stInfo ? stInfo.name : '검단오류';
       }
     }
+    const destStEl = document.getElementById('du2-dest-st');
+    if (destStEl) destStEl.innerText = noRouteInfo ? '-' : '운연';
 
     const spdEl = document.getElementById('du2-speed-val');
     if (spdEl) spdEl.innerText = Math.round(trainSpeed);
@@ -11262,6 +11295,8 @@ function handleComponentTouch(compId) {
     }
 
     // 공압 배기음은 오직 주차제동체결 / 주차제동완해에만 들림 (1.0초)
+    if (compId === 'SW_PARK_SET') window.__PARK_BRAKE_SET = true;
+    if (compId === 'SW_PARK_REL') window.__PARK_BRAKE_SET = false;
     if (compId === 'SW_PARK_SET') {
       // 주차제동체결: 스프링 챔버 공기가 1초간 빠지며 강력 체결 (묵직한 칙~~~~)
       sound.playAirExhaust(1.0, 950, 0.75);
