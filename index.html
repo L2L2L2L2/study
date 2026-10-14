@@ -3486,7 +3486,16 @@
     .du2-status-strip .du2-chip-mode { min-width: 46px; }
     .du2-adc-stack { display: flex; flex-direction: column; gap: 0; width: 38px; }
     .du2-adc-stack .du2-chip-box { flex: 1 1 50%; height: auto; font-size: 10px; padding: 0 4px; min-width: 0; border-bottom: 1px solid #000 !important; }
-    .du2-status-strip .du2-st-dest-wrap { justify-content: center; padding: 0 8px; }
+    .du2-status-strip .du2-st-dest-wrap { justify-content: center; padding: 0 6px; white-space: nowrap; text-align: left; }
+    /* 상태 띠는 왼쪽에 붙이고, 속도·가선전압·가선전류는 오른쪽에 줄바꿈 없이 촘촘하게 */
+    .sim-du-box .du2-sub-bar { justify-content: flex-start !important; gap: 6px !important; padding-left: 0 !important; }
+    .sim-du-box .du2-status-strip { flex: 0 0 auto; border-left: none; }
+    .sim-du-box .du2-sub-bar .du2-meter-item { white-space: nowrap; gap: 2px; }
+    .sim-du-box .du2-sub-bar .du2-meter-item:first-of-type { margin-left: auto; }
+    .sim-du-box .du2-sub-bar .du2-meter-label { font-size: 10px; padding: 1px 2px; }
+    .sim-du-box .du2-sub-bar .du2-val-big-green { font-size: 21px; }
+    .sim-du-box .du2-sub-bar .du2-val-big-red { font-size: 19px; }
+    .sim-du-box .du2-sub-bar .du2-meter-unit { font-size: 9.5px; }
     .du2-chip-adc { color: #ffffff !important; }
     .du2-chip-adc.closed { background: #0022ff !important; border-color: #4466ff !important; }
     .du2-chip-adc.open { background: #ff0000 !important; border-color: #ff4444 !important; }
