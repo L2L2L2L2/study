@@ -7744,7 +7744,7 @@ let ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5', 'DU', 'ADU'];
 let currentSplitMode = 2;       // 대화면 기본: 2분할 (2 또는 3)
 let activeLeftPanel = 'OP3';    // 좌측 슬롯 (기본 OP3)
 let activeCenterPanel = 'OP1';  // 중앙 슬롯 (3분할 전용 기본 OP1)
-let activeRightPanel = 'OP2';   // 좌측 선택 패널 (기본 OP2, OP1은 콘솔 상시 표시)
+let activeRightPanel = 'OP4';   // 좌측 선택 패널 (기본 OP4, OP1은 콘솔 상시 표시)
 
 function checkIsDualMode() {
   return window.innerWidth >= 768;
@@ -13265,10 +13265,10 @@ window.addEventListener('resize', () => {
   if (window.CabView3D) window.CabView3D.resize();
 });
 
-// 초기 구동: OP1 콘솔 고정, 좌측 패널은 OP2(실물 콘솔 좌측 표시등·스위치판), 스케일러 적용
+// 초기 구동: OP1 콘솔 고정, 좌측 패널은 OP4(운전모드·와이퍼·공기압력계), 스케일러 적용
 window.addEventListener('DOMContentLoaded', () => {
   mountConsoleOp1();
-  switchRightOp('OP2');
+  switchRightOp('OP4');
   updateMmiScalers();
   if (window.CabView3D) window.CabView3D.resize();
 });
