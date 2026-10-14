@@ -937,7 +937,9 @@ function buildOppTrain() {
 function drawCab(w, h) {
   const g = cabCanvas.getContext('2d');
   cabCanvas.width = w; cabCanvas.height = h; g.clearRect(0, 0, w, h);
-  const top = 0.07 * h, bot = 0.715 * h, lT = 0.05 * w, rT = 0.95 * w, lB = 0.035 * w, rB = 0.965 * w, rad = 0.05 * h;
+  // 창 하단 위치: 컨테이너의 data-win-bottom (기본 0.715). 값이 클수록 창 아래 콘솔이 얇아짐
+  const botF = clamp(+STAGE.dataset.winBottom || 0.715, 0.6, 0.9), topF = 0.07;
+  const top = topF * h, bot = botF * h, lT = 0.05 * w, rT = 0.95 * w, lB = 0.035 * w, rB = 0.965 * w, rad = 0.05 * h;
   const win = new Path2D();
   win.moveTo(lT + rad, top); win.lineTo(rT - rad, top); win.quadraticCurveTo(rT, top, rT + (rB - rT) * 0.08, top + rad);
   win.lineTo(rB, bot - rad); win.quadraticCurveTo(rB, bot, rB - rad, bot); win.lineTo(lB + rad, bot);
@@ -980,7 +982,7 @@ function drawCab(w, h) {
   // 고무 가스켓
   g.strokeStyle = '#121518'; g.lineWidth = h * 0.012; g.stroke(win);
   g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1.5; g.save(); g.translate(0, h * 0.007); g.stroke(win); g.restore();
-  return { horizon: 0.42, path: win, top, bot, left: lB, right: rB, w, h };
+  return { horizon: topF + (botF - topF) * 0.55, path: win, top, bot, left: lB, right: rB, w, h };
 }
 
 /* =====================================================================

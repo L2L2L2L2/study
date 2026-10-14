@@ -4643,9 +4643,10 @@
   
     /* ========================================================
        인천 2호선 모의운전 워크스테이션 신규 레이아웃 (정밀 고증)
-       - 좌측 상단 (61.8%): 전면 3D 시뮬레이터 + OP1~OP5 오버레이 버튼
-       - 좌측 하단 (38.2%): DU / ADU 나란히 50:50 배치
-       - 우측 세로 (24.4%): OP1 ~ OP5 전용 조작반
+       - 실물 콘솔 배치 (아래 "실물 콘솔 배치" 그리드가 최종 적용)
+       - 상단 (50%): 전면 3D 시뮬레이터 + OP2~OP5 선택 버튼
+       - 하단 (50%): DU / ADU / OP1(주간제어기·방송·출입문 상시 표시)
+       - 좌측 전체 높이 (21%): OP2 ~ OP5 / OCC 선택 패널
     ======================================================== */
     html, body {
       margin: 0 !important;
@@ -4707,8 +4708,8 @@
 
     /* 상단: 3D 시뮬레이터 뷰 */
     .sim-cab-section {
-      flex: 0 0 61.8% !important;
-      height: 61.8% !important;
+      flex: 0 0 50% !important;
+      height: 50% !important;
       width: 100% !important;
       position: relative !important;
       overflow: hidden !important;
@@ -4936,8 +4937,8 @@
 
     /* 하단: DU & ADU 모니터 50:50 나란히 */
     .sim-mmi-section {
-      flex: 1 1 38.2% !important;
-      height: 38.2% !important;
+      flex: 1 1 50% !important;
+      height: 50% !important;
       width: 100% !important;
       display: flex !important;
       flex-direction: row !important;
@@ -4987,6 +4988,45 @@
       transform-origin: top left !important;
       flex-shrink: 0 !important;
     }
+    /* ===== 실물 콘솔 배치 =====
+       ┌ OP2~5 ┬──────── 3D 전면 ────────┐
+       │(전체  ├─ DU ─┬─ ADU ─┬─ OP1 ────┤
+       └ 높이) ┴──────┴───────┴──────────┘ */
+    .sim-workstation-layout {
+      display: grid !important;
+      grid-template-columns: 21% 25% 33% 21% !important;
+      grid-template-rows: 50% 50% !important;
+      grid-template-areas: "side cab cab cab" "side du adu op1" !important;
+    }
+    .sim-left-col, .sim-mmi-section { display: contents !important; }
+    .sim-workstation-layout .sim-cab-section {
+      grid-area: cab !important; height: auto !important; flex: none !important; min-width: 0 !important;
+    }
+    .sim-workstation-layout > .sim-right-col {
+      grid-area: side !important; width: auto !important; height: auto !important; flex: none !important;
+      min-height: 0 !important; border-left: none !important; border-right: 2px solid #282f3a !important;
+    }
+    .sim-mmi-box.sim-du-box { grid-area: du !important; }
+    .sim-mmi-box.sim-adu-box { grid-area: adu !important; }
+    .sim-mmi-box.sim-du-box, .sim-mmi-box.sim-adu-box {
+      width: auto !important; height: auto !important; min-height: 0 !important; padding: 4px 2px !important;
+      background: #090c10 !important;
+    }
+    .console-op1 {
+      grid-area: op1; position: relative; overflow: hidden; min-width: 0; min-height: 0;
+      background: #181c22; border-left: 1px solid #21262d;
+    }
+    .console-op1 > .train-metal-panel {
+      position: absolute; top: 0; left: 0; width: 440px; transform-origin: top left;
+      margin: 0 !important; padding: 8px 6px !important; border-radius: 6px !important;
+      border: 1px solid #30363d !important; box-sizing: border-box !important;
+    }
+    .console-op1 .op1-bottom-row { display: flex !important; flex-direction: column !important; gap: 8px !important; width: 100% !important; }
+    .console-op1 .op1-bottom-left-col, .console-op1 .op1-bottom-right-col { width: 100% !important; }
+
+    /* 화면 자체가 잘 보이도록 DU/ADU 제목줄(베젤 헤더) 제거, 테두리 최소화 */
+    .sim-mmi-box .mmi-bezel-header { display: none !important; }
+    .sim-mmi-box .mmi-monitor-frame { border-width: 1px !important; border-radius: 2px !important; }
 
     /* 우측 컬럼 (OP 패널 100% 높이) */
     .sim-right-col {
@@ -5170,7 +5210,7 @@
           </div>
 
           <div class="cab-screen-viewport" id="cab-screen-viewport">
-            <div id="cab3d-stage"></div>
+            <div id="cab3d-stage" data-win-bottom="0.85"></div>
             <canvas id="cab-view-canvas" width="1024" height="473"></canvas>
             
             <!-- 시뮬레이터 화면 상단 우측: 회차 버튼 (종착역 도착 시 표시) -->
@@ -5185,9 +5225,9 @@
               </div>
             </div>
 
-            <!-- 시뮬레이터 화면 우측 하단: OP1 ~ OP5 선택 플로팅 오버레이 버튼 바 -->
+            <!-- 시뮬레이터 화면 하단: 좌측 패널(OP2~OP5) 선택 버튼 (OP1은 콘솔에 상시 표시) -->
             <div class="cab-op-overlay-bar" id="cab-op-overlay-bar">
-              <button type="button" class="cab-op-btn" id="btn-op1" onclick="switchRightOp('OP1')">OP1</button>
+              <button type="button" class="cab-op-btn" id="btn-op1" onclick="switchRightOp('OP1')" style="display:none;">OP1</button>
               <button type="button" class="cab-op-btn" id="btn-op2" onclick="switchRightOp('OP2')">OP2</button>
               <button type="button" class="cab-op-btn" id="btn-op3" onclick="switchRightOp('OP3')">OP3</button>
               <button type="button" class="cab-op-btn active" id="btn-op4" onclick="switchRightOp('OP4')">OP4</button>
@@ -5643,10 +5683,13 @@
               </div>
             </div>
           </div>
+
+          <!-- ADU 우측: OP1 주간제어기·방송·출입문 (실물 콘솔처럼 항상 표시) -->
+          <div class="console-op1" id="console-op1"></div>
         </div>
       </div>
 
-      <!-- 우측 메인 영역: 선택된 OP 패널 (초기 OP4 마운트) -->
+      <!-- 좌측 전체 높이: OP2~OP5 / OCC 중 선택한 패널 -->
       <div class="sim-right-col" id="sim-right-col">
         <section id="panel-op4" class="train-metal-panel" style="display:block;">
       <div class="screw tl"></div><div class="screw tr"></div>
@@ -7641,7 +7684,7 @@ let ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5', 'DU', 'ADU'];
 let currentSplitMode = 2;       // 대화면 기본: 2분할 (2 또는 3)
 let activeLeftPanel = 'OP3';    // 좌측 슬롯 (기본 OP3)
 let activeCenterPanel = 'OP1';  // 중앙 슬롯 (3분할 전용 기본 OP1)
-let activeRightPanel = 'OP4';   // 우측 슬롯 (기본 OP4)
+let activeRightPanel = 'OP2';   // 좌측 선택 패널 (기본 OP2, OP1은 콘솔 상시 표시)
 
 function checkIsDualMode() {
   return window.innerWidth >= 768;
@@ -13034,6 +13077,8 @@ function switchRightOp(opId) {
   opId = opId.toUpperCase();
   const validPanels = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5', 'OCC'];
   if (!validPanels.includes(opId)) return;
+  // OP1(주간제어기·방송·출입문)은 콘솔에 상시 표시 → 좌측 패널 전환 대상 아님
+  if (opId === 'OP1') { mountConsoleOp1(); return; }
 
   // 연동되지 않았거나 교관 모드가 아닌 경우 OCC 패널 접근 방지
   if (opId === 'OCC' && (!TrainRemote.isConnected || TrainRemote.role !== 'INSTRUCTOR')) {
@@ -13054,7 +13099,7 @@ function switchRightOp(opId) {
 
   validPanels.forEach(p => {
     const el = document.getElementById(`panel-${p.toLowerCase()}`);
-    if (!el) return;
+    if (!el || p === 'OP1') return;
     if (p === opId) {
       el.style.display = 'block';
       if (el.parentElement !== rightCol) {
@@ -13075,30 +13120,46 @@ function switchRightOp(opId) {
 }
 
 // DU / ADU 반응형 자동 스케일러 (어떤 해상도에서도 화면에 꽉 맞게 비례 축소/확대)
+/* OP1을 ADU 오른쪽 콘솔 칸에 고정하고, 칸 크기에 맞춰 비율 유지 확대/축소 */
+function mountConsoleOp1() {
+  const slot = document.getElementById('console-op1');
+  const el = document.getElementById('panel-op1');
+  if (!slot || !el) return;
+  if (el.parentElement !== slot) slot.appendChild(el);
+  el.style.display = 'block';
+  fitConsoleOp1();
+}
+function fitConsoleOp1() {
+  const slot = document.getElementById('console-op1');
+  const el = document.getElementById('panel-op1');
+  if (!slot || !el || el.parentElement !== slot) return;
+  el.style.transform = 'none';
+  const cw = el.offsetWidth, ch = el.offsetHeight, sw = slot.clientWidth, sh = slot.clientHeight;
+  if (!cw || !ch || !sw || !sh) return;
+  const s = Math.min(sw / cw, sh / ch);
+  el.style.transform = `translate(${Math.max(0, (sw - cw * s) / 2)}px, ${Math.max(0, (sh - ch * s) / 2)}px) scale(${s})`;
+}
+
 function updateMmiScalers() {
   const duScreen = document.querySelector('.sim-du-box .du-screen');
   const aduScreen = document.querySelector('.sim-adu-box .adu-screen');
   const duWrap = document.querySelector('.sim-du-box .du2-tcms-wrapper');
   const aduWrap = document.querySelector('.sim-adu-box .adu2-mmi-wrapper');
 
-  if (duScreen && duWrap) {
-    const sw = duScreen.clientWidth;
-    const sh = duScreen.clientHeight;
-    if (sw > 0 && sh > 0) {
-      const s = Math.min(sw / 528, sh / 400);
-      duWrap.style.transform = `scale(${s})`;
-      duWrap.style.width = '522px';
-    }
-  }
-  if (aduScreen && aduWrap) {
-    const sw = aduScreen.clientWidth;
-    const sh = aduScreen.clientHeight;
-    if (sw > 0 && sh > 0) {
-      const s = Math.min(sw / 528, sh / 400);
-      aduWrap.style.transform = `scale(${s})`;
-      aduWrap.style.width = '522px';
-    }
-  }
+  // 화면 내용(폭 522px, 높이는 실제 내용 기준)을 비율 유지한 채 최대 확대하고 가운데 정렬
+  const fit = (screen, wrap) => {
+    if (!screen || !wrap) return;
+    wrap.style.width = '522px';
+    const sw = screen.clientWidth, sh = screen.clientHeight;
+    const cw = 522, ch = Math.max(wrap.offsetHeight, 300);
+    if (sw <= 0 || sh <= 0) return;
+    const s = Math.min(sw / cw, sh / ch);
+    const ox = Math.max(0, (sw - cw * s) / 2), oy = Math.max(0, (sh - ch * s) / 2);
+    wrap.style.transform = `translate(${ox}px, ${oy}px) scale(${s})`;
+  };
+  fit(duScreen, duWrap);
+  fit(aduScreen, aduWrap);
+  fitConsoleOp1();
 }
 
 // 윈도우 리사이즈 및 초기화 연동
@@ -13107,8 +13168,10 @@ window.addEventListener('resize', () => {
   if (window.CabView3D) window.CabView3D.resize();
 });
 
-// 초기 구동 시 OP4 활성화 및 스케일러 적용
+// 초기 구동: OP1 콘솔 고정, 좌측 패널은 OP2(실물 콘솔 좌측 표시등·스위치판), 스케일러 적용
 window.addEventListener('DOMContentLoaded', () => {
+  mountConsoleOp1();
+  switchRightOp('OP2');
   updateMmiScalers();
   if (window.CabView3D) window.CabView3D.resize();
 });
