@@ -272,10 +272,18 @@ function signTex(name) {          // 노란 세로 역명판
     chars.forEach((c, i) => g.fillText(c, w / 2, 30 + fs / 2 + i * fs));
   }, { repeat: false });
 }
-T.stop = canvasTex(128, 160, (g, w, h) => {      // 정지위치표
-  g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.strokeStyle = '#1550a8'; g.lineWidth = 10; g.strokeRect(5, 5, w - 10, h - 10);
-  g.fillStyle = '#1550a8'; g.textAlign = 'center'; g.font = `bold 34px 'Malgun Gothic'`; g.fillText('정지', w / 2, 52);
-  g.font = 'bold 76px Arial'; g.fillText('2', w / 2, 132);
+/* 정차위치표지 (편성량 수 = 2)
+   측면표지: 400×400mm 흑색 바탕 + 백색 숫자 (글자 높이 300mm) — PSD에 부착
+   전면표지: 삼각기둥(길이 1000mm, 높이 160mm, 폭 180mm) 백색 반사재 + 적색 숫자 — 선로 중앙 */
+T.stop = canvasTex(128, 128, (g, w, h) => {
+  g.fillStyle = '#0a0a0a'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#ffffff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = 'bold 104px Arial'; g.fillText('2', w / 2, h / 2 + 4);
+}, { repeat: false });
+T.stopFront = canvasTex(256, 64, (g, w, h) => {
+  g.fillStyle = '#f4f6f6'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#e01b1b'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = 'bold 54px Arial'; g.fillText('2', w / 2, h / 2 + 3);
 }, { repeat: false });
 T.trainFront = canvasTex(256, 320, (g, w, h) => {   // 반대편 열차 전면
   g.fillStyle = '#f1f2f0'; g.fillRect(0, 0, w, h);
@@ -354,6 +362,7 @@ const MAT = {
   greenSign: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.2, 1.6, 0.6) }),
   stopU: new THREE.MeshBasicMaterial({ map: T.stop }),
   stopA: new THREE.MeshLambertMaterial({ map: T.stop }),
+  stopFront: new THREE.MeshBasicMaterial({ map: T.stopFront, color: new THREE.Color(1.15, 1.15, 1.15), side: DS2 }),   // 반사재: 조명 영향 적게
   water: new THREE.MeshPhongMaterial({ color: 0x3d6577, specular: 0x8899aa, shininess: 90 }),
   hill: new THREE.MeshLambertMaterial({ map: T.forest, vertexColors: true }),
   pole: new THREE.MeshLambertMaterial({ color: 0x9a9fa3 }),
@@ -483,7 +492,21 @@ const G = {
   pier: shared(new THREE.CylinderGeometry(1, 1.08, 1, 16).translate(0, 0.5, 0)),
   signFwd: shared(new THREE.PlaneGeometry(0.34, 0.95)),                         // 진입 열차를 향함(-s 방향)
   signBack: shared(new THREE.PlaneGeometry(0.34, 0.95).rotateY(Math.PI)),
-  stopR: shared(new THREE.PlaneGeometry(0.42, 0.52).rotateY(-Math.PI / 2)),
+  stopR: shared(new THREE.PlaneGeometry(0.4, 0.4).rotateY(-Math.PI / 2)),
+  stopFront: shared((() => {
+    // 삼각기둥: 진입 열차 쪽(로컬 +Z)으로 경사면, 폭(선로 직각) 1.0m, 높이 0.16m, 깊이 0.18m
+    const W = 0.5, Hh = 0.16, D = 0.09;
+    const P = [[-W, 0, D], [W, 0, D], [W, Hh, -D], [-W, Hh, -D],     // 경사면 (텍스처)
+      [-W, Hh, -D], [W, Hh, -D], [W, 0, -D], [-W, 0, -D],               // 뒷면
+      [-W, 0, D], [-W, Hh, -D], [-W, 0, -D], [W, 0, D], [W, 0, -D], [W, Hh, -D]];   // 양 끝 삼각형
+    const pos = P.flat(), uv = [0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    g.setIndex([0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 8, 9, 10, 11, 12, 13]);
+    g.computeVertexNormals();
+    return g;
+  })()),
   door: shared(new THREE.PlaneGeometry(1.0, 2.05)),
 };
 {
@@ -623,7 +646,9 @@ function stationFeatures(st, a, b, under) {
   inst(G.unit, MAT.greenSign, greens); glowPoints(glowG, MAT.glowG);
   inst(G.door, MAT.doorGlow, doors);
   inst(G.steps, MAT.metalU, steps);
-  if (st.stop + 0.6 >= a && st.stop + 0.6 < b) inst(G.stopR, under ? MAT.stopU : MAT.stopA, [{ s: st.stop + 0.6, u: 3.69, v: 3.0 }]);
+  // 정차위치표지: 측면(PSD 부착, 흑색 바탕 백색 숫자) + 전면(선로 중앙, 백색 반사재 적색 숫자)
+  if (st.stop + 0.6 >= a && st.stop + 0.6 < b) inst(G.stopR, under ? MAT.stopU : MAT.stopA, [{ s: st.stop + 0.6, u: 3.69, v: 2.6 }]);
+  if (st.stop >= a && st.stop < b) inst(G.stopFront, MAT.stopFront, [{ s: st.stop, u: TRK, v: -0.30 }]);
 }
 
 function buildStationA(a, b) {

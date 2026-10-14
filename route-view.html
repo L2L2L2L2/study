@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>인천2호선 노선 형상</title>
+<!--
+  노선 형상 확인용 페이지: 시뮬레이터가 쓰는 js/route.js 데이터를 그대로 그림
+  - 평면도 (위에서 본 선형, 구간별 색), 종단면도 (레일면 높이), 설계속도
+  - 마우스를 올리면 위치(km)·구간·높이·구배·제한속도 표시
+-->
+<style>
+  :root { --bg: #0e1116; --panel: #161b22; --line: #2b323c; --text: #e6edf3; --muted: #8b949e;
+    --elev: #4c9aff; --cut: #f2b134; --tun: #9aa3ad; --st: #ffffff; --limit: #ff7b72; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif; }
+  header { padding: 14px 18px 6px; display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; }
+  h1 { margin: 0; font-size: 18px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+  .legend i { display: inline-block; width: 18px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+  main { padding: 6px 18px 18px; display: grid; gap: 12px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px 10px; }
+  section h2 { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
+  canvas { display: block; width: 100%; }
+  #plan { height: 560px; }
+  #prof { height: 260px; }
+  #speed { height: 150px; }
+  #tip { position: fixed; pointer-events: none; background: rgba(13,17,23,.94); border: 1px solid var(--line); border-radius: 6px;
+    padding: 7px 9px; font-size: 12px; line-height: 1.5; display: none; z-index: 10; white-space: nowrap; }
+  .note { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>인천2호선 노선 형상 (201 검단오류 → 227 운연)</h1>
+  <div class="legend">
+    <span><i style="background:var(--elev)"></i>고가 / 고가역</span>
+    <span><i style="background:var(--cut)"></i>U형 개착 (지상↔지하 전환)</span>
+    <span><i style="background:var(--tun)"></i>지하 (박스·원형 터널, 지하역)</span>
+    <span><i style="background:var(--limit)"></i>설계속도 제한 구간</span>
+  </div>
+</header>
+<main>
+  <section><h2>평면도 — 위에서 본 선형 (곡선 좌/우 방향은 추정값)</h2><canvas id="plan"></canvas></section>
+  <section><h2>종단면도 — 레일면 높이 (지면 = 0 m)</h2><canvas id="prof"></canvas></section>
+  <section><h2>설계속도 (선로개요도) — 곡선 제한 구간 외 80 km/h</h2><canvas id="speed"></canvas></section>
+  <p class="note">데이터: <code>js/route.js</code> (시뮬레이터와 같은 파일). 마우스를 올리면 해당 지점 정보를 보여줍니다.</p>
+</main>
+<div id="tip"></div>
+<script src="js/route.js?v=20261014"></script>
+<script>
+const R = window.IC2;
+const { STN, START, END, NS, DS, PX, PY, PZ, ZC, PORTALS, CANAL, CURVES, SPEED_ZONES } = R;
+const ZONE_KO = ['고가', '고가역', 'U형 개착', '박스 터널', '원형 터널', '지하역'];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const zoneColor = c => c <= 1 ? css('--elev') : c === 2 ? css('--cut') : css('--tun');
+const sOf = i => START + i * DS;
+const idxOf = s => Math.max(0, Math.min(NS - 1, Math.round((s - START) / DS)));
+
+function setup(cv) {
+  const dpr = devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = w * dpr; cv.height = h * dpr;
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  return { g, w, h };
+}
+/* 구간 코드별로 끊어서 선 그리기 */
+function strokeByZone(g, pt, step = 4, width = 3) {
+  let i = 0;
+  while (i < NS - 1) {
+    const c = ZC[i] <= 1 ? 0 : ZC[i] === 2 ? 2 : 3;
+    let j = i;
+    while (j < NS - 1 && (ZC[j] <= 1 ? 0 : ZC[j] === 2 ? 2 : 3) === c) j += 1;
+    g.beginPath();
+    for (let k = i; k <= j; k += step) { const [x, y] = pt(k); k === i ? g.moveTo(x, y) : g.lineTo(x, y); }
+    const [xe, ye] = pt(j); g.lineTo(xe, ye);
+    g.strokeStyle = zoneColor(ZC[i]); g.lineWidth = width; g.setLineDash(c === 3 ? [7, 4] : []); g.stroke();
+    i = j;
+  }
+  g.setLineDash([]);
+}
+
+/* ---------- 평면도 ---------- */
+let planMap = null;
+function drawPlan() {
+  const cv = document.getElementById('plan'), { g, w, h } = setup(cv);
+  // 출발 방향(-Z)을 오른쪽(동쪽)으로 회전: 화면 x = -Z, 화면 y = X
+  let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+  for (let i = 0; i < NS; i += 10) { const X = -PZ[i], Y = PX[i]; minX = Math.min(minX, X); maxX = Math.max(maxX, X); minY = Math.min(minY, Y); maxY = Math.max(maxY, Y); }
+  const pad = 40, sc = Math.min((w - pad * 2) / (maxX - minX), (h - pad * 2) / (maxY - minY));
+  const ox = pad + ((w - pad * 2) - (maxX - minX) * sc) / 2, oy = pad + ((h - pad * 2) - (maxY - minY) * sc) / 2;
+  const pt = i => [ox + (-PZ[i] - minX) * sc, oy + (PX[i] - minY) * sc];
+  planMap = { pt };
+  // 축척 막대
+  const km = 1000 * sc;
+  g.strokeStyle = css('--muted'); g.fillStyle = css('--muted'); g.lineWidth = 2; g.font = '11px sans-serif';
+  g.beginPath(); g.moveTo(w - pad - km, h - 16); g.lineTo(w - pad, h - 16); g.stroke(); g.fillText('1 km', w - pad - km, h - 22);
+  strokeByZone(g, pt, 4, 4);
+  // 아라뱃길
+  { const [x, y] = pt(idxOf(CANAL)); g.fillStyle = 'rgba(80,160,255,.25)'; g.beginPath(); g.arc(x, y, 14, 0, 7); g.fill(); g.fillStyle = '#7fb8ff'; g.fillText('아라뱃길', x + 14, y + 4); }
+  // 갱구
+  for (const p of PORTALS) { const [x, y] = pt(idxOf(p.s)); g.fillStyle = css('--cut'); g.fillRect(x - 3, y - 3, 6, 6); }
+  // 역
+  g.font = 'bold 11px sans-serif';
+  STN.forEach((st, n) => {
+    const [x, y] = pt(idxOf(st.s));
+    g.fillStyle = css('--st'); g.beginPath(); g.arc(x, y, 4.5, 0, 7); g.fill();
+    g.strokeStyle = zoneColor(ZC[idxOf(st.s)]); g.lineWidth = 2; g.stroke();
+    // 선로 진행 방향에 수직으로, 역마다 좌우를 번갈아 라벨 배치 (밀집 구간 겹침 방지)
+    const i0 = idxOf(st.s), [xa, ya] = pt(Math.max(0, i0 - 40)), [xb, yb] = pt(Math.min(NS - 1, i0 + 40));
+    let nx = -(yb - ya), ny = xb - xa; const L = Math.hypot(nx, ny) || 1; nx /= L; ny /= L;
+    const side = n % 2 === 0 ? 1 : -1, d = 12 + (n % 4 < 2 ? 0 : 10);
+    const lx = x + nx * d * side, ly = y + ny * d * side;
+    g.strokeStyle = 'rgba(255,255,255,.25)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x, y); g.lineTo(lx, ly); g.stroke();
+    g.fillStyle = css('--text'); g.textAlign = (nx * side) >= 0 ? 'left' : 'right';
+    g.fillText(`${st.id} ${st.name}`, lx + ((nx * side) >= 0 ? 3 : -3), ly + 4);
+  });
+  g.textAlign = 'left';
+}
+
+/* ---------- 종단면도 / 설계속도 (같은 가로축) ---------- */
+let profMap = null;
+function hAxis(g, w, h, padL, padR, padB) {
+  const sx = s => padL + (s - START) / (END - START) * (w - padL - padR);
+  g.strokeStyle = css('--line'); g.fillStyle = css('--muted'); g.font = '10px sans-serif'; g.lineWidth = 1;
+  for (let k = 0; k <= Math.floor(END / 1000); k += 2) {
+    const x = sx(k * 1000); g.beginPath(); g.moveTo(x, 6); g.lineTo(x, h - padB); g.stroke(); g.fillText(k + 'km', x - 8, h - padB + 12);
+  }
+  return sx;
+}
+function drawProfile() {
+  const cv = document.getElementById('prof'), { g, w, h } = setup(cv);
+  const padL = 40, padR = 10, padT = 22, padB = 18;
+  const sx = hAxis(g, w, h, padL, padR, padB);
+  const yMin = -25, yMax = 22, sy = y => padT + (yMax - y) / (yMax - yMin) * (h - padT - padB);
+  profMap = { sx, padL, padR, w };
+  // 지면 / 높이 눈금
+  g.fillStyle = 'rgba(120,90,60,.18)'; g.fillRect(padL, sy(0), w - padL - padR, sy(yMin) - sy(0));
+  g.strokeStyle = '#8a6a4a'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(padL, sy(0)); g.lineTo(w - padR, sy(0)); g.stroke();
+  g.fillStyle = css('--muted'); g.font = '10px sans-serif';
+  for (const y of [-20, -10, 0, 10, 20]) g.fillText((y > 0 ? '+' : '') + y + 'm', 4, sy(y) + 3);
+  strokeByZone(g, i => [sx(sOf(i)), sy(PY[i])], 6, 2.5);
+  // 역 표시
+  g.font = '10px sans-serif'; g.textAlign = 'center';
+  STN.forEach((st, n) => {
+    const x = sx(st.s), y = sy(st.y);
+    g.fillStyle = css('--st'); g.fillRect(x - 3, y - 3, 6, 6);
+    g.fillStyle = css('--text'); g.fillText(st.name, x, n % 2 ? padT - 8 : padT + 2);
+  });
+  g.textAlign = 'left';
+  // 주요 구배 표기
+  const marks = [[R.S('202') + 650, '-54‰'], [R.S('206') + 980, '+55‰'], [R.S('208') + 580, '-55‰'], [R.S('225') + 1180, '+52‰'], [R.S('226') + 330, '-34‰']];
+  g.fillStyle = css('--cut'); g.font = 'bold 11px sans-serif';
+  for (const [s, t] of marks) { const i = idxOf(s); g.fillText(t, sx(s) + 4, sy(PY[i]) - 6); }
+}
+function drawSpeed() {
+  const cv = document.getElementById('speed'), { g, w, h } = setup(cv);
+  const padL = 40, padR = 10, padT = 8, padB = 18;
+  const sx = hAxis(g, w, h, padL, padR, padB);
+  const vMax = 85, sy = v => padT + (vMax - v) / vMax * (h - padT - padB);
+  g.fillStyle = css('--muted'); g.font = '10px sans-serif';
+  for (const v of [30, 45, 60, 80]) { g.fillText(v, 14, sy(v) + 3); g.strokeStyle = 'rgba(255,255,255,.06)'; g.beginPath(); g.moveTo(padL, sy(v)); g.lineTo(w - padR, sy(v)); g.stroke(); }
+  g.beginPath();
+  for (let s = START; s <= END; s += 5) { const v = R.limitAt(s) * 3.6; s === START ? g.moveTo(sx(s), sy(v)) : g.lineTo(sx(s), sy(v)); }
+  g.strokeStyle = css('--limit'); g.lineWidth = 1.8; g.stroke();
+  for (const st of STN) { g.fillStyle = css('--st'); g.fillRect(sx(st.s) - 1, padT, 2, 6); }
+}
+
+/* ---------- 마우스 정보 ---------- */
+const tip = document.getElementById('tip');
+function info(i) {
+  const s = sOf(i), st = STN.reduce((a, b) => Math.abs(b.s - s) < Math.abs(a.s - s) ? b : a);
+  const prev = [...STN].reverse().find(x => x.s <= s), next = STN.find(x => x.s > s);
+  const sec = Math.abs(st.s - s) < 60 ? `${st.id} ${st.name}역` : `${prev ? prev.name : '기점'} → ${next ? next.name : '종점'}`;
+  const curve = CURVES.find(([c, wd]) => Math.abs(s - c) < wd / 2);
+  return `<b>${(s / 1000).toFixed(2)} km</b> · ${sec}<br>구간: ${ZONE_KO[ZC[i]]} · 레일면 ${PY[i].toFixed(1)} m<br>` +
+    `구배 ${(R.grade(s) * 1000).toFixed(0)}‰ · 설계속도 ${Math.round(R.limitAt(s) * 3.6)} km/h` +
+    (curve ? `<br>곡선 R=${curve[2]} (${curve[3] > 0 ? '우' : '좌'}, 추정)` : '');
+}
+function showTip(e, i) { tip.innerHTML = info(i); tip.style.display = 'block'; tip.style.left = (e.clientX + 14) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; }
+document.getElementById('plan').addEventListener('mousemove', e => {
+  if (!planMap) return;
+  const r = e.target.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+  let best = 0, bd = 1e9;
+  for (let i = 0; i < NS; i += 3) { const [x, y] = planMap.pt(i); const d = (x - mx) ** 2 + (y - my) ** 2; if (d < bd) { bd = d; best = i; } }
+  if (bd > 400) { tip.style.display = 'none'; return; }
+  showTip(e, best);
+});
+for (const id of ['prof', 'speed']) document.getElementById(id).addEventListener('mousemove', e => {
+  if (!profMap) return;
+  const r = e.target.getBoundingClientRect(), mx = e.clientX - r.left;
+  const s = START + (mx - profMap.padL) / (r.width - profMap.padL - profMap.padR) * (END - START);
+  if (s < START || s > END) { tip.style.display = 'none'; return; }
+  showTip(e, idxOf(s));
+});
+for (const id of ['plan', 'prof', 'speed']) document.getElementById(id).addEventListener('mouseleave', () => tip.style.display = 'none');
+
+function drawAll() { drawPlan(); drawProfile(); drawSpeed(); }
+drawAll();
+addEventListener('resize', drawAll);
+</script>
+</body>
+</html>
