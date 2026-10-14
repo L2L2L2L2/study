@@ -3490,6 +3490,7 @@
     .du2-chip-adc { color: #ffffff !important; }
     .du2-chip-adc.closed { background: #0022ff !important; border-color: #4466ff !important; }
     .du2-chip-adc.open { background: #ff0000 !important; border-color: #ff4444 !important; }
+    .du2-chip-box.active-red.blink-off { background: #181818 !important; color: #666666 !important; box-shadow: none !important; }
     .du2-chip-adc.open.blink-off { background: #181818 !important; color: #666666 !important; border-color: #444444 !important; }
     .du2-chip-box.active-green {
       background: #00cc00 !important;
@@ -8636,9 +8637,13 @@ function updateDuAduDisplay(driveMode, notch, now) {
       chipAdc.classList.toggle('open', !allClosed);
       chipAdc.classList.toggle('blink-off', !allClosed && (now % 1000) >= 500);
     }
-    // ADBS (출입문 바이패스): OP4 출입문 바이패스 시 녹색
+    // ADBS (출입문 바이패스): OP4 출입문 스위치 바이패스 시 적색 바탕 흰 글씨 점멸
     const chipAdbs = document.getElementById('du2-chip-adbs');
-    if (chipAdbs) chipAdbs.classList.toggle('active-green', cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
+    if (chipAdbs) {
+      const bypass = cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS';
+      chipAdbs.classList.toggle('active-red', bypass);
+      chipAdbs.classList.toggle('blink-off', bypass && (now % 1000) >= 500);
+    }
 
     // 3. Stations & Speed & Catenary
     const stInfo = cvStationInfo(trainDistance);
