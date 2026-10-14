@@ -8,6 +8,20 @@
 
 별도의 외부 프레임워크, 3D 엔진(Unity/Three.js), 사운드 파일 다운로드 없이 **표준 웹 기술(HTML5, Canvas, Web Audio API, SVG)**만으로 가볍고 빠르게 동작합니다.
 
+> **2026-10 개편**: 메인(`/`)은 인천2호선 실제 노선(201 검단오류 → 227 운연)을 3D로 구현한 새 버전입니다.
+> 전면 전망은 Three.js 기반이며, 실물 콘솔 배치(좌측 OP2~OP5 선택 패널 · DU · ADU · OP1)로 바뀌었습니다.
+> 이전 버전은 **[`/old/`](https://l2l2l2l2.github.io/study/old/)** 에 그대로 보관되어 있습니다. 아래 설명은 이전 버전 기준입니다.
+>
+> | 파일 | 내용 |
+> |---|---|
+> | `index.html` | 조작반(OP1~OP5)·DU·ADU·동역학·무인운전 |
+> | `js/route.js` | 노선 데이터 (역간거리, 곡선·설계속도, 구배, 건넘선, 지상/지하 구간) |
+> | `js/cabview3d.js` | 3D 전면 전망 (Three.js r160, 열차 주변만 생성) |
+> | `view-demo.html` | 3D 전면 전망 단독 시험 페이지 |
+> | `old/index.html` | 이전 버전 (단일 파일) |
+>
+> 새 버전은 파일이 나뉘어 있어 GitHub Pages 같은 웹 서버로 열어야 합니다 (로컬: `python -m http.server`).
+
 ---
 
 ## 🌐 라이브 데모 (Live Simulator)

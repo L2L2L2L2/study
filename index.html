@@ -6,8 +6,14 @@
   <title>열차 운전실 모바일 훈련 시뮬레이터</title>
   <!-- Supabase JS SDK v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Three.js 3D WebGL Library for Realistic Cab View -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- 3D 전면 전망: Three.js r160 (ES 모듈) + 노선 데이터 -->
+  <script type="importmap">
+  { "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  } }
+  </script>
+  <script src="js/route.js"></script>
   <style>
     :root {
       --bg-dark: #121519;
@@ -2396,7 +2402,7 @@
       border: 1px solid #1e293b;
       box-shadow: inset 0 0 12px rgba(0,0,0,0.85);
     }
-    #cab-3d-stage {
+    #cab3d-stage {
       position: absolute;
       inset: 0;
       width: 100%;
@@ -2404,7 +2410,7 @@
       z-index: 0;
       overflow: hidden;
     }
-    #cab-3d-stage canvas {
+    #cab3d-stage canvas {
       width: 100% !important;
       height: 100% !important;
       display: block;
@@ -3463,6 +3469,14 @@
       color: #ffffff !important;
       border-color: #4466ff !important;
     }
+    /* 비활성 칩은 기본 스타일(어두운 회색 바탕에 흐린 글자)로 자리만 표시 */
+    .du2-chip-mode { min-width: 40px; }
+    .du2-adc-stack { display: flex; flex-direction: column; gap: 1px; }
+    .du2-adc-stack .du2-chip-box { font-size: 10px; padding: 0 5px; line-height: 1.3; }
+    .du2-chip-adc { color: #ffffff !important; }
+    .du2-chip-adc.closed { background: #0022ff !important; border-color: #4466ff !important; }
+    .du2-chip-adc.open { background: #ff0000 !important; border-color: #ff4444 !important; }
+    .du2-chip-adc.open.blink-off { background: #181818 !important; color: #666666 !important; border-color: #444444 !important; }
     .du2-chip-box.active-green {
       background: #00cc00 !important;
       color: #ffffff !important;
@@ -3515,7 +3529,7 @@
     /* 3. 편성 뷰 (2량 차체 그래픽 + 범례) */
     .du2-cars-row {
       display: grid;
-      grid-template-columns: 85px 120px 140px 120px 1fr;
+      grid-template-columns: 1fr auto 3px auto 1fr;   /* Mc1·Mc2 붙여서 한 편성으로 (사이 3px) */
       align-items: center;
       padding: 4px 0;
       border-bottom: 1px solid #333333;
@@ -3932,7 +3946,7 @@
     /* 2. 중앙 메인 영역 (좌: Target Point, 중: 속도계, 우: 플랫폼/도어) */
     .adu2-middle-area {
       display: grid;
-      grid-template-columns: 105px 1fr 140px;
+      grid-template-columns: 90px minmax(0, 1fr) 128px;   /* 510px 안에 속도계(292px)와 우측 정보 칸이 들어가도록 */
       border-bottom: 2px solid #0000aa;
       min-height: 245px;
       background: #000000;
@@ -4637,9 +4651,10 @@
   
     /* ========================================================
        인천 2호선 모의운전 워크스테이션 신규 레이아웃 (정밀 고증)
-       - 좌측 상단 (61.8%): 전면 3D 시뮬레이터 + OP1~OP5 오버레이 버튼
-       - 좌측 하단 (38.2%): DU / ADU 나란히 50:50 배치
-       - 우측 세로 (24.4%): OP1 ~ OP5 전용 조작반
+       - 실물 콘솔 배치 (아래 "실물 콘솔 배치" 그리드가 최종 적용)
+       - 상단 (50%): 전면 3D 시뮬레이터 + OP2~OP5 선택 버튼
+       - 하단 (50%): DU / ADU / OP1(주간제어기·방송·출입문 상시 표시)
+       - 좌측 전체 높이 (21%): OP2 ~ OP5 / OCC 선택 패널
     ======================================================== */
     html, body {
       margin: 0 !important;
@@ -4701,8 +4716,8 @@
 
     /* 상단: 3D 시뮬레이터 뷰 */
     .sim-cab-section {
-      flex: 0 0 61.8% !important;
-      height: 61.8% !important;
+      flex: 0 0 50% !important;
+      height: 50% !important;
       width: 100% !important;
       position: relative !important;
       overflow: hidden !important;
@@ -4719,13 +4734,13 @@
       background: #000000 !important;
       overflow: hidden !important;
     }
-    .sim-cab-section #cab-3d-stage {
+    .sim-cab-section #cab3d-stage {
       position: absolute !important;
       inset: 0 !important;
       width: 100% !important;
       height: 100% !important;
     }
-    .sim-cab-section #cab-3d-stage canvas {
+    .sim-cab-section #cab3d-stage canvas {
       width: 100% !important;
       height: 100% !important;
       display: block !important;
@@ -4930,8 +4945,8 @@
 
     /* 하단: DU & ADU 모니터 50:50 나란히 */
     .sim-mmi-section {
-      flex: 1 1 38.2% !important;
-      height: 38.2% !important;
+      flex: 1 1 50% !important;
+      height: 50% !important;
       width: 100% !important;
       display: flex !important;
       flex-direction: row !important;
@@ -4981,6 +4996,63 @@
       transform-origin: top left !important;
       flex-shrink: 0 !important;
     }
+    /* ===== 실물 콘솔 배치 =====
+       ┌ OP2~5 ┬──────── 3D 전면 ────────┐
+       │(전체  ├─ DU ─┬─ ADU ─┬─ OP1 ────┤
+       └ 높이) ┴──────┴───────┴──────────┘ */
+    .sim-workstation-layout {
+      display: grid !important;
+      grid-template-columns: 17.85% 29% 29% 24.15% !important;   /* 좌측 패널 15% 축소분 → OP1 */
+      grid-template-rows: 50% 50% !important;
+      grid-template-areas: "side cab cab cab" "side du adu op1" !important;
+    }
+    .sim-left-col, .sim-mmi-section { display: contents !important; }
+    .sim-workstation-layout .sim-cab-section {
+      grid-area: cab !important; height: auto !important; flex: none !important; min-width: 0 !important;
+    }
+    .sim-workstation-layout > .sim-right-col {
+      grid-area: side !important; width: auto !important; height: auto !important; flex: none !important;
+      min-height: 0 !important; border-left: none !important; border-right: 2px solid #282f3a !important;
+    }
+    .sim-mmi-box.sim-du-box { grid-area: du !important; }
+    .sim-mmi-box.sim-adu-box { grid-area: adu !important; }
+    .sim-mmi-box.sim-du-box, .sim-mmi-box.sim-adu-box {
+      width: auto !important; height: auto !important; min-height: 0 !important; padding: 4px 2px !important;
+      background: #090c10 !important;
+    }
+    .console-op1 {
+      grid-area: op1; position: relative; overflow: hidden; min-width: 0; min-height: 0;
+      background: #181c22; border-left: 1px solid #21262d;
+    }
+    .console-op1 > .train-metal-panel {
+      position: absolute; top: 0; left: 0; width: 440px; transform-origin: top left;
+      margin: 0 !important; padding: 8px 6px !important; border-radius: 6px !important;
+      border: 1px solid #30363d !important; box-sizing: border-box !important;
+    }
+    .console-op1 .op1-bottom-row { display: flex !important; flex-direction: column !important; gap: 8px !important; width: 100% !important; }
+    .console-op1 .op1-bottom-left-col, .console-op1 .op1-bottom-right-col { width: 100% !important; }
+
+    /* DU 화면을 ADU와 같은 모니터 비율로: 우측 설명 칸을 넓혀 줄바꿈으로 행이 길어지지 않게,
+       중앙 ESK 칸은 좁히고 두 줄 표기, 값 박스 여백 축소 */
+    .sim-du-box .du2-trow { grid-template-columns: 76px 100px 70px 100px 1fr !important; min-height: 21px !important; }
+    .sim-du-box .du2-tr-side { padding: 1px 4px !important; font-size: 9px !important; }
+    .sim-du-box .du2-tr-side > div { white-space: nowrap; }
+    .sim-du-box .du2-esk-box-label { white-space: normal !important; text-align: center; line-height: 1.15; padding: 1px 3px !important; }
+    .sim-du-box .du2-val-box { padding: 0 4px !important; line-height: 1.15 !important; width: 56px !important; }
+    .sim-du-box .du2-tcol-eq { gap: 1px !important; padding: 1px 4px !important; }
+    .sim-du-box .du2-th { padding: 2px 5px !important; }
+    .sim-du-box .du2-v-track { height: 30px !important; }
+    .sim-du-box .du2-top-header { padding: 1px 4px 2px 4px !important; }
+    .sim-du-box .du2-header-title { font-size: 21px !important; }
+    .sim-du-box .du2-sub-bar { padding: 1px 4px !important; }
+    .sim-du-box .du2-cars-row { padding: 1px 0 !important; }
+    .sim-du-box .du2-car-capsule { height: 36px !important; }
+    .sim-du-box .du2-msg-bar { padding: 2px 8px !important; }
+    .sim-du-box .du2-soft-btn { padding: 4px 4px !important; }
+
+    /* 화면 자체가 잘 보이도록 DU/ADU 제목줄(베젤 헤더) 제거, 테두리 최소화 */
+    .sim-mmi-box .mmi-bezel-header { display: none !important; }
+    .sim-mmi-box .mmi-monitor-frame { border-width: 1px !important; border-radius: 2px !important; }
 
     /* 우측 컬럼 (OP 패널 100% 높이) */
     .sim-right-col {
@@ -5164,7 +5236,7 @@
           </div>
 
           <div class="cab-screen-viewport" id="cab-screen-viewport">
-            <div id="cab-3d-stage"></div>
+            <div id="cab3d-stage" data-win-bottom="0.85"></div>
             <canvas id="cab-view-canvas" width="1024" height="473"></canvas>
             
             <!-- 시뮬레이터 화면 상단 우측: 회차 버튼 (종착역 도착 시 표시) -->
@@ -5179,9 +5251,8 @@
               </div>
             </div>
 
-            <!-- 시뮬레이터 화면 우측 하단: OP1 ~ OP5 선택 플로팅 오버레이 버튼 바 -->
+            <!-- 시뮬레이터 화면 하단: 좌측 패널(OP2~OP5) 선택 버튼 (OP1은 콘솔에 상시 표시) -->
             <div class="cab-op-overlay-bar" id="cab-op-overlay-bar">
-              <button type="button" class="cab-op-btn" id="btn-op1" onclick="switchRightOp('OP1')">OP1</button>
               <button type="button" class="cab-op-btn" id="btn-op2" onclick="switchRightOp('OP2')">OP2</button>
               <button type="button" class="cab-op-btn" id="btn-op3" onclick="switchRightOp('OP3')">OP3</button>
               <button type="button" class="cab-op-btn active" id="btn-op4" onclick="switchRightOp('OP4')">OP4</button>
@@ -5224,10 +5295,17 @@
 
                 <!-- 2. 상단 상태 및 측정치 서브 바 -->
                 <div class="du2-sub-bar">
+                  <!-- 운전모드 / 정차제동(HB) / 비상제동(EB) / 주차제동(PB): 해당 상태일 때만 표시 -->
                   <div class="du2-chips-group">
+                    <span class="du2-chip-box du2-chip-mode" id="du2-chip-mode"></span>
                     <span class="du2-chip-box" id="du2-chip-hb">HB</span>
-                    <span class="du2-chip-box active-red" id="du2-chip-eb">EB</span>
-                    <span class="du2-chip-box active-blue" id="du2-chip-pb">PB</span>
+                    <span class="du2-chip-box" id="du2-chip-eb">EB</span>
+                    <span class="du2-chip-box" id="du2-chip-pb">PB</span>
+                  </div>
+
+                  <!-- ADC (All Door Close: 전 출입문 닫힘 = 파랑, 하나라도 열림 = 적색 깜빡임) / 아래 ADBS (출입문 바이패스) -->
+                  <div class="du2-adc-stack">
+                    <span class="du2-chip-box du2-chip-adc" id="du2-chip-adc">ADC</span>
                     <span class="du2-chip-box" id="du2-chip-adbs">ADBS</span>
                   </div>
 
@@ -5406,7 +5484,7 @@
                     <div class="du2-tcol-center">
                       <div class="du2-esk-bridge-unit">
                         <span class="du2-esk-wire-line"></span>
-                        <span class="du2-esk-box-label">연장급전기(ESK)</span>
+                        <span class="du2-esk-box-label">연장급전기<br>(ESK)</span>
                         <span class="du2-esk-wire-line"></span>
                       </div>
                     </div>
@@ -5587,7 +5665,7 @@
                         <span class="side-lbl">L</span>
                         <span class="adu2-sq-box yellow" id="adu2-psd-l1">■</span>
                         <span class="adu2-sq-box yellow" id="adu2-psd-l2">■</span>
-                        <span style="flex:1;"></span>
+                        <span style="width:12px; flex:none;"></span>
                         <span class="adu2-sq-box green" id="adu2-psd-r1">■</span>
                         <span class="adu2-sq-box green" id="adu2-psd-r2">■</span>
                         <span class="side-lbl" style="text-align:right;">R</span>
@@ -5599,7 +5677,7 @@
                         <span class="side-lbl">L</span>
                         <span class="adu2-sq-box yellow" id="adu2-tdoor-l1">■</span>
                         <span class="adu2-sq-box yellow" id="adu2-tdoor-l2">■</span>
-                        <span style="flex:1;"></span>
+                        <span style="width:12px; flex:none;"></span>
                         <span class="adu2-sq-box green" id="adu2-tdoor-r1">■</span>
                         <span class="adu2-sq-box green" id="adu2-tdoor-r2">■</span>
                         <span class="side-lbl" style="text-align:right;">R</span>
@@ -5637,10 +5715,13 @@
               </div>
             </div>
           </div>
+
+          <!-- ADU 우측: OP1 주간제어기·방송·출입문 (실물 콘솔처럼 항상 표시) -->
+          <div class="console-op1" id="console-op1"></div>
         </div>
       </div>
 
-      <!-- 우측 메인 영역: 선택된 OP 패널 (초기 OP4 마운트) -->
+      <!-- 좌측 전체 높이: OP2~OP5 / OCC 중 선택한 패널 -->
       <div class="sim-right-col" id="sim-right-col">
         <section id="panel-op4" class="train-metal-panel" style="display:block;">
       <div class="screw tl"></div><div class="screw tr"></div>
@@ -6865,6 +6946,10 @@
         </div>
         <div id="scenario-preview-desc" style="font-size:12px; color:#8b949e; line-height:1.4;"></div>
         <div class="form-group" style="margin-top:8px;">
+          <label>시작 역 (정차 상태로 배치)</label>
+          <select id="scenario-start-station" class="form-control"></select>
+        </div>
+        <div class="form-group" style="margin-top:8px;">
           <label>JSON 데이터 백업 / 불러오기</label>
           <div style="display:flex; gap:6px;">
             <button class="toolbar-btn" onclick="exportScenarioJSON()">내보내기(복사)</button>
@@ -7631,7 +7716,7 @@ let ALL_PANELS = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5', 'DU', 'ADU'];
 let currentSplitMode = 2;       // 대화면 기본: 2분할 (2 또는 3)
 let activeLeftPanel = 'OP3';    // 좌측 슬롯 (기본 OP3)
 let activeCenterPanel = 'OP1';  // 중앙 슬롯 (3분할 전용 기본 OP1)
-let activeRightPanel = 'OP4';   // 우측 슬롯 (기본 OP4)
+let activeRightPanel = 'OP2';   // 좌측 선택 패널 (기본 OP2, OP1은 콘솔 상시 표시)
 
 function checkIsDualMode() {
   return window.innerWidth >= 768;
@@ -7972,12 +8057,11 @@ const CV_STATIONS = INCHEON2_STATIONS.map(s => s.name);
 
 /* 기존 파일과 동일한 이름의 전역 상태 (다른 로직이 참조하므로 유지) */
 let trainSpeed = 0.0;
-let trainDistance = 0.0;
+let trainDistance = IC2.STN[0].stop;   // 검단오류역 정차점에서 시작
 let trainTargetSpeed = 0.0;
 let trainAccelRate = 0.0;
 let trackTiePhase = 0.0;
 let lastPhysicsTime = performance.now();
-let isCabZoomed = false;
 let isDoorOpen = false;
 let doorOpenSide = 'R'; // 기본 개방 측 (L 또는 R)
 let isRmEbActive = false;
@@ -8073,19 +8157,12 @@ const AtoDriverless = {
   },
 
   initStopTarget(s) {
-    const CYCLE = 1500.0;
-    const n = Math.floor(s / CYCLE);
-    const p = ((s % CYCLE) + CYCLE) % CYCLE;
-
-    if (p <= 305.0 + 5.0) {
-      this.targetStopDist = n * CYCLE + 305.0;
-      this.stationIdx = Math.min(INCHEON2_STATIONS.length - 1, ((n % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length);
-    } else {
-      this.targetStopDist = (n + 1) * CYCLE + 305.0;
-      this.stationIdx = Math.min(INCHEON2_STATIONS.length - 1, (((n + 1) % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length);
-    }
+    // 실제 노선의 다음 정차점 (2량 열차: 4량 승강장의 1~2 위치)
+    let idx = IC2.STN.findIndex(st => st.stop >= s - 5.0);
+    if (idx < 0) idx = IC2.STN.length - 1;
+    this.stationIdx = idx;
+    this.targetStopDist = IC2.STN[idx].stop;
   },
-
   update(dt, dist, speed) {
     if (this.state === 'TERMINATED') {
       this.targetSpeed = 0.0;
@@ -8103,7 +8180,7 @@ const AtoDriverless = {
     const currSt = INCHEON2_STATIONS[this.stationIdx % INCHEON2_STATIONS.length];
 
     if (this.state === 'CRUISING') {
-      const cruiseSpeed = 65.0;
+      const cruiseSpeed = Math.min(65.0, IC2.limitAhead(dist) * 3.6 - 2.0);   // 곡선 설계속도 반영
       const vMs = speed / 3.6;
       // 0.78 m/s^2 기준 감속 여유거리
       const reqBrakeDist = (vMs * vMs) / (2.0 * 0.78) + 14.0;
@@ -8116,9 +8193,15 @@ const AtoDriverless = {
         }
       } else {
         this.targetSpeed = cruiseSpeed;
-        this.accelRate = 2.6;
+        // 목표속도(곡선 설계속도·하구배) 초과 시 제동, 이하이면 견인
+        if (speed > cruiseSpeed + 0.5) {
+          this.accelRate = -Math.min(3.0, (speed - cruiseSpeed) * 1.2 + 0.6);
+          if (typeof updateGaugeUI === 'function') updateGaugeUI(Math.min(3.8, (-this.accelRate / 4.0) * 3.4));
+        } else {
+          this.accelRate = 2.6;
+          if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
+        }
         this.isHoldingBrake = false;
-        if (typeof updateGaugeUI === 'function') updateGaugeUI(0.0);
       }
     }
 
@@ -8126,7 +8209,7 @@ const AtoDriverless = {
       const d = Math.max(0.0, distToStop);
       // TASC 포물선 제동 감속 프로파일
       const vProfile = Math.sqrt(2.0 * 0.72 * d) * 3.6;
-      const tSpeed = Math.min(65.0, vProfile);
+      const tSpeed = Math.min(65.0, vProfile, IC2.limitAhead(dist) * 3.6 - 2.0);
 
       if (d <= 0.6 && speed < 3.5) {
         this.targetSpeed = 0.0;
@@ -8211,10 +8294,7 @@ const AtoDriverless = {
         const nextIdx = (this.stationIdx + 1) % INCHEON2_STATIONS.length;
         this.stationIdx = nextIdx;
         const nextSt = INCHEON2_STATIONS[nextIdx];
-        const CYCLE = 1500.0;
-        const n = Math.floor(dist / CYCLE);
-        // 다음 역 승강장 정차점 (다음 주기의 305m 승강장)
-        this.targetStopDist = (n + 1) * CYCLE + 305.0;
+        this.targetStopDist = IC2.STN[nextIdx].stop;
         this.state = 'DEPARTING';
         this.departRampDuration = 1.5;
         this.stateTimer = 1.5;
@@ -8238,8 +8318,8 @@ const AtoDriverless = {
       }
 
       // 제동 완해 진행에 따라 견인 가속도 투입 (서서히 바뀌면서 출발)
-      this.targetSpeed = 65.0;
-      this.accelRate = progress * 2.6;
+      this.targetSpeed = Math.min(65.0, IC2.limitAhead(dist) * 3.6 - 2.0);
+      this.accelRate = speed > this.targetSpeed + 0.5 ? -1.0 : progress * 2.6;
 
       if (this.stateTimer <= 0 && speed > 2.0) {
         this.state = 'CRUISING';
@@ -8267,124 +8347,29 @@ const cvState = {
   lastClack: 0
 };
 
-/* 선형 프리컴퓨트 버퍼 */
-const cvLat = new Float32Array(CV.DMAX + 2);
-const cvElev = new Float32Array(CV.DMAX + 2);
 
 /* ---------------------------------------------------------------------------
    1. 선형(곡선·구배) 및 노선 이벤트
 --------------------------------------------------------------------------- */
-function cvCurv(s) {           // 곡률 (1/m), + 가 우곡선
-  return 0.0026 * Math.sin(s / 215) + 0.0015 * Math.sin(s / 79 + 1.7) + 0.0007 * Math.sin(s / 31 + 0.4);
+function cvCurv(s) {           // 곡률 (1/m), + 가 우곡선 — 실제 노선
+  return IC2.curv(s);
 }
-function cvGradeAt(s) {        // 실시간 선형 구배 (m/m, 퍼밀 고증)
-  const CYCLE = 1500.0;
-  const p = ((s % CYCLE) + CYCLE) % CYCLE;
-  const n = Math.floor(s / CYCLE);
-  const curIdx = ((n % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
-  const nextIdx = (curIdx + 1) % INCHEON2_STATIONS.length;
-
-  const curStation = INCHEON2_STATIONS[curIdx];
-  const nextStation = INCHEON2_STATIONS[nextIdx];
-
-  // 1. 검바위(208) -> 아시아드경기장(209): 54/1000 (54‰, -0.054) 롤러코스터 급강하 하구배
-  //    검바위역 출발(305m) 후 높은 고가교에서 지하 갱구(776m) 직전까지의 급경사 강하 구간
-  if (curStation.id === '208' && nextStation.id === '209') {
-    if (p >= 430.0 && p <= 760.0) {
-      const t = (p - 430.0) / (760.0 - 430.0);
-      const bell = Math.sin(t * Math.PI);
-      return -0.054 * Math.pow(bell, 0.45); // 피크에서 정확히 -0.054 (54/1000 하구배)
-    }
-  }
-
-  // 2. 독정(206) -> 검암(207): 지하 터널에서 경인아라뱃길/시천교 상공 높은 고가교로 치고 올라가는 급상승 상구배 (+38‰)
-  if (curStation.id === '206' && nextStation.id === '207') {
-    if (p >= 460.0 && p <= 760.0) {
-      const t = (p - 460.0) / (760.0 - 460.0);
-      const bell = Math.sin(t * Math.PI);
-      return 0.038 * Math.pow(bell, 0.5); // 피크에서 +0.038 (38/1000 상구배)
-    }
-  }
-
-  // 3. 검암(207) -> 검바위(208): 높은 지상 고가교 평탄 유지
-  if (curStation.id === '207' && nextStation.id === '208') {
-    return 0.002 * Math.sin(p / 100);
-  }
-
-  // 4. 왕길(202) -> 검단사거리(203): 지상에서 지하 갱구 진입 (-32‰)
-  if (curStation.id === '202' && nextStation.id === '203') {
-    if (p >= 480.0 && p <= 760.0) {
-      const t = (p - 480.0) / (760.0 - 480.0);
-      return -0.032 * Math.sin(t * Math.PI);
-    }
-  }
-
-  // 5. 남동구청(225) -> 인천대공원(226): 지하에서 지상 고가 진출 (+35‰)
-  if (curStation.id === '225' && nextStation.id === '226') {
-    if (p >= 480.0 && p <= 760.0) {
-      const t = (p - 480.0) / (760.0 - 480.0);
-      return 0.035 * Math.sin(t * Math.PI);
-    }
-  }
-
-  // 일반 완만한 구배
-  return 0.008 * Math.sin(s / 290 + 0.8) + 0.004 * Math.sin(s / 113 + 2.1);
+function cvGradeAt(s) {        // 선로 구배 (m/m) — 선로개요도 기반 실제 종단
+  return IC2.grade(s);
 }
+
 function cvHash(a, b) {
   const h = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
   return h - Math.floor(h);
 }
-function cvTunnelInfo(s) {
-  const CYCLE = 1500.0;
-  const p = ((s % CYCLE) + CYCLE) % CYCLE;
-  const n = Math.floor(s / CYCLE);
-  const curIdx = ((n % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
-  const nextIdx = (curIdx + 1) % INCHEON2_STATIONS.length;
-
-  const curType = INCHEON2_STATIONS[curIdx].type;
-  const nextType = INCHEON2_STATIONS[nextIdx].type;
-  const portalAt = 776.0;
-
-  if (curType === 'GROUND' && nextType === 'GROUND') {
-    return { inside: false, exit: 0, entry: 9999, mode: 'GROUND_GROUND' };
-  }
-  if (curType === 'TUNNEL' && nextType === 'TUNNEL') {
-    return { inside: true, exit: 9999, entry: 0, mode: 'TUNNEL_TUNNEL' };
-  }
-  if (curType === 'GROUND' && nextType === 'TUNNEL') {
-    // 왕길 -> 검단사거리: 지상에서 터널로 진입
-    if (p < portalAt) {
-      return { inside: false, exit: 0, entry: portalAt - p, mode: 'GROUND_TO_TUNNEL' };
-    } else {
-      return { inside: true, exit: 9999, entry: 0, mode: 'GROUND_TO_TUNNEL' };
-    }
-  }
-  if (curType === 'TUNNEL' && nextType === 'GROUND') {
-    // 남동구청 -> 인천대공원: 터널에서 지상으로 진출
-    if (p < portalAt) {
-      return { inside: true, exit: portalAt - p, entry: 0, mode: 'TUNNEL_TO_GROUND' };
-    } else {
-      return { inside: false, exit: 0, entry: 9999, mode: 'TUNNEL_TO_GROUND' };
-    }
-  }
-  return { inside: false, exit: 0, entry: 9999, mode: 'GROUND_GROUND' };
+function cvTunnelInfo(s) {     // { inside, entry: 다음 갱구 진입까지(m), exit: 다음 지상 진출까지(m) }
+  return IC2.tunnelInfo(s);
 }
-function cvStationInfo(s) {
-  const p = ((s % CV_LINE.cycle) + CV_LINE.cycle) % CV_LINE.cycle;
-  const a = CV_LINE.stationAt, b = a + CV_LINE.stationLen;
-  let dStart, n = Math.floor(s / CV_LINE.cycle);
-  if (p < b) { dStart = a - p; } else { dStart = CV_LINE.cycle - p + a; n += 1; }
-  const idx = ((n % INCHEON2_STATIONS.length) + INCHEON2_STATIONS.length) % INCHEON2_STATIONS.length;
-  const st = INCHEON2_STATIONS[idx];
-  return {
-    dStart: dStart,
-    dEnd: dStart + CV_LINE.stationLen,
-    name: st.name,
-    eng: st.eng,
-    type: st.type,
-    platformSide: st.platformSide || 'R',
-    index: idx
-  };
+function cvStationInfo(s) {    // 다음(또는 현재) 정차역: dStart=승강장 시작까지, dStop=정차점까지
+  const info = IC2.stationInfo(s);
+  const st = INCHEON2_STATIONS[info.index];
+  if (st) info.eng = st.eng;
+  return info;
 }
 function cvRainAt(s) {
   if (typeof window !== 'undefined' && window.cvForceRain !== undefined && window.cvForceRain !== null) {
@@ -8396,128 +8381,12 @@ function cvRainAt(s) {
 /* ---------------------------------------------------------------------------
    2. 원근 투영
 --------------------------------------------------------------------------- */
-function cvBuildTrack(s) {
-  const slope0 = cvGradeAt(s);
-  cvState.slope = slope0;
-  let hdg = 0, lat = 0, el = 0;
-  cvLat[0] = 0; cvElev[0] = 0;
-  for (let i = 1; i <= CV.DMAX + 1; i++) {
-    hdg += cvCurv(s + i);
-    lat += hdg;
-    el += cvGradeAt(s + i);
-    cvLat[i] = lat;
-    cvElev[i] = el - slope0 * i;   // 카메라가 차체와 함께 피칭한 효과
-  }
-}
-/* u: 좌우(m, +우) / v: 레일면 위 높이(m) / d: 전방거리(m) */
-function cvProj(u, v, d) {
-  if (d < 0.9) d = 0.9;
-  let i = d | 0; if (i > CV.DMAX) i = CV.DMAX;
-  const fr = d - i;
-  const L = cvLat[i] + (cvLat[i + 1] - cvLat[i]) * fr;
-  const E = cvElev[i] + (cvElev[i + 1] - cvElev[i]) * fr;
-  const k = CV.focal / d;
-  return { x: CV.vpX + (L + u) * k, y: CV.horizon + (CV.camH - v - E) * k };
-}
-function cvScale(d) { return CV.focal / (d < 0.9 ? 0.9 : d); }
 
-/* 전방거리 dStart~dEnd 사이의 띠(strip) 폴리곤 */
-function cvStrip(ctx, u1, u2, v, dStart, dEnd, step) {
-  step = step || 1.07;
-  ctx.beginPath();
-  let p = cvProj(u1, v, dStart); ctx.moveTo(p.x, p.y);
-  for (let d = dStart * step; d < dEnd; d *= step) { p = cvProj(u1, v, d); ctx.lineTo(p.x, p.y); }
-  p = cvProj(u1, v, dEnd); ctx.lineTo(p.x, p.y);
-  p = cvProj(u2, v, dEnd); ctx.lineTo(p.x, p.y);
-  for (let d = dEnd / step; d > dStart; d /= step) { p = cvProj(u2, v, d); ctx.lineTo(p.x, p.y); }
-  p = cvProj(u2, v, dStart); ctx.lineTo(p.x, p.y);
-  ctx.closePath();
-}
 
 /* ---------------------------------------------------------------------------
    3. 창틀 마스크 (사진에서 측정한 전면창 개구부 경로)
 --------------------------------------------------------------------------- */
-function cvWindowPath() {
-  const xl = y => 88 + (y - 90) * 0.18125;     // 좌측 몰딩
-  const xr = y => 948 - (y - 50) * 0.15278;    // 우측 몰딩
-  const p = new Path2D();
-  p.moveTo(xl(79), 79);
-  p.lineTo(447, 79);              // 좌상단 롤블라인드 하단
-  p.lineTo(447, 50);
-  p.lineTo(483, 50);
-  p.lineTo(483, 113);             // 중앙 상단 미러/카메라 하우징
-  p.lineTo(648, 113);
-  p.lineTo(648, 46);
-  p.lineTo(926, 46);
-  p.quadraticCurveTo(947, 47, 946, 68);
-  p.lineTo(xr(402), 402);
-  p.quadraticCurveTo(893, 417, 876, 419);
-  p.lineTo(162, 419);
-  p.quadraticCurveTo(146, 419, 144, 403);
-  p.closePath();
-  return p;
-}
-let CV_WIN = null, CV_FRAME = null, CV_BACK = null;
 
-/* 운전실 프레임(창 구멍 뚫린 전경) + 원경 배경판을 1회 사전 렌더 */
-function cvPrepareAssets() {
-  if (!cabImgLoaded || CV_FRAME) return;
-  CV_WIN = cvWindowPath();
-
-  /* (1) 전경 프레임 : 사진에서 창 개구부만 도려냄 */
-  CV_FRAME = document.createElement('canvas');
-  CV_FRAME.width = CV.W; CV_FRAME.height = CV.H;
-  const f = CV_FRAME.getContext('2d');
-  f.drawImage(cabImg, 0, 0, CV.W, CV.H);
-  f.globalCompositeOperation = 'destination-out';
-  f.fill(CV_WIN);
-  f.globalCompositeOperation = 'source-over';
-
-  /* (2) 원경 배경판 : 하늘 + 원산 (차체/블라인드/미러가 안 들어가는 영역만 사용) */
-  CV_BACK = document.createElement('canvas');
-  CV_BACK.width = CV.W; CV_BACK.height = CV.H;
-  const b = CV_BACK.getContext('2d');
-  const sky = b.createLinearGradient(0, 0, 0, CV.horizon + 20);
-  sky.addColorStop(0, '#c2cdda');
-  sky.addColorStop(0.7, '#cdd6e0');
-  sky.addColorStop(1, '#d6dde4');
-  b.fillStyle = sky; b.fillRect(0, 0, CV.W, CV.H);
-  // 사진의 깨끗한 하늘+원산 띠 (x126~880, y118~270) 를 1.25배로 확대 배치
-  const SX = 126, SY = 118, SW = 754, SH = 152, SC = 1.25;
-  const DX = CV.vpX - (CV.vpX - SX) * SC;
-  const DY = CV.horizon - (CV.horizon - SY) * SC;
-  b.drawImage(cabImg, SX, SY, SW, SH, DX, DY, SW * SC, SH * SC);
-  // 블라인드 줄(케이블)이 배경에 남지 않도록 인접한 깨끗한 스트립으로 살짝 덮기
-  // (케이블은 사진상 x=439~444의 얇은 세로선 — 바로 옆 스트립을 가져와야 산 능선이 자연스럽게 이어짐)
-  (function cvPatchBlindCable() {
-    const cw = 18 * SC;
-    const cx = DX + (436 - SX) * SC;
-    const pc = document.createElement('canvas');
-    pc.width = Math.ceil(cw); pc.height = SH * SC;
-    const pctx = pc.getContext('2d');
-    pctx.drawImage(cabImg, 447, SY, 18, SH, 0, 0, cw, SH * SC);
-    const fgrad = pctx.createLinearGradient(0, 0, cw, 0);
-    fgrad.addColorStop(0, 'rgba(0,0,0,0)');
-    fgrad.addColorStop(0.22, 'rgba(0,0,0,1)');
-    fgrad.addColorStop(0.78, 'rgba(0,0,0,1)');
-    fgrad.addColorStop(1, 'rgba(0,0,0,0)');
-    pctx.globalCompositeOperation = 'destination-in';
-    pctx.fillStyle = fgrad;
-    pctx.fillRect(0, 0, cw, SH * SC);
-    b.drawImage(pc, cx, DY);
-  })();
-  // 상·좌·우 경계를 하늘색으로 부드럽게 페이드
-  const fade = (x0, y0, x1, y1, c0, c1) => {
-    const g = b.createLinearGradient(x0, y0, x1, y1);
-    g.addColorStop(0, c0); g.addColorStop(1, c1);
-    b.fillStyle = g;
-    b.fillRect(Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0) || CV.W, Math.abs(y1 - y0) || CV.H);
-  };
-  fade(0, DY, 0, DY + 26, 'rgba(206,214,224,1)', 'rgba(206,214,224,0)');
-  fade(DX, 0, DX + 52, 0, 'rgba(206,214,224,1)', 'rgba(206,214,224,0)');
-  fade(DX + SW * SC, 0, DX + SW * SC - 52, 0, 'rgba(206,214,224,1)', 'rgba(206,214,224,0)');
-  cvState.ready = true;
-}
 
 /* ---------------------------------------------------------------------------
    4. 주행 물리 (기존 인터록 조건 그대로 유지)
@@ -8575,6 +8444,14 @@ function resetRmEmergencyBrake() {
   showTemporaryHudFeedback('ℹ️ [RM 비상제동 완해] 비상제동이 정상 해제되었습니다.', false);
 }
 
+/* ADU 제한속도 (km/h): RM 15 / FM은 제한속도 정보 없음(null) / 그 외 노선 설계속도를 ATP 단계(45·60·80)로 표시 */
+function aduSpeedLimit(driveMode) {
+  if (driveMode === 'RM') return 15;
+  if (driveMode === 'FM') return null;
+  const design = IC2.curLimit(trainDistance) * 3.6;
+  return design <= 45.5 ? 45 : design <= 60.5 ? 60 : 80;
+}
+
 function drawAduSpeedoGauge(speed, driveMode) {
   try {
     const canvas = document.getElementById('adu2-speedo-canvas');
@@ -8599,40 +8476,24 @@ function drawAduSpeedoGauge(speed, driveMode) {
       return startDeg + (clamped / 120) * totalDeg;
     }
 
-    // 1. Outer Arc Bands (Yellow, White, Red)
-    let targetLimit = 15;
-    let maxPermitted = 17;
-    if (driveMode === 'FM') {
-      targetLimit = 75;
-      maxPermitted = 80;
-    } else if (driveMode === 'ATPM') {
-      targetLimit = 65;
-      maxPermitted = 70;
+    // 1. 제한속도 표시 (흰색 호: 0 ~ 현재 제한속도)
+    //    RM: 15km/h 고정 / 무인·ATPM: 노선 구간 제한 (45·60 구간 외 80) / FM: 제한속도 정보 없음 → 속도만 표시
+    const limit = aduSpeedLimit(driveMode);
+    const over = limit !== null && speed > limit + 0.5;
+    if (limit !== null) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 5, toRad(startDeg), toRad(speedToDeg(limit)));
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+      // 제한속도 끝 표시 눈금
+      const ldeg = toRad(speedToDeg(limit));
+      ctx.beginPath();
+      ctx.moveTo(cx + (r + 1) * Math.cos(ldeg), cy + (r + 1) * Math.sin(ldeg));
+      ctx.lineTo(cx + (r + 11) * Math.cos(ldeg), cy + (r + 11) * Math.sin(ldeg));
+      ctx.lineWidth = 3;
+      ctx.stroke();
     }
-
-    // Yellow band (0 to targetLimit / civil speed)
-    const yellowEndDeg = speedToDeg(targetLimit);
-    ctx.beginPath();
-    ctx.arc(cx, cy, r + 4, toRad(startDeg), toRad(yellowEndDeg));
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = '#ffff00';
-    ctx.stroke();
-
-    // White band (targetLimit to maxPermitted)
-    const whiteEndDeg = speedToDeg(maxPermitted);
-    ctx.beginPath();
-    ctx.arc(cx, cy, r + 6, toRad(yellowEndDeg), toRad(whiteEndDeg));
-    ctx.lineWidth = 10;
-    ctx.strokeStyle = '#ffffff';
-    ctx.stroke();
-
-    // Red band (maxPermitted to overspeed ceiling)
-    const redEndDeg = speedToDeg(Math.min(120, maxPermitted + 12));
-    ctx.beginPath();
-    ctx.arc(cx, cy, r + 6, toRad(whiteEndDeg), toRad(redEndDeg));
-    ctx.lineWidth = 10;
-    ctx.strokeStyle = '#ff0000';
-    ctx.stroke();
 
     // 2. Ticks and Labels (0 to 120 km/h)
     ctx.fillStyle = '#ffffff';
@@ -8680,8 +8541,8 @@ function drawAduSpeedoGauge(speed, driveMode) {
     ctx.lineTo(r - 4, 0);
     ctx.lineTo(0, 3.5);
     ctx.closePath();
-    ctx.fillStyle = '#ff0000';
-    ctx.shadowColor = 'rgba(255, 0, 0, 0.6)';
+    ctx.fillStyle = over ? '#ff0000' : '#ffffff';           // 제한속도 초과 시 적색
+    ctx.shadowColor = over ? 'rgba(255, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.35)';
     ctx.shadowBlur = 4;
     ctx.fill();
     ctx.restore();
@@ -8690,7 +8551,7 @@ function drawAduSpeedoGauge(speed, driveMode) {
     const hubRadius = 24;
     ctx.beginPath();
     ctx.arc(cx, cy, hubRadius, 0, Math.PI * 2);
-    ctx.fillStyle = '#ff0000';
+    ctx.fillStyle = over ? '#ff0000' : '#ffffff';
     ctx.fill();
 
     // Digital Speed inside hub (Black bold text)
@@ -8726,33 +8587,56 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const isEmgActive = (isEmgStopLatched && !isEmgReleaseLatched);
     const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB');
 
+    // 운전모드 칩 (FM / RM / ATPM: 청색, 그 외 빈칸)
+    const chipMode = document.getElementById('du2-chip-mode');
+    if (chipMode) {
+      const shown = ['FM', 'RM', 'ATPM'].includes(driveMode);
+      chipMode.textContent = shown ? driveMode : '';
+      chipMode.classList.toggle('active-blue', shown);
+    }
+    // 활성 시 적색 점등, 비활성 시 회색
+    const setChip = (el, on) => { if (el) el.classList.toggle('active-red', !!on); };
+
     // 정차제동(HB) 칩: 승강장 정차 중일 때 붉은 배경에 흰 글씨 점등
     const chipHb = document.getElementById('du2-chip-hb');
     const isHbActive = (typeof AtoDriverless !== 'undefined' && AtoDriverless.isHoldingBrake) || (window.__HOLDING_BRAKE_ACTIVE === true);
-    if (chipHb) chipHb.classList.toggle('active-red', !!isHbActive);
+    setChip(chipHb, isHbActive);
 
-    const chipEb = document.getElementById('du2-chip-eb');
-    if (chipEb) chipEb.classList.toggle('active-red', isEbActive);
+    // 비상제동(EB)
+    setChip(document.getElementById('du2-chip-eb'), isEbActive);
 
-    const chipPb = document.getElementById('du2-chip-pb');
-    const isPbActive = (cvCompState('SW_PARK_SET') === 'LATCHED') || (trainSpeed <= 0.2 && cvBC() >= 3.5);
-    if (chipPb) chipPb.classList.toggle('active-blue', isPbActive);
+    // 주차제동(PB): 주차제동체결 버튼으로 체결 → 주차제동완해 버튼으로 해제
+    setChip(document.getElementById('du2-chip-pb'), window.__PARK_BRAKE_SET === true);
 
+    // ADC (All Door Close)
+    const chipAdc = document.getElementById('du2-chip-adc');
+    if (chipAdc) {
+      const allClosed = !isDoorOpen && !window.__FAULT_DOOR_FAIL;
+      chipAdc.classList.toggle('closed', allClosed);
+      chipAdc.classList.toggle('open', !allClosed);
+      chipAdc.classList.toggle('blink-off', !allClosed && (now % 1000) >= 500);
+    }
+    // ADBS (출입문 바이패스): OP4 출입문 바이패스 시 녹색
     const chipAdbs = document.getElementById('du2-chip-adbs');
-    const isAdbsActive = (cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
-    if (chipAdbs) chipAdbs.classList.toggle('active-green', isAdbsActive);
+    if (chipAdbs) chipAdbs.classList.toggle('active-green', cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
 
     // 3. Stations & Speed & Catenary
     const stInfo = cvStationInfo(trainDistance);
     const distToStation = Math.max(0, Math.round(stInfo ? stInfo.dStart : 0));
+    // 다음역·종착역: FM/RM에서는 신호(ATP) 정보가 올라오지 않아 표시하지 않음
+    const noRouteInfo = (driveMode === 'FM' || driveMode === 'RM');
     const nextStEl = document.getElementById('du2-next-st');
     if (nextStEl) {
-      if (typeof AtoDriverless !== 'undefined' && AtoDriverless.state === 'TERMINATED') {
+      if (noRouteInfo) {
+        nextStEl.innerText = '-';
+      } else if (typeof AtoDriverless !== 'undefined' && AtoDriverless.state === 'TERMINATED') {
         nextStEl.innerText = '운연 (종착)';
       } else {
         nextStEl.innerText = stInfo ? stInfo.name : '검단오류';
       }
     }
+    const destStEl = document.getElementById('du2-dest-st');
+    if (destStEl) destStEl.innerText = noRouteInfo ? '-' : '운연';
 
     const spdEl = document.getElementById('du2-speed-val');
     if (spdEl) spdEl.innerText = Math.round(trainSpeed);
@@ -9087,13 +8971,14 @@ function updateDuAduDisplay(driveMode, notch, now) {
     if (atpDirEl) atpDirEl.innerText = (revNotch === 'R' ? 'Reverse' : 'Forward');
 
     // Target Point Bar & Distance
+    const tpDist = Math.max(0, Math.round(cvStationInfo(trainDistance).dStop));   // 다음 정차점까지
     const tpValEl = document.getElementById('adu2-tp-val');
-    if (tpValEl) tpValEl.innerText = `${distToStation} m`;
+    if (tpValEl) tpValEl.innerText = `${tpDist} m`;
 
     const tpBarEl = document.getElementById('adu2-tp-bar-fill');
     if (tpBarEl) {
       // 0 to 1000m scale
-      const barPct = Math.max(0, Math.min(100, (distToStation / 1000) * 100));
+      const barPct = Math.max(0, Math.min(100, (tpDist / 1000) * 100));
       tpBarEl.style.height = `${barPct.toFixed(1)}%`;
     }
 
@@ -9320,7 +9205,7 @@ function updateTrainPhysics() {
   const dir = (revNotch === 'R') ? -1 : 1;
   const speedMs = trainSpeed / 3.6;
   trainDistance += speedMs * dt * (isUnmannedActive ? 1 : dir);
-  if (trainDistance < 0) trainDistance = 0;
+  trainDistance = Math.max(IC2.START + 60, Math.min(IC2.END - 40, trainDistance));
   trackTiePhase = (trackTiePhase + speedMs * dt * 0.28) % 1.0;
 
   /* ---- 카메라 물리 ---- */
@@ -9462,693 +9347,31 @@ function cvPlayJointClack(speed) {
 /* ---------------------------------------------------------------------------
    6. 풍경 렌더링
 --------------------------------------------------------------------------- */
-function cvDrawBackdrop(ctx) {
-  const sx = Math.max(-42, Math.min(42, -cvState.headingDrift * 190));
-  const sy = Math.max(-14, Math.min(14, cvState.slope * 520));
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(-40, -40, CV.W + 80, CV.horizon + 46);
-  ctx.clip();
-  ctx.drawImage(CV_BACK, sx, sy);
-  ctx.restore();
-}
 
-function cvDrawGround(ctx) {
-  const g = ctx.createLinearGradient(0, CV.horizon - 6, 0, CV.H + 40);
-  g.addColorStop(0, '#a3ad96');
-  g.addColorStop(0.14, '#8b976e');
-  g.addColorStop(1, '#63714b');
-  ctx.fillStyle = g;
-  ctx.fillRect(-60, CV.horizon - 4, CV.W + 120, CV.H + 80);
 
-  /* 좌측 작업용 도로 (사진의 좌측 자갈 야드 재현) */
-  cvStrip(ctx, -10.6, -5.2, -0.45, 3, 175);
-  const rg = ctx.createLinearGradient(0, CV.horizon, 0, CV.H);
-  rg.addColorStop(0, '#9aa0a0'); rg.addColorStop(1, '#a9a69c');
-  ctx.fillStyle = rg; ctx.fill();
 
-  /* 지평선 헤이즈 */
-  const hz = ctx.createLinearGradient(0, CV.horizon - 16, 0, CV.horizon + 26);
-  hz.addColorStop(0, 'rgba(208,218,228,0.95)');
-  hz.addColorStop(1, 'rgba(208,218,228,0)');
-  ctx.fillStyle = hz;
-  ctx.fillRect(-60, CV.horizon - 16, CV.W + 120, 44);
-}
 
-function cvDrawBallastAndTrack(ctx, dNear, dFar) {
-  /* 도상 어깨 */
-  cvStrip(ctx, -3.55, 3.55, -0.45, dNear, Math.min(dFar, 170));
-  ctx.fillStyle = '#8b8577'; ctx.fill();
-  /* 도상 상면 */
-  cvStrip(ctx, -2.35, 2.35, 0.0, dNear, Math.min(dFar, 170));
-  const bg = ctx.createLinearGradient(0, CV.horizon, 0, CV.H);
-  bg.addColorStop(0, '#7d786e'); bg.addColorStop(1, '#615d55');
-  ctx.fillStyle = bg; ctx.fill();
 
-  /* 자갈 노이즈 (월드 고정 → 뒤로 흘러감) */
-  const s = trainDistance;
-  const k0 = Math.ceil((s + 3) / 0.9);
-  ctx.fillStyle = 'rgba(190,184,170,0.55)';
-  for (let k = k0; ; k++) {
-    const d = k * 0.9 - s;
-    if (d > 46) break;
-    for (let j = 0; j < 3; j++) {
-      const h1 = cvHash(k, j), h2 = cvHash(k + 77, j * 3 + 1);
-      const u = (h1 - 0.5) * 5.0;
-      if (Math.abs(u) < 1.45) continue;
-      const p = cvProj(u, 0.02 + h2 * 0.04, d + h2 * 0.8);
-      const r = Math.max(0.6, cvScale(d) * 0.006);
-      ctx.globalAlpha = 0.5 * Math.max(0, 1 - d / 46);
-      ctx.fillRect(p.x, p.y, r, r * 0.8);
-    }
-  }
-  ctx.globalAlpha = 1;
 
-  /* 침목 */
-  const tieStart = Math.ceil((s + 2.0) / CV.tie);
-  for (let k = tieStart; ; k++) {
-    const d = k * CV.tie - s;
-    if (d > 78) break;
-    const a = d < 40 ? 1 : Math.max(0, 1 - (d - 40) / 38);
-    if (a <= 0.02) continue;
-    const p1 = cvProj(-1.32, 0.16, d), p2 = cvProj(1.32, 0.16, d);
-    const p3 = cvProj(1.32, 0.16, d + 0.27), p4 = cvProj(-1.32, 0.16, d + 0.27);
-    ctx.globalAlpha = a;
-    ctx.fillStyle = (k & 1) ? '#a29b8d' : '#9b9486';
-    ctx.beginPath();
-    ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y);
-    ctx.closePath(); ctx.fill();
-    if (d < 26) {
-      const q1 = cvProj(-1.32, 0.0, d), q2 = cvProj(1.32, 0.0, d);
-      ctx.fillStyle = 'rgba(40,36,30,0.45)';
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(q2.x, q2.y); ctx.lineTo(q1.x, q1.y);
-      ctx.closePath(); ctx.fill();
-    }
-  }
-  ctx.globalAlpha = 1;
 
-  /* 레일 2조 */
-  const half = CV.gauge / 2;
-  for (let side = -1; side <= 1; side += 2) {
-    const u = side * half;
-    cvStrip(ctx, u - 0.042, u + 0.042, 0.10, dNear, Math.min(dFar, 190), 1.05);
-    ctx.fillStyle = '#4e5257'; ctx.fill();
-    cvStrip(ctx, u - 0.032, u + 0.032, 0.175, dNear, Math.min(dFar, 190), 1.05);
-    const rgd = ctx.createLinearGradient(0, CV.horizon, 0, CV.H);
-    rgd.addColorStop(0, '#cfd6dc'); rgd.addColorStop(0.5, '#b7bec5'); rgd.addColorStop(1, '#98a0a8');
-    ctx.fillStyle = rgd; ctx.fill();
-  }
-}
 
-function cvDrawQuad(ctx, u1, u2, v1, v2, d, fill) {
-  const a = cvProj(u1, v1, d), b = cvProj(u2, v1, d), c = cvProj(u2, v2, d), e = cvProj(u1, v2, d);
-  ctx.fillStyle = fill;
-  ctx.beginPath();
-  ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.lineTo(e.x, e.y);
-  ctx.closePath(); ctx.fill();
-}
 
-/* 월드 좌표 기반 노이즈 (실루엣이 실제로 뒤로 흘러가게 함) */
-function cvNoise(w, seed) {
-  return Math.sin(w * 0.33 + seed) * 0.50 + Math.sin(w * 0.11 + seed * 2.1) * 0.34 + Math.sin(w * 0.87 + seed * 3.7) * 0.16;
-}
 
-/* 식생 둔덕 : 상단 실루엣이 요동치는 연속 띠 */
-function cvHedge(ctx, s, u, dStart, dEnd, hBase, hVar, seed, colTop, colBot) {
-  ctx.beginPath();
-  let first = true, p;
-  for (let d = dEnd; d > dStart; d /= 1.05) {
-    const w = s + d;
-    const h = hBase + hVar * (0.5 + 0.5 * cvNoise(w, seed));
-    p = cvProj(u + cvNoise(w * 0.4, seed + 1.3) * 0.7, h, d);
-    if (first) { ctx.moveTo(p.x, p.y); first = false; } else ctx.lineTo(p.x, p.y);
-  }
-  p = cvProj(u, -0.7, dStart); ctx.lineTo(p.x, p.y);
-  for (let d = dStart; d < dEnd; d *= 1.1) { p = cvProj(u, -0.7, d); ctx.lineTo(p.x, p.y); }
-  p = cvProj(u, -0.7, dEnd); ctx.lineTo(p.x, p.y);
-  ctx.closePath();
-  const g = ctx.createLinearGradient(0, CV.horizon - 24, 0, CV.H);
-  g.addColorStop(0, colTop); g.addColorStop(1, colBot);
-  ctx.fillStyle = g; ctx.fill();
-}
 
-/* 수목 */
-function cvTrees(ctx, s) {
-  const list = [];
-  for (let k = Math.ceil((s + 6) / 11); k * 11 - s < 175; k++) {
-    for (let side = -1; side <= 1; side += 2) {
-      const h = cvHash(k, side * 17);
-      if (h < 0.68) continue;
-      list.push({ d: k * 11 - s + cvHash(k, side) * 6, side: side, h: h });
-    }
-  }
-  list.sort((a, b) => b.d - a.d);
-  for (let i = 0; i < list.length; i++) {
-    const it = list[i], d = it.d, k = cvScale(d);
-    if (d < 3) continue;
-    const u = it.side * (7.5 + it.h * 8);
-    const ht = 4.2 + it.h * 5.4, rad = 1.1 + it.h * 1.7;
-    const base = cvProj(u, -0.5, d), top = cvProj(u, ht, d);
-    const trunkW = Math.max(1, k * 0.16);
-    ctx.fillStyle = '#4a4034';
-    ctx.fillRect(base.x - trunkW / 2, top.y, trunkW, Math.max(1, base.y - top.y));
-    const rx = Math.max(2, rad * k * 0.5);
-    const tone = 52 + Math.floor(cvHash(it.side * 3, d | 0) * 34);
-    for (let b = 0; b < 3; b++) {
-      const ox = (cvHash(d | 0, b) - 0.5) * rx * 1.1;
-      const oy = (cvHash(d | 0, b + 9) - 0.5) * rx * 0.7;
-      const rr = rx * (0.62 + cvHash(d | 0, b + 21) * 0.42);
-      ctx.fillStyle = 'rgb(' + (tone + 10 + b * 7) + ',' + (tone + 36 + b * 8) + ',' + (tone - 16) + ')';
-      ctx.beginPath();
-      ctx.ellipse(base.x + ox, top.y + rx * 0.55 + oy, rr, rr * 0.86, 0, 0, 6.2832);
-      ctx.fill();
-    }
-  }
-}
 
-/* 방호 울타리 (메시망 + 지주) */
-function cvFence(ctx, s, u, dStart, dEnd, h) {
-  let p, first = true;
-  ctx.beginPath();
-  for (let d = dEnd; d > dStart; d /= 1.08) { p = cvProj(u, h, d); if (first) { ctx.moveTo(p.x, p.y); first = false; } else ctx.lineTo(p.x, p.y); }
-  p = cvProj(u, h, dStart); ctx.lineTo(p.x, p.y);
-  for (let d = dStart; d < dEnd; d *= 1.08) { p = cvProj(u, -0.35, d); ctx.lineTo(p.x, p.y); }
-  p = cvProj(u, -0.35, dEnd); ctx.lineTo(p.x, p.y);
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(214,222,226,0.17)'; ctx.fill();
-  ctx.strokeStyle = 'rgba(196,204,208,0.55)'; ctx.lineWidth = 1;
-  for (let i = 0; i < 4; i++) {
-    const v = 0.12 + i * (h - 0.18) / 3;
-    ctx.beginPath(); first = true;
-    for (let d = dStart; d < dEnd; d *= 1.06) { p = cvProj(u, v, d); if (first) { ctx.moveTo(p.x, p.y); first = false; } else ctx.lineTo(p.x, p.y); }
-    ctx.stroke();
-  }
-  for (let k = Math.ceil((s + dStart) / 3); k * 3 - s < dEnd; k++) {
-    const d = k * 3 - s;
-    if (d < dStart) continue;
-    cvDrawQuad(ctx, u - 0.035, u + 0.035, -0.35, h, d, 'rgba(172,180,184,0.9)');
-  }
-}
 
-/* 선로변 전신주 설비 (열차 위 전차선은 제거하고 선로변 전신주 기둥 및 완철/애자만 유지) */
-function cvCatenary(ctx, s) {
-  const masts = [];
-  for (let k = Math.ceil((s + 2) / 45); k * 45 - s < 190; k++) masts.push({ d: k * 45 - s, side: (k & 1) ? 1 : -1 });
-  masts.sort((a, b) => b.d - a.d);
-  for (let i = 0; i < masts.length; i++) {
-    const m = masts[i], d = m.d, u = m.side * 3.25, k = cvScale(d);
-    // 전신주 기둥 및 상부 캡
-    cvDrawQuad(ctx, u - 0.13, u + 0.13, -0.35, 6.6, d, '#596169');
-    cvDrawQuad(ctx, u - 0.17, u + 0.17, 6.45, 6.7, d, '#454c53');
-    // 전신주 상부 완철 (선로변 전주 가로대)
-    cvDrawQuad(ctx, u - 0.45, u + 0.45, 5.85, 6.0, d, '#454c53');
-    // 애자 포인트 (선로 위로 넘어오지 않고 전신주 완철 위에만 배치)
-    const p1 = cvProj(u - 0.32, 6.12, d), p2 = cvProj(u + 0.32, 6.12, d);
-    const r = Math.max(0.8, k * 0.05);
-    ctx.fillStyle = '#cbd5e1';
-    ctx.beginPath(); ctx.arc(p1.x, p1.y, r, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(p2.x, p2.y, r, 0, Math.PI * 2); ctx.fill();
-  }
-}
 
-/* 거리표 / 신호기 */
-function cvDrawPosts(ctx, s) {
-  for (let k = Math.ceil((s + 2) / 100); k * 100 - s < 180; k++) {
-    const d = k * 100 - s;
-    cvDrawQuad(ctx, -3.85, -3.62, -0.35, 0.95, d, '#e6e4dc');
-    cvDrawQuad(ctx, -3.85, -3.62, 0.76, 0.95, d, '#2f4a6b');
-  }
-  for (let k = Math.ceil((s + 2) / 380); k * 380 - s < 200; k++) {
-    const d = k * 380 - s, u = 3.7, kk = cvScale(d);
-    cvDrawQuad(ctx, u - 0.1, u + 0.1, -0.35, 4.2, d, '#4a5156');
-    cvDrawQuad(ctx, u - 0.36, u + 0.04, 3.25, 4.45, d, '#1f2429');
-    const p = cvProj(u - 0.16, 3.72, d), r = Math.max(1, kk * 0.085);
-    const caution = cvHash(k, 2) > 0.78;
-    ctx.fillStyle = caution ? '#ffd23a' : '#3ef08a';
-    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2832); ctx.fill();
-    ctx.globalAlpha = 0.3;
-    ctx.beginPath(); ctx.arc(p.x, p.y, r * 2.6, 0, 6.2832); ctx.fill();
-    ctx.globalAlpha = 1;
-  }
-}
 
-/* 원경 건물 */
-function cvDrawBuildings(ctx, s) {
-  const list = [];
-  for (let k = Math.ceil((s + 30) / 55); k * 55 - s < 210; k++) {
-    for (let side = -1; side <= 1; side += 2) {
-      const h = cvHash(k + 991, side * 7);
-      if (h < 0.6) continue;
-      list.push({ d: k * 55 - s, side: side, h: h });
-    }
-  }
-  list.sort((a, b) => b.d - a.d);
-  for (let i = 0; i < list.length; i++) {
-    const it = list[i], u = it.side * (30 + it.h * 48), hh = 4.5 + it.h * 10, w = 9 + it.h * 17;
-    ctx.globalAlpha = 0.82;
-    cvDrawQuad(ctx, u - w / 2, u + w / 2, -0.8, hh, it.d, '#b9bcbd');
-    cvDrawQuad(ctx, u - w / 2, u + w / 2, hh, hh + 0.8, it.d, '#8d9294');
-    ctx.globalAlpha = 1;
-  }
-}
-
-/* 트랙 뒤쪽(원경) 풍경 */
-function cvDrawFarScenery(ctx, s) {
-  cvDrawBuildings(ctx, s);
-  cvHedge(ctx, s, 15.5, 6, 200, 3.2, 4.0, 1.7, '#8d9a7c', '#59683f');
-  cvHedge(ctx, s, -17.0, 6, 200, 2.8, 3.6, 4.3, '#95a184', '#5f6d46');
-  cvTrees(ctx, s);
-  cvHedge(ctx, s, 5.45, 3, 150, 0.55, 1.75, 2.9, '#7f9154', '#4e5f33');
-  cvHedge(ctx, s, -11.5, 4, 150, 0.70, 1.50, 6.1, '#83945c', '#526239');
-}
-
-/* 트랙 앞쪽(근경) 설비 */
-function cvDrawNearScenery(ctx, s) {
-  cvFence(ctx, s, 4.70, 3, 120, 1.85);
-  cvFence(ctx, s, -4.95, 3, 120, 1.85);
-  cvCatenary(ctx, s);
-  cvDrawPosts(ctx, s);
-}
-
-/* 역 승강장 */
-function cvDrawStation(ctx, st) {
-  const d0 = Math.max(2.5, st.dStart), d1 = Math.min(st.dEnd, 170);
-  if (d1 <= d0) return;
-  for (let side = -1; side <= 1; side += 2) {
-    const inner = side * 2.95, outer = side * 7.4;
-    cvStrip(ctx, inner, inner + side * 0.06, -0.45, d0, d1);   // 승강장 측벽
-    ctx.fillStyle = '#7d7c78'; ctx.fill();
-    cvStrip(ctx, inner, outer, 1.05, d0, d1);                  // 상면
-    ctx.fillStyle = '#c6c5c0'; ctx.fill();
-    cvStrip(ctx, inner, inner + side * 0.4, 1.06, d0, d1);     // 황색 안전선
-    ctx.fillStyle = '#dfb43a'; ctx.fill();
-    for (let k = Math.ceil(d0 / 9); k * 9 < d1; k++) {         // 캐노피 기둥
-      const d = k * 9;
-      if (d < d0) continue;
-      cvDrawQuad(ctx, side * 6.1 - 0.16, side * 6.1 + 0.16, 1.05, 4.2, d, '#b2b1ac');
-    }
-    cvStrip(ctx, inner + side * 0.2, outer, 4.35, d0, d1);     // 지붕
-    ctx.fillStyle = 'rgba(200,203,203,0.96)'; ctx.fill();
-  }
-}
-
-/* 터널 */
-function cvArch(ctx, d, R) {
-  const cy = 2.2, floor = -0.65;
-  ctx.beginPath();
-  let p = cvProj(-R, floor, d); ctx.moveTo(p.x, p.y);
-  p = cvProj(-R, cy, d); ctx.lineTo(p.x, p.y);
-  for (let t = 180; t >= 0; t -= 12) {
-    const rad = t * Math.PI / 180;
-    p = cvProj(R * Math.cos(rad), cy + R * Math.sin(rad) * 0.8, d);
-    ctx.lineTo(p.x, p.y);
-  }
-  p = cvProj(R, floor, d); ctx.lineTo(p.x, p.y);
-  ctx.closePath();
-}
-function cvDrawTunnel(ctx, tun, headlightPower) {
-  const far = tun.inside ? Math.min(tun.exit, 95) : 95;
-  ctx.fillStyle = '#0c0f13';
-  ctx.fillRect(-40, -40, CV.W + 80, CV.H + 80);
-
-  /* 출구 개구부(주광) */
-  if (tun.inside && tun.exit < 140) {
-    cvArch(ctx, Math.max(3, tun.exit), 2.95);
-    const g = ctx.createLinearGradient(0, CV.horizon - 60, 0, CV.horizon + 60);
-    g.addColorStop(0, '#e6eef5'); g.addColorStop(1, '#cfd9c4');
-    ctx.fillStyle = g; ctx.fill();
-  }
-
-  /* 라이닝 링 (뒤 → 앞) */
-  let d0 = 6 - (trainDistance % 6); if (d0 <= 0.2) d0 += 6;
-  for (let d = d0; d < far; d += 6) {
-    const dd = d;
-    const near = 1 - Math.min(1, dd / far);
-    const lit = Math.min(1, headlightPower * (1 - Math.min(1, dd / (18 + headlightPower * 34))) + 0.06);
-    cvArch(ctx, dd, 2.95);
-    ctx.strokeStyle = 'rgba(' + Math.round(40 + 150 * lit) + ',' + Math.round(42 + 150 * lit) + ',' + Math.round(46 + 145 * lit) + ',' + (0.35 + 0.5 * near) + ')';
-    ctx.lineWidth = Math.max(0.8, cvScale(dd) * 0.012);
-    ctx.stroke();
-  }
-  /* 벽면 조명 */
-  for (let k = Math.ceil((trainDistance + 2) / 24); k * 24 - trainDistance < far; k++) {
-    const d = k * 24 - trainDistance;
-    if (d < 2) continue;
-    const p = cvProj(-2.75, 3.0, d), r = Math.max(1.2, cvScale(d) * 0.05);
-    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 5);
-    g.addColorStop(0, 'rgba(255,232,170,0.95)'); g.addColorStop(1, 'rgba(255,220,150,0)');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, r * 5, 0, 6.2832); ctx.fill();
-  }
-  /* 케이블 트레이 */
-  ctx.strokeStyle = 'rgba(70,74,78,0.9)'; ctx.lineWidth = 1.5;
-  for (let lane = 0; lane < 2; lane++) {
-    ctx.beginPath();
-    let first = true;
-    for (let d = 2.5; d < far; d *= 1.1) {
-      const p = cvProj(-2.85, 1.5 + lane * 0.3, d);
-      if (first) { ctx.moveTo(p.x, p.y); first = false; } else ctx.lineTo(p.x, p.y);
-    }
-    ctx.stroke();
-  }
-}
-
-/* 전조등 빔 */
-function cvDrawHeadlight(ctx, power, reach) {
-  if (power <= 0.01) return;
-  const p = cvProj(0, 0.4, reach);
-  const r = Math.max(120, cvScale(reach) * 9);
-  const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-  g.addColorStop(0, 'rgba(255,248,224,' + (0.34 * power) + ')');
-  g.addColorStop(0.45, 'rgba(255,244,210,' + (0.14 * power) + ')');
-  g.addColorStop(1, 'rgba(255,240,200,0)');
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2832); ctx.fill();
-  ctx.globalCompositeOperation = 'source-over';
-}
 
 /* ---------------------------------------------------------------------------
    7. 유리면 (빗방울 / 와이퍼 / 반사)
 --------------------------------------------------------------------------- */
-const CV_WIPER = {
-  // 선로 중앙 하부 차체 몰딩 지지대 피벗 (메인 암 및 보조축 시작점: x=517 선로 중앙)
-  baseMain: { x: 517, y: 426 },
-  baseAux:  { x: 538, y: 424 },
-  armLength: 286,
 
-  // 회전 각도 범위: 우측 대기 위치(-45.4도) ~ 좌측 대칭 한계 위치(-134.5도)
-  parkAngle: -0.793,  // -45.4 deg (우측 파킹)
-  sweepAngle: -2.348, // -134.5 deg (좌측 최대 스위프)
 
-  // 블레이드 제원 (중앙 브래킷 기준 상부 12시 방향 + 하부 6시 방향 일체형 롱 블레이드)
-  bladeTopLen: 200,
-  bladeBottomLen: 210,
-
-  // 블레이드 틸트 (차체 좌우 필러 경사에 맞추어 자연스럽게 추종)
-  bladeTiltPark: 0.12,   // +6.9 deg
-  bladeTiltSweep: -0.12  // -6.9 deg
-};
-
-function cvWiperMode() {
-  const st = cvCompState('SW_WIPER', 'OFF');
-  if (st === 'OFF') return { period: 0, pause: 0 };
-  if (st === 'INT') return { period: 1.6, pause: 2.2 };
-  if (st === 'SLOW') return { period: 1.5, pause: 0 };
-  if (st === 'FAST') return { period: 0.85, pause: 0 };
-  if (st === 'AUTO') return cvState.rain > 0.05 ? { period: 1.3, pause: cvState.rain > 0.5 ? 0 : 1.6 } : { period: 0, pause: 0 };
-  return { period: 0, pause: 0 };
-}
-
-function cvUpdateWiper(dt) {
-  const m = cvWiperMode();
-  if (m.period <= 0) {
-    // 자연스럽게 우측 파킹 위치로 복귀
-    cvState.wiperAngle += (0 - cvState.wiperAngle) * Math.min(1, dt * 5);
-    cvState.wiperTimer = 0;
-    return;
-  }
-  cvState.wiperTimer += dt;
-  const total = m.period + m.pause;
-  const t = cvState.wiperTimer % total;
-  if (t < m.period) {
-    const ph = t / m.period;
-    // 0(우측) -> 1(좌측) -> 0(우측)으로 왕복하는 부드러운 조화 운동 (좌우로 움직여 닦음)
-    cvState.wiperAngle = 0.5 * (1 - Math.cos(ph * Math.PI * 2));
-  } else {
-    cvState.wiperAngle += (0 - cvState.wiperAngle) * Math.min(1, dt * 8);
-  }
-}
 
 // 팬터그래프 와이퍼 기하학 계산 함수 (progress: 0 = 우측 파킹, 1 = 좌측 최대 도달)
-function cvGetWiperGeometry(progress) {
-  const p = Math.max(0, Math.min(1, progress));
-  const armAngle = CV_WIPER.parkAngle + (CV_WIPER.sweepAngle - CV_WIPER.parkAngle) * p;
 
-  // 메인 암 끝 중앙 연결부 (블레이드의 세로 중앙 축)
-  const pJoint = {
-    x: CV_WIPER.baseMain.x + CV_WIPER.armLength * Math.cos(armAngle),
-    y: CV_WIPER.baseMain.y + CV_WIPER.armLength * Math.sin(armAngle)
-  };
 
-  // 보조 평행 링크(보조축) 끝 연결부 (메인 암과 평행한 4절 링크 기구)
-  const auxOffset = {
-    x: CV_WIPER.baseAux.x - CV_WIPER.baseMain.x,
-    y: CV_WIPER.baseAux.y - CV_WIPER.baseMain.y
-  };
-  const qJoint = {
-    x: pJoint.x + auxOffset.x,
-    y: pJoint.y + auxOffset.y
-  };
-
-  // 일체형 와이퍼 블레이드 각도
-  const tilt = CV_WIPER.bladeTiltPark + (CV_WIPER.bladeTiltSweep - CV_WIPER.bladeTiltPark) * p;
-  const uBlade = {
-    x: Math.sin(tilt),
-    y: -Math.cos(tilt)
-  };
-
-  // 블레이드 12시 방향 상단 및 6시 방향 하단 끝점 (1개의 연속된 롱 블레이드)
-  const bladeTop = {
-    x: pJoint.x + uBlade.x * CV_WIPER.bladeTopLen,
-    y: pJoint.y + uBlade.y * CV_WIPER.bladeTopLen
-  };
-  const bladeBottom = {
-    x: pJoint.x - uBlade.x * CV_WIPER.bladeBottomLen,
-    y: pJoint.y - uBlade.y * CV_WIPER.bladeBottomLen
-  };
-
-  return {
-    pBase: CV_WIPER.baseMain,
-    qBase: CV_WIPER.baseAux,
-    pJoint,
-    qJoint,
-    bladeTop,
-    bladeBottom,
-    uBlade
-  };
-}
-
-function cvDrawWiper(ctx) {
-  const geo = cvGetWiperGeometry(cvState.wiperAngle);
-  ctx.save();
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-
-  // 1. 유리 표면 그림자
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.40)';
-  ctx.shadowBlur = 6;
-  ctx.shadowOffsetX = 3;
-  ctx.shadowOffsetY = 4;
-
-  // 2. 메인 구동 암 (선로 중앙 메인축 -> 블레이드 중앙 연결부)
-  ctx.strokeStyle = '#181b20';
-  ctx.lineWidth = 5.2;
-  ctx.beginPath();
-  ctx.moveTo(geo.pBase.x, geo.pBase.y);
-  ctx.lineTo(geo.pJoint.x, geo.pJoint.y);
-  ctx.stroke();
-
-  // 3. 보조 평행 링크 암 (선로 중앙 보조축 -> 블레이드 중앙 연결부, 메인 암과 평행)
-  ctx.strokeStyle = '#22262d';
-  ctx.lineWidth = 3.2;
-  ctx.beginPath();
-  ctx.moveTo(geo.qBase.x, geo.qBase.y);
-  ctx.lineTo(geo.qJoint.x, geo.qJoint.y);
-  ctx.stroke();
-
-  // 메인 암 금속 반사 하이라이트
-  ctx.shadowColor = 'transparent';
-  ctx.strokeStyle = 'rgba(148, 163, 184, 0.28)';
-  ctx.lineWidth = 1.4;
-  ctx.beginPath();
-  ctx.moveTo(geo.pBase.x - 0.7, geo.pBase.y - 0.7);
-  ctx.lineTo(geo.pJoint.x - 0.7, geo.pJoint.y - 0.7);
-  ctx.stroke();
-
-  // 4. 중앙 연결부 브래킷 (실물 마름모 메탈 브래킷: 메인 암과 보조축이 블레이드 중앙에서 결합)
-  const uB = geo.uBlade;
-  const brkTop = { x: geo.pJoint.x + uB.x * 22, y: geo.pJoint.y + uB.y * 22 };
-  const brkBottom = { x: geo.pJoint.x - uB.x * 22, y: geo.pJoint.y - uB.y * 22 };
-  const nB = { x: -uB.y, y: uB.x };
-
-  ctx.fillStyle = '#262a32';
-  ctx.strokeStyle = '#475569';
-  ctx.lineWidth = 1.6;
-  ctx.beginPath();
-  ctx.moveTo(brkTop.x, brkTop.y);
-  ctx.lineTo(geo.qJoint.x + nB.x * 3.5, geo.qJoint.y + nB.y * 3.5);
-  ctx.lineTo(geo.qJoint.x - nB.x * 3.5, geo.qJoint.y - nB.y * 3.5);
-  ctx.lineTo(brkBottom.x, brkBottom.y);
-  ctx.lineTo(geo.pJoint.x - nB.x * 4.5, geo.pJoint.y - nB.y * 4.5);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-
-  // 5. 닦는 부분: 12시와 6시가 하나로 이어진 일체형 롱 와이퍼 블레이드
-  // (1) 고무 블레이드 백본 (두꺼운 지지대)
-  ctx.strokeStyle = '#0a0c0f';
-  ctx.lineWidth = 7.0;
-  ctx.beginPath();
-  ctx.moveTo(geo.bladeBottom.x, geo.bladeBottom.y);
-  ctx.lineTo(geo.bladeTop.x, geo.bladeTop.y);
-  ctx.stroke();
-
-  // (2) 메탈 블레이드 가이드 바
-  ctx.strokeStyle = '#2b303a';
-  ctx.lineWidth = 4.0;
-  ctx.beginPath();
-  ctx.moveTo(geo.bladeBottom.x, geo.bladeBottom.y);
-  ctx.lineTo(geo.bladeTop.x, geo.bladeTop.y);
-  ctx.stroke();
-
-  // (3) 블레이드 상단 반사 하이라이트
-  ctx.strokeStyle = 'rgba(203, 213, 225, 0.45)';
-  ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  ctx.moveTo(geo.bladeBottom.x + 0.6, geo.bladeBottom.y);
-  ctx.lineTo(geo.bladeTop.x + 0.6, geo.bladeTop.y);
-  ctx.stroke();
-
-  // 6. 힌지 리벳 및 볼트 (메인축 피벗 및 보조축 피벗)
-  // 메인 힌지 볼트
-  ctx.fillStyle = '#1e232a';
-  ctx.strokeStyle = '#94a3b8';
-  ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  ctx.arc(geo.pJoint.x, geo.pJoint.y, 4.5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillStyle = '#cbd5e1';
-  ctx.beginPath();
-  ctx.arc(geo.pJoint.x, geo.pJoint.y, 1.8, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 보조 힌지 볼트
-  ctx.fillStyle = '#1e232a';
-  ctx.strokeStyle = '#64748b';
-  ctx.lineWidth = 1.0;
-  ctx.beginPath();
-  ctx.arc(geo.qJoint.x, geo.qJoint.y, 3.2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-
-  // 7. 선로 중앙 하부 차체 베이스 마운트 피벗
-  ctx.fillStyle = '#15181d';
-  ctx.strokeStyle = '#334155';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.arc(geo.pBase.x, geo.pBase.y, 6.0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(geo.qBase.x, geo.qBase.y, 4.5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.restore();
-}
-
-function cvUpdateRain(ctx, dt) {
-  const rain = cvState.rain;
-  const drops = cvState.drops;
-  if (rain > 0.02) {
-    const spawn = rain * 34 * dt;
-    let n = Math.floor(spawn) + (Math.random() < (spawn % 1) ? 1 : 0);
-    while (n-- > 0 && drops.length < 220) {
-      drops.push({
-        x: 110 + Math.random() * 800,
-        y: 60 + Math.random() * 350,
-        r: 1.2 + Math.random() * 2.6,
-        v: 0, life: 1
-      });
-    }
-  }
-  const wind = Math.min(2.4, trainSpeed * 0.045);
-  // 현재 일체형 블레이드의 상단 및 하단 위치 계산
-  const geo = cvGetWiperGeometry(cvState.wiperAngle);
-  const bp1 = geo.bladeBottom;
-  const bp2 = geo.bladeTop;
-  const vx = bp2.x - bp1.x, vy = bp2.y - bp1.y;
-  const vLenSq = vx * vx + vy * vy;
-
-  const ap1 = geo.pBase;
-  const ap2 = geo.pJoint;
-  const ax = ap2.x - ap1.x, ay = ap2.y - ap1.y;
-  const aLenSq = ax * ax + ay * ay;
-
-  for (let i = drops.length - 1; i >= 0; i--) {
-    const d = drops[i];
-    d.v += (d.r * 0.55 - d.v) * dt * 2.2;
-    d.y += d.v * dt * 26;
-    d.x += wind * dt * 14 * (d.r / 3);
-
-    /* 와이퍼 일체형 롱 블레이드 및 구동 암이 지나간 전 구간 빗방울 완벽 소거 */
-    const tb = Math.max(0, Math.min(1, ((d.x - bp1.x) * vx + (d.y - bp1.y) * vy) / vLenSq));
-    const cxb = bp1.x + vx * tb, cyb = bp1.y + vy * tb;
-    const distSqB = (d.x - cxb) * (d.x - cxb) + (d.y - cyb) * (d.y - cyb);
-    if (distSqB < 380) {
-      drops.splice(i, 1);
-      continue;
-    }
-
-    const ta = Math.max(0, Math.min(1, ((d.x - ap1.x) * ax + (d.y - ap1.y) * ay) / aLenSq));
-    const cxa = ap1.x + ax * ta, cya = ap1.y + ay * ta;
-    const distSqA = (d.x - cxa) * (d.x - cxa) + (d.y - cya) * (d.y - cya);
-    if (distSqA < 220) {
-      drops.splice(i, 1);
-      continue;
-    }
-
-    if (d.y > 440 || d.x > 960) { drops.splice(i, 1); continue; }
-  }
-  /* 렌더 */
-  if (drops.length) {
-    ctx.save();
-    for (let i = 0; i < drops.length; i++) {
-      const d = drops[i];
-      ctx.fillStyle = 'rgba(232,241,248,0.30)';
-      ctx.beginPath(); ctx.ellipse(d.x, d.y, d.r * 0.8, d.r * 1.15, 0, 0, 6.2832); ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.55)';
-      ctx.beginPath(); ctx.arc(d.x - d.r * 0.28, d.y - d.r * 0.34, d.r * 0.3, 0, 6.2832); ctx.fill();
-      if (d.v > 1.4) {
-        ctx.strokeStyle = 'rgba(226,238,246,0.22)'; ctx.lineWidth = d.r * 0.8;
-        ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - wind * 3, d.y - d.v * 6); ctx.stroke();
-      }
-    }
-    ctx.restore();
-  }
-  /* 공중의 빗줄기 */
-  if (rain > 0.25) {
-    ctx.save();
-    ctx.strokeStyle = 'rgba(214,226,238,' + (0.12 + rain * 0.16) + ')';
-    ctx.lineWidth = 1;
-    const t = performance.now() * 0.001;
-    for (let i = 0; i < 70; i++) {
-      const h1 = cvHash(i, Math.floor(t * 12));
-      const x = 90 + h1 * 860, y = 50 + ((h1 * 977 + t * 900) % 380);
-      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 5 - wind * 3, y + 22); ctx.stroke();
-    }
-    ctx.restore();
-  }
-}
-function cvDrawGlass(ctx) {
-  /* 유리 반사 */
-  const g = ctx.createLinearGradient(140, 420, 700, 60);
-  g.addColorStop(0, 'rgba(255,255,255,0.00)');
-  g.addColorStop(0.55, 'rgba(255,255,255,0.045)');
-  g.addColorStop(0.72, 'rgba(255,255,255,0.09)');
-  g.addColorStop(0.9, 'rgba(255,255,255,0.00)');
-  ctx.fillStyle = g;
-  ctx.fillRect(80, 40, 880, 390);
-  /* 창 가장자리 비네팅 */
-  const v = ctx.createRadialGradient(CV.vpX, 240, 210, CV.vpX, 240, 560);
-  v.addColorStop(0, 'rgba(6,10,16,0)');
-  v.addColorStop(1, 'rgba(6,10,16,0.34)');
-  ctx.fillStyle = v;
-  ctx.fillRect(80, 40, 880, 390);
-}
 
 /* ---------------------------------------------------------------------------
    8. 캔버스 내 보조 OSD (다음역 / 터널 / 기상)
@@ -10200,16 +9423,6 @@ function cvDrawOverlayInfo(ctx, st, tun) {
 /* ---------------------------------------------------------------------------
    9. 메인 렌더 루프
 --------------------------------------------------------------------------- */
-function toggleCabZoom(event) {
-  if (event) event.stopPropagation();
-  isCabZoomed = !isCabZoomed;
-  const monitor = document.getElementById('wrap-CAB_VIEW');
-  if (monitor) monitor.classList.toggle('zoomed', isCabZoomed);
-  if (typeof triggerHaptic === 'function') triggerHaptic(25);
-  setTimeout(() => {
-    if (typeof ThreeCabView !== 'undefined' && ThreeCabView.active) ThreeCabView.onResize();
-  }, 60);
-}
 
 function updateCabOSD(notch, revNotch, isUnmannedActive, driveMode) {
   const elNotch = document.getElementById('cab-osd-notch');
@@ -10273,1354 +9486,46 @@ function updateCabOSD(notch, revNotch, isUnmannedActive, driveMode) {
   }
 }
 
-/* ===========================================================================
-   3D Realistic Cab View Engine (Three.js WebGL)
-   - Inspired by Thunder Crest 3D simulation
-   - Photorealistic 3D dual steel rails, concrete ties, ballast, catenary
-   - Realistic 3D mountain tunnel with vault ribs and overhead illumination
-   - Realistic 3D station platform with animated PSD (Platform Screen Doors)
-   - Natural terrain, rolling hills, lush 3D vegetation
-   - Dynamic directional lighting, tunnel darkness transition, train headlight spot
-   - Physics-based camera sway, cant banking roll, acceleration/braking pitch
-=========================================================================== */
-const ThreeCabView = {
-  initialized: false,
-  active: false,
-  container: null,
-  renderer: null,
-  scene: null,
-  camera: null,
-  trackCurve: null,
-  curveLength: 1500.0,
-
-  // Lighting
-  dirLight: null,
-  hemiLight: null,
-  headlight: null,
-  headlightTarget: null,
-  tunnelLights: [],
-
-  // Dynamic Elements
-  psdDoors: [],
-  psdOpenProgress: 0.0,
-  signTextCanvas: null,
-  signTexture: null,
-  lastStationName: '',
-
-  init() {
-    if (this.initialized) return;
-    if (typeof THREE === 'undefined') return;
-
-    this.container = document.getElementById('cab-3d-stage');
-    if (!this.container) return;
-
-    const width = this.container.clientWidth || 1024;
-    const height = this.container.clientHeight || 473;
-
-    // 1. Scene
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x8cb8eb);
-    this.scene.fog = new THREE.FogExp2(0x8cb8eb, 0.0022);
-
-    // 2. Camera (cab driver perspective, FOV 62)
-    this.camera = new THREE.PerspectiveCamera(62, width / height, 0.2, 900);
-
-    // 3. WebGL Renderer
-    try {
-      this.renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: false,
-        powerPreference: 'high-performance'
-      });
-      this.renderer.setSize(width, height);
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      this.renderer.toneMappingExposure = 1.05;
-      if (THREE.sRGBEncoding) this.renderer.outputEncoding = THREE.sRGBEncoding;
-      this.container.appendChild(this.renderer.domElement);
-    } catch (e) {
-      console.warn('WebGL init failed:', e);
-      return;
-    }
-
-    // Resize handling
-    if (window.ResizeObserver) {
-      new ResizeObserver(() => this.onResize()).observe(this.container);
-    }
-    window.addEventListener('resize', () => this.onResize());
-
-    // 4. Build world
-    this.initLights();
-    this.buildTrackCurve();
-    this.buildRailsAndBallast();
-    this.buildThirdRail();
-    this.buildSleepers();
-    this.buildViaductParapets();
-    this.buildTunnel();
-    this.buildStation();
-    this.buildTerrainAndTrees();
-
-    this.initialized = true;
-    this.active = true;
-  },
-
-  onResize() {
-    if (!this.renderer || !this.camera || !this.container) return;
-    const w = this.container.clientWidth;
-    const h = this.container.clientHeight;
-    if (w === 0 || h === 0) return;
-    this.camera.aspect = w / h;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(w, h);
-  },
-
-  initLights() {
-    // Ambient / Sky
-    this.hemiLight = new THREE.HemisphereLight(0xa5cbfa, 0x425238, 0.60);
-    this.scene.add(this.hemiLight);
-
-    // Sun directional light
-    this.dirLight = new THREE.DirectionalLight(0xfffaec, 1.25);
-    this.dirLight.position.set(130, 190, 85);
-    this.scene.add(this.dirLight);
-
-    // Train Headlight SpotLight
-    this.headlight = new THREE.SpotLight(0xfffae0, 3.5, 180, Math.PI / 6, 0.45, 1.2);
-    this.headlightTarget = new THREE.Object3D();
-    this.scene.add(this.headlight);
-    this.scene.add(this.headlightTarget);
-    this.headlight.target = this.headlightTarget;
-
-    // Tunnel dynamic point lights
-    for (let i = 0; i < 4; i++) {
-      const pl = new THREE.PointLight(0xfffae0, 0, 32, 1.6);
-      this.tunnelLights.push(pl);
-      this.scene.add(pl);
-    }
-  },
-
-  buildTrackCurve() {
-    const rawPts = [
-      new THREE.Vector3(0, 0, -250),
-      new THREE.Vector3(0, 0, -100),
-      new THREE.Vector3(0, 0, 30),
-      new THREE.Vector3(15, 0.5, 150),
-      new THREE.Vector3(60, 2.0, 260),
-      new THREE.Vector3(140, 3.8, 330),
-      new THREE.Vector3(230, 5.2, 310),
-      new THREE.Vector3(300, 6.5, 220),
-      new THREE.Vector3(320, 6.8, 120),
-      new THREE.Vector3(320, 6.8, 40),
-      new THREE.Vector3(300, 5.5, -60),
-      new THREE.Vector3(240, 4.0, -160),
-      new THREE.Vector3(160, 2.5, -250),
-      new THREE.Vector3(90, 1.2, -310),
-      new THREE.Vector3(20, 0.4, -330),
-      new THREE.Vector3(-10, 0.0, -300)
-    ];
-    const tempCurve = new THREE.CatmullRomCurve3(rawPts, true, 'centripetal');
-    const rawLen = tempCurve.getLength();
-    const scale = 1500.0 / rawLen;
-    const scaledPts = rawPts.map(p => p.clone().multiplyScalar(scale));
-    this.trackCurve = new THREE.CatmullRomCurve3(scaledPts, true, 'centripetal');
-    this.curveLength = 1500.0;
-  },
-
-  getTrackFrame(u) {
-    const P = this.trackCurve.getPointAt(((u % 1.0) + 1.0) % 1.0);
-    const T = this.trackCurve.getTangentAt(((u % 1.0) + 1.0) % 1.0);
-    const up = new THREE.Vector3(0, 1, 0);
-    const N = new THREE.Vector3().crossVectors(T, up).normalize();
-    const B = new THREE.Vector3().crossVectors(N, T).normalize();
-    return { P, T, N, B };
-  },
-
-  buildRailsAndBallast() {
-    const numSlices = 750;
-    
-    for (let trackOffset of [0, -4.0]) {
-      const leftPts = [];
-      const rightPts = [];
-      const ballastPositions = [];
-      const ballastIndices = [];
-
-      for (let i = 0; i <= numSlices; i++) {
-        const u = (i % numSlices) / numSlices;
-        const { P, N, B } = this.getTrackFrame(u);
-        const Pc = P.clone().addScaledVector(N, trackOffset);
-
-        if (i < numSlices) {
-          leftPts.push(Pc.clone().addScaledVector(N, -0.7175).addScaledVector(B, 0.10));
-          rightPts.push(Pc.clone().addScaledVector(N, 0.7175).addScaledVector(B, 0.10));
-        }
-
-        const pL = Pc.clone().addScaledVector(N, -1.4).addScaledVector(B, -0.2);
-        const pR = Pc.clone().addScaledVector(N, 1.4).addScaledVector(B, -0.2);
-        ballastPositions.push(pL.x, pL.y, pL.z, pR.x, pR.y, pR.z);
-
-        if (i < numSlices) {
-          const r1 = i * 2;
-          const r2 = (i + 1) * 2;
-          ballastIndices.push(r1, r1 + 1, r2 + 1);
-          ballastIndices.push(r1, r2 + 1, r2);
-        }
-      }
-
-      const railGeoL = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(leftPts, true), numSlices, 0.07, 4, true);
-      const railGeoR = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rightPts, true), numSlices, 0.07, 4, true);
-      const railMat = new THREE.MeshStandardMaterial({ color: 0x888c92, roughness: 0.4, metalness: 0.8 });
-      this.scene.add(new THREE.Mesh(railGeoL, railMat));
-      this.scene.add(new THREE.Mesh(railGeoR, railMat));
-
-      const balGeo = new THREE.BufferGeometry();
-      balGeo.setAttribute('position', new THREE.Float32BufferAttribute(ballastPositions, 3));
-      balGeo.setIndex(ballastIndices);
-      balGeo.computeVertexNormals();
-      const balMat = new THREE.MeshStandardMaterial({ color: 0x44403c, roughness: 1.0 });
-      this.scene.add(new THREE.Mesh(balGeo, balMat));
-    }
-  },
-
-  buildThirdRail() {
-    const numSlices = 750;
-
-    for (let trackOffset of [0, -4.0]) {
-      const thirdRailPts = [];
-      const trSupportPositions = [];
-      const trSupportIndices = [];
-
-      for (let i = 0; i <= numSlices; i++) {
-        const u = (i % numSlices) / numSlices;
-        const { P, N, B } = this.getTrackFrame(u);
-        const Pc = P.clone().addScaledVector(N, trackOffset);
-
-        const isLeft = (trackOffset === 0) ? -1 : 1;
-        const pt = Pc.clone().addScaledVector(N, isLeft * 1.15).addScaledVector(B, 0.25);
-
-        if (i < numSlices) {
-          thirdRailPts.push(pt);
-        }
-
-        if (i % 3 === 0 && i < numSlices) {
-          const base = pt.clone().addScaledVector(B, -0.2);
-          const top = pt.clone();
-          const w = 0.05;
-
-          const vBase = trSupportPositions.length / 3;
-          trSupportPositions.push(
-            base.x + w, base.y, base.z,
-            base.x - w, base.y, base.z,
-            top.x + w, top.y, top.z,
-            top.x - w, top.y, top.z
-          );
-
-          trSupportIndices.push(
-            vBase, vBase + 1, vBase + 3,
-            vBase, vBase + 3, vBase + 2
-          );
-        }
-      }
-
-      const thirdRailGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(thirdRailPts, true), numSlices, 0.08, 4, true);
-      const thirdRailMat = new THREE.MeshStandardMaterial({ color: 0xcc5500, roughness: 0.6, metalness: 0.5 });
-      this.scene.add(new THREE.Mesh(thirdRailGeo, thirdRailMat));
-
-      const supportGeo = new THREE.BufferGeometry();
-      supportGeo.setAttribute('position', new THREE.Float32BufferAttribute(trSupportPositions, 3));
-      supportGeo.setIndex(trSupportIndices);
-      supportGeo.computeVertexNormals();
-      const supportMat = new THREE.MeshStandardMaterial({ color: 0xa0a0a0, roughness: 0.9 });
-      this.scene.add(new THREE.Mesh(supportGeo, supportMat));
-    }
-  },
-
-  buildSleepers() {
-    const tieSpacing = 0.65;
-    const numTies = Math.floor(1500 / tieSpacing);
-    const tieGeo = new THREE.BoxGeometry(2.4, 0.16, 0.24);
-    const tieMat = new THREE.MeshStandardMaterial({ color: 0x686b72, roughness: 0.88 });
-
-    for (let trackOffset of [0, -4.0]) {
-      const tieMesh = new THREE.InstancedMesh(tieGeo, tieMat, numTies);
-      const m = new THREE.Matrix4();
-      const position = new THREE.Vector3();
-      for (let k = 0; k < numTies; k++) {
-        const u = (k * tieSpacing) / 1500.0;
-        const { P, T, N, B } = this.getTrackFrame(u);
-        const Pc = P.clone().addScaledVector(N, trackOffset);
-        position.copy(Pc).addScaledVector(B, -0.04);
-        m.makeBasis(N, B, T);
-        m.setPosition(position);
-        tieMesh.setMatrixAt(k, m);
-      }
-      tieMesh.instanceMatrix.needsUpdate = true;
-      this.scene.add(tieMesh);
-    }
-  },
-
-  // 지상/고가 구간 측면 콘크리트 방음/난간벽 (Parapets)
-  buildViaductParapets() {
-    this.viaductGroup = new THREE.Group();
-    const numSlices = 500;
-    const leftWallPos = [];
-    const leftWallInd = [];
-    const rightWallPos = [];
-    const rightWallInd = [];
-    const deckPos = [];
-    const deckInd = [];
-
-    // Materials
-    const wallMat = new THREE.MeshStandardMaterial({
-      color: 0x6e737c,
-      roughness: 0.85,
-      side: THREE.DoubleSide
-    });
-    const deckMat = new THREE.MeshStandardMaterial({
-      color: 0x484d56,
-      roughness: 0.90,
-      side: THREE.DoubleSide
-    });
-    const pierMat = new THREE.MeshStandardMaterial({
-      color: 0x5a606a,
-      roughness: 0.85
-    });
-
-    const pierGeo = new THREE.CylinderGeometry(1.2, 1.4, 14.0, 12);
-
-    for (let i = 0; i <= numSlices; i++) {
-      const u = (i % numSlices) / numSlices;
-      const s = u * 1500.0;
-      const { P, N, B } = this.getTrackFrame(u);
-
-      // In station area, parapets are replaced by station platform & facade
-      const inStation = (s >= 244 && s <= 346);
-      const isVisible = !inStation;
-
-      // Wall vertices
-      // Left Parapet Wall (N = -6.4m, height -0.3m to 1.10m)
-      const pL0 = P.clone().addScaledVector(N, -6.4).addScaledVector(B, -0.3);
-      const pL1 = P.clone().addScaledVector(N, -6.4).addScaledVector(B, 1.10);
-
-      // Right Parapet Wall (N = 2.4m, height -0.3m to 1.10m)
-      const pR0 = P.clone().addScaledVector(N, 2.4).addScaledVector(B, -0.3);
-      const pR1 = P.clone().addScaledVector(N, 2.4).addScaledVector(B, 1.10);
-
-      leftWallPos.push(pL0.x, pL0.y, pL0.z, pL1.x, pL1.y, pL1.z);
-      rightWallPos.push(pR0.x, pR0.y, pR0.z, pR1.x, pR1.y, pR1.z);
-
-      // Solid Viaduct Deck Slab spanning from left wall to right wall under both tracks
-      // Bottom of deck at B = -0.6m
-      const pDeckL = P.clone().addScaledVector(N, -6.4).addScaledVector(B, -0.35);
-      const pDeckR = P.clone().addScaledVector(N, 2.4).addScaledVector(B, -0.35);
-      deckPos.push(pDeckL.x, pDeckL.y, pDeckL.z, pDeckR.x, pDeckR.y, pDeckR.z);
-
-      if (i < numSlices && isVisible) {
-        const r1 = i * 2;
-        const r2 = (i + 1) * 2;
-
-        // Left wall winding facing inward towards track (+N)
-        leftWallInd.push(r1, r2 + 1, r1 + 1);
-        leftWallInd.push(r1, r2, r2 + 1);
-
-        // Right wall winding facing inward towards track (-N)
-        rightWallInd.push(r1, r1 + 1, r2 + 1);
-        rightWallInd.push(r1, r2 + 1, r2);
-
-        // Deck slab facing UP
-        deckInd.push(r1, r1 + 1, r2 + 1);
-        deckInd.push(r1, r2 + 1, r2);
-      }
-
-      // Concrete Bridge Piers spaced every 30m under viaduct
-      if (i % 10 === 0 && !inStation) {
-        const pier = new THREE.Mesh(pierGeo, pierMat);
-        const pierPos = P.clone().addScaledVector(N, -2.0).addScaledVector(B, -7.2);
-        pier.position.copy(pierPos);
-        this.viaductGroup.add(pier);
-      }
-    }
-
-    const lGeo = new THREE.BufferGeometry();
-    lGeo.setAttribute('position', new THREE.Float32BufferAttribute(leftWallPos, 3));
-    lGeo.setIndex(leftWallInd);
-    lGeo.computeVertexNormals();
-    this.viaductGroup.add(new THREE.Mesh(lGeo, wallMat));
-
-    const rGeo = new THREE.BufferGeometry();
-    rGeo.setAttribute('position', new THREE.Float32BufferAttribute(rightWallPos, 3));
-    rGeo.setIndex(rightWallInd);
-    rGeo.computeVertexNormals();
-    this.viaductGroup.add(new THREE.Mesh(rGeo, wallMat));
-
-    const dGeo = new THREE.BufferGeometry();
-    dGeo.setAttribute('position', new THREE.Float32BufferAttribute(deckPos, 3));
-    dGeo.setIndex(deckInd);
-    dGeo.computeVertexNormals();
-    this.viaductGroup.add(new THREE.Mesh(dGeo, deckMat));
-
-    this.scene.add(this.viaductGroup);
-  },
-
-  buildTunnel() {
-    this.tunnelGroup = new THREE.Group();
-
-    // 14-vertex horseshoe / cut-and-cover double-track tunnel profile
-    const profile = [
-      [-6.8, -0.3], // 0: 바닥 좌측
-      [-6.8, 0.4],  // 1: 좌측 벽
-      [-6.8, 1.8],  // 2: 좌측 중단 벽
-      [-6.7, 3.0],  // 3: 좌측 상단 벽
-      [-6.2, 4.0],  // 4: 좌측 아치
-      [-5.3, 4.7],  // 5: 좌측 천장
-      [-2.0, 5.0],  // 6: 천장 중앙 최고점
-      [ 1.3, 4.7],  // 7: 우측 천장
-      [ 2.2, 4.0],  // 8: 우측 아치
-      [ 2.7, 3.0],  // 9: 우측 상단 벽
-      [ 2.8, 1.8],  // 10: 우측 중단 벽
-      [ 2.8, 0.7],  // 11: 우측 대피로 외벽
-      [ 2.2, 0.7],  // 12: 우측 대피로 발판
-      [ 2.2, -0.3]  // 13: 바닥 우측
-    ];
-    const numV = profile.length;
-
-    const tunnelMat = new THREE.MeshStandardMaterial({
-      color: 0x22262c,
-      roughness: 0.90,
-      side: THREE.DoubleSide
-    });
-    const cableMat = new THREE.MeshBasicMaterial({ color: 0x111317 });
-    const lampMat = new THREE.MeshBasicMaterial({ color: 0xfffae0 });
-    const lampGeo = new THREE.BoxGeometry(1.6, 0.12, 0.25);
-
-    // Inter-station tunnel segment connecting station exit (345m) through entire loop to next station entrance (1745m)
-    const segments = [
-      { sStart: 345.0, sEnd: 1745.0 }
-    ];
-
-    const step = 2.5;
-
-    segments.forEach((seg, segIdx) => {
-      const segLen = seg.sEnd - seg.sStart;
-      const numSlices = Math.floor(segLen / step);
-
-      const positions = [];
-      const indices = [];
-      const cablePts = [];
-
-      for (let i = 0; i <= numSlices; i++) {
-        const s = seg.sStart + i * step;
-        const u = ((s % 1500.0) + 1500.0) % 1500.0 / 1500.0;
-        const { P, N, B } = this.getTrackFrame(u);
-
-        for (let j = 0; j < numV; j++) {
-          const pt = P.clone().addScaledVector(N, profile[j][0]).addScaledVector(B, profile[j][1]);
-          positions.push(pt.x, pt.y, pt.z);
-        }
-
-        cablePts.push(P.clone().addScaledVector(N, -2.75).addScaledVector(B, 1.9));
-
-        if (i < numSlices) {
-          const row1 = i * numV;
-          const row2 = (i + 1) * numV;
-          for (let j = 0; j < numV - 1; j++) {
-            indices.push(row1 + j, row1 + j + 1, row2 + j + 1);
-            indices.push(row1 + j, row2 + j + 1, row2 + j);
-          }
-          // Floor face connection
-          indices.push(row1 + (numV - 1), row1, row2 + (numV - 1));
-          indices.push(row1, row2, row2 + (numV - 1));
-        }
-      }
-
-      // Tunnel tube mesh
-      const tunnelGeo = new THREE.BufferGeometry();
-      tunnelGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-      tunnelGeo.setIndex(indices);
-      tunnelGeo.computeVertexNormals();
-      const tMesh = new THREE.Mesh(tunnelGeo, tunnelMat);
-      this.tunnelGroup.add(tMesh);
-
-      // Left-side cable tray tube
-      if (cablePts.length > 2) {
-        const cableCurve = new THREE.CatmullRomCurve3(cablePts, false, 'centripetal');
-        const cableGeo = new THREE.TubeGeometry(cableCurve, Math.min(250, numSlices), 0.03, 5, false);
-        this.tunnelGroup.add(new THREE.Mesh(cableGeo, cableMat));
-      }
-
-      // Ceiling fluorescent lamps spaced every 15 meters
-      const numLamps = Math.floor(segLen / 15.0);
-      if (numLamps > 0) {
-        const lampsMesh = new THREE.InstancedMesh(lampGeo, lampMat, numLamps);
-        const lm = new THREE.Matrix4();
-        for (let k = 0; k < numLamps; k++) {
-          const ls = seg.sStart + 7.5 + k * 15.0;
-          const lu = ((ls % 1500.0) + 1500.0) % 1500.0 / 1500.0;
-          const { P, T, N, B } = this.getTrackFrame(lu);
-          lm.makeBasis(N, B, T);
-          lm.setPosition(P.clone().addScaledVector(B, 4.85));
-          lampsMesh.setMatrixAt(k, lm);
-        }
-        lampsMesh.instanceMatrix.needsUpdate = true;
-        this.tunnelGroup.add(lampsMesh);
-      }
-    });
-
-    this.scene.add(this.tunnelGroup);
-
-    // Tunnel portals for ground-to-tunnel and tunnel-to-ground transitions
-    this.portalEntryGroup = this.buildPortalArch(776.0, false);
-    this.portalExitGroup = this.buildPortalArch(1114.0, true);
-  },
-
-  buildPortalArch(s, isExit) {
-    const { P, T, N, B } = this.getTrackFrame(s / 1500.0);
-    const pGroup = new THREE.Group();
-    const portalMat = new THREE.MeshStandardMaterial({ color: 0x5a6068, roughness: 0.85 });
-    const cliffMat = new THREE.MeshStandardMaterial({ color: 0x3a3834, roughness: 0.95 });
-
-    // 1. 좌측 콘크리트 포털 기둥
-    const leftPillar = new THREE.Mesh(new THREE.BoxGeometry(2.4, 6.0, 2.5), portalMat);
-    leftPillar.position.set(-8.1, 2.8, 0);
-    pGroup.add(leftPillar);
-
-    // 2. 우측 콘크리트 포털 기둥
-    const rightPillar = new THREE.Mesh(new THREE.BoxGeometry(2.4, 6.0, 2.5), portalMat);
-    rightPillar.position.set(4.1, 2.8, 0);
-    pGroup.add(rightPillar);
-
-    // 3. 상부 아치 헤더 빔
-    const topHeader = new THREE.Mesh(new THREE.BoxGeometry(14.6, 2.2, 2.5), portalMat);
-    topHeader.position.set(-2.0, 6.3, 0);
-    pGroup.add(topHeader);
-
-    // 4. 좌측 산악 암벽
-    const leftCliff = new THREE.Mesh(new THREE.BoxGeometry(22.0, 14.0, 3.0), cliffMat);
-    leftCliff.position.set(-20.3, 6.5, isExit ? 1.5 : -1.5);
-    pGroup.add(leftCliff);
-
-    // 5. 우측 산악 암벽
-    const rightCliff = new THREE.Mesh(new THREE.BoxGeometry(22.0, 14.0, 3.0), cliffMat);
-    rightCliff.position.set(16.3, 6.5, isExit ? 1.5 : -1.5);
-    pGroup.add(rightCliff);
-
-    // 6. 상부 산악 능선 암벽
-    const topCliff = new THREE.Mesh(new THREE.BoxGeometry(54.0, 8.0, 3.0), cliffMat);
-    topCliff.position.set(0, 11.4, isExit ? 1.5 : -1.5);
-    pGroup.add(topCliff);
-
-    // ★ 중앙 통로는 100% 뚫려있어 열차가 안전하게 통과함!
-    const m = new THREE.Matrix4().makeBasis(N, B, T);
-    pGroup.applyMatrix4(m);
-    pGroup.position.copy(P);
-    this.scene.add(pGroup);
-    return pGroup;
-  },
-
-  buildStation() {
-    // 1. Materials (DoubleSide on all structural surfaces so both left & right platforms are 100% visible)
-    const platMat = new THREE.MeshStandardMaterial({ color: 0xdbe2ea, roughness: 0.85, side: THREE.DoubleSide }); // Floor tile
-    const yellowMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.7, side: THREE.DoubleSide }); // Tactile yellow
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9, side: THREE.DoubleSide }); // Dark slate back wall
-    const roofMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8, side: THREE.DoubleSide }); // Platform ceiling roof
-    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.75 }); // Concrete columns
-    const lightMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Fluorescent ceiling LED
-
-    // PSD Materials - Crystal clear, transparent glass
-    const psdGlassMat = new THREE.MeshPhysicalMaterial({
-      color: 0x5a8fa8,
-      transmission: 0.88,
-      opacity: 1.0,
-      transparent: true,
-      roughness: 0.05,
-      reflectivity: 0.8,
-      ior: 1.5,
-      side: THREE.DoubleSide
-    });
-    // Slim, sleek dark steel frames
-    const psdFrameMat = new THREE.MeshStandardMaterial({ color: 0x1e222a, metalness: 0.6, roughness: 0.35 });
-    const psdTopMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.5 }); // Incheon Line 2 Orange
-    const psdLedMat = new THREE.MeshBasicMaterial({ color: 0x22c55e }); // Green door indicator LED
-
-    // Props Materials
-    const benchWoodMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.9 });
-    const benchLegMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
-    const vendingRedMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4 });
-    const vendingGlassMat = new THREE.MeshPhysicalMaterial({ color: 0x9ca3af, transmission: 0.6, opacity: 1, transparent: true, roughness: 0.1 });
-    const vendingBlackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
-    const escalatorStairMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 });
-    const escalatorRailMat = new THREE.MeshPhysicalMaterial({ color: 0x94a3b8, transmission: 0.8, opacity: 1, transparent: true, roughness: 0.1 });
-
-    const psdGroup = new THREE.Group();
-    this.psdDoors = [];
-    const propsGroup = new THREE.Group();
-    const platGroup = new THREE.Group();
-
-    // 2. Station Sign Texture Setup
-    const signCanvas = document.createElement('canvas');
-    signCanvas.width = 1024; signCanvas.height = 256;
-    this.signTextCanvas = signCanvas;
-    this.signTexture = new THREE.CanvasTexture(signCanvas);
-    this.updateStationSignTexture('201', '검단오류', 'Geomdan Oryu');
-    const signMat = new THREE.MeshBasicMaterial({ map: this.signTexture, side: THREE.DoubleSide });
-    const signGeo = new THREE.BoxGeometry(0.06, 1.15, 3.8);
-
-    // Slim, elegant frame geometries (refined to 6cm ~ 8cm thickness)
-    const postGeo = new THREE.BoxGeometry(0.08, 2.30, 0.08); // Thin vertical post
-    const mullionGeo = new THREE.BoxGeometry(0.06, 2.20, 0.05); // Thin vertical divider
-    const kickplateGeo = new THREE.BoxGeometry(0.07, 0.12, 1.95); // Slim bottom kickplate
-    const subHeaderGeo = new THREE.BoxGeometry(0.07, 0.08, 1.95); // Slim top frame
-    const windowGlassGeo = new THREE.BoxGeometry(0.03, 2.05, 1.92); // Large clear glass window
-    const doorLeafGlassGeo = new THREE.BoxGeometry(0.04, 2.20, 1.08); // Full glass sliding door leaf
-    const doorEdgeGeo = new THREE.BoxGeometry(0.06, 2.22, 0.04); // Slim rubber edge on door
-    const doorLedGeo = new THREE.BoxGeometry(0.12, 0.08, 0.22);
-    const signPoleGeo = new THREE.CylinderGeometry(0.025, 0.025, 1.2, 8);
-    const stationPillarGeo = new THREE.BoxGeometry(0.6, 4.8, 0.6);
-
-    // One station along the 1500m loop (정차위치: 305m)
-    const stations = [
-      { sStart: 245, sEnd: 345, stopP: 305, isTunnel: false }
-    ];
-
-    for (let st of stations) {
-      const sStart = st.sStart;
-      const sEnd = st.sEnd;
-      const stopP = st.stopP;
-      const numSlices = 50;
-      const step = (sEnd - sStart) / numSlices;
-
-      for (let trackOffset of [0, -4.0]) {
-        const sideSign = (trackOffset === 0) ? 1 : -1;
-        const platPositions = [];
-        const platIndices = [];
-        const yellowPositions = [];
-        const yellowIndices = [];
-        const wallPositions = [];
-        const wallIndices = [];
-        const roofPositions = [];
-        const roofIndices = [];
-
-        // Build continuous platform, back wall, and ceiling roof
-        for (let i = 0; i <= numSlices; i++) {
-          const s = sStart + i * step;
-          const { P, N, B } = this.getTrackFrame(s / 1500.0);
-          const Pc = P.clone().addScaledVector(N, trackOffset);
-
-          // Points across platform cross-section
-          const pEdge = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, 1.15);
-          const pYell = Pc.clone().addScaledVector(N, sideSign * 1.65).addScaledVector(B, 1.152);
-          const pBack = Pc.clone().addScaledVector(N, sideSign * 5.40).addScaledVector(B, 1.15);
-          const pBase = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, -0.2);
-
-          platPositions.push(pBase.x, pBase.y, pBase.z, pEdge.x, pEdge.y, pEdge.z, pBack.x, pBack.y, pBack.z);
-          yellowPositions.push(pEdge.x, pEdge.y, pEdge.z, pYell.x, pYell.y, pYell.z);
-
-          // Back wall and Roof
-          const pWallTop = pBack.clone().addScaledVector(B, 4.4);
-          // Span the roof across the tracks to enclose the station
-          const pRoofFront = Pc.clone().addScaledVector(B, 4.8);
-          wallPositions.push(pBack.x, pBack.y, pBack.z, pWallTop.x, pWallTop.y, pWallTop.z);
-          roofPositions.push(pWallTop.x, pWallTop.y, pWallTop.z, pRoofFront.x, pRoofFront.y, pRoofFront.z);
-
-          if (i < numSlices) {
-            const r1 = i * 3;
-            const r2 = (i + 1) * 3;
-
-            // Proper winding order depending on sideSign
-            if (sideSign === 1) {
-              platIndices.push(r1, r1 + 1, r2 + 1); platIndices.push(r1, r2 + 1, r2);
-              platIndices.push(r1 + 1, r1 + 2, r2 + 2); platIndices.push(r1 + 1, r2 + 2, r2 + 1);
-
-              const y1 = i * 2; const y2 = (i + 1) * 2;
-              yellowIndices.push(y1, y1 + 1, y2 + 1); yellowIndices.push(y1, y2 + 1, y2);
-
-              const w1 = i * 2; const w2 = (i + 1) * 2;
-              wallIndices.push(w1, w1 + 1, w2 + 1); wallIndices.push(w1, w2 + 1, w2);
-              roofIndices.push(w1, w1 + 1, w2 + 1); roofIndices.push(w1, w2 + 1, w2);
-            } else {
-              // Left side platform (reversed winding so normals face UP towards camera)
-              platIndices.push(r1, r2 + 1, r1 + 1); platIndices.push(r1, r2, r2 + 1);
-              platIndices.push(r1 + 1, r2 + 2, r1 + 2); platIndices.push(r1 + 1, r2 + 1, r2 + 2);
-
-              const y1 = i * 2; const y2 = (i + 1) * 2;
-              yellowIndices.push(y1, y2 + 1, y1 + 1); yellowIndices.push(y1, y2, y2 + 1);
-
-              const w1 = i * 2; const w2 = (i + 1) * 2;
-              wallIndices.push(w1, w2 + 1, w1 + 1); wallIndices.push(w1, w2, w2 + 1);
-              roofIndices.push(w1, w2 + 1, w1 + 1); roofIndices.push(w1, w2, w2 + 1);
-            }
-          }
-        }
-
-        // Station Front & Back Facade Portal Gables (close off hollow slice)
-        if (st.sStart === 245) {
-          // Ground station front & rear entrance portals
-          [st.sStart, st.sEnd].forEach((gableS, gIdx) => {
-            const { P, T, N, B } = this.getTrackFrame(gableS / 1500.0);
-            const Pc = P.clone().addScaledVector(N, trackOffset);
-            const gableMesh = new THREE.Mesh(new THREE.BoxGeometry(0.3, 4.4, 4.4), wallMat);
-            const gablePos = Pc.clone().addScaledVector(N, sideSign * 3.35).addScaledVector(B, 3.35);
-            gableMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(gablePos));
-            platGroup.add(gableMesh);
-
-            // Concrete bridge support deck underneath station platform
-            const underDeckMesh = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.8, 10.0), wallMat);
-            const uPos = Pc.clone().addScaledVector(N, sideSign * 3.35).addScaledVector(B, 0.6);
-            underDeckMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(uPos));
-            platGroup.add(underDeckMesh);
-          });
-        }
-
-        // Platform meshes
-        const pGeo = new THREE.BufferGeometry();
-        pGeo.setAttribute('position', new THREE.Float32BufferAttribute(platPositions, 3));
-        pGeo.setIndex(platIndices);
-        pGeo.computeVertexNormals();
-        platGroup.add(new THREE.Mesh(pGeo, platMat));
-
-        const yGeo = new THREE.BufferGeometry();
-        yGeo.setAttribute('position', new THREE.Float32BufferAttribute(yellowPositions, 3));
-        yGeo.setIndex(yellowIndices);
-        yGeo.computeVertexNormals();
-        platGroup.add(new THREE.Mesh(yGeo, yellowMat));
-
-        const wallGeo = new THREE.BufferGeometry();
-        wallGeo.setAttribute('position', new THREE.Float32BufferAttribute(wallPositions, 3));
-        wallGeo.setIndex(wallIndices);
-        wallGeo.computeVertexNormals();
-        platGroup.add(new THREE.Mesh(wallGeo, wallMat));
-
-        const roofGeo = new THREE.BufferGeometry();
-        roofGeo.setAttribute('position', new THREE.Float32BufferAttribute(roofPositions, 3));
-        roofGeo.setIndex(roofIndices);
-        roofGeo.computeVertexNormals();
-        platGroup.add(new THREE.Mesh(roofGeo, roofMat));
-
-        // 3. Sleek PSD Top Header Box & Orange Line
-        const stLen = sEnd - sStart;
-        const numHeaderSteps = Math.floor(stLen / 10.0);
-        for (let h = 0; h < numHeaderSteps; h++) {
-          const hs = sStart + h * 10.0 + 5.0;
-          const { P, T, N, B } = this.getTrackFrame(hs / 1500.0);
-          const Pc = P.clone().addScaledVector(N, trackOffset);
-
-          // Top Header dark housing (compact: 0.16m wide, 0.40m high)
-          const boxMesh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.40, 10.1), psdFrameMat);
-          const bPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 3.42);
-          boxMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(bPos));
-          psdGroup.add(boxMesh);
-
-          // Front Orange Line Stripe
-          const stripeMesh = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.16, 10.1), psdTopMat);
-          const sPos = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, 3.42);
-          stripeMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(sPos));
-          psdGroup.add(stripeMesh);
-        }
-
-        // 4. Slim, elegant vertical posts (Mullions: 8cm thin) spaced along platform edge
-        for (let sP = sStart + 2.0; sP <= sEnd - 2.0; sP += 2.0) {
-          const { P, T, N, B } = this.getTrackFrame(sP / 1500.0);
-          const Pc = P.clone().addScaledVector(N, trackOffset);
-
-          // Slim vertical column connecting floor (1.15) to header (3.30)
-          const postMesh = new THREE.Mesh(postGeo, psdFrameMat);
-          const postPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 2.25);
-          postMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(postPos));
-          psdGroup.add(postMesh);
-        }
-
-        // 5. 100% Clear, transparent glass window panels between posts (no black walls!)
-        for (let sP = sStart + 3.0; sP <= sEnd - 3.0; sP += 2.0) {
-          // Leave sliding door openings clear
-          const isDoorZone = [-30, -15, 0].some(dOff => Math.abs(sP - (stopP + dOff)) < 1.3);
-          if (isDoorZone) continue;
-
-          const { P, T, N, B } = this.getTrackFrame(sP / 1500.0);
-          const Pc = P.clone().addScaledVector(N, trackOffset);
-
-          // Clear Glass Pane (transparent, see right through to station signs!)
-          const glassMesh = new THREE.Mesh(windowGlassGeo, psdGlassMat);
-          const gPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 2.26);
-          glassMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(gPos));
-          psdGroup.add(glassMesh);
-
-          // Slim kickplate sill at bottom (12cm low)
-          const kickMesh = new THREE.Mesh(kickplateGeo, psdFrameMat);
-          const kPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 1.21);
-          kickMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(kPos));
-          psdGroup.add(kickMesh);
-
-          // Slim sub-header frame at top (8cm low)
-          const subMesh = new THREE.Mesh(subHeaderGeo, psdFrameMat);
-          const sbPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 3.24);
-          subMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(sbPos));
-          psdGroup.add(subMesh);
-        }
-
-        // 6. Sliding PSD Doors (Door 1 at stopP-30, Door 2 at stopP-15, Door 3 at stopP)
-        // 100% Clear Glass door leaves with slim rubber edges - absolutely NO opaque black slabs!
-        const doorOffsets = [-30.0, -15.0, 0.0];
-        doorOffsets.forEach((dOff) => {
-          const ds = stopP + dOff;
-          const { P, T, N, B } = this.getTrackFrame(ds / 1500.0);
-          const Pc = P.clone().addScaledVector(N, trackOffset);
-
-          // Slim flanking portal posts (10cm thin)
-          const lpMesh = new THREE.Mesh(new THREE.BoxGeometry(0.10, 2.30, 0.10), psdFrameMat);
-          const rpMesh = new THREE.Mesh(new THREE.BoxGeometry(0.10, 2.30, 0.10), psdFrameMat);
-          const leftPillarPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 2.25).addScaledVector(T, -1.15);
-          const rightPillarPos = Pc.clone().addScaledVector(N, sideSign * 1.34).addScaledVector(B, 2.25).addScaledVector(T, 1.15);
-          lpMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(leftPillarPos));
-          rpMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(rightPillarPos));
-          psdGroup.add(lpMesh);
-          psdGroup.add(rpMesh);
-
-          // Door Status LED indicator above door
-          const ledMesh = new THREE.Mesh(doorLedGeo, psdLedMat);
-          const ledPos = Pc.clone().addScaledVector(N, sideSign * 1.25).addScaledVector(B, 3.42);
-          ledMesh.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(ledPos));
-          psdGroup.add(ledMesh);
-
-          // Sliding Door Leaves - Clean, beautiful transparent glass leaves!
-          // Left Leaf (mesh group)
-          const lLeafGroup = new THREE.Group();
-          const lGlass = new THREE.Mesh(doorLeafGlassGeo, psdGlassMat);
-          const lEdge = new THREE.Mesh(doorEdgeGeo, psdFrameMat);
-          lEdge.position.set(0, 0, 0.52); // Rubber seal on inner meeting edge
-          lLeafGroup.add(lGlass, lEdge);
-
-          // Right Leaf (mesh group)
-          const rLeafGroup = new THREE.Group();
-          const rGlass = new THREE.Mesh(doorLeafGlassGeo, psdGlassMat);
-          const rEdge = new THREE.Mesh(doorEdgeGeo, psdFrameMat);
-          rEdge.position.set(0, 0, -0.52); // Rubber seal on inner meeting edge
-          rLeafGroup.add(rGlass, rEdge);
-
-          const dlPos = Pc.clone().addScaledVector(N, sideSign * 1.32).addScaledVector(B, 2.23).addScaledVector(T, -0.54);
-          const drPos = Pc.clone().addScaledVector(N, sideSign * 1.32).addScaledVector(B, 2.23).addScaledVector(T, 0.54);
-
-          lLeafGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(dlPos));
-          rLeafGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(drPos));
-
-          psdGroup.add(lLeafGroup);
-          psdGroup.add(rLeafGroup);
-          this.psdDoors.push({ doorL: lLeafGroup, doorR: rLeafGroup, baseL: dlPos, baseR: drPos, tangent: T });
-        });
-
-        // 7. Station Sign (Mounted prominently at eye level, perfectly visible through clear PSD glass!)
-        {
-          const { P, T, N, B } = this.getTrackFrame(stopP / 1500.0);
-          const Pc = P.clone().addScaledVector(N, trackOffset);
-          const signMesh = new THREE.Mesh(signGeo, signMat);
-          // Positioned at N = sideSign * 2.8, B = 2.6, T = 3.5: perfectly framed right in the driver's front/side window view
-          const signPos = Pc.clone().addScaledVector(N, sideSign * 2.8).addScaledVector(B, 2.6).addScaledVector(T, 3.5);
-
-          // Face the sign normal directly towards the track so text reads left-to-right from cab
-          const signNormal = N.clone().multiplyScalar(-sideSign);
-          const signTangent = T.clone().multiplyScalar(-1);
-          signMesh.applyMatrix4(new THREE.Matrix4().makeBasis(signNormal, B, signTangent).setPosition(signPos));
-          propsGroup.add(signMesh);
-
-          // Hanging steel mounting poles up to ceiling
-          const pole1 = new THREE.Mesh(signPoleGeo, psdFrameMat);
-          const pole2 = new THREE.Mesh(signPoleGeo, psdFrameMat);
-          pole1.position.copy(signPos).addScaledVector(B, 1.05).addScaledVector(T, -1.2);
-          pole2.position.copy(signPos).addScaledVector(B, 1.05).addScaledVector(T, 1.2);
-          propsGroup.add(pole1, pole2);
-        }
-
-        // 8. Station Columns, Ceiling Lights & Platform Furniture
-        for (let cS = sStart + 10.0; cS < sEnd; cS += 18.0) {
-          const { P, T, N, B } = this.getTrackFrame(cS / 1500.0);
-          const Pc = P.clone().addScaledVector(N, trackOffset);
-
-          // Concrete station column
-          const pillar = new THREE.Mesh(stationPillarGeo, pillarMat);
-          const pilPos = Pc.clone().addScaledVector(N, sideSign * 4.2).addScaledVector(B, 3.4);
-          pillar.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(pilPos));
-          propsGroup.add(pillar);
-
-          // Ceiling LED light strip
-          const ledStrip = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.08, 4.0), lightMat);
-          const ledPos = Pc.clone().addScaledVector(N, sideSign * 3.0).addScaledVector(B, 5.25);
-          ledStrip.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, T).setPosition(ledPos));
-          propsGroup.add(ledStrip);
-        }
-
-        // 9. Platform Props: Benches, Vending Machine, Escalator
-        const propT = (sideSign === -1) ? this.getTrackFrame(stopP / 1500.0).T.clone().negate() : this.getTrackFrame(stopP / 1500.0).T.clone();
-
-        // Bench
-        {
-          const { P, T, N, B } = this.getTrackFrame((stopP - 18.0) / 1500.0);
-          const Pc = P.clone().addScaledVector(N, trackOffset);
-          const benchGroup = new THREE.Group();
-          const seat = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.1, 0.7), benchWoodMat);
-          seat.position.set(0, 1.6, 0);
-          const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.45, 0.55), benchLegMat);
-          leg1.position.set(-0.8, 1.375, 0);
-          const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.45, 0.55), benchLegMat);
-          leg2.position.set(0.8, 1.375, 0);
-          benchGroup.add(seat, leg1, leg2);
-          const bPos = Pc.clone().addScaledVector(N, sideSign * 3.5).addScaledVector(B, 0);
-          benchGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, propT).setPosition(bPos));
-          propsGroup.add(benchGroup);
-        }
-
-        // Vending Machine
-        {
-          const { P, T, N, B } = this.getTrackFrame((stopP + 12.0) / 1500.0);
-          const Pc = P.clone().addScaledVector(N, trackOffset);
-          const vmGroup = new THREE.Group();
-          const vmBody = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.0, 0.9), vendingRedMat);
-          vmBody.position.set(0, 2.15, 0);
-          const vmGlass = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.1, 0.1), vendingGlassMat);
-          vmGlass.position.set(0, 2.45, sideSign * 0.46);
-          const vmSlot = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 0.1), vendingBlackMat);
-          vmSlot.position.set(0, 1.45, sideSign * 0.46);
-          vmGroup.add(vmBody, vmGlass, vmSlot);
-          const vmPos = Pc.clone().addScaledVector(N, sideSign * 3.8).addScaledVector(B, 0);
-          vmGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, propT).setPosition(vmPos));
-          propsGroup.add(vmGroup);
-        }
-
-        // Escalator
-        {
-          const { P, T, N, B } = this.getTrackFrame((stopP - 38.0) / 1500.0);
-          const Pc = P.clone().addScaledVector(N, trackOffset);
-          const escGroup = new THREE.Group();
-          const steps = new THREE.Mesh(new THREE.BoxGeometry(2.0, 3.5, 3.5), escalatorStairMat);
-          steps.position.set(0, 2.9, 1.8);
-          steps.rotation.x = Math.PI / 4;
-          const rail = new THREE.Mesh(new THREE.BoxGeometry(2.1, 3.5, 0.1), escalatorRailMat);
-          rail.position.set(0, 3.7, 1.8);
-          rail.rotation.x = Math.PI / 4;
-          escGroup.add(steps, rail);
-          const ePos = Pc.clone().addScaledVector(N, sideSign * 3.6).addScaledVector(B, 0);
-          escGroup.applyMatrix4(new THREE.Matrix4().makeBasis(N, B, propT).setPosition(ePos));
-          propsGroup.add(escGroup);
-        }
-      }
-    }
-
-    this.scene.add(platGroup);
-    this.scene.add(psdGroup);
-    this.scene.add(propsGroup);
-  },
-
-  updateStationSignTexture(id, name, eng) {
-    if (!this.signTextCanvas || !this.signTexture) return;
-    const ctx = this.signTextCanvas.getContext('2d');
-    
-    // Background: White
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, 1024, 256);
-    
-    // Bottom Orange Stripe
-    ctx.fillStyle = '#f97316';
-    ctx.fillRect(0, 220, 1024, 36);
-
-    // Frame Border
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#22262c';
-    ctx.strokeRect(0, 0, 1024, 256);
-    
-    // Station badge
-    ctx.fillStyle = '#f97316'; // orange badge
-    ctx.beginPath();
-    ctx.roundRect(40, 40, 140, 140, 20);
-    ctx.fill();
-
-    // Inside Badge text
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 50px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(id || '200', 110, 110); // Hardcoded ID for now, can be updated if we pass ID
-
-    // Station Name (Korean)
-    ctx.fillStyle = '#111827';
-    ctx.font = 'bold 80px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(name, 512, 100);
-
-    // Station Name (English)
-    ctx.fillStyle = '#4b5563';
-    ctx.font = 'bold 36px Consolas, monospace';
-    ctx.fillText(eng || 'Incheon Line 2', 512, 170);
-
-    this.signTexture.needsUpdate = true;
-  },
-
-  buildTerrainAndTrees() {
-    const terrPositions = [];
-    const terrIndices = [];
-    const terrColors = [];
-    const numSlices = 250;
-
-    for (let i = 0; i <= numSlices; i++) {
-      const u = (i % numSlices) / numSlices;
-      const s = u * 1500.0;
-      const { P, N, B } = this.getTrackFrame(u);
-
-      const inTunnel = (s >= 772 && s <= 1118);
-      const isRock = (s >= 730 && s <= 780) || (s >= 1110 && s <= 1150);
-
-      const pFarL = P.clone().addScaledVector(N, -70).addScaledVector(B, -6.0);
-      const pMidL = P.clone().addScaledVector(N, -16).addScaledVector(B, -2.0);
-      const pBedL = P.clone().addScaledVector(N, -6.4).addScaledVector(B, -0.35);
-      const pBedR = P.clone().addScaledVector(N, 2.4).addScaledVector(B, -0.35);
-      const pMidR = P.clone().addScaledVector(N, 12).addScaledVector(B, -2.0);
-      const pFarR = P.clone().addScaledVector(N, 70).addScaledVector(B, -6.0);
-
-      const row = [pFarL, pMidL, pBedL, pBedR, pMidR, pFarR];
-      for (let j = 0; j < 6; j++) {
-        terrPositions.push(row[j].x, row[j].y, row[j].z);
-        if (isRock) {
-          terrColors.push(0.36, 0.34, 0.32);
-        } else {
-          terrColors.push(0.24, 0.40, 0.20);
-        }
-      }
-
-      if (i < numSlices && !inTunnel) {
-        const r1 = i * 6;
-        const r2 = (i + 1) * 6;
-        for (let j = 0; j < 5; j++) {
-          terrIndices.push(r1 + j, r1 + j + 1, r2 + j + 1);
-          terrIndices.push(r1 + j, r2 + j + 1, r2 + j);
-        }
-      }
-    }
-
-    const terrGeo = new THREE.BufferGeometry();
-    terrGeo.setAttribute('position', new THREE.Float32BufferAttribute(terrPositions, 3));
-    terrGeo.setAttribute('color', new THREE.Float32BufferAttribute(terrColors, 3));
-    terrGeo.setIndex(terrIndices);
-    terrGeo.computeVertexNormals();
-
-    const terrMat = new THREE.MeshStandardMaterial({
-      vertexColors: true,
-      roughness: 0.95
-    });
-    this.terrainMesh = new THREE.Mesh(terrGeo, terrMat);
-    this.scene.add(this.terrainMesh);
-
-    const numTrees = 400;
-    const trunkGeo = new THREE.CylinderGeometry(0.3, 0.45, 3.5, 6);
-    const foliageGeo = new THREE.ConeGeometry(2.4, 5.2, 7);
-    foliageGeo.translate(0, 4.2, 0);
-
-    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x423020, roughness: 0.9 });
-    const foliageMat = new THREE.MeshStandardMaterial({ color: 0x274a21, roughness: 0.85 });
-
-    const trunkMesh = new THREE.InstancedMesh(trunkGeo, trunkMat, numTrees);
-    const foliageMesh = new THREE.InstancedMesh(foliageGeo, foliageMat, numTrees);
-
-    const tm = new THREE.Matrix4();
-
-    for (let k = 0; k < numTrees; k++) {
-      const u = (k / numTrees) + (Math.sin(k * 13.7) * 0.005);
-      const s = (((u % 1.0) + 1.0) % 1.0) * 1500.0;
-
-      if (s >= 755 && s <= 1130) {
-        tm.makeScale(0, 0, 0);
-        trunkMesh.setMatrixAt(k, tm);
-        foliageMesh.setMatrixAt(k, tm);
-        continue;
-      }
-
-      const { P, N, B } = this.getTrackFrame(u);
-      const side = (k % 2 === 0) ? 1 : -1;
-      const distOffset = side * (7.0 + (Math.abs(Math.sin(k * 7.91)) * 40.0));
-      const treePos = P.clone().addScaledVector(N, distOffset).addScaledVector(B, -1.2);
-
-      const sc = 0.75 + Math.abs(Math.sin(k * 3.3)) * 0.55;
-      tm.makeScale(sc, sc, sc);
-      tm.setPosition(treePos);
-      trunkMesh.setMatrixAt(k, tm);
-      foliageMesh.setMatrixAt(k, tm);
-    }
-
-    trunkMesh.instanceMatrix.needsUpdate = true;
-    foliageMesh.instanceMatrix.needsUpdate = true;
-    this.treesGroup = new THREE.Group();
-    this.treesGroup.add(trunkMesh);
-    this.treesGroup.add(foliageMesh);
-    this.scene.add(this.treesGroup);
-  },
-
-  update(trainDist, speed, dt, roll, pitch, shakeX, shakeY, headlightPower, isDoorOpen, tun, st) {
-    if (!this.active || !this.trackCurve) return;
-
-    if (st && st.name && st.name !== this.lastStationName) {
-      this.lastStationName = st.name;
-      this.updateStationSignTexture(st.id, st.name, st.eng);
-    }
-
-    // 터널 및 고가교 환경 요소 적응형 가시성 제어
-    if (tun) {
-      // 터널 내부에 있을 때는 나무, 지형, 고가교를 100% 숨겨서 터널 안에 나무가 보이는 현상을 완벽 방지!
-      const isInsideTunnel = tun.inside || tun.mode === 'TUNNEL_TUNNEL';
-
-      if (isInsideTunnel) {
-        if (this.viaductGroup) this.viaductGroup.visible = false;
-        if (this.tunnelGroup) this.tunnelGroup.visible = true;
-        if (this.portalEntryGroup) this.portalEntryGroup.visible = (tun.mode === 'GROUND_TO_TUNNEL');
-        if (this.portalExitGroup) this.portalExitGroup.visible = (tun.mode === 'TUNNEL_TO_GROUND');
-        if (this.terrainMesh) this.terrainMesh.visible = false;
-        if (this.treesGroup) this.treesGroup.visible = false;
-      } else {
-        // 지상 구간에서는 고가교 난간, 상판, 지형, 수목 표시
-        if (this.viaductGroup) this.viaductGroup.visible = true;
-        if (this.tunnelGroup) this.tunnelGroup.visible = (tun.mode === 'GROUND_TO_TUNNEL' && tun.entry < 200.0);
-        if (this.portalEntryGroup) this.portalEntryGroup.visible = (tun.mode === 'GROUND_TO_TUNNEL');
-        if (this.portalExitGroup) this.portalExitGroup.visible = (tun.mode === 'TUNNEL_TO_GROUND');
-        if (this.terrainMesh) this.terrainMesh.visible = true;
-        if (this.treesGroup) this.treesGroup.visible = true;
-      }
-    }
-
-    const isStationUnderground = (st && st.type === 'TUNNEL');
-    if (this.stationVaultGroup) this.stationVaultGroup.visible = isStationUnderground;
-    if (this.stationCanopyGroup) this.stationCanopyGroup.visible = !isStationUnderground;
-
-    const u = ((trainDist % 1500.0) + 1500.0) % 1500.0 / 1500.0;
-    const { P, T, N, B } = this.getTrackFrame(u);
-
-    const lookU = ((u + (28.0 / 1500.0)) % 1.0 + 1.0) % 1.0;
-    const lookP = this.trackCurve.getPointAt(lookU);
-
-    const eyePos = P.clone().addScaledVector(B, 1.85).addScaledVector(N, -0.22);
-    eyePos.addScaledVector(N, shakeX * 0.0035);
-    eyePos.addScaledVector(B, shakeY * 0.0035);
-    this.camera.position.copy(eyePos);
-
-    const pitchOffset = (pitch || 0) * 0.008;
-    const lookTarget = lookP.clone().addScaledVector(B, 1.85 + pitchOffset);
-    this.camera.lookAt(lookTarget);
-
-    if (roll) {
-      this.camera.rotateZ(roll * 0.85);
-    }
-
-    // 전조등 (Headlight)
-    const nosePos = eyePos.clone().addScaledVector(T, 1.4).addScaledVector(B, -0.6);
-    this.headlight.position.copy(nosePos);
-    this.headlightTarget.position.copy(lookTarget);
-    const hlMult = (tun && tun.inside) ? 4.5 : 3.0;
-    this.headlight.intensity = headlightPower * hlMult;
-
-    // 터널 내부 환경 전환 (Daylight <-> Tunnel Deep Darkness)
-    let tunBlend = 0.0;
-    if (tun && tun.inside) {
-      if (tun.exit < 35.0) {
-        tunBlend = Math.max(0.0, tun.exit / 35.0);
-      } else {
-        tunBlend = 1.0;
-      }
-    } else if (tun && tun.entry < 35.0) {
-      tunBlend = Math.max(0.0, (35.0 - tun.entry) / 35.0);
-    }
-
-    const dayBg = new THREE.Color(0x8cb8eb);
-    const tunBg = new THREE.Color(0x020305); // 터널 내부는 칠흑 같은 암전
-    this.scene.background.copy(dayBg).lerp(tunBg, tunBlend);
-    this.scene.fog.color.copy(this.scene.background);
-    this.scene.fog.density = 0.0022 + tunBlend * 0.022;
-
-    this.dirLight.intensity = (1.0 - tunBlend) * 1.25;
-    this.hemiLight.intensity = 0.60 - tunBlend * 0.56;
-
-    // 터널 동적 천장 조명
-    if (tun && tun.inside) {
-      for (let i = 0; i < this.tunnelLights.length; i++) {
-        const offset = (i - 1.5) * 14.0;
-        const lightU = (((trainDist + offset) % 1500.0) + 1500.0) % 1500.0 / 1500.0;
-        const lFrame = this.getTrackFrame(lightU);
-        this.tunnelLights[i].position.copy(lFrame.P).addScaledVector(lFrame.B, 4.8);
-        this.tunnelLights[i].intensity = 2.0;
-      }
-    } else {
-      for (let i = 0; i < this.tunnelLights.length; i++) {
-        this.tunnelLights[i].intensity = 0.0;
-      }
-    }
-
-    // 전구간 PSD 개폐 애니메이션 (출입문 상태와 100% 동기화)
-    if (isDoorOpen) {
-      this.psdOpenProgress = Math.min(1.0, this.psdOpenProgress + dt * 0.7);
-    } else {
-      this.psdOpenProgress = Math.max(0.0, this.psdOpenProgress - dt * 0.7);
-    }
-
-    if (this.psdDoors && this.psdDoors.length > 0) {
-      const openDist = this.psdOpenProgress * 0.48;
-      for (let i = 0; i < this.psdDoors.length; i++) {
-        const d = this.psdDoors[i];
-        d.doorL.position.copy(d.baseL).addScaledVector(d.tangent, -openDist);
-        d.doorR.position.copy(d.baseR).addScaledVector(d.tangent, openDist);
-      }
-    }
-
-    this.renderer.render(this.scene, this.camera);
-  }
-};
 
 function drawCabViewLoop() {
   const now = performance.now();
   const dt = Math.min(0.1, (now - (cvState.lastFrame || now)) / 1000);
   cvState.lastFrame = now;
-
-  cvBuildTrack(trainDistance);
+  cvState.slope = cvGradeAt(trainDistance);      // 구배 (동역학·안내 표시용)
   updateTrainPhysics();
-  cvUpdateWiper(dt);
 
+  /* 3D 전면 전망 (js/cabview3d.js): 위치·속도·기상·와이퍼만 전달 */
+  if (window.CabView3D) {
+    window.CabView3D.update({
+      s: trainDistance,
+      v: trainSpeed / 3.6,
+      rain: cvState.rain,
+      wiper: cvCompState('SW_WIPER', 'OFF'),
+      doorsOpen: isDoorOpen
+    });
+  }
+
+  /* 상단 2D 캔버스: 운행 안내 OSD만 표시 (투명 오버레이) */
   const canvas = document.getElementById('cab-view-canvas');
-  if (!canvas) { requestAnimationFrame(drawCabViewLoop); return; }
-  if (!cvState.ctx || cvState.canvas !== canvas) { cvState.ctx = canvas.getContext('2d'); cvState.canvas = canvas; }
-  cvState.frame++;
-  if ((cvState.frame % 12) === 0) cvState.visible = !!canvas.offsetParent;
-  if (!cvState.visible) { requestAnimationFrame(drawCabViewLoop); return; }
-
-  const ctx = cvState.ctx;
-  cvPrepareAssets();
-
-  // Three.js 3D Cab View 초기화 시도
-  if (!ThreeCabView.initialized && typeof THREE !== 'undefined') {
-    ThreeCabView.init();
+  if (canvas) {
+    if (!cvState.ctx || cvState.canvas !== canvas) { cvState.ctx = canvas.getContext('2d'); cvState.canvas = canvas; }
+    cvState.frame++;
+    if ((cvState.frame % 12) === 0) cvState.visible = !!canvas.offsetParent;
+    if (cvState.visible) {
+      const ctx = cvState.ctx;
+      ctx.clearRect(0, 0, CV.W, CV.H);
+      cvDrawOverlayInfo(ctx, cvStationInfo(trainDistance), cvTunnelInfo(trainDistance));
+    }
   }
-
-  const s = trainDistance;
-  const tun = cvTunnelInfo(s);
-  const st = cvStationInfo(s);
-
-  // 터널 내부에서는 전면창 빗방울 정지
-  if (tun.inside) {
-    cvState.rain = Math.max(0, cvState.rain - dt * 2.0);
-  }
-
-  /* 조명 상태 */
-  const hl = cvCompState('SW_HEADLIGHT', 'OFF');
-  const headlightPower = (hl === 'HIGH') ? 1.0 : (hl === 'LOW' || hl === 'AUTO' || hl === 'REMOTE') ? 0.62 : 0.0;
-
-  if (ThreeCabView.active) {
-    // ==========================================
-    // 🚅 3D WebGL 현실적 운전실 뷰 (Three.js 기반)
-    // ==========================================
-    ThreeCabView.update(
-      trainDistance,
-      trainSpeed,
-      dt,
-      cvState.roll,
-      cvState.pitch,
-      cvState.shakeX,
-      cvState.shakeY,
-      headlightPower,
-      isDoorOpen,
-      tun,
-      st
-    );
-
-    // 상단 2D 캔버스는 투명하게 지워 Three.js 3D 화면이 뒤에서 비치도록 함
-    ctx.clearRect(0, 0, CV.W, CV.H);
-
-    if (cvState.ready) {
-      /* ---- 유리면 / 비 / 오버레이 (창 개구부 안쪽만) ---- */
-      ctx.save();
-      ctx.clip(CV_WIN);
-      cvDrawGlass(ctx);
-      cvUpdateRain(ctx, dt);
-      cvDrawOverlayInfo(ctx, st, tun);
-      cvDrawWiper(ctx);
-      ctx.restore();
-
-      /* ---- 운전실 실물 콕핏 전경 오버레이(고정) ---- */
-      ctx.drawImage(CV_FRAME, 0, 0);
-    }
-  } else {
-    // ==========================================
-    // 2D 폴백 모드 (Three.js 비활성 시)
-    // ==========================================
-    ctx.clearRect(0, 0, CV.W, CV.H);
-    ctx.fillStyle = '#0b0e13';
-    ctx.fillRect(0, 0, CV.W, CV.H);
-
-    if (!cvState.ready) { requestAnimationFrame(drawCabViewLoop); return; }
-
-    let ambient = 1.0;
-    if (tun.inside) ambient = 0.10 + 0.10 * Math.max(0, 1 - Math.min(tun.exit, 60) / 60);
-    else if (!tun.inside && tun.entry < 30) ambient = 1 - 0.55 * (1 - tun.entry / 30);
-    ambient *= (1 - cvState.rain * 0.28);
-    cvState.ambient = ambient;
-
-    ctx.save();
-    ctx.translate(CV.vpX, 300);
-    ctx.rotate(cvState.roll);
-    ctx.translate(-CV.vpX + cvState.shakeX, -300 + cvState.shakeY + cvState.pitch);
-
-    if (tun.inside) {
-      cvDrawTunnel(ctx, tun, headlightPower);
-      cvDrawBallastAndTrack(ctx, 2.2, Math.max(20, Math.min(tun.exit + 25, 110)));
-    } else {
-      cvDrawBackdrop(ctx);
-      cvDrawGround(ctx);
-      cvDrawFarScenery(ctx, s);
-      cvDrawBallastAndTrack(ctx, 2.2, 200);
-      if (st.dStart < 170 && st.dEnd > 0) cvDrawStation(ctx, st);
-      cvDrawNearScenery(ctx, s);
-      if (tun.entry < 120) {
-        const dp = Math.max(2.5, tun.entry);
-        cvArch(ctx, dp, 3.35);
-        ctx.fillStyle = '#5c5f63'; ctx.fill();
-        cvArch(ctx, dp, 2.95);
-        ctx.fillStyle = '#080a0d'; ctx.fill();
-      }
-    }
-
-    if (ambient < 0.62) {
-      ctx.fillStyle = 'rgba(6,10,18,' + (1 - ambient) * 0.88 + ')';
-      ctx.fillRect(-60, -60, CV.W + 120, CV.H + 120);
-      cvDrawHeadlight(ctx, headlightPower, tun.inside ? 26 : 34);
-    }
-    ctx.restore();
-
-    if (trainSpeed > 22) {
-      const amt = Math.min(0.030, (trainSpeed - 22) * 0.0009);
-      ctx.save();
-      ctx.globalAlpha = 0.26;
-      for (let i = 1; i <= 2; i++) {
-        const sc = 1 + amt * i;
-        ctx.drawImage(canvas, CV.vpX * (1 - sc), CV.horizon * (1 - sc), CV.W * sc, CV.H * sc);
-      }
-      ctx.restore();
-    }
-
-    ctx.save();
-    ctx.clip(CV_WIN);
-    cvDrawGlass(ctx);
-    cvUpdateRain(ctx, dt);
-    cvDrawOverlayInfo(ctx, st, tun);
-    cvDrawWiper(ctx);
-    ctx.restore();
-
-    ctx.drawImage(CV_FRAME, 0, 0);
-  }
-
   requestAnimationFrame(drawCabViewLoop);
 }
 
 /* ---------------------------------------------------------------------------
    10. 초기화 / 리셋
 --------------------------------------------------------------------------- */
-const cabImg = new Image();
-let cabImgLoaded = false;
-cabImg.onload = () => { cabImgLoaded = true; };
-cabImg.onerror = () => { cabImgLoaded = false; };
-cabImg.src = 'cab_view.png';
 
 function resetCabView() {
-  trainSpeed = 0; trainDistance = 0; trainTargetSpeed = 0; trainAccelRate = 0;
+  trainSpeed = 0; trainDistance = IC2.STN[0].stop; trainTargetSpeed = 0; trainAccelRate = 0;
   cvState.drops.length = 0;
   cvState.headingDrift = 0; cvState.roll = 0; cvState.rain = 0;
   cvState.wiperAngle = 0; cvState.wiperTimer = 0; cvState.lastClack = 0;
@@ -11636,7 +9541,7 @@ function resetCabView() {
    종착역(운연역) 회차 및 역 위치 이동 제어
 --------------------------------------------------------------------------- */
 function returnToFirstStation() {
-  trainDistance = 0.0;
+  trainDistance = IC2.STN[0].stop;
   trainSpeed = 0.0;
   trainTargetSpeed = 0.0;
   trainAccelRate = 0.0;
@@ -11644,9 +9549,9 @@ function returnToFirstStation() {
     setUnmannedMode(false);
   }
   if (typeof AtoDriverless !== 'undefined') {
-    AtoDriverless.reset(0.0);
+    AtoDriverless.reset(IC2.STN[0].stop);
     AtoDriverless.stationIdx = 0;
-    AtoDriverless.targetStopDist = 305.0;
+    AtoDriverless.targetStopDist = IC2.STN[0].stop;
     AtoDriverless.state = 'STOPPED';
     AtoDriverless.stateTimer = 1.0;
     AtoDriverless.isHoldingBrake = true;
@@ -11681,8 +9586,7 @@ window.jumpToStation = function(target, directStop = false) {
   if (idx < 0 || idx >= INCHEON2_STATIONS.length) return false;
 
   const st = INCHEON2_STATIONS[idx];
-  const CYCLE = 1500.0;
-  const targetStop = idx * CYCLE + 305.0;
+  const targetStop = IC2.STN[idx].stop;
 
   // 역 이동 시 항상 무인운전(ATO) 활성화 및 운전모드 OFF 유지하여 역 정차 보장
   if (typeof setUnmannedMode === 'function') {
@@ -13398,6 +11302,8 @@ function handleComponentTouch(compId) {
     }
 
     // 공압 배기음은 오직 주차제동체결 / 주차제동완해에만 들림 (1.0초)
+    if (compId === 'SW_PARK_SET') window.__PARK_BRAKE_SET = true;
+    if (compId === 'SW_PARK_REL') window.__PARK_BRAKE_SET = false;
     if (compId === 'SW_PARK_SET') {
       // 주차제동체결: 스프링 챔버 공기가 1초간 빠지며 강력 체결 (묵직한 칙~~~~)
       sound.playAirExhaust(1.0, 950, 0.75);
@@ -15067,6 +12973,7 @@ function previewScenarioInfo() {
   if (!descEl) return;
 
   if (val === '__FREE_MODE__') {
+    fillStartStationSelect('');
     descEl.innerHTML = `
       <b>설명:</b> 특정 시나리오 절차 없이 모든 조작반의 스위치, 레버, 키, 게이지를 자유롭게 조작하며 인터록 논리와 물리 반응을 점검하는 자유 테스트 모드입니다.<br>
       <b>오조작 감점:</b> 없음 (완전 자유 조작)
@@ -15076,6 +12983,7 @@ function previewScenarioInfo() {
 
   const sc = getScenarioById(val);
   if (sc) {
+    fillStartStationSelect(sc.startStation || '');
     descEl.innerHTML = `
       <b>설명:</b> ${sc.description || '설명 없음'}<br>
       <b>총 단계:</b> ${sc.steps.length}단계 구성
@@ -15116,11 +13024,53 @@ function loadSelectedScenario() {
 function applyScenario(sc) {
   currentScenario = sc;
   resetCurrentScenario();
+  // 시나리오 시작 역: 모달에서 고른 역 > 시나리오에 저장된 역 > 현재 위치 유지
+  const selSt = document.getElementById('scenario-start-station');
+  const startId = (selSt && selSt.value) || (sc && sc.startStation) || '';
+  if (startId) placeTrainAtStation(startId);
 }
 
+/* 시작 역 선택 목록 채우기 */
+function fillStartStationSelect(selectedId) {
+  const sel = document.getElementById('scenario-start-station');
+  if (!sel) return;
+  if (!sel.options.length) {
+    sel.add(new Option('현재 위치 유지', ''));
+    IC2.STN.forEach(st => sel.add(new Option(`${st.id} ${st.name}${st.type === 'under' ? ' (지하)' : ' (지상)'}`, st.id)));
+  }
+  sel.value = selectedId || '';
+}
+
+/* 지정 역 정차점에 정차 상태로 배치 (운전 모드는 바꾸지 않음) */
+function placeTrainAtStation(target) {
+  const idx = IC2.STN.findIndex(st => st.id === target || st.name === target);
+  if (idx < 0) return false;
+  trainDistance = IC2.STN[idx].stop;
+  trainSpeed = 0.0; trainTargetSpeed = 0.0; trainAccelRate = 0.0;
+  if (typeof AtoDriverless !== 'undefined') {
+    AtoDriverless.reset(trainDistance);
+    AtoDriverless.state = 'STOPPED';
+    AtoDriverless.stationIdx = idx;
+    AtoDriverless.targetStopDist = trainDistance;
+    AtoDriverless.stateTimer = 0.8;
+    AtoDriverless.isHoldingBrake = true;
+  }
+  if (typeof updateGaugeUI === 'function') updateGaugeUI(2.0);
+  const cabBtn = document.getElementById('btn-cab-return-first');
+  if (cabBtn) cabBtn.classList.remove('visible');
+  if (typeof showTemporaryHudFeedback === 'function') {
+    showTemporaryHudFeedback(`📍 ${IC2.STN[idx].name}역 정차 위치에서 시작합니다. (정차제동 HB 2.0 Bar)`, false);
+  }
+  return true;
+}
+window.placeTrainAtStation = placeTrainAtStation;
+
 function exportScenarioJSON() {
-  const sc = getScenarioById(document.getElementById('scenario-selector').value);
-  if (!sc) return;
+  const sc0 = getScenarioById(document.getElementById('scenario-selector').value);
+  if (!sc0) return;
+  const startSel = document.getElementById('scenario-start-station');
+  const sc = { ...sc0 };
+  if (startSel && startSel.value) sc.startStation = startSel.value;
   const jsonStr = JSON.stringify(sc, null, 2);
   navigator.clipboard.writeText(jsonStr).then(() => {
     alert("📋 시나리오 JSON 데이터가 클립보드에 복사되었습니다!");
@@ -15156,6 +13106,7 @@ function closeModal(id) {
 }
 function openScenarioModal() {
   loadScenarioListUI();
+  fillStartStationSelect('');
   openModal('modal-scenario-list');
 }
 
@@ -15176,6 +13127,8 @@ function switchRightOp(opId) {
   opId = opId.toUpperCase();
   const validPanels = ['OP1', 'OP2', 'OP3', 'OP4', 'OP5', 'OCC'];
   if (!validPanels.includes(opId)) return;
+  // OP1(주간제어기·방송·출입문)은 콘솔에 상시 표시 → 좌측 패널 전환 대상 아님
+  if (opId === 'OP1') { mountConsoleOp1(); return; }
 
   // 연동되지 않았거나 교관 모드가 아닌 경우 OCC 패널 접근 방지
   if (opId === 'OCC' && (!TrainRemote.isConnected || TrainRemote.role !== 'INSTRUCTOR')) {
@@ -15196,7 +13149,7 @@ function switchRightOp(opId) {
 
   validPanels.forEach(p => {
     const el = document.getElementById(`panel-${p.toLowerCase()}`);
-    if (!el) return;
+    if (!el || p === 'OP1') return;
     if (p === opId) {
       el.style.display = 'block';
       if (el.parentElement !== rightCol) {
@@ -15217,56 +13170,81 @@ function switchRightOp(opId) {
 }
 
 // DU / ADU 반응형 자동 스케일러 (어떤 해상도에서도 화면에 꽉 맞게 비례 축소/확대)
+/* OP1을 ADU 오른쪽 콘솔 칸에 고정하고, 칸 크기에 맞춰 비율 유지 확대/축소 */
+function mountConsoleOp1() {
+  const slot = document.getElementById('console-op1');
+  const el = document.getElementById('panel-op1');
+  if (!slot || !el) return;
+  if (el.parentElement !== slot) slot.appendChild(el);
+  el.style.display = 'block';
+  fitConsoleOp1();
+}
+function fitConsoleOp1() {
+  const slot = document.getElementById('console-op1');
+  const el = document.getElementById('panel-op1');
+  if (!slot || !el || el.parentElement !== slot) return;
+  el.style.transform = 'none';
+  const sw = slot.clientWidth, sh = slot.clientHeight;
+  if (!sw || !sh) return;
+  // 내용 폭을 칸의 가로세로 비율에 맞춰 몇 번 조정 → 확대 후 좌우/상하 여백이 최소가 되도록
+  let width = 440;
+  for (let i = 0; i < 4; i++) {
+    el.style.width = width + 'px';
+    if (typeof updateMasconScalers === 'function') updateMasconScalers();
+    const next = Math.round(Math.max(380, Math.min(640, sw * el.offsetHeight / sh)));
+    if (Math.abs(next - width) < 4) break;
+    width = next;
+  }
+  const cw = el.offsetWidth, ch = el.offsetHeight;
+  if (!cw || !ch) return;
+  const s = Math.min(sw / cw, sh / ch);
+  el.style.transform = `translate(${Math.max(0, (sw - cw * s) / 2)}px, ${Math.max(0, (sh - ch * s) / 2)}px) scale(${s})`;
+}
+
 function updateMmiScalers() {
   const duScreen = document.querySelector('.sim-du-box .du-screen');
   const aduScreen = document.querySelector('.sim-adu-box .adu-screen');
   const duWrap = document.querySelector('.sim-du-box .du2-tcms-wrapper');
   const aduWrap = document.querySelector('.sim-adu-box .adu2-mmi-wrapper');
 
-  if (duScreen && duWrap) {
-    const sw = duScreen.clientWidth;
-    const sh = duScreen.clientHeight;
-    if (sw > 0 && sh > 0) {
-      const s = Math.min(sw / 528, sh / 400);
-      duWrap.style.transform = `scale(${s})`;
-      duWrap.style.width = '522px';
-    }
-  }
-  if (aduScreen && aduWrap) {
-    const sw = aduScreen.clientWidth;
-    const sh = aduScreen.clientHeight;
-    if (sw > 0 && sh > 0) {
-      const s = Math.min(sw / 528, sh / 400);
-      aduWrap.style.transform = `scale(${s})`;
-      aduWrap.style.width = '522px';
-    }
-  }
+  // DU·ADU는 같은 크기의 모니터 → 두 화면 중 큰 내용 높이 기준으로 같은 배율, 가운데 정렬
+  if (duWrap) duWrap.style.width = '522px';
+  if (aduWrap) aduWrap.style.width = '522px';
+  const cw = 522, chMax = Math.max(duWrap ? duWrap.offsetHeight : 0, aduWrap ? aduWrap.offsetHeight : 0, 300);
+  const fit = (screen, wrap) => {
+    if (!screen || !wrap) return;
+    const sw = screen.clientWidth, sh = screen.clientHeight;
+    if (sw <= 0 || sh <= 0) return;
+    const s = Math.min(sw / cw, sh / chMax), ch = wrap.offsetHeight;
+    const ox = Math.max(0, (sw - cw * s) / 2), oy = Math.max(0, (sh - ch * s) / 2);
+    wrap.style.transform = `translate(${ox}px, ${oy}px) scale(${s})`;
+  };
+  fit(duScreen, duWrap);
+  fit(aduScreen, aduWrap);
+  fitConsoleOp1();
 }
 
 // 윈도우 리사이즈 및 초기화 연동
 window.addEventListener('resize', () => {
   updateMmiScalers();
-  if (typeof ThreeCabView !== 'undefined' && ThreeCabView.active) {
-    ThreeCabView.onResize();
-  }
+  if (window.CabView3D) window.CabView3D.resize();
 });
 
-// 초기 구동 시 OP4 활성화 및 스케일러 적용
+// 초기 구동: OP1 콘솔 고정, 좌측 패널은 OP2(실물 콘솔 좌측 표시등·스위치판), 스케일러 적용
 window.addEventListener('DOMContentLoaded', () => {
+  mountConsoleOp1();
+  switchRightOp('OP2');
   updateMmiScalers();
-  if (typeof ThreeCabView !== 'undefined' && ThreeCabView.active) {
-    ThreeCabView.onResize();
-  }
+  if (window.CabView3D) window.CabView3D.resize();
 });
 setTimeout(() => {
   updateMmiScalers();
-  if (typeof ThreeCabView !== 'undefined' && ThreeCabView.active) {
-    ThreeCabView.onResize();
-  }
+  if (window.CabView3D) window.CabView3D.resize();
 }, 300);
 
 </script>
 
 
+<script type="module" src="js/cabview3d.js"></script>
 </body>
 </html>
