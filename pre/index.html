@@ -4994,7 +4994,7 @@
        └ 높이) ┴──────┴───────┴──────────┘ */
     .sim-workstation-layout {
       display: grid !important;
-      grid-template-columns: 21% 25% 33% 21% !important;
+      grid-template-columns: 17.85% 29% 29% 24.15% !important;   /* 좌측 패널 15% 축소분 → OP1 */
       grid-template-rows: 50% 50% !important;
       grid-template-areas: "side cab cab cab" "side du adu op1" !important;
     }
@@ -5023,6 +5023,24 @@
     }
     .console-op1 .op1-bottom-row { display: flex !important; flex-direction: column !important; gap: 8px !important; width: 100% !important; }
     .console-op1 .op1-bottom-left-col, .console-op1 .op1-bottom-right-col { width: 100% !important; }
+
+    /* DU 화면을 ADU와 같은 모니터 비율로: 우측 설명 칸을 넓혀 줄바꿈으로 행이 길어지지 않게,
+       중앙 ESK 칸은 좁히고 두 줄 표기, 값 박스 여백 축소 */
+    .sim-du-box .du2-trow { grid-template-columns: 76px 100px 70px 100px 1fr !important; min-height: 21px !important; }
+    .sim-du-box .du2-tr-side { padding: 1px 4px !important; font-size: 9px !important; }
+    .sim-du-box .du2-tr-side > div { white-space: nowrap; }
+    .sim-du-box .du2-esk-box-label { white-space: normal !important; text-align: center; line-height: 1.15; padding: 1px 3px !important; }
+    .sim-du-box .du2-val-box { padding: 0 4px !important; line-height: 1.15 !important; width: 56px !important; }
+    .sim-du-box .du2-tcol-eq { gap: 1px !important; padding: 1px 4px !important; }
+    .sim-du-box .du2-th { padding: 2px 5px !important; }
+    .sim-du-box .du2-v-track { height: 30px !important; }
+    .sim-du-box .du2-top-header { padding: 1px 4px 2px 4px !important; }
+    .sim-du-box .du2-header-title { font-size: 21px !important; }
+    .sim-du-box .du2-sub-bar { padding: 1px 4px !important; }
+    .sim-du-box .du2-cars-row { padding: 1px 0 !important; }
+    .sim-du-box .du2-car-capsule { height: 36px !important; }
+    .sim-du-box .du2-msg-bar { padding: 2px 8px !important; }
+    .sim-du-box .du2-soft-btn { padding: 4px 4px !important; }
 
     /* 화면 자체가 잘 보이도록 DU/ADU 제목줄(베젤 헤더) 제거, 테두리 최소화 */
     .sim-mmi-box .mmi-bezel-header { display: none !important; }
@@ -5452,7 +5470,7 @@
                     <div class="du2-tcol-center">
                       <div class="du2-esk-bridge-unit">
                         <span class="du2-esk-wire-line"></span>
-                        <span class="du2-esk-box-label">연장급전기(ESK)</span>
+                        <span class="du2-esk-box-label">연장급전기<br>(ESK)</span>
                         <span class="du2-esk-wire-line"></span>
                       </div>
                     </div>
@@ -8412,6 +8430,13 @@ function resetRmEmergencyBrake() {
   showTemporaryHudFeedback('ℹ️ [RM 비상제동 완해] 비상제동이 정상 해제되었습니다.', false);
 }
 
+/* ADU 제한속도 (km/h): RM 15 / 그 외 노선 설계속도를 ATP 단계(45·60·80)로 표시 */
+function aduSpeedLimit(driveMode) {
+  if (driveMode === 'RM') return 15;
+  const design = IC2.curLimit(trainDistance) * 3.6;
+  return design <= 45.5 ? 45 : design <= 60.5 ? 60 : 80;
+}
+
 function drawAduSpeedoGauge(speed, driveMode) {
   try {
     const canvas = document.getElementById('adu2-speedo-canvas');
@@ -8436,39 +8461,21 @@ function drawAduSpeedoGauge(speed, driveMode) {
       return startDeg + (clamped / 120) * totalDeg;
     }
 
-    // 1. Outer Arc Bands (Yellow, White, Red)
-    let targetLimit = 15;
-    let maxPermitted = 17;
-    if (driveMode === 'FM') {
-      targetLimit = 75;
-      maxPermitted = 80;
-    } else if (driveMode === 'ATPM') {
-      targetLimit = 65;
-      maxPermitted = 70;
-    }
-
-    // Yellow band (0 to targetLimit / civil speed)
-    const yellowEndDeg = speedToDeg(targetLimit);
+    // 1. 제한속도 표시 (흰색 호: 0 ~ 현재 제한속도)
+    //    RM: 15km/h 고정 / 무인·FM·ATPM: 노선 구간 제한 (45·60 구간 외 80)
+    const limit = aduSpeedLimit(driveMode);
+    const over = speed > limit + 0.5;
     ctx.beginPath();
-    ctx.arc(cx, cy, r + 4, toRad(startDeg), toRad(yellowEndDeg));
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = '#ffff00';
-    ctx.stroke();
-
-    // White band (targetLimit to maxPermitted)
-    const whiteEndDeg = speedToDeg(maxPermitted);
-    ctx.beginPath();
-    ctx.arc(cx, cy, r + 6, toRad(yellowEndDeg), toRad(whiteEndDeg));
-    ctx.lineWidth = 10;
+    ctx.arc(cx, cy, r + 5, toRad(startDeg), toRad(speedToDeg(limit)));
+    ctx.lineWidth = 8;
     ctx.strokeStyle = '#ffffff';
     ctx.stroke();
-
-    // Red band (maxPermitted to overspeed ceiling)
-    const redEndDeg = speedToDeg(Math.min(120, maxPermitted + 12));
+    // 제한속도 끝 표시 눈금
+    const ldeg = toRad(speedToDeg(limit));
     ctx.beginPath();
-    ctx.arc(cx, cy, r + 6, toRad(whiteEndDeg), toRad(redEndDeg));
-    ctx.lineWidth = 10;
-    ctx.strokeStyle = '#ff0000';
+    ctx.moveTo(cx + (r + 1) * Math.cos(ldeg), cy + (r + 1) * Math.sin(ldeg));
+    ctx.lineTo(cx + (r + 11) * Math.cos(ldeg), cy + (r + 11) * Math.sin(ldeg));
+    ctx.lineWidth = 3;
     ctx.stroke();
 
     // 2. Ticks and Labels (0 to 120 km/h)
@@ -8517,8 +8524,8 @@ function drawAduSpeedoGauge(speed, driveMode) {
     ctx.lineTo(r - 4, 0);
     ctx.lineTo(0, 3.5);
     ctx.closePath();
-    ctx.fillStyle = '#ff0000';
-    ctx.shadowColor = 'rgba(255, 0, 0, 0.6)';
+    ctx.fillStyle = over ? '#ff0000' : '#ffffff';           // 제한속도 초과 시 적색
+    ctx.shadowColor = over ? 'rgba(255, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.35)';
     ctx.shadowBlur = 4;
     ctx.fill();
     ctx.restore();
@@ -8527,7 +8534,7 @@ function drawAduSpeedoGauge(speed, driveMode) {
     const hubRadius = 24;
     ctx.beginPath();
     ctx.arc(cx, cy, hubRadius, 0, Math.PI * 2);
-    ctx.fillStyle = '#ff0000';
+    ctx.fillStyle = over ? '#ff0000' : '#ffffff';
     ctx.fill();
 
     // Digital Speed inside hub (Black bold text)
@@ -8924,13 +8931,14 @@ function updateDuAduDisplay(driveMode, notch, now) {
     if (atpDirEl) atpDirEl.innerText = (revNotch === 'R' ? 'Reverse' : 'Forward');
 
     // Target Point Bar & Distance
+    const tpDist = Math.max(0, Math.round(cvStationInfo(trainDistance).dStop));   // 다음 정차점까지
     const tpValEl = document.getElementById('adu2-tp-val');
-    if (tpValEl) tpValEl.innerText = `${distToStation} m`;
+    if (tpValEl) tpValEl.innerText = `${tpDist} m`;
 
     const tpBarEl = document.getElementById('adu2-tp-bar-fill');
     if (tpBarEl) {
       // 0 to 1000m scale
-      const barPct = Math.max(0, Math.min(100, (distToStation / 1000) * 100));
+      const barPct = Math.max(0, Math.min(100, (tpDist / 1000) * 100));
       tpBarEl.style.height = `${barPct.toFixed(1)}%`;
     }
 
@@ -13134,8 +13142,19 @@ function fitConsoleOp1() {
   const el = document.getElementById('panel-op1');
   if (!slot || !el || el.parentElement !== slot) return;
   el.style.transform = 'none';
-  const cw = el.offsetWidth, ch = el.offsetHeight, sw = slot.clientWidth, sh = slot.clientHeight;
-  if (!cw || !ch || !sw || !sh) return;
+  const sw = slot.clientWidth, sh = slot.clientHeight;
+  if (!sw || !sh) return;
+  // 내용 폭을 칸의 가로세로 비율에 맞춰 몇 번 조정 → 확대 후 좌우/상하 여백이 최소가 되도록
+  let width = 440;
+  for (let i = 0; i < 4; i++) {
+    el.style.width = width + 'px';
+    if (typeof updateMasconScalers === 'function') updateMasconScalers();
+    const next = Math.round(Math.max(380, Math.min(640, sw * el.offsetHeight / sh)));
+    if (Math.abs(next - width) < 4) break;
+    width = next;
+  }
+  const cw = el.offsetWidth, ch = el.offsetHeight;
+  if (!cw || !ch) return;
   const s = Math.min(sw / cw, sh / ch);
   el.style.transform = `translate(${Math.max(0, (sw - cw * s) / 2)}px, ${Math.max(0, (sh - ch * s) / 2)}px) scale(${s})`;
 }
@@ -13146,14 +13165,15 @@ function updateMmiScalers() {
   const duWrap = document.querySelector('.sim-du-box .du2-tcms-wrapper');
   const aduWrap = document.querySelector('.sim-adu-box .adu2-mmi-wrapper');
 
-  // 화면 내용(폭 522px, 높이는 실제 내용 기준)을 비율 유지한 채 최대 확대하고 가운데 정렬
+  // DU·ADU는 같은 크기의 모니터 → 두 화면 중 큰 내용 높이 기준으로 같은 배율, 가운데 정렬
+  if (duWrap) duWrap.style.width = '522px';
+  if (aduWrap) aduWrap.style.width = '522px';
+  const cw = 522, chMax = Math.max(duWrap ? duWrap.offsetHeight : 0, aduWrap ? aduWrap.offsetHeight : 0, 300);
   const fit = (screen, wrap) => {
     if (!screen || !wrap) return;
-    wrap.style.width = '522px';
     const sw = screen.clientWidth, sh = screen.clientHeight;
-    const cw = 522, ch = Math.max(wrap.offsetHeight, 300);
     if (sw <= 0 || sh <= 0) return;
-    const s = Math.min(sw / cw, sh / ch);
+    const s = Math.min(sw / cw, sh / chMax), ch = wrap.offsetHeight;
     const ox = Math.max(0, (sw - cw * s) / 2), oy = Math.max(0, (sh - ch * s) / 2);
     wrap.style.transform = `translate(${ox}px, ${oy}px) scale(${s})`;
   };
