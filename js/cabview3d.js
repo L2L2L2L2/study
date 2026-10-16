@@ -1412,7 +1412,7 @@ function segDist2(px, py, a, b) {
 }
 function updateRain(g, dt) {
   const k = (WIN.bot - WIN.top) / WIPER.ref, drops = glass.drops;
-  const outdoor = !isUnder(zc(train.s));
+  const outdoor = !sheltered(train.s);
   if (glass.rain > 0.02 && outdoor) {
     const spawn = glass.rain * 34 * dt * ((WIN.right - WIN.left) * (WIN.bot - WIN.top)) / (800 * 350 * k * k);
     let n = Math.floor(spawn) + (Math.random() < spawn % 1 ? 1 : 0);
@@ -1442,9 +1442,11 @@ function updateRain(g, dt) {
     }
   }
 }
+/* 비가 들이치지 않는 곳: 지하 구간 + 지붕 있는 고가역 승강장 */
+const sheltered = s => { const c = zc(s); return isUnder(c) || c === 1; };
 function drawGlassFx(dt) {
   if (!WIN) return;
-  const target = isUnder(zc(train.s)) ? 0 : clamp(+glass.rainOn || 0, 0, 1);   // 비 강도 0~1 (지하는 0)
+  const target = sheltered(train.s) ? 0 : clamp(+glass.rainOn || 0, 0, 1);   // 비 강도 0~1 (지하·고가역 지붕 아래는 0)
   glass.rain += (target - glass.rain) * Math.min(1, dt * 0.35);
   updateWiper(dt);
   fx.clearRect(0, 0, WIN.w, WIN.h);
