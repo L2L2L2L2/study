@@ -18,7 +18,7 @@ const rr = (a, b) => a + (b - a) * rnd();
 const reseed = n => { _seed = (Math.abs(Math.floor(n)) * 7919 + 104729) % 2147483646 + 1; };
 
 /* 외부(운전 로직)에서 받는 열차 상태 */
-const train = { s: SID['201'].stop, v: 0 };
+const train = { s: SID['201'].stop, v: 0, dir: 1 };   // dir: +1 하선(+u 선로, s 증가) / -1 상선(-u 선로, s 감소)
 /* 화면 구성: 3D(WebGL) / 전면창 효과(와이퍼·빗방울) / 운전실 창틀 */
 const STAGE = document.getElementById('cab3d-stage') || document.body;
 for (const id of ['c3d-gl', 'c3d-fx', 'c3d-cab']) {
@@ -686,6 +686,9 @@ function stationFeatures(st, a, b, under) {
   // 정차위치표지: 측면(PSD 부착, 흑색 바탕 백색 숫자) + 전면(선로 중앙, 백색 반사재 적색 숫자)
   if (st.stop + 0.6 >= a && st.stop + 0.6 < b) inst(G.stopR, under ? MAT.stopU : MAT.stopA, [{ s: st.stop + 0.6, u: 3.69, v: 2.6 }]);
   if (st.stop >= a && st.stop < b) inst(G.stopFront, MAT.stopFront, [{ s: st.stop, u: TRK, v: -0.30 }]);
+  // 상선 (반대편 선로, s 감소 방향 진행)
+  if (st.oppStop - 0.6 >= a && st.oppStop - 0.6 < b) inst(G.stopR, under ? MAT.stopU : MAT.stopA, [{ s: st.oppStop - 0.6, u: -3.69, v: 2.6, yaw: Math.PI }]);
+  if (st.oppStop >= a && st.oppStop < b) inst(G.stopFront, MAT.stopFront, [{ s: st.oppStop, u: -TRK, v: -0.30, yaw: Math.PI }]);
 }
 
 function buildStationA(a, b) {
@@ -936,7 +939,8 @@ function disposeChunk(ci) {
   scene.remove(g); chunks.delete(ci);
 }
 function updateChunks(s, budget) {
-  const c0 = Math.max(0, Math.floor((s - BEHIND - START) / CH)), c1 = Math.min(Math.floor((END - START) / CH), Math.floor((s + AHEAD - START) / CH));
+  const back = train.dir > 0 ? BEHIND : AHEAD, fwd = train.dir > 0 ? AHEAD : BEHIND;   // 진행방향으로 멀리
+  const c0 = Math.max(0, Math.floor((s - back - START) / CH)), c1 = Math.min(Math.floor((END - START) / CH), Math.floor((s + fwd - START) / CH));
   const cur = Math.floor((s - START) / CH);
   const want = []; for (let c = c0; c <= c1; c++) if (!chunks.has(c)) want.push(c);
   want.sort((x, y) => Math.abs(x - cur) - Math.abs(y - cur));
@@ -1166,15 +1170,15 @@ function drawGlassFx(dt) {
 const camPos = new THREE.Vector3(), camTgt = new THREE.Vector3(), up = new THREE.Vector3(), _d = new THREE.Vector3();
 let exposure = 1, inside = 0, time = 0;
 function updateCamera(dt) {
-  const s = train.s - 1.0, k = train.v / 22;
-  Wabs(s + 4, TRK, EYE, camTgt); Wabs(s - 9, TRK, EYE, _v);
+  const D = train.dir, uT = D * TRK, s = train.s - 1.0 * D, k = train.v / 22;
+  Wabs(s + 4 * D, uT, EYE, camTgt); Wabs(s - 9 * D, uT, EYE, _v);
   const dir = _d.copy(camTgt).sub(_v).normalize();
-  Wabs(s, TRK, EYE, camPos);
+  Wabs(s, uT, EYE, camPos);
   const bob = (Math.sin(time * 7.1) * 0.5 + Math.sin(time * 12.7 + 1) * 0.3 + Math.sin(train.s * 0.9) * 0.4) * 0.006 * k;
   const sway = (Math.sin(train.s * 0.11) * 0.6 + Math.sin(train.s * 0.37 + 2) * 0.4) * 0.018 * k;
   at(s); camPos.x += Math.cos(F.h) * sway; camPos.z += Math.sin(F.h) * sway; camPos.y += bob;
   camera.position.copy(camPos);
-  const roll = clamp(curv(s) * 32, -0.06, 0.06) + Math.sin(train.s * 0.23) * 0.0025 * k;
+  const roll = clamp(curv(s) * 32 * D, -0.06, 0.06) + Math.sin(train.s * 0.23) * 0.0025 * k;
   up.set(0, 1, 0).applyAxisAngle(dir, roll); camera.up.copy(up);
   camera.lookAt(camPos.x + dir.x, camPos.y + dir.y, camPos.z + dir.z);
   // 지상/지하 전환 (눈 순응 지연)
@@ -1193,40 +1197,45 @@ function updateCamera(dt) {
 }
 const _b0 = new THREE.Vector3(), _b1 = new THREE.Vector3(), _bx = new THREE.Vector3(), _by = new THREE.Vector3(), _bz = new THREE.Vector3();
 function updateOpp(o, dt) {
+  const D = train.dir, od = -D, uO = od * TRK;         // od: 반대 열차 진행방향, uO: 반대 열차 선로
   if (!o.active) {
     o.cool -= dt; o.g.visible = false;
-    if (o.cool <= 0 && train.s + 1000 < END - 60) {
-      o.active = true; o.s = train.s + 1000; o.v = 15; o.a = 0; o.dwell = 0;
-      const st = STN.find(x => o.s > x.s - 60 && o.s < x.s + 60); if (st) o.s = st.s + 70;
+    const sp = train.s + 1000 * D;
+    if (o.cool <= 0 && sp > START + 60 && sp < END - 60) {
+      o.active = true; o.s = sp; o.v = 15; o.a = 0; o.dwell = 0;
+      const st = STN.find(x => o.s > x.s - 60 && o.s < x.s + 60); if (st) o.s = st.s + 70 * D;
     }
     return;
   }
-  // 상선 다음 정차역 (s 감소 방향)
-  let ns = null; for (const st of STN) if (st.oppStop < o.s - 0.5) ns = st;
+  // 반대 열차 다음 정차역 (od 방향) — s 감소 방향은 oppStop, 증가 방향은 stop
+  let ns = null;
+  if (od < 0) { for (const st of STN) if (st.oppStop < o.s - 0.5) ns = st; }
+  else ns = STN.find(st => st.stop > o.s + 0.5) ?? null;
+  const stopPt = ns ? (od < 0 ? ns.oppStop : ns.stop) : 0;
   if (o.dwell > 0) { o.dwell -= dt; o.v = 0; }
   else {
-    const d = ns ? o.s - ns.oppStop : 1e9;
+    const d = ns ? (stopPt - o.s) * od : 1e9;
     const vt = Math.min(19.4, limitAt(o.s) - 0.5, Math.sqrt(Math.max(0, 2 * 0.75 * (d - 0.2))));
     o.a += (clamp((vt - o.v) * 0.9, -1.0, 0.8) - o.a) * Math.min(1, dt / 0.6);
-    o.v = Math.max(0, o.v + o.a * dt); o.s -= o.v * dt;
-    if (ns && d < 0.4 && o.v < 0.3) { o.dwell = 20; o.v = 0; o.a = 0; o.s = ns.oppStop - 0.6; }
+    o.v = Math.max(0, o.v + o.a * dt); o.s += od * o.v * dt;
+    if (ns && d < 0.4 && o.v < 0.3) { o.dwell = 20; o.v = 0; o.a = 0; o.s = stopPt + od * 0.6; }
   }
-  if (o.s + 40 < train.s - 150 || o.s < START + 60) { o.active = false; o.cool = rr(25, 60); o.g.visible = false; return; }
+  if ((o.s - train.s) * D + 40 < -150 || o.s < START + 60 || o.s > END - 60) { o.active = false; o.cool = rr(25, 60); o.g.visible = false; return; }
   o.g.visible = true;
   // 차체는 앞뒤 대차 중심(±6.5m)을 잇는 방향 → 구배·곡선을 따라 기울어짐
   o.cars.forEach((c, i) => {
-    const sc = o.s + 8.8 + i * 18.2;
-    Wabs(sc - 6.5, -TRK, 0, _b0); Wabs(sc + 6.5, -TRK, 0, _b1);
-    _bz.subVectors(_b0, _b1).normalize();                 // 로컬 +Z = 진행방향(s 감소) = 전면
+    const sc = o.s - od * (8.8 + i * 18.2);
+    Wabs(sc + od * 6.5, uO, 0, _b0); Wabs(sc - od * 6.5, uO, 0, _b1);
+    _bz.subVectors(_b0, _b1).normalize();                 // 로컬 +Z = 진행방향 = 전면
     _bx.crossVectors(_bU, _bz).normalize(); _by.crossVectors(_bz, _bx);
     _m.makeBasis(_bx, _by, _bz);
     _v.addVectors(_b0, _b1).multiplyScalar(0.5).addScaledVector(_by, 1.95);
     _m.setPosition(_v); c.matrix.copy(_m);
   });
-  const lv = clamp(lightAt(o.s, -TRK, 2), 0.25, 1.6); o.mats.forEach(m => m.color.setScalar(lv));
+  const lv = clamp(lightAt(o.s, uO, 2), 0.25, 1.6); o.mats.forEach(m => m.color.setScalar(lv));
   const p = o.heads.geometry.attributes.position;
-  Wabs(o.s - 0.05, -TRK - 0.85, 0.85, _v); p.setXYZ(0, _v.x, _v.y, _v.z);
-  Wabs(o.s - 0.05, -TRK + 0.85, 0.85, _v); p.setXYZ(1, _v.x, _v.y, _v.z); p.needsUpdate = true;
+  Wabs(o.s + od * 0.05, uO - 0.85, 0.85, _v); p.setXYZ(0, _v.x, _v.y, _v.z);
+  Wabs(o.s + od * 0.05, uO + 0.85, 0.85, _v); p.setXYZ(1, _v.x, _v.y, _v.z); p.needsUpdate = true;
 }
 
 /* =====================================================================
@@ -1268,8 +1277,13 @@ function jumpReset() {
   updateChunks(train.s, 99);
 }
 window.CabView3D = {
-  /* s: 위치(m), v: 속도(m/s), rain: 비 강도 0~1 또는 bool, wiper: 'OFF'|'INT'|'SLOW'|'FAST'|'AUTO', doorsOpen: bool */
+  /* s: 실제 위치(m), dir: +1 하선 / -1 상선, v: 속도(m/s), rain: 비 강도 0~1 또는 bool, wiper: 'OFF'|'INT'|'SLOW'|'FAST'|'AUTO', doorsOpen: bool */
   update(st) {
+    if (st.dir !== undefined && (st.dir < 0 ? -1 : 1) !== train.dir) {   // 운행 방향 전환 (하선/상선)
+      train.dir = st.dir < 0 ? -1 : 1;
+      if (st.s !== undefined) train.s = clamp(st.s, START + 50, END - 40);
+      jumpReset();
+    }
     if (st.s !== undefined) {
       const jump = Math.abs(st.s - train.s) > 200;
       train.s = clamp(st.s, START + 50, END - 40);
@@ -1281,7 +1295,7 @@ window.CabView3D = {
   },
   setQuality(q) { autoQ = q === 'auto'; if (!autoQ) renderScale = +q; resize(); },
   resize() { resize(); },
-  spawnOncoming(dist = 300, frozen = false) { opp.active = true; opp.s = train.s + dist; opp.v = frozen ? 0 : 15; opp.dwell = frozen ? 1e9 : 0; },
+  spawnOncoming(dist = 300, frozen = false) { opp.active = true; opp.s = train.s + dist * train.dir; opp.v = frozen ? 0 : 15; opp.dwell = frozen ? 1e9 : 0; },
   get stats() { return { fps: Math.round(fps), scale: renderScale, chunks: chunks.size, zone: zc(train.s) }; },
   get renderInfo() { updateCamera(0.016); updateLod(); renderer.render(scene, camera); const r = renderer.info.render; return { calls: r.calls, tris: r.triangles, chunks: chunks.size, geos: renderer.info.memory.geometries }; },
   get glass() { return { rain: glass.rain, wiper: glass.wiperMode }; },

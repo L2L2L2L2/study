@@ -13,7 +13,7 @@
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
   } }
   </script>
-  <script src="js/route.js?v=2026101602"></script>
+  <script src="js/route.js?v=2026101603"></script>
   <style>
     :root {
       --bg-dark: #121519;
@@ -5260,8 +5260,9 @@
           <div id="sim-quick-menu" class="sim-quick-menu" style="display:none;" onclick="event.stopPropagation()">
             <div class="quick-menu-header">모의운전 훈련 메뉴</div>
             <button type="button" class="quick-menu-item" onclick="openScenarioModal(); toggleQuickMenu();">📋 시나리오 선택</button>
-            <button type="button" class="quick-menu-item" onclick="returnToFirstStation(); toggleQuickMenu();">🔄 기점역(검단오류역)으로 회차</button>
-            <button type="button" class="quick-menu-item" onclick="jumpToStation('운연'); toggleQuickMenu();">📍 종착역(운연역)으로 바로 이동</button>
+            <button type="button" class="quick-menu-item" onclick="returnToFirstStation(); toggleQuickMenu();">🔄 기점역(<span class="dir-first-name">검단오류</span>역)으로 회차</button>
+            <button type="button" class="quick-menu-item" onclick="jumpToStation(IC2.P.STN.length - 1); toggleQuickMenu();">📍 종착역(<span class="dir-last-name">운연</span>역)으로 바로 이동</button>
+            <button type="button" class="quick-menu-item" onclick="setRunDirection(-IC2.P.dir); toggleQuickMenu();">🔁 운행 방향 전환 (현재: <span class="dir-label">하선 201→227</span>)</button>
             <button type="button" class="quick-menu-item" onclick="resetCurrentScenario(); toggleQuickMenu();">↺ 처음부터 재시작</button>
             <button type="button" class="quick-menu-item" onclick="toggleMuteSound(); toggleQuickMenu();">🔊 소리 켜기 / 끄기</button>
             <button type="button" class="quick-menu-item" onclick="openRemoteModal(); toggleQuickMenu();">📡 원격 교육 연동</button>
@@ -5273,7 +5274,7 @@
             <canvas id="cab-view-canvas" width="1024" height="473"></canvas>
             
             <!-- 시뮬레이터 화면 상단 우측: 회차 버튼 (종착역 도착 시 표시) -->
-            <button type="button" class="cab-return-badge" id="btn-cab-return-first" onclick="returnToFirstStation()">🔄 처음(검단오류역)으로 회차</button>
+            <button type="button" class="cab-return-badge" id="btn-cab-return-first" onclick="returnToFirstStation()">🔄 처음(<span class="dir-first-name">검단오류</span>역)으로 회차</button>
 
             <!-- 실물 OSD 오버레이 (노치 및 속도 인디케이터) -->
             <div class="cab-osd-overlay">
@@ -5722,7 +5723,7 @@
                     </div>
                     <div class="adu2-info-block">
                       <span class="adu2-info-lbl">Door Enable</span>
-                      <span class="adu2-info-val green" id="adu2-door-enable">Left</span>
+                      <span class="adu2-info-val green" id="adu2-door-enable">Right</span>
                     </div>
                     <div class="adu2-subsys-block">
                       <div class="adu2-subsys-line green" id="adu2-subsys-tcms">TCMS</div>
@@ -6983,7 +6984,12 @@
         </div>
         <div id="scenario-preview-desc" style="font-size:12px; color:#8b949e; line-height:1.4;"></div>
         <div class="form-group" style="margin-top:8px;">
-          <label>시작 역 (정차 상태로 배치)</label>
+          <label>운행 방향</label>
+          <select id="scenario-direction" class="form-control" onchange="fillStartStationSelect(document.getElementById('scenario-start-station').value, +this.value)">
+            <option value="1">하선 (201 검단오류 → 227 운연)</option>
+            <option value="-1">상선 (227 운연 → 201 검단오류)</option>
+          </select>
+          <label style="margin-top:6px;">시작 역 (정차 상태로 배치)</label>
           <select id="scenario-start-station" class="form-control"></select>
         </div>
         <div class="form-group" style="margin-top:8px;">
@@ -7009,14 +7015,14 @@
     <div class="modal-window" style="max-width: 500px; border: 1.5px solid #f97316; box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 25px rgba(249,115,22,0.4);">
       <div class="modal-header" style="background:#1e293b; border-bottom:1px solid #334155; padding:14px 18px;">
         <span style="font-weight:bold; color:#f97316; font-size:16px; display:flex; align-items:center; gap:8px;">
-          <span style="font-size:18px;">🏁</span> 인천 2호선 종착역(운연역) 운행 종료
+          <span style="font-size:18px;">🏁</span> 인천 2호선 종착역(<span class="dir-last-name">운연</span>역) 운행 종료
         </span>
         <span style="cursor:pointer; color:#94a3b8; font-size:18px; font-weight:bold;" onclick="closeModal('modal-terminal-arrival')">✕</span>
       </div>
       <div class="modal-body" style="padding:20px; color:#e2e8f0; font-size:13.5px; line-height:1.65; background:#0f172a;">
         <div style="background:#1e293b; border:1px solid #334155; border-radius:8px; padding:14px; margin-bottom:14px;">
           <div style="font-size:15px; font-weight:bold; color:#38bdf8; margin-bottom:4px;">
-            🚊 마지막 역인 <span style="color:#f97316;">운연(서창)역</span>에 도착하였습니다.
+            🚊 마지막 역인 <span style="color:#f97316;"><span class="dir-last-name">운연</span>역</span>에 도착하였습니다.
           </div>
           <div style="color:#94a3b8; font-size:12.5px;">
             승객 하차 및 출입문/PSD 닫힘이 완료되었으며, <strong>본 열차의 모든 영업 운행이 종료</strong>되었습니다. 더 이상 다음 역으로 운행하지 않습니다.
@@ -7035,12 +7041,12 @@
         </div>
 
         <div style="padding:10px 14px; background:rgba(249,115,22,0.12); border-left:3.5px solid #f97316; border-radius:4px; font-size:12.5px; color:#fed7aa;">
-          기점인 <strong>검단오류역</strong>으로 회차하여 새로운 편도 운행을 시작하시겠습니까?
+          기점인 <strong><span class="dir-first-name">검단오류</span>역</strong>으로 회차하여 새로운 편도 운행을 시작하시겠습니까?
         </div>
       </div>
       <div class="modal-footer" style="background:#0b0f19; border-top:1px solid #334155; padding:12px 18px; display:flex; justify-content:flex-end; gap:8px;">
         <button class="toolbar-btn" style="background:#1e293b; border:1px solid #475569; color:#cbd5e1;" onclick="closeModal('modal-terminal-arrival')">대기 (창 닫기)</button>
-        <button class="toolbar-btn primary" style="background:#f97316; border-color:#ea580c; font-weight:bold; font-size:13px; color:#ffffff;" onclick="returnToFirstStation();">🔄 처음(검단오류역)으로 회차하기</button>
+        <button class="toolbar-btn primary" style="background:#f97316; border-color:#ea580c; font-weight:bold; font-size:13px; color:#ffffff;" onclick="returnToFirstStation();">🔄 처음(<span class="dir-first-name">검단오류</span>역)으로 회차하기</button>
       </div>
     </div>
   </div>
@@ -8098,7 +8104,7 @@ const CV_STATIONS = INCHEON2_STATIONS.map(s => s.name);
 
 /* 기존 파일과 동일한 이름의 전역 상태 (다른 로직이 참조하므로 유지) */
 let trainSpeed = 0.0;
-let trainDistance = IC2.STN[0].stop;   // 검단오류역 정차점에서 시작
+let trainDistance = IC2.P.STN[0].stop;   // 검단오류역 정차점에서 시작
 let trainTargetSpeed = 0.0;
 let trainAccelRate = 0.0;
 let trackTiePhase = 0.0;
@@ -8199,10 +8205,10 @@ const AtoDriverless = {
 
   initStopTarget(s) {
     // 실제 노선의 다음 정차점 (2량 열차: 4량 승강장의 1~2 위치)
-    let idx = IC2.STN.findIndex(st => st.stop >= s - 5.0);
-    if (idx < 0) idx = IC2.STN.length - 1;
+    let idx = IC2.P.STN.findIndex(st => st.stop >= s - 5.0);
+    if (idx < 0) idx = IC2.P.STN.length - 1;
     this.stationIdx = idx;
-    this.targetStopDist = IC2.STN[idx].stop;
+    this.targetStopDist = IC2.P.STN[idx].stop;
   },
   update(dt, dist, speed) {
     if (this.state === 'TERMINATED') {
@@ -8221,7 +8227,7 @@ const AtoDriverless = {
     const currSt = INCHEON2_STATIONS[this.stationIdx % INCHEON2_STATIONS.length];
 
     if (this.state === 'CRUISING') {
-      const cruiseSpeed = Math.min(65.0, IC2.limitAhead(dist) * 3.6 - 2.0);   // 곡선 설계속도 반영
+      const cruiseSpeed = Math.min(65.0, IC2.P.limitAhead(dist) * 3.6 - 2.0);   // 곡선 설계속도 반영
       const vMs = speed / 3.6;
       // 0.78 m/s^2 기준 감속 여유거리
       const reqBrakeDist = (vMs * vMs) / (2.0 * 0.78) + 14.0;
@@ -8250,7 +8256,7 @@ const AtoDriverless = {
       const d = Math.max(0.0, distToStop);
       // TASC 포물선 제동 감속 프로파일
       const vProfile = Math.sqrt(2.0 * 0.72 * d) * 3.6;
-      const tSpeed = Math.min(65.0, vProfile, IC2.limitAhead(dist) * 3.6 - 2.0);
+      const tSpeed = Math.min(65.0, vProfile, IC2.P.limitAhead(dist) * 3.6 - 2.0);
 
       if (d <= 0.6 && speed < 3.5) {
         this.targetSpeed = 0.0;
@@ -8314,8 +8320,8 @@ const AtoDriverless = {
       const isDoorClosed = !isDoorOpen && (!window.__FAULT_DOOR_FAIL) && (lampDoor ? lampDoor.classList.contains('lit') : true);
 
       if (this.stateTimer <= 0 && isDoorClosed) {
-        // ★ 마지막역인 운연역(227) 도착 시 더 이상 운행하지 않고 종착 안내
-        if (this.stationIdx >= INCHEON2_STATIONS.length - 1 || currSt.id === '227' || currSt.name === '운연') {
+        // ★ 마지막역 도착 시 더 이상 운행하지 않고 종착 안내
+        if (this.stationIdx >= INCHEON2_STATIONS.length - 1) {   // 진행방향 마지막 역 (하선 운연 / 상선 검단오류)
           this.state = 'TERMINATED';
           this.targetSpeed = 0.0;
           this.accelRate = 0.0;
@@ -8335,7 +8341,7 @@ const AtoDriverless = {
         const nextIdx = (this.stationIdx + 1) % INCHEON2_STATIONS.length;
         this.stationIdx = nextIdx;
         const nextSt = INCHEON2_STATIONS[nextIdx];
-        this.targetStopDist = IC2.STN[nextIdx].stop;
+        this.targetStopDist = IC2.P.STN[nextIdx].stop;
         this.state = 'DEPARTING';
         this.departRampDuration = 1.5;
         this.stateTimer = 1.5;
@@ -8359,7 +8365,7 @@ const AtoDriverless = {
       }
 
       // 제동 완해 진행에 따라 견인 가속도 투입 (서서히 바뀌면서 출발)
-      this.targetSpeed = Math.min(65.0, IC2.limitAhead(dist) * 3.6 - 2.0);
+      this.targetSpeed = Math.min(65.0, IC2.P.limitAhead(dist) * 3.6 - 2.0);
       this.accelRate = speed > this.targetSpeed + 0.5 ? -1.0 : progress * 2.6;
 
       if (this.stateTimer <= 0 && speed > 2.0) {
@@ -8393,10 +8399,10 @@ const cvState = {
    1. 선형(곡선·구배) 및 노선 이벤트
 --------------------------------------------------------------------------- */
 function cvCurv(s) {           // 곡률 (1/m), + 가 우곡선 — 실제 노선
-  return IC2.curv(s);
+  return IC2.P.curv(s);
 }
 function cvGradeAt(s) {        // 선로 구배 (m/m) — 선로개요도 기반 실제 종단
-  return IC2.grade(s);
+  return IC2.P.grade(s);
 }
 
 function cvHash(a, b) {
@@ -8404,10 +8410,10 @@ function cvHash(a, b) {
   return h - Math.floor(h);
 }
 function cvTunnelInfo(s) {     // { inside, entry: 다음 갱구 진입까지(m), exit: 다음 지상 진출까지(m) }
-  return IC2.tunnelInfo(s);
+  return IC2.P.tunnelInfo(s);
 }
 function cvStationInfo(s) {    // 다음(또는 현재) 정차역: dStart=승강장 시작까지, dStop=정차점까지
-  const info = IC2.stationInfo(s);
+  const info = IC2.P.stationInfo(s);
   const st = INCHEON2_STATIONS[info.index];
   if (st) info.eng = st.eng;
   return info;
@@ -8514,7 +8520,7 @@ function resetRmEmergencyBrake() {
 function aduSpeedLimit(driveMode) {
   if (driveMode === 'RM') return 15;
   if (driveMode === 'FM') return null;
-  const design = IC2.curLimit(trainDistance) * 3.6;
+  const design = IC2.P.curLimit(trainDistance) * 3.6;
   return design <= 45.5 ? 45 : design <= 60.5 ? 60 : 80;
 }
 
@@ -8707,13 +8713,13 @@ function updateDuAduDisplay(driveMode, notch, now) {
       if (noRouteInfo) {
         nextStEl.innerText = '-';
       } else if (typeof AtoDriverless !== 'undefined' && AtoDriverless.state === 'TERMINATED') {
-        nextStEl.innerText = '운연 (종착)';
+        nextStEl.innerText = IC2.P.STN[IC2.P.STN.length - 1].name + ' (종착)';
       } else {
-        nextStEl.innerText = stInfo ? stInfo.name : '검단오류';
+        nextStEl.innerText = stInfo ? stInfo.name : IC2.P.STN[0].name;
       }
     }
     const destStEl = document.getElementById('du2-dest-st');
-    if (destStEl) destStEl.innerText = noRouteInfo ? '-' : '운연';
+    if (destStEl) destStEl.innerText = noRouteInfo ? '-' : IC2.P.STN[IC2.P.STN.length - 1].name;
 
     const spdEl = document.getElementById('du2-speed-val');
     if (spdEl) spdEl.innerText = Math.round(trainSpeed);
@@ -8827,7 +8833,7 @@ function updateDuAduDisplay(driveMode, notch, now) {
     if (alarmEl) {
       if (typeof AtoDriverless !== 'undefined' && AtoDriverless.state === 'TERMINATED') {
         alarmEl.style.color = '#f97316';
-        alarmEl.innerText = '🏁 [운행종료] 종착역(운연역) 도착 완료 - 회차 대기 중';
+        alarmEl.innerText = `🏁 [운행종료] 종착역(${IC2.P.STN[IC2.P.STN.length - 1].name}역) 도착 완료 - 회차 대기 중`;
       } else if (isUnmannedNow && typeof AtoDriverless !== 'undefined' && AtoDriverless.isHoldingBrake) {
         alarmEl.style.color = '#ef4444';
         alarmEl.innerText = '🛑 [정차제동] 승강장 정차제동(HB 2.0 Bar) 체결 중';
@@ -9065,6 +9071,13 @@ function updateDuAduDisplay(driveMode, notch, now) {
     if (fsbBanner) fsbBanner.classList.toggle('lit', isFsb);
 
     const atpDirEl = document.getElementById('adu2-atp-dir');
+    // Door Enable: RM·FM = Both / 그 외(무인운전·ATPM·OFF) = Right
+    const doorEnEl = document.getElementById('adu2-door-enable');
+    if (doorEnEl) {
+      const de = (driveMode === 'RM' || driveMode === 'FM') ? 'Both' : 'Right';
+      if (doorEnEl.innerText !== de) doorEnEl.innerText = de;
+    }
+
     // ATP Reverse: 평소 회색, OP3 ATP후진 스위치 동작 시 노란색
     if (atpDirEl) {
       const atpRev = cvCompState('SW_ATP_REV', 'OFF') === 'ON';
@@ -9100,10 +9113,13 @@ function updateDuAduDisplay(driveMode, notch, now) {
 
     // Platform & Station Info
     const nextPlatEl = document.getElementById('adu2-next-plat');
-    if (nextPlatEl) {
-      const stCode = (typeof cvCurrentStationIndex !== 'undefined') ? (201 + cvCurrentStationIndex).toString() + 'A' : '201A';
-      nextPlatEl.innerText = stCode;
-    }
+    // FM: 신호 정보 없음 → 비움 / 그 외: 역번호 + 방향(하선 A, 상선 B)
+    const finalPlatEl = document.getElementById('adu2-final-plat');
+    const platInfo = driveMode !== 'FM';
+    const nextPlat = platInfo ? cvStationInfo(trainDistance).id + (IC2.P.dir > 0 ? 'A' : 'B') : '';
+    const finalPlat = platInfo ? IC2.P.STN[IC2.P.STN.length - 1].id : '';
+    if (nextPlatEl && nextPlatEl.innerText !== nextPlat) nextPlatEl.innerText = nextPlat;
+    if (finalPlatEl && finalPlatEl.innerText !== finalPlat) finalPlatEl.innerText = finalPlat;
 
     // Doors & PSD status
     const psdL1 = document.getElementById('adu2-psd-l1');
@@ -9380,7 +9396,7 @@ function updateTrainPhysics() {
   cvState.headingDrift += curv * speedMs * dt - cvState.headingDrift * dt * 0.55;
 
   /* 날씨 */
-  const rainTarget = cvRainAt(trainDistance);
+  const rainTarget = cvRainAt(IC2.P.toS(trainDistance));   // 강우 구간은 실제 위치 기준
   cvState.rain += (rainTarget - cvState.rain) * Math.min(1, dt * 0.35);
 
   /* 사운드 */
@@ -9645,7 +9661,8 @@ function drawCabViewLoop() {
   /* 3D 전면 전망 (js/cabview3d.js): 위치·속도·기상·와이퍼만 전달 */
   if (window.CabView3D) {
     window.CabView3D.update({
-      s: trainDistance,
+      dir: IC2.P.dir,
+      s: IC2.P.toS(trainDistance),   // 진행방향 거리 → 실제 위치
       v: trainSpeed / 3.6,
       rain: cvState.rain,
       wiper: cvCompState('SW_WIPER', 'OFF'),
@@ -9673,7 +9690,7 @@ function drawCabViewLoop() {
 --------------------------------------------------------------------------- */
 
 function resetCabView() {
-  trainSpeed = 0; trainDistance = IC2.STN[0].stop; trainTargetSpeed = 0; trainAccelRate = 0;
+  trainSpeed = 0; trainDistance = IC2.P.STN[0].stop; trainTargetSpeed = 0; trainAccelRate = 0;
   cvState.drops.length = 0;
   cvState.headingDrift = 0; cvState.roll = 0; cvState.rain = 0;
   cvState.wiperAngle = 0; cvState.wiperTimer = 0; cvState.lastClack = 0;
@@ -9689,7 +9706,7 @@ function resetCabView() {
    종착역(운연역) 회차 및 역 위치 이동 제어
 --------------------------------------------------------------------------- */
 function returnToFirstStation() {
-  trainDistance = IC2.STN[0].stop;
+  trainDistance = IC2.P.STN[0].stop;
   trainSpeed = 0.0;
   trainTargetSpeed = 0.0;
   trainAccelRate = 0.0;
@@ -9697,9 +9714,9 @@ function returnToFirstStation() {
     setUnmannedMode(false);
   }
   if (typeof AtoDriverless !== 'undefined') {
-    AtoDriverless.reset(IC2.STN[0].stop);
+    AtoDriverless.reset(IC2.P.STN[0].stop);
     AtoDriverless.stationIdx = 0;
-    AtoDriverless.targetStopDist = IC2.STN[0].stop;
+    AtoDriverless.targetStopDist = IC2.P.STN[0].stop;
     AtoDriverless.state = 'STOPPED';
     AtoDriverless.stateTimer = 1.0;
     AtoDriverless.isHoldingBrake = true;
@@ -9714,13 +9731,8 @@ function returnToFirstStation() {
   }
 
   if (typeof showTemporaryHudFeedback === 'function') {
-    showTemporaryHudFeedback('🔄 [회차 완료] 기점역(검단오류역)으로 회차하였습니다. 정차제동(HB 2.0 Bar) 체결 상태에서 대기합니다.', false);
+    showTemporaryHudFeedback(`🔄 [회차 완료] 기점역(${IC2.P.STN[0].name}역)으로 회차하였습니다. 정차제동(HB 2.0 Bar) 체결 상태에서 대기합니다.`, false);
   }
-
-  const destEl = document.getElementById('du2-dest-st');
-  if (destEl) destEl.innerText = '운연';
-  const nextStEl = document.getElementById('du2-next-st');
-  if (nextStEl) nextStEl.innerText = '검단오류';
 }
 window.returnToFirstStation = returnToFirstStation;
 
@@ -9734,7 +9746,7 @@ window.jumpToStation = function(target, directStop = false) {
   if (idx < 0 || idx >= INCHEON2_STATIONS.length) return false;
 
   const st = INCHEON2_STATIONS[idx];
-  const targetStop = IC2.STN[idx].stop;
+  const targetStop = IC2.P.STN[idx].stop;
 
   // 역 이동 시 항상 무인운전(ATO) 활성화 및 운전모드 OFF 유지하여 역 정차 보장
   window.__POS_LOST = null;   // 역 이동(교관 조작)은 위치 확정 상태로 시작
@@ -13141,7 +13153,7 @@ function previewScenarioInfo() {
 
   const sc = getScenarioById(val);
   if (sc) {
-    fillStartStationSelect(sc.startStation || '');
+    fillStartStationSelect(sc.startStation || '', sc.direction || IC2.P.dir);
     descEl.innerHTML = `
       <b>설명:</b> ${sc.description || '설명 없음'}<br>
       <b>총 단계:</b> ${sc.steps.length}단계 구성
@@ -13184,26 +13196,55 @@ function applyScenario(sc) {
   resetCurrentScenario();
   // 시나리오 시작 역: 모달에서 고른 역 > 시나리오에 저장된 역 > 현재 위치 유지
   const selSt = document.getElementById('scenario-start-station');
+  const selDir = document.getElementById('scenario-direction');
+  const dir = selDir ? +selDir.value : (sc && sc.direction) || IC2.P.dir;
   const startId = (selSt && selSt.value) || (sc && sc.startStation) || '';
-  if (startId) placeTrainAtStation(startId);
+  if (dir !== IC2.P.dir) setRunDirection(dir, startId || null);
+  else if (startId) placeTrainAtStation(startId);
 }
 
 /* 시작 역 선택 목록 채우기 */
-function fillStartStationSelect(selectedId) {
+function fillStartStationSelect(selectedId, dir) {
   const sel = document.getElementById('scenario-start-station');
   if (!sel) return;
-  if (!sel.options.length) {
-    sel.add(new Option('현재 위치 유지', ''));
-    IC2.STN.forEach(st => sel.add(new Option(`${st.id} ${st.name}${st.type === 'under' ? ' (지하)' : ' (지상)'}`, st.id)));
-  }
+  const selDir = document.getElementById('scenario-direction');
+  if (dir === undefined) dir = IC2.P.dir;
+  if (selDir) selDir.value = String(dir);
+  // 진행 순서대로 역 나열 (하선 201→227 / 상선 227→201)
+  sel.length = 0;
+  sel.add(new Option('현재 위치 유지', ''));
+  const list = dir > 0 ? IC2.STN : IC2.STN.slice().reverse();
+  list.forEach(st => sel.add(new Option(`${st.id} ${st.name}${st.type === 'under' ? ' (지하)' : ' (지상)'}`, st.id)));
   sel.value = selectedId || '';
 }
 
+/* 운행 방향 설정 (+1 하선 201→227 / -1 상선 227→201). 반대편 선로로 옮겨 지정 역(없으면 기점역)에 정차 배치 */
+function setRunDirection(dir, startId) {
+  dir = dir < 0 ? -1 : 1;
+  IC2.P.setDir(dir);
+  // 역 목록을 진행 순서로 재정렬 (AtoDriverless.stationIdx와 IC2.P.STN 인덱스 일치)
+  const order = IC2.P.STN.map(st => st.id);
+  INCHEON2_STATIONS.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+  CV_STATIONS.splice(0, CV_STATIONS.length, ...INCHEON2_STATIONS.map(st => st.name));
+  const first = IC2.P.STN[0], last = IC2.P.STN[IC2.P.STN.length - 1];
+  document.querySelectorAll('.dir-first-name').forEach(e => { e.textContent = first.name; });
+  document.querySelectorAll('.dir-last-name').forEach(e => { e.textContent = last.name; });
+  document.querySelectorAll('.dir-label').forEach(e => { e.textContent = dir > 0 ? '하선 201→227' : '상선 227→201'; });
+  if (typeof setUnmannedMode === 'function') setUnmannedMode(false);
+  window.__POS_LOST = null;
+  const startSt = IC2.P.STN.find(st => st.id === startId) || first;
+  placeTrainAtStation(startSt.id);
+  if (typeof showTemporaryHudFeedback === 'function') {
+    showTemporaryHudFeedback(`🔁 [운행 방향] ${dir > 0 ? '하선' : '상선'} (${first.name} → ${last.name}) - ${startSt.name}역 정차 위치`, false);
+  }
+}
+window.setRunDirection = setRunDirection;
+
 /* 지정 역 정차점에 정차 상태로 배치 (운전 모드는 바꾸지 않음) */
 function placeTrainAtStation(target) {
-  const idx = IC2.STN.findIndex(st => st.id === target || st.name === target);
+  const idx = IC2.P.STN.findIndex(st => st.id === target || st.name === target);
   if (idx < 0) return false;
-  trainDistance = IC2.STN[idx].stop;
+  trainDistance = IC2.P.STN[idx].stop;
   trainSpeed = 0.0; trainTargetSpeed = 0.0; trainAccelRate = 0.0;
   if (typeof AtoDriverless !== 'undefined') {
     AtoDriverless.reset(trainDistance);
@@ -13217,7 +13258,7 @@ function placeTrainAtStation(target) {
   const cabBtn = document.getElementById('btn-cab-return-first');
   if (cabBtn) cabBtn.classList.remove('visible');
   if (typeof showTemporaryHudFeedback === 'function') {
-    showTemporaryHudFeedback(`📍 ${IC2.STN[idx].name}역 정차 위치에서 시작합니다. (정차제동 HB 2.0 Bar)`, false);
+    showTemporaryHudFeedback(`📍 ${IC2.P.STN[idx].name}역 정차 위치에서 시작합니다. (정차제동 HB 2.0 Bar)`, false);
   }
   return true;
 }
@@ -13229,6 +13270,8 @@ function exportScenarioJSON() {
   const startSel = document.getElementById('scenario-start-station');
   const sc = { ...sc0 };
   if (startSel && startSel.value) sc.startStation = startSel.value;
+  const dirSel = document.getElementById('scenario-direction');
+  if (dirSel) sc.direction = +dirSel.value;
   const jsonStr = JSON.stringify(sc, null, 2);
   navigator.clipboard.writeText(jsonStr).then(() => {
     alert("📋 시나리오 JSON 데이터가 클립보드에 복사되었습니다!");
@@ -13403,6 +13446,6 @@ setTimeout(() => {
 </script>
 
 
-<script type="module" src="js/cabview3d.js?v=2026101602"></script>
+<script type="module" src="js/cabview3d.js?v=2026101603"></script>
 </body>
 </html>

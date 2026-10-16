@@ -242,9 +242,52 @@ function stationInfo(s) {
   return { dStart: st.s0 - s, dEnd: st.s1 - s, dStop: st.stop - s, name: st.name, eng: st.eng || '', id: st.id,
     type: st.type === 'under' ? 'TUNNEL' : 'GROUND', platformSide: 'R', index: idx };
 }
+/* ---------- 운행 방향 (하선 +1: 201→227 / 상선 -1: 227→201) ----------
+   운전 로직은 진행방향 거리 p(값이 커지는 쪽 = 진행방향)로 동작하고, 3D는 실제 위치 s = P.toS(p)를 씀.
+   상선은 반대편(-u) 선로를 달리며 승강장은 하선과 같이 진행방향 우측. 제한속도는 하선과 동일 구간 적용 */
+const P = { dir: 1, START, END };
+const mir = x => START + END - x;
+P.toS = p => P.dir > 0 ? p : mir(p);
+P.toP = P.toS;
+P.setDir = d => {
+  P.dir = d < 0 ? -1 : 1;
+  P.STN = P.dir > 0 ? STN : STN.slice().reverse().map(st => ({ ...st,
+    s: mir(st.s), s0: mir(st.s1), s1: mir(st.s0), stop: mir(st.oppStop), oppStop: mir(st.stop) }));
+};
+P.setDir(1);
+P.curv = p => P.dir * curv(P.toS(p));                  // 진행방향 기준 (+: 우곡선)
+P.grade = p => P.dir * grade(P.toS(p));                // 진행방향 기준 (+: 상구배)
+P.limitAt = p => limitAt(P.toS(p));
+P.curLimit = p => { let v = VMAX; for (let x = p - TRAIN_LEN; x <= p; x += 5) v = Math.min(v, P.limitAt(x)); return v; };
+P.limitAhead = (p, b = 0.6) => {
+  let vt = P.curLimit(p);
+  for (let d = 5; d <= 600; d += 10) { const vl = P.limitAt(p + d); vt = Math.min(vt, Math.sqrt(vl * vl + 2 * b * d)); }
+  return vt;
+};
+P.nextStation = p => P.STN.find(st => st.stop > p + 0.5) ?? null;
+P.atStation = p => P.STN.find(st => Math.abs(st.stop - p) < 1.0);
+P.tunnelInfo = p => {
+  const inside = isUnder(zc(P.toS(p)));
+  let entry = 1e9, exit = 1e9;
+  const ps = PORTALS.map(o => ({ p: P.toP(o.s), dir: o.dir * P.dir })).sort((a, b) => a.p - b.p);
+  for (const o of ps) {
+    if (o.p < p) continue;
+    if (o.dir > 0 && entry === 1e9) entry = o.p - p;
+    if (o.dir < 0 && exit === 1e9) exit = o.p - p;
+  }
+  return { inside, entry, exit };
+};
+P.stationInfo = p => {
+  let idx = P.STN.findIndex(st => st.s1 > p);
+  if (idx < 0) idx = P.STN.length - 1;
+  const st = P.STN[idx];
+  return { dStart: st.s0 - p, dEnd: st.s1 - p, dStop: st.stop - p, name: st.name, eng: st.eng || '', id: st.id,
+    type: st.type === 'under' ? 'TUNNEL' : 'GROUND', platformSide: 'R', index: idx };
+};
+
 window.IC2 = {
   clamp, smooth, lerp, TRK, EYE, PLAT, TRAIN_LEN, VMAX, STN, SID, S, START, END, CURVES, SPEED_ZONES, curv, PROFILE,
   XOVERS, nearXover, CANAL, DS, NS, PX, PY, PZ, PH, F, at, Y, grade, ZC, PORTALS, DEPTH_ZONE, stationAt, zc, isUnder, PD, OUT_NEAR,
-  limitAt, curLimit, limitAhead, nextStation, atStation, tunnelInfo, stationInfo,
+  limitAt, curLimit, limitAhead, nextStation, atStation, tunnelInfo, stationInfo, P,
 };
 })();
