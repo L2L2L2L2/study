@@ -13,7 +13,7 @@
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
   } }
   </script>
-  <script src="js/route.js?v=2026101701"></script>
+  <script src="js/route.js?v=2026101703"></script>
   <style>
     :root {
       --bg-dark: #121519;
@@ -4838,20 +4838,24 @@
     /* ===== 차단기반 팝업 ===== */
     .cab-op-btn.cb-open-btn { background: rgba(120, 80, 20, 0.55) !important; }
     .cab-op-btn.cb-open-btn:hover { background: rgba(160, 110, 30, 0.75) !important; }
-    #modal-breaker .modal-window { max-width: min(1180px, 96vw); max-height: 96vh; }
-    #modal-breaker .modal-body { overflow: auto; padding: 0; background: #2a2d31; }
+    #modal-breaker .modal-window { width: auto; max-width: 98vw; max-height: 97vh; }
+    #modal-breaker .modal-body { overflow: hidden; padding: 0; background: #2a2d31; max-height: none !important; }
     .cb-tabs { display: flex; gap: 6px; }
     .cb-tab { padding: 5px 14px; border-radius: 6px; border: 1px solid #4b5563; background: #1f2937; color: #cbd5e1; font-weight: 700; cursor: pointer; font-size: 13px; }
     .cb-tab.active { background: #b45309; border-color: #f59e0b; color: #fff; }
     .cb-hint { color: #94a3b8; font-size: 11.5px; margin-left: 12px; }
     /* 주 차단기반 (ABB) */
-    .cb-cabinet { background: linear-gradient(#8f969c, #7d848a); padding: 18px 26px 22px; display: flex; flex-direction: column; gap: 20px; min-width: 900px; }
-    .cb-row { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .cb-plate { display: flex; width: 900px; border: 2px solid #c9cfd4; border-radius: 3px;
+    .cb-cabinet { background: linear-gradient(#8f969c, #7d848a); padding: 18px 26px 22px; display: flex; flex-direction: column; gap: 20px; }
+    .cb-row { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+    .cb-plate.short, .cb-rail.short { width: auto; }
+    .cb-plate span.sticker { background: #facc15; color: #111; border-radius: 3px; margin: 3px; padding: 4px 2px; font-size: 9.5px; line-height: 1.15; white-space: normal; }
+    .cb-abb.sch .cb-body { border-top: 9px solid #e5e7eb; }
+    .cb-abb.sch .cb-body::before { content: 'Schneider'; color: #15803d; font-size: 7.5px; }
+    .cb-plate { display: flex; width: 1120px; border: 2px solid #c9cfd4; border-radius: 3px;
       background: linear-gradient(#e6eaed, #b9c0c6); box-shadow: 0 2px 3px rgba(0,0,0,.35); }
     .cb-plate span { flex: none; font: 700 10.5px/1 Arial, sans-serif; color: #2b2f33; text-align: center; padding: 8px 2px; border-right: 1px solid #8d959c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
     .cb-plate span:last-child { border-right: none; }
-    .cb-rail { display: flex; width: 900px; background: #3a3f44; padding: 4px 0; border-radius: 2px; box-shadow: inset 0 2px 4px rgba(0,0,0,.6); }
+    .cb-rail { display: flex; width: 1120px; background: #3a3f44; padding: 4px 0; border-radius: 2px; box-shadow: inset 0 2px 4px rgba(0,0,0,.6); }
     /* ABB 차단기 1개 = 보조접점(반 칸) + 극(칸) n개, 2·3극은 손잡이 하나로 묶임 */
     .cb-abb { flex: none; display: flex; height: 116px; cursor: pointer; position: relative; box-sizing: border-box; }
     .cb-abb:hover { outline: 2px solid #f59e0b; outline-offset: -1px; }
@@ -4883,7 +4887,7 @@
     .cb-abb.rcbo .cb-body { border-top-color: #c8102e; }
     .cb-abb.rcbo .cb-test { position: absolute; top: 32px; right: -10px; width: 18px; height: 34px; border-radius: 9px; background: linear-gradient(90deg, #f3f4f6, #d1d5db); border: 1px solid #9ca3af; }
     /* 냉난방 차단기 (Schneider) */
-    .cb-hvac { background: #5f6367; padding: 22px 28px 28px; display: flex; flex-direction: column; gap: 34px; min-width: 980px; }
+    .cb-hvac { background: #5f6367; padding: 22px 28px 28px; display: flex; flex-direction: column; gap: 34px; }
     .cb-hrow { display: flex; flex-direction: column; gap: 6px; }
     .cb-hplate { position: relative; height: 26px; background: linear-gradient(#e8ecef, #aab2b8); border-radius: 3px; box-shadow: 0 2px 3px rgba(0,0,0,.4); }
     .cb-hplate b { position: absolute; top: 4px; font: 800 15px/18px Arial; color: #23272b; transform: translateX(-50%); white-space: nowrap; }
@@ -7104,7 +7108,8 @@
       <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between;">
         <div style="display:flex; align-items:center;">
           <div class="cb-tabs">
-            <button type="button" class="cb-tab active" id="cb-tab-main" onclick="showBreakerView('main')">주 차단기(신조차)</button>
+            <button type="button" class="cb-tab active" id="cb-tab-old" onclick="showBreakerView('old')">주 차단기(기존차)</button>
+            <button type="button" class="cb-tab" id="cb-tab-main" onclick="showBreakerView('main')">주 차단기(신조차)</button>
             <button type="button" class="cb-tab" id="cb-tab-hvac" onclick="showBreakerView('hvac')">냉난방</button>
           </div>
           <span class="cb-hint">차단기를 누르면 투입(ON) / 차단(OFF)이 바뀝니다</span>
@@ -7112,7 +7117,8 @@
         <span style="cursor:pointer; color:#94a3b8; font-size:18px; font-weight:bold;" onclick="closeModal('modal-breaker')">✕</span>
       </div>
       <div class="modal-body">
-        <div id="cb-view-main" class="cb-cabinet"></div>
+        <div id="cb-view-old" class="cb-cabinet"></div>
+        <div id="cb-view-main" class="cb-cabinet" style="display:none;"></div>
         <div id="cb-view-hvac" class="cb-hvac" style="display:none;"></div>
       </div>
     </div>
@@ -13507,40 +13513,41 @@ const CB_MAIN_ROWS = [
    ['SPARE', 1, 'K10A'], ['CMCB', 3, 'K6A'], ['ACDCB', 3, 'K16A']],
   [['SO220VCB', 2, 'C25 30mA', 'RCBO'], ['HVACCB', 3, 'K50A'], ['RLCB', 3, 'K6A'], ['VBCB', 3, 'K6A'], ['SPARE', 3, 'K10A'], ['WIDCB', 3, 'K10A']],
 ];
-const CB_ROW_W = 900;   // 한 줄 폭(px) — 줄마다 모듈 폭을 맞춰 끝을 가지런히
+/* 기존차 주 차단기반 (ABB S281 UC, 각 차단기 왼쪽에 보조접점). 형식 'SCH' = Schneider C60N, 5번째 값 = 고정 ID */
+const CB_OLD_ROWS = [
+  [['CCUDOCB', 1, 'K6A'], ['CCUDICB', 1, 'K10A'], ['CCUCB', 1, 'K6A'], ['DUCB', 1, 'K6A'], ['TBCCB', 1, 'K6A'], ['BOU#1CB', 1, 'K10A'],
+   ['BOU#2CB', 1, 'K10A'], ['ENCB', 1, 'K3A'], ['ICCB', 1, 'K15A'], ['WWCB', 1, 'K6A'], ['EI&PIDCB', 1, 'K20A'], ['DCUDICB', 1, 'K3A']],
+  [['EDCB', 1, 'K6A'], ['EHCB', 1, 'K6A'], ['CACB', 1, 'K6A'], ['ILCB', 1, 'K6A'], ['FDSCB', 1, 'K3A'], ['BECUCB', 1, 'K10A'],
+   ['DCU1CB', 1, 'K6A'], ['DCU2CB', 1, 'K6A'], ['SIVCB', 1, 'K10A'], ['EBLCB', 1, 'K3A'], ['PBCB', 1, 'K10A']],
+  [['HACCB', 1, 'K6A'], ['EROCB', 1, 'K10A'], ['HSCBOCB', 1, 'K6A'], ['HTLCB', 1, 'K6A'], ['EMILCB', 1, 'K3A'], ['TRCECB', 1, 'K6A'],
+   ['MSRPCB', 1, 'K6A'], ['PAMP&COPCB', 1, 'K6A'], ['FFSCB', 1, 'K10A'], ['VOBCCB1', 1, 'K10A'], ['VOBCCB2', 1, 'K10A']],
+  [['VOBCDICB', 1, 'K3A'], ['ADUCB', 1, 'K3A'], ['SDCB', 1, 'K6A'], ['CMCCB', 1, 'K10A'], ['AD&ADVHCB', 1, 'K3A'], ['TN&FD', 2, 'K6A'],
+   ['SO220VCB', 2, 'C25 30mA', 'RCBO'], ['비상출입문 바이패스', 1, 'K6A', '', 'CB_EMG_DOOR_BYPASS'], ['SPARE', 1, 'K10A'], ['SPARE', 3, 'K10A']],
+  [['HVACCB', 3, 'K50A'], ['RLCB', 3, 'K6A'], ['VBCB', 3, 'K6A'], ['CMCB', 3, 'C16A', 'SCH'], ['WIDCB', 3, 'K10A']],
+];
+const CB_ROW_W = 1120;   // 한 줄 폭(px) — 줄마다 모듈 폭을 맞춰 끝을 가지런히
 const cbModules = b => b[3] === 'RCBO' ? b[1] + 0.5 : b[1] + 0.5;   // 극 수 + 보조접점(반 칸) 또는 시험버튼
 /* 냉난방: [명칭, 보조접점 수(반 폭), 극수, 정격] */
 const CB_HVAC_ROWS = [
   [['AuxHEAT1', 3, 3, 'C16A'], ['AuxHEAT2', 3, 3, 'C16A'], ['ACCON', 0, 2, 'C10A'], ['VFN', 1, 1, 'C3A'], ['TCN', 1, 1, 'C3A'], ['DHeN1', 1, 3, 'C6A']],
   [['UN1', 1, 3, 'C40A'], ['UN2', 1, 3, 'C40A'], ['RHeN1', 2, 3, 'C25A'], ['RHeN2', 2, 3, 'C16A'], ['LFFN', 1, 3, 'C3A']],
 ];
-const cbId = (label, r, c) => 'CB_' + label.replace(/[^A-Za-z0-9]/g, '_') + (label === 'SPARE' ? `_${r + 1}${String.fromCharCode(65 + c)}` : '');
+const cbId = (b, r, c, panel = 'N') => b[4] || ('CB_' + b[0].replace(/[^A-Za-z0-9]/g, '_') +
+  (b[0] === 'SPARE' ? `_${panel === 'N' ? '' : panel}${r + 1}${String.fromCharCode(65 + c)}` : ''));
 function registerBreakers() {
-  CB_MAIN_ROWS.forEach((row, r) => row.forEach(([label], c) => {
-    const id = cbId(label, r, c);
-    if (!COMPONENT_REGISTRY[id]) COMPONENT_REGISTRY[id] = { name: `차단기 ${label}`, type: 'BREAKER', state: label === 'SPARE' ? 'OFF' : 'ON', panel: 'CB' };
-  }));
+  [[CB_MAIN_ROWS, 'N'], [CB_OLD_ROWS, 'O']].forEach(([rows, pk]) => rows.forEach((row, r) => row.forEach((b, c) => {
+    const id = cbId(b, r, c, pk);
+    if (!COMPONENT_REGISTRY[id]) COMPONENT_REGISTRY[id] = {
+      name: `차단기 ${b[0]}${b[0] === 'SPARE' ? ` (${pk === 'O' ? '기존차' : '신조차'})` : ''}`, type: 'BREAKER', state: b[0] === 'SPARE' ? 'OFF' : 'ON', panel: 'CB' };
+  })));
   CB_HVAC_ROWS.forEach(row => row.forEach(([label]) => {
     const id = 'CB_' + label;
     if (!COMPONENT_REGISTRY[id]) COMPONENT_REGISTRY[id] = { name: `냉난방 차단기 ${label}`, type: 'BREAKER', state: 'ON', panel: 'HVAC' };
   }));
 }
 function renderBreakers() {
-  const main = document.getElementById('cb-view-main');
-  if (main) main.innerHTML = CB_MAIN_ROWS.map((row, r) => {
-    const mw = CB_ROW_W / row.reduce((n, b) => n + cbModules(b), 0);   // 이 줄의 1칸 폭
-    const plate = row.map(b => `<span style="width:${cbModules(b) * mw}px" title="${b[0]}">${b[0]}</span>`).join('');
-    const rail = row.map((b, c) => {
-      const [label, poles, rating, kind] = b, id = cbId(label, r, c), st = COMPONENT_REGISTRY[id].state === 'ON' ? 'on' : 'off';
-      const rcbo = kind === 'RCBO';
-      const spec = rcbo ? `DS201L\n${rating}` : `S20${poles}M\n${rating}\nUC`;
-      return `<div class="cb-abb ${st}${rcbo ? ' rcbo' : ''}" id="cbw-${id}" style="width:${cbModules(b) * mw}px" onclick="toggleBreaker('${id}')" title="${COMPONENT_REGISTRY[id].name} (${poles}극 ${rating})">
-        ${rcbo ? '' : `<div class="cb-auxc" style="width:${mw / 2}px">13 21\n14 22</div>`}
-        <div class="cb-body"><div class="cb-spec">${spec}</div><div class="cb-wells">${'<span></span>'.repeat(poles)}</div><div class="cb-handle"></div>
-          <div class="cb-wins">${'<i></i>'.repeat(poles)}</div><div class="cb-yl">${label}</div>${rcbo ? '<div class="cb-test"></div>' : ''}</div></div>`;
-    }).join('');
-    return `<div class="cb-row"><div class="cb-plate">${plate}</div><div class="cb-rail">${rail}</div></div>`;
-  }).join('');
+  renderAbbPanel('cb-view-old', CB_OLD_ROWS, 'O', 'S28{p} UC');
+  renderAbbPanel('cb-view-main', CB_MAIN_ROWS, 'N', 'S20{p}M');
   const hvac = document.getElementById('cb-view-hvac');
   if (hvac) hvac.innerHTML = CB_HVAC_ROWS.map(row => {
     let x = 4; const labels = [];
@@ -13550,19 +13557,41 @@ function renderBreakers() {
       labels.push(`<b style="left:${x + w / 2}px">${label}</b>`); x += w + 2;
       const polesHtml = Array.from({ length: poles }, (_, i) =>
         `<div class="cb-pole${i === 0 ? ' first' : ''}" data-spec="${i === 0 ? `Schneider\nC60N\n${rating}\n415V~` : ''}"><div class="cb-on">I - ON</div></div>`).join('');
-      return `<div class="cb-sch ${st}" id="cbw-${id}" onclick="toggleBreaker('${id}')" title="${COMPONENT_REGISTRY[id].name} (${rating})">
+      return `<div class="cb-sch ${st}" data-cb="${id}" onclick="toggleBreaker('${id}')" title="${COMPONENT_REGISTRY[id].name} (${rating})">
         ${'<div class="cb-aux"><i></i></div>'.repeat(aux)}
         <div style="position:relative; display:flex;">${polesHtml}<div class="cb-bar" style="width:${poles * 42 - 12}px"></div></div></div>`;
     });
     return `<div class="cb-hrow"><div class="cb-hplate">${labels.join('')}</div><div class="cb-hrail">${units.join('')}</div></div>`;
   }).join('');
 }
+/* ABB 주 차단기반 그리기. 신조차(N): 줄마다 폭을 맞춤 / 기존차(O): 같은 칸 폭으로 실물처럼 줄 길이가 다름 */
+function renderAbbPanel(elId, rows, pk, model) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const uniform = pk === 'O';
+  const maxMod = Math.max(...rows.map(row => row.reduce((n, b) => n + cbModules(b), 0)));
+  el.innerHTML = rows.map((row, r) => {
+    const mods = row.reduce((n, b) => n + cbModules(b), 0);
+    const mw = CB_ROW_W / (uniform ? maxMod : mods);
+    const short = uniform && mods < maxMod ? ' short' : '';
+    const plate = row.map(b => `<span class="${/[가-힣]/.test(b[0]) ? 'sticker' : ''}" style="width:${cbModules(b) * mw}px" title="${b[0]}">${b[0]}</span>`).join('');
+    const rail = row.map((b, c) => {
+      const [label, poles, rating, kind] = b, id = cbId(b, r, c, pk), st = COMPONENT_REGISTRY[id].state === 'ON' ? 'on' : 'off';
+      const rcbo = kind === 'RCBO', sch = kind === 'SCH';
+      const spec = rcbo ? `DS201L\n${rating}` : sch ? `C60N\n${rating}` : `${model.replace('{p}', poles)}\n${rating}\nUC`;
+      return `<div class="cb-abb ${st}${rcbo ? ' rcbo' : ''}${sch ? ' sch' : ''}" data-cb="${id}" style="width:${cbModules(b) * mw}px" onclick="toggleBreaker('${id}')" title="${COMPONENT_REGISTRY[id].name} (${poles}극 ${rating})">
+        ${rcbo ? '' : `<div class="cb-auxc" style="width:${mw / 2}px">13 21\n14 22</div>`}
+        <div class="cb-body"><div class="cb-spec">${spec}</div><div class="cb-wells">${'<span></span>'.repeat(poles)}</div><div class="cb-handle"></div>
+          <div class="cb-wins">${'<i></i>'.repeat(poles)}</div><div class="cb-yl">${label}</div>${rcbo ? '<div class="cb-test"></div>' : ''}</div></div>`;
+    }).join('');
+    return `<div class="cb-row"><div class="cb-plate${short}">${plate}</div><div class="cb-rail${short}">${rail}</div></div>`;
+  }).join('');
+}
 function toggleBreaker(id) {
   const comp = COMPONENT_REGISTRY[id];
   if (!comp) return;
   comp.state = comp.state === 'ON' ? 'OFF' : 'ON';
-  const el = document.getElementById('cbw-' + id);
-  if (el) { el.classList.toggle('on', comp.state === 'ON'); el.classList.toggle('off', comp.state !== 'ON'); }
+  document.querySelectorAll(`[data-cb="${id}"]`).forEach(el => { el.classList.toggle('on', comp.state === 'ON'); el.classList.toggle('off', comp.state !== 'ON'); });
   try { sound.playHeavyLatch(); triggerHaptic(25); } catch (e) { }
   showTemporaryHudFeedback(`🔌 [${comp.name}] ${comp.state === 'ON' ? '투입 (ON)' : '차단 (OFF)'}`, comp.state !== 'ON');
   if (currentMode === 'REC') promptRecordStep(id, comp.name, comp.state);
@@ -13570,15 +13599,32 @@ function toggleBreaker(id) {
   broadcastStudentState(id, comp.state);
 }
 function showBreakerView(view) {
-  document.getElementById('cb-view-main').style.display = view === 'main' ? '' : 'none';
-  document.getElementById('cb-view-hvac').style.display = view === 'hvac' ? '' : 'none';
-  document.getElementById('cb-tab-main').classList.toggle('active', view === 'main');
-  document.getElementById('cb-tab-hvac').classList.toggle('active', view === 'hvac');
+  ['old', 'main', 'hvac'].forEach(v => {
+    document.getElementById('cb-view-' + v).style.display = view === v ? '' : 'none';
+    document.getElementById('cb-tab-' + v).classList.toggle('active', view === v);
+  });
+  fitBreakerView();
 }
+/* 차단기반을 화면(팝업 최대 크기)에 맞춰 통째로 배율 조정 → 스크롤 없이 한 화면에 */
+function fitBreakerView() {
+  const modal = document.getElementById('modal-breaker');
+  if (!modal || modal.style.display === 'none') return;
+  const head = modal.querySelector('.modal-header');
+  const availW = innerWidth * 0.98 - 4, availH = innerHeight * 0.97 - (head ? head.offsetHeight : 50) - 4;
+  ['cb-view-old', 'cb-view-main', 'cb-view-hvac'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || el.style.display === 'none') return;
+    el.style.zoom = '1';
+    const z = Math.max(0.4, Math.min(1.6, availW / el.scrollWidth, availH / el.scrollHeight));
+    el.style.zoom = String(z);
+  });
+}
+window.addEventListener('resize', fitBreakerView);
 function openBreakerPanel() {
   registerBreakers();
   renderBreakers();
   openModal('modal-breaker');
+  fitBreakerView();
 }
 window.openBreakerPanel = openBreakerPanel;
 window.toggleBreaker = toggleBreaker;
@@ -13770,6 +13816,6 @@ setTimeout(() => {
 </script>
 
 
-<script type="module" src="js/cabview3d.js?v=2026101701"></script>
+<script type="module" src="js/cabview3d.js?v=2026101703"></script>
 </body>
 </html>

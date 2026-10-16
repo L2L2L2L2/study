@@ -317,21 +317,69 @@ T.stopFront = canvasTex(256, 64, (g, w, h) => {
   g.fillStyle = '#e01b1b'; g.textAlign = 'center'; g.textBaseline = 'middle';
   g.font = 'bold 54px Arial'; g.fillText('2', w / 2, h / 2 + 3);
 }, { repeat: false });
-T.trainFront = canvasTex(256, 320, (g, w, h) => {   // 반대편 열차 전면
-  g.fillStyle = '#f1f2f0'; g.fillRect(0, 0, w, h);
-  g.fillStyle = '#1b1f24'; g.beginPath(); g.roundRect(18, 26, w - 36, 150, 14); g.fill();
-  g.fillStyle = 'rgba(120,150,170,.35)'; g.fillRect(28, 34, w - 56, 30);
-  g.fillStyle = '#ff6a1a'; g.font = "bold 22px 'Malgun Gothic'"; g.textAlign = 'center'; g.fillText('검단오류', w / 2, 58);
-  g.fillStyle = '#ef8a1e'; g.fillRect(0, 196, w, 22);
-  g.fillStyle = '#fefefe'; g.beginPath(); g.arc(46, 250, 14, 0, 7); g.arc(w - 46, 250, 14, 0, 7); g.fill();
-  g.fillStyle = '#9a9c9e'; g.fillRect(0, h - 26, w, 26);
+/* ---------- 반대편 열차 (인천2호선 전동차: 은색 차체 + 주황 띠, 검은 전면 + 은색 테두리) ----------
+   차체 단면(오른쪽 절반, 아래 → 지붕 가운데). 중심 기준 y: -1.625(차체 하단) ~ +1.625(지붕) */
+const CAR_L = 17.6, CAR_H = 3.25;
+const CAR_HALF = (() => {
+  const P = [[0, -1.625], [1.27, -1.625], [1.36, -1.48], [1.385, -0.7], [1.38, 0.15], [1.34, 0.95]];
+  for (let i = 1; i <= 7; i++) { const t = i / 7 * Math.PI / 2; P.push([0.93 + 0.41 * Math.cos(t), 1.215 + 0.41 * Math.sin(t)]); }
+  P.push([0, 1.625]);
+  return P;
+})();
+/* 단면 전체 둘레(오른쪽 아래 중심 → 오른쪽 → 지붕 → 왼쪽 → 아래 중심)와 둘레 위치(v) */
+const CAR_LOOP = (() => {
+  const R = CAR_HALF, L = R.slice(1, -1).reverse().map(([x, y]) => [-x, y]);
+  const pts = [...R, ...L, [0, -1.625]];
+  const len = [0]; for (let i = 1; i < pts.length; i++) len.push(len[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  return pts.map((p, i) => ({ x: p[0], y: p[1], v: len[i] / len[len.length - 1] }));
+})();
+/* 차체 높이 y → 측면 텍스처 v (side: +1 오른쪽, -1 왼쪽) */
+function carV(y, side) {
+  const seg = side > 0 ? CAR_LOOP.slice(0, 7) : CAR_LOOP.slice(CAR_LOOP.length - 8);
+  const S = side > 0 ? seg : seg.slice().reverse();          // 아래 → 위 순서
+  for (let i = 1; i < S.length; i++) if (y <= S[i].y || i === S.length - 1) {
+    const t = clamp((y - S[i - 1].y) / ((S[i].y - S[i - 1].y) || 1), 0, 1); return S[i - 1].v + (S[i].v - S[i - 1].v) * t;
+  }
+  return S[S.length - 1].v;
+}
+const SIDE_W = 2048, SIDE_H = 512;
+/* 측면 칠하기: 길이 x(m, 0 = 뒤끝, CAR_L = 운전실 앞끝) × 높이 y 구간을 양쪽 측면에 */
+function sideRect(g, x0, x1, y0, y1, fill) {
+  g.fillStyle = fill;
+  for (const side of [1, -1]) {
+    const va = carV(y0, side), vb = carV(y1, side), top = (1 - Math.max(va, vb)) * SIDE_H, bot = (1 - Math.min(va, vb)) * SIDE_H;
+    g.fillRect(x0 / CAR_L * SIDE_W, top, (x1 - x0) / CAR_L * SIDE_W, bot - top);
+  }
+}
+const CAR_DOORS = [2.7, 8.1, 13.5];            // 출입문 중심 (뒤끝 기준 m)
+const CAR_WINS = [[0.35, 1.85], [3.55, 7.25], [8.95, 12.65], [14.35, 15.3]];   // 측창 구간
+T.trainSide = canvasTex(SIDE_W, SIDE_H, (g, w, h) => {
+  g.fillStyle = '#c3c7cb'; g.fillRect(0, 0, w, h);                                    // 은색 차체
+  // 지붕 (측면 위쪽 끝 ~ 지붕 가운데)
+  const rv0 = carV(0.95, 1), rv1 = carV(0.95, -1);
+  g.fillStyle = '#d3d6d9'; g.fillRect(0, (1 - rv1) * h, w, (rv1 - rv0) * h);
+  for (let x = 0.4; x < CAR_L; x += 1.2) { g.fillStyle = 'rgba(0,0,0,.06)'; g.fillRect(x / CAR_L * w, (1 - rv1) * h, 2, (rv1 - rv0) * h); }
+  sideRect(g, 0, CAR_L, -1.625, -1.47, '#3b3e42');                                   // 하부 치마
+  sideRect(g, 0, CAR_L, -0.46, -0.40, '#f5f5f3');                                    // 흰 줄
+  sideRect(g, 0, CAR_L, -0.40, -0.16, '#ef8a1e');                                    // 주황 띠
+  for (const [a, b] of CAR_WINS) { sideRect(g, a - 0.06, b + 0.06, -0.06, 0.9, '#15181b'); sideRect(g, a, b, 0.0, 0.84, '#1f2a33'); }
+  for (const c of CAR_DOORS) {                                                         // 양문형 출입문
+    sideRect(g, c - 0.68, c + 0.68, -1.5, 0.92, '#55595e');
+    sideRect(g, c - 0.65, c + 0.65, -1.47, 0.89, '#aeb3b8');
+    sideRect(g, c - 0.55, c - 0.08, -0.05, 0.78, '#1f2a33'); sideRect(g, c + 0.08, c + 0.55, -0.05, 0.78, '#1f2a33');
+    sideRect(g, c - 0.012, c + 0.012, -1.47, 0.89, '#3d4145');
+  }
+  // 운전실 쪽 끝: 검은 면 + 위로 휘어 오르는 주황 띠 + 운전실 측창
+  sideRect(g, 15.7, CAR_L, -1.47, 1.0, '#141618');
+  sideRect(g, 16.25, 17.15, 0.12, 0.84, '#26313a');
+  for (let i = 0; i < 40; i++) {
+    const t = i / 39, x = 15.0 + t * 2.5, rise = Math.pow(t, 1.8) * 1.35;
+    sideRect(g, x, x + 2.5 / 39 + 0.01, -0.40 + rise, -0.16 + rise, '#ef8a1e');
+    sideRect(g, x, x + 2.5 / 39 + 0.01, -0.46 + rise, -0.40 + rise, '#f5f5f3');
+  }
+  g.fillStyle = '#1b1d20'; g.font = 'bold 22px Arial';                                 // 편성 번호
+  for (const side of [1, -1]) g.fillText('2135', 14.6 / CAR_L * w, (1 - carV(-1.0, side)) * h);
 }, { repeat: false });
-T.trainSide = canvasTex(512, 128, (g, w, h) => {   // 반대편 열차 측면
-  g.fillStyle = '#eceeed'; g.fillRect(0, 0, w, h);
-  g.fillStyle = '#2a3036'; for (let i = 0; i < 4; i++) g.fillRect(20 + i * 125, 26, 80, 46);
-  g.fillStyle = '#ef8a1e'; g.fillRect(0, 84, w, 10);
-  g.fillStyle = '#9a9c9e'; g.fillRect(0, h - 14, w, 14);
-});
 /* 객실 조명 (발광맵: 창 부분만 밝게, 나머지 검정) */
 function litCabin(g, x, y, w, h) {
   const gr = g.createLinearGradient(0, y, 0, y + h);   // 천장 조명 → 밝은 내장판 → 좌석 높이
@@ -343,21 +391,87 @@ function litCabin(g, x, y, w, h) {
   g.fillStyle = 'rgba(90,96,100,.55)'; g.fillRect(x, y + h * 0.22, w, h * 0.025);
   g.fillStyle = 'rgba(60,66,70,.5)'; g.fillRect(x, y + h * 0.82, w, h * 0.18);       // 좌석 등받이
 }
-T.trainSideLit = canvasTex(512, 128, (g, w, h) => {
+T.trainSideLit = canvasTex(SIDE_W, SIDE_H, (g, w, h) => {
   g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
-  for (let i = 0; i < 4; i++) litCabin(g, 20 + i * 125, 26, 80, 46);
-});
-T.trainFrontLit = canvasTex(256, 320, (g, w, h) => {
-  g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
-  g.save(); g.beginPath(); g.roundRect(18, 26, w - 36, 150, 14); g.clip();
-  litCabin(g, 18, 26, w - 36, 150);
-  g.fillStyle = 'rgba(25,30,34,.85)'; g.fillRect(18, 140, w - 36, 36);                   // 운전대 실루엣
-  g.restore();
-  g.fillStyle = '#1b1f24'; g.fillRect(28, 34, w - 56, 30);                               // 행선 표시기
-  g.fillStyle = '#ff6a1a'; g.font = "bold 22px 'Malgun Gothic'"; g.textAlign = 'center'; g.fillText('검단오류', w / 2, 58);
-  g.fillStyle = '#fefefe'; g.beginPath(); g.arc(46, 250, 14, 0, 7); g.arc(w - 46, 250, 14, 0, 7); g.fill();   // 전조등
+  const lit = (x0, x1, y0, y1) => { for (const side of [1, -1]) {
+    const va = carV(y0, side), vb = carV(y1, side), top = (1 - Math.max(va, vb)) * h, bot = (1 - Math.min(va, vb)) * h;
+    litCabin(g, x0 / CAR_L * w, top, (x1 - x0) / CAR_L * w, bot - top); } };
+  for (const [a, b] of CAR_WINS) lit(a, b, 0.0, 0.84);
+  for (const c of CAR_DOORS) { lit(c - 0.55, c - 0.08, -0.05, 0.78); lit(c + 0.08, c + 0.55, -0.05, 0.78); }
 }, { repeat: false });
+/* 전면: 은색 테두리 안 검은 면 — 창 3개(가운데 비상문)·행선 표시기·전조등/미등·그릴·주황 엠블럼·편성 번호 */
+const FW = 512, FH = 640;
+function frontFace(g, lit) {
+  const W = FW, H = FH;
+  g.fillStyle = lit ? '#000' : '#c3c7cb'; g.fillRect(0, 0, W, H);
+  if (!lit) {
+    g.fillStyle = '#141618'; g.beginPath(); g.roundRect(W * 0.07, H * 0.05, W * 0.86, H * 0.76, 26); g.fill();          // 검은 면
+    g.fillStyle = '#3b3e42'; g.fillRect(0, H * 0.91, W, H * 0.09);                                                     // 하부
+    g.fillStyle = '#1b1d20'; g.font = 'bold 30px Arial'; g.fillText('2135', W * 0.12, H * 0.885);                      // 편성 번호
+  }
+  // 창 (왼쪽 · 가운데 비상문 · 오른쪽)
+  const wins = [[0.12, 0.10, 0.27, 0.32], [0.415, 0.08, 0.17, 0.38], [0.61, 0.10, 0.27, 0.32]];
+  for (const [x, y, w, h] of wins) {
+    if (lit) { g.save(); g.globalAlpha = 0.55; litCabin(g, x * W, y * H, w * W, h * H); g.restore(); }
+    else {
+      const gr = g.createLinearGradient(0, y * H, 0, (y + h) * H); gr.addColorStop(0, '#2c3a46'); gr.addColorStop(1, '#16202a');
+      g.fillStyle = gr; g.beginPath(); g.roundRect(x * W, y * H, w * W, h * H, 6); g.fill();
+    }
+  }
+  // 행선 표시기 (양쪽 창 위)
+  for (const x of [0.14, 0.63]) {
+    if (!lit) { g.fillStyle = '#0b0b0b'; g.fillRect(x * W, 0.115 * H, 0.23 * W, 0.045 * H); }
+    g.fillStyle = '#ff7a1a'; g.font = "bold 20px 'Malgun Gothic'"; g.textAlign = 'center';
+    g.fillText('인천대공원', (x + 0.115) * W, 0.152 * H); g.textAlign = 'left';
+  }
+  // 그릴 (가로줄)
+  if (!lit) for (let y = 0.47; y < 0.79; y += 0.022) { g.fillStyle = '#2a2d31'; g.fillRect(W * 0.09, y * H, W * 0.82, 4); }
+  // 주황 엠블럼
+  if (!lit) {
+    g.fillStyle = '#ef8a1e'; g.fillRect(W * 0.41, H * 0.47, W * 0.18, H * 0.16);
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(W * 0.5, H * 0.55, 14, 0, 7); g.fill();
+  }
+  // 전조등(흰색) · 미등(빨강)
+  for (const x of [0.13, 0.67]) {
+    g.fillStyle = lit ? '#fffdf4' : '#e9eef2'; g.beginPath(); g.roundRect(x * W, 0.495 * H, 0.2 * W, 0.055 * H, 8); g.fill();
+    if (!lit) { g.fillStyle = '#9aa3aa'; g.beginPath(); g.arc((x + 0.1) * W, 0.522 * H, 13, 0, 7); g.fill(); }
+    g.fillStyle = lit ? '#5a0000' : '#a3141a'; g.fillRect((x + 0.05) * W, 0.585 * H, 0.1 * W, 0.022 * H);
+  }
+}
+T.trainFront = canvasTex(FW, FH, g => frontFace(g, false), { repeat: false });
+T.trainFrontLit = canvasTex(FW, FH, g => frontFace(g, true), { repeat: false });
 
+/* 차체 형상: 단면을 길이 방향으로 뽑은 몸체 + 운전실 쪽 코(앞으로 0.38m, 위로 갈수록 뒤로 기움) + 연결부 마감 */
+function buildCarGeometry() {
+  const half = CAR_L / 2, NOSE = 0.38, n = CAR_LOOP.length;
+  // 몸체
+  const pos = [], uv = [], idx = [];
+  for (const z of [-half, half]) for (const p of CAR_LOOP) { pos.push(p.x, p.y, z); uv.push(z < 0 ? 0 : 1, p.v); }
+  for (let i = 0; i < n - 1; i++) { const a = i, b = i + 1, c = n + i, d = n + i + 1; idx.push(a, c, b, b, c, d); }
+  const body = new THREE.BufferGeometry();
+  body.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); body.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  body.setIndex(idx); body.computeVertexNormals();
+  // 전면: 차체 단면 → 조금 작은 단면(앞으로 NOSE, 위쪽은 뒤로 기움) + 앞면
+  const fuv = (x, y) => [(x + 1.39) / 2.78, (y + 1.625) / CAR_H];
+  const inner = CAR_LOOP.map(p => ({ x: p.x * 0.95, y: -0.12 + (p.y + 0.12) * 0.96 }));
+  const zIn = y => half + NOSE - Math.max(0, y) * 0.09;
+  const fp = [], fu = [], fi = [];
+  for (const p of CAR_LOOP) { fp.push(p.x, p.y, half); fu.push(...fuv(p.x, p.y)); }
+  for (const p of inner) { fp.push(p.x, p.y, zIn(p.y)); fu.push(...fuv(p.x, p.y)); }
+  for (let i = 0; i < n - 1; i++) { const a = i, b = i + 1, c = n + i, d = n + i + 1; fi.push(a, c, b, b, c, d); }
+  const cIdx = fp.length / 3; fp.push(0, -0.12, zIn(0) + 0.02); fu.push(...fuv(0, -0.12));
+  for (let i = 0; i < n - 1; i++) fi.push(cIdx, n + i, n + i + 1);
+  const front = new THREE.BufferGeometry();
+  front.setAttribute('position', new THREE.Float32BufferAttribute(fp, 3)); front.setAttribute('uv', new THREE.Float32BufferAttribute(fu, 2));
+  front.setIndex(fi); front.computeVertexNormals();
+  // 연결부 쪽 마감 (평면)
+  const ep = [0, 0, -half], ei = [];
+  for (const p of CAR_LOOP) ep.push(p.x, p.y, -half);
+  for (let i = 1; i < n; i++) ei.push(0, i + 1, i);
+  const end = new THREE.BufferGeometry();
+  end.setAttribute('position', new THREE.Float32BufferAttribute(ep, 3)); end.setIndex(ei); end.computeVertexNormals();
+  return { body, front, end };
+}
 
 T.mesh = canvasTex(64, 64, (g, w, h) => {          // 마름모 철망
   g.clearRect(0, 0, w, h); g.strokeStyle = 'rgba(165,170,168,.9)'; g.lineWidth = 2;
@@ -1015,12 +1129,22 @@ function buildSkyFar() {
    ===================================================================== */
 function buildOppTrain() {
   // 창은 발광맵으로 객실 조명이 켜진 것처럼 (터널에서도 밝게 보임)
-  const side = new THREE.MeshLambertMaterial({ map: T.trainSide, emissive: 0xffffff, emissiveMap: T.trainSideLit, emissiveIntensity: 0.85 });
-  const front = new THREE.MeshLambertMaterial({ map: T.trainFront, emissive: 0xffffff, emissiveMap: T.trainFrontLit, emissiveIntensity: 0.75 });
-  const roof = new THREE.MeshLambertMaterial({ color: 0xd9dbdb }), dark = new THREE.MeshLambertMaterial({ color: 0x3a3c3e });
+  const side = new THREE.MeshLambertMaterial({ map: T.trainSide, emissive: 0xffffff, emissiveMap: T.trainSideLit, emissiveIntensity: 0.85, side: THREE.DoubleSide });
+  const front = new THREE.MeshLambertMaterial({ map: T.trainFront, emissive: 0xffffff, emissiveMap: T.trainFrontLit, emissiveIntensity: 0.8, side: THREE.DoubleSide });
+  const roof = new THREE.MeshLambertMaterial({ color: 0xd9dbdb }), dark = new THREE.MeshLambertMaterial({ color: 0x3a3c3e, side: THREE.DoubleSide });
   [side, front, roof, dark].forEach(withHeadlight);
-  const geo = new THREE.BoxGeometry(2.75, 3.25, 17.6);
-  const cars = [new THREE.Mesh(geo, [side, side, roof, dark, front, dark]), new THREE.Mesh(geo, [side, side, roof, dark, dark, front])];
+  const G0 = buildCarGeometry();
+  // 1호차: 운전실이 +Z(진행방향) / 2호차: 같은 차체를 180° 돌려 운전실이 뒤쪽(-Z)
+  const makeCar = flip => {
+    const c = new THREE.Group();
+    [[G0.body, side], [G0.front, front], [G0.end, dark]].forEach(([geo, m]) => {
+      const mesh = new THREE.Mesh(flip ? geo.clone().rotateY(Math.PI) : geo, m); c.add(mesh);
+    });
+    // 지붕 냉방기 2대
+    for (const z of [-4.2, 4.2]) { const ac = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.32, 3.0), roof); ac.position.set(0, 1.78, z); c.add(ac); }
+    return c;
+  };
+  const cars = [makeCar(false), makeCar(true)];
   // 하부 기기·대차 (차체와 레일 사이를 채워 떠 보이지 않게)
   const under = withHeadlight(new THREE.MeshLambertMaterial({ color: 0x24272b }));
   const underGeo = mergeGeometries([
@@ -1280,8 +1404,8 @@ function updateOpp(o, dt) {
   });
   const lv = clamp(lightAt(o.s, uO, 2), 0.25, 1.6); o.mats.forEach(m => m.color.setScalar(lv));
   const p = o.heads.geometry.attributes.position;
-  Wabs(o.s + od * 0.05, uO - 0.85, 0.85, _v); p.setXYZ(0, _v.x, _v.y, _v.z);
-  Wabs(o.s + od * 0.05, uO + 0.85, 0.85, _v); p.setXYZ(1, _v.x, _v.y, _v.z); p.needsUpdate = true;
+  Wabs(o.s + od * 0.42, uO - 0.62, 1.82, _v); p.setXYZ(0, _v.x, _v.y, _v.z);       // 전면 전조등 (코 끝)
+  Wabs(o.s + od * 0.42, uO + 0.62, 1.82, _v); p.setXYZ(1, _v.x, _v.y, _v.z); p.needsUpdate = true;
 }
 
 /* =====================================================================
