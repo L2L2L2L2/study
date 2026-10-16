@@ -418,6 +418,8 @@ const FW = 512, FH = 640;
    위: 창 3개(가운데 비상문은 별도 문틀 안 작은 창) + 와이퍼
    아래: 검은 가로 리브 / 가운데 주황 가로줄 + 엠블럼 주황 판 / 양쪽 흰 하우징 둥근 전조등 + 빨간 LED 미등 / 편성 번호
    맨 아래: 검은 리브 띠 + 은색 하부 덮개와 연결기 */
+/* 마주 오는 열차 행선: 내 열차와 반대 방향의 종착역 (내가 하선 → 상선 열차 '검단오류' / 내가 상선 → 하선 열차 '운연') */
+let OPP_DEST = '검단오류';
 function frontFace(g, lit) {
   const W = FW, H = FH, X = f => f * W, Y = f => f * H;
   const L = 0.15, R = 0.85, C0 = 0.395, C1 = 0.605;          // 검은 면 좌우 끝 · 가운데 기둥
@@ -459,7 +461,7 @@ function frontFace(g, lit) {
     // 행선 표시기 (창 위쪽 안)
     if (!lit) { g.fillStyle = '#0b0b0b'; g.fillRect(X(x + 0.02), Y(0.175), X(0.17), Y(0.035)); }
     g.fillStyle = '#ff7a1a'; g.font = "bold 15px 'Malgun Gothic'"; g.textAlign = 'center';
-    g.fillText('인천대공원', X(x + 0.105), Y(0.203)); g.textAlign = 'left';
+    g.fillText(OPP_DEST, X(x + 0.105), Y(0.203)); g.textAlign = 'left';
   }
   if (!lit) { g.fillStyle = '#0a0b0c'; g.fillRect(X(C0), Y(0.205), X(C1 - C0), Y(0.33)); g.fillStyle = '#1c2026'; g.fillRect(X(C0 + 0.01), Y(0.212), X(C1 - C0 - 0.02), Y(0.318)); }
   glass(C0 + 0.04, 0.265, C1 - C0 - 0.08, 0.19);
@@ -511,7 +513,7 @@ function frontFaceNew(g, lit) {
     g.fillStyle = '#26292d'; g.fillRect(X(0.58), Y(0.13), X(0.24), Y(0.075));
   }
   g.fillStyle = '#ff7a1a'; g.font = "bold 17px 'Malgun Gothic'"; g.textAlign = 'center';
-  g.fillText('인천대공원', X(0.305), Y(0.178));
+  g.fillText(OPP_DEST, X(0.305), Y(0.178));
   g.font = 'bold 24px monospace'; g.fillText('2230', X(0.70), Y(0.18)); g.textAlign = 'left';
   // 큰 통유리창
   if (lit) { g.save(); g.globalAlpha = 0.5; litCabin(g, X(0.18), Y(0.235), X(0.64), Y(0.245)); g.restore(); }
@@ -539,10 +541,20 @@ function frontFaceNew(g, lit) {
     g.fillStyle = lit ? '#5a0000' : '#d4232b'; g.fillRect(X(lx - 0.045), Y(0.665), X(0.09), Y(0.02));
   }
 }
-T.trainFront = canvasTex(FW, FH, g => frontFace(g, false), { repeat: false });
-T.trainFrontNew = canvasTex(FW, FH, g => frontFaceNew(g, false), { repeat: false });
-T.trainFrontNewLit = canvasTex(FW, FH, g => frontFaceNew(g, true), { repeat: false });
-T.trainFrontLit = canvasTex(FW, FH, g => frontFace(g, true), { repeat: false });
+const OPP_FRONTS = [
+  ['trainFront', g => frontFace(g, false)], ['trainFrontLit', g => frontFace(g, true)],
+  ['trainFrontNew', g => frontFaceNew(g, false)], ['trainFrontNewLit', g => frontFaceNew(g, true)]];
+for (const [k, draw] of OPP_FRONTS) T[k] = canvasTex(FW, FH, draw, { repeat: false });
+/* 운행 방향이 바뀌면 마주 오는 열차 전면(행선 표시기)을 다시 그림 */
+function setOppDest(dir) {
+  const d = dir > 0 ? '검단오류' : '운연';
+  if (d === OPP_DEST) return;
+  OPP_DEST = d;
+  for (const [k, draw] of OPP_FRONTS) {
+    const c = T[k].image, g = c.getContext('2d');
+    g.clearRect(0, 0, c.width, c.height); draw(g); T[k].needsUpdate = true;
+  }
+}
 
 /* 차체 형상: 단면을 길이 방향으로 뽑은 몸체 + 운전실 쪽 코(앞으로 0.38m, 위로 갈수록 뒤로 기움) + 연결부 마감 */
 function buildCarGeometry() {
@@ -1573,6 +1585,7 @@ window.CabView3D = {
   update(st) {
     if (st.dir !== undefined && (st.dir < 0 ? -1 : 1) !== train.dir) {   // 운행 방향 전환 (하선/상선)
       train.dir = st.dir < 0 ? -1 : 1;
+      setOppDest(train.dir);
       if (st.s !== undefined) train.s = clamp(st.s, START + 50, END - 40);
       jumpReset();
     }
@@ -1594,6 +1607,7 @@ window.CabView3D = {
   get stats() { return { fps: Math.round(fps), scale: renderScale, chunks: chunks.size, zone: zc(train.s) }; },
   get renderInfo() { updateCamera(0.016); updateLod(); renderer.render(scene, camera); const r = renderer.info.render; return { calls: r.calls, tris: r.triangles, chunks: chunks.size, geos: renderer.info.memory.geometries }; },
   get glass() { return { rain: glass.rain, wiper: glass.wiperMode }; },
+  get oppDest() { return OPP_DEST; },   // 마주 오는 열차 행선 (확인용)
 };
 
 const t0 = performance.now();
