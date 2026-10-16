@@ -1288,26 +1288,37 @@ function updateOpp(o, dt) {
    11. 크기 / 해상도 자동 조절
    ===================================================================== */
 let renderScale = 0.85, autoQ = true, cssW = 0, cssH = 0;
+/* 크기·해상도가 실제로 바뀔 때만 다시 설정하고, 설정 직후 바로 다시 그림
+   (캔버스 크기를 바꾸면 내용이 지워지므로 그대로 두면 빈 화면이 한 프레임 보여 깜빡임) */
+let appliedGL = '', appliedCab = '', ready = false;
 function resize() {
   cssW = STAGE.clientWidth || innerWidth; cssH = STAGE.clientHeight || innerHeight;
   const dpr = Math.min(devicePixelRatio || 1, 1.5);
+  const glW = Math.round(cssW * dpr * renderScale), glH = Math.round(cssH * dpr * renderScale);
+  const cabKey = `${Math.round(cssW * dpr)}x${Math.round(cssH * dpr)}:${STAGE.dataset.winBottom}`;
+  if (`${glW}x${glH}` === appliedGL && cabKey === appliedCab) return;
+  appliedGL = `${glW}x${glH}`;
   renderer.setPixelRatio(1);
-  renderer.setSize(Math.round(cssW * dpr * renderScale), Math.round(cssH * dpr * renderScale), false);
-  WIN = drawCab(Math.round(cssW * dpr), Math.round(cssH * dpr));
-  fxCanvas.width = WIN.w; fxCanvas.height = WIN.h;
+  renderer.setSize(glW, glH, false);
+  if (cabKey !== appliedCab) {
+    appliedCab = cabKey;
+    WIN = drawCab(Math.round(cssW * dpr), Math.round(cssH * dpr));
+    fxCanvas.width = WIN.w; fxCanvas.height = WIN.h;
+  }
   const { horizon } = WIN;
   const aspect = cssW / cssH, k = 1.2, vfov = 2 * Math.atan(Math.tan(36 * Math.PI / 180) / aspect);
   camera.aspect = aspect;
   camera.fov = 2 * Math.atan(Math.tan(vfov / 2) * k) * 180 / Math.PI;
   camera.setViewOffset(cssW, cssH * k, 0, cssH * (k / 2 - horizon), cssW, cssH);
   camera.updateProjectionMatrix();
+  if (ready) { renderer.render(scene, camera); drawGlassFx(0); }
 }
 let fpsAcc = 0, fpsN = 0, fps = 60, lastAdj = 0;
 function adaptQuality(dt, now) {
   fpsAcc += dt; fpsN++;
   if (fpsAcc < 1) return;
   fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0;
-  if (!autoQ || now - lastAdj < 2500) return;
+  if (!autoQ || now - lastAdj < 2500 || now - t0 < 5000) return;   // 시작 직후(선로 생성 중)에는 조절하지 않음
   if (fps < 42 && renderScale > 0.5) { renderScale = Math.max(0.5, renderScale - 0.1); lastAdj = now; resize(); }
   else if (fps > 57 && renderScale < 1) { renderScale = Math.min(1, renderScale + 0.05); lastAdj = now; resize(); }
 }
@@ -1355,17 +1366,18 @@ updateChunks(train.s, 99);
 resize();
 new ResizeObserver(() => resize()).observe(STAGE);
 console.log(`[cabview3d] init ${(performance.now() - t0).toFixed(0)} ms`);
+ready = true;
 window.dispatchEvent(new Event('cabview3d-ready'));
 
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now; time += dt;
   if (STAGE.offsetParent !== null || STAGE === document.body) {
+    adaptQuality(dt, now);                 // 해상도 변경은 그리기 전에
     updateChunks(train.s, 1); updateCamera(dt); updateOpp(opp, dt); updateLod();
     sky.position.copy(camera.position); far.position.set(camera.position.x, 0, camera.position.z);
     renderer.render(scene, camera);
     drawGlassFx(dt);
-    adaptQuality(dt, now);
   }
   requestAnimationFrame(frame);
 }
