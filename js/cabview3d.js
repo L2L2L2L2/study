@@ -93,31 +93,38 @@ const hemi = new THREE.HemisphereLight(0xdfe9f3, 0x6a6553, 1.9);
 const sun = new THREE.DirectionalLight(0xfff0dc, 2.3);
 sun.position.set(-0.45, 1, -0.35).multiplyScalar(100);
 scene.add(hemi, sun);
-/* 전조등: 열차 전면에서 선로 앞쪽을 비추는 스포트라이트 (하향 = 평소 / 상향 = 더 밝고 멀리) */
+/* 전조등: 모든 재질 셰이더에 '전조등 빛' 항을 주입 (구운 조명을 쓰는 Basic 재질의 벽·바닥까지 함께 밝아짐)
+   하향 = 평소 / 상향 = 더 밝고 멀리. 원뿔 각도 + 거리 감쇠, 재질 고유색(구운 조명 제외) 기준 */
 const HEAD = {
-  LOW:  { intensity: 60, distance: 90, angle: 0.36, aim: 35 },
-  HIGH: { intensity: 160, distance: 220, angle: 0.30, aim: 110 },
+  LOW:  { k: 0.65, range: 70,  cos: 0.80, aim: 30 },
+  HIGH: { k: 1.6, range: 220, cos: 0.84, aim: 90 },
 };
-const headlight = new THREE.SpotLight(0xfff4e0, 0, 90, 0.36, 0.55, 1.2);
-headlight.castShadow = false;
-scene.add(headlight, headlight.target);
-/* 전조등 빛 웅덩이: 조명 계산을 안 받는 터널 바닥(도상)에도 비친 느낌을 주는 가산 합성 띠 (선로 곡선을 따라 매 프레임 갱신) */
-const POOL_N = 24;
-const pool = (() => {
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array((POOL_N + 1) * 3 * 3), 3));
-  g.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array((POOL_N + 1) * 3 * 3), 3));
-  const idx = [];
-  for (let i = 0; i < POOL_N; i++) for (let j = 0; j < 2; j++) {
-    const a = i * 3 + j, b = a + 1, c = a + 3, d = a + 4;
-    idx.push(a, c, b, b, c, d);
-  }
-  g.setIndex(idx);
-  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending,
-    depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
-  m.frustumCulled = false; m.renderOrder = 4; scene.add(m);
-  return m;
-})();
+const HL = { pos: { value: new THREE.Vector3() }, dir: { value: new THREE.Vector3(0, 0, -1) }, k: { value: 0 }, range: { value: 75 }, cos: { value: 0.8 } };
+function withHeadlight(mat) {
+  if (!mat || !(mat.isMeshBasicMaterial || mat.isMeshLambertMaterial || mat.isMeshPhongMaterial)) return mat;
+  if (mat.blending === THREE.AdditiveBlending) return mat;
+  mat.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, { hlPos: HL.pos, hlDir: HL.dir, hlK: HL.k, hlRange: HL.range, hlCos: HL.cos });
+    sh.vertexShader = 'varying vec3 vHlW;\n' + sh.vertexShader.replace('#include <project_vertex>',
+      `vec4 hlw = vec4(transformed, 1.0);
+      #ifdef USE_INSTANCING
+        hlw = instanceMatrix * hlw;
+      #endif
+      vHlW = (modelMatrix * hlw).xyz;
+      #include <project_vertex>`);
+    sh.fragmentShader = 'uniform vec3 hlPos; uniform vec3 hlDir; uniform float hlK, hlRange, hlCos; varying vec3 vHlW;\n' + sh.fragmentShader
+      .replace('#include <color_fragment>', 'vec3 hlAlb = diffuseColor.rgb;\n#include <color_fragment>')
+      .replace('#include <opaque_fragment>', `if (hlK > 0.0) {
+        vec3 hd = vHlW - hlPos; float hL = max(length(hd), 0.5);
+        float cone = smoothstep(hlCos - 0.06, hlCos + 0.10, dot(hd / hL, hlDir));
+        float fall = clamp(1.0 - hL / hlRange, 0.0, 1.0);
+        outgoingLight += hlAlb * vec3(1.0, 0.95, 0.86) * hlK * cone * fall * fall * (0.9 / (1.0 + hL * 0.10));
+      }
+      #include <opaque_fragment>`);
+  };
+  mat.customProgramCacheKey = () => 'hl1';
+  return mat;
+}
 
 /* =====================================================================
    4. 캔버스 텍스처
@@ -426,11 +433,12 @@ const MAT = {
 const GLOW = color => new THREE.PointsMaterial({ map: T.glow, size: 2.4, sizeAttenuation: true, transparent: true,
   depthWrite: false, blending: THREE.AdditiveBlending, color, toneMapped: false });
 MAT.glowW = GLOW(0xfff1dc); MAT.glowG = GLOW(0x55ff99);
+Object.values(MAT).forEach(withHeadlight);
 const SIGN_MAT = new Map();
 const signMat = (st, basic) => {
   const k = st.id + (basic ? 'b' : 'a');
-  if (!SIGN_MAT.has(k)) SIGN_MAT.set(k, basic ? new THREE.MeshBasicMaterial({ map: signTex(st.name), color: new THREE.Color().setScalar(1.1) })
-    : new THREE.MeshLambertMaterial({ map: signTex(st.name) }));
+  if (!SIGN_MAT.has(k)) SIGN_MAT.set(k, withHeadlight(basic ? new THREE.MeshBasicMaterial({ map: signTex(st.name), color: new THREE.Color().setScalar(1.1) })
+    : new THREE.MeshLambertMaterial({ map: signTex(st.name) })));
   return SIGN_MAT.get(k);
 };
 
@@ -711,10 +719,12 @@ function stationFeatures(st, a, b, under) {
   inst(G.door, MAT.doorGlow, doors);
   inst(G.steps, MAT.metalU, steps);
   // 정차위치표지: 측면(PSD 부착, 흑색 바탕 백색 숫자) + 전면(선로 중앙, 백색 반사재 적색 숫자)
-  if (st.stop + 0.6 >= a && st.stop + 0.6 < b) inst(G.stopR, under ? MAT.stopU : MAT.stopA, [{ s: st.stop + 0.6, u: 3.69, v: 2.6 }]);
+  //   바닥 표지 = 정차 시 열차 앞끝 / PSD 표지 = 운전자 옆(앞끝에서 1m 뒤) → 우측 측창으로 확인
+  const SIDE_BACK = 1.0;
+  if (st.stop - SIDE_BACK >= a && st.stop - SIDE_BACK < b) inst(G.stopR, under ? MAT.stopU : MAT.stopA, [{ s: st.stop - SIDE_BACK, u: 3.69, v: 2.6 }]);
   if (st.stop >= a && st.stop < b) inst(G.stopFront, MAT.stopFront, [{ s: st.stop, u: TRK, v: -0.30 }]);
   // 상선 (반대편 선로, s 감소 방향 진행)
-  if (st.oppStop - 0.6 >= a && st.oppStop - 0.6 < b) inst(G.stopR, under ? MAT.stopU : MAT.stopA, [{ s: st.oppStop - 0.6, u: -3.69, v: 2.6, yaw: Math.PI }]);
+  if (st.oppStop + SIDE_BACK >= a && st.oppStop + SIDE_BACK < b) inst(G.stopR, under ? MAT.stopU : MAT.stopA, [{ s: st.oppStop + SIDE_BACK, u: -3.69, v: 2.6, yaw: Math.PI }]);
   if (st.oppStop >= a && st.oppStop < b) inst(G.stopFront, MAT.stopFront, [{ s: st.oppStop, u: -TRK, v: -0.30, yaw: Math.PI }]);
 }
 
@@ -758,7 +768,7 @@ function buildCut(a, b) {
   for (const p of PORTALS) {
     if (p.s < a || p.s >= b) continue;
     const top = 1.4 - Y(p.s);
-    plate(p.s, rect(-7.5, 7.5, -1.0, top), rect(-BOX_W, BOX_W, -0.45, BOX_H), new THREE.MeshLambertMaterial({ map: T.concrete, side: DS2 }));
+    plate(p.s, rect(-7.5, 7.5, -1.0, top), rect(-BOX_W, BOX_W, -0.45, BOX_H), withHeadlight(new THREE.MeshLambertMaterial({ map: T.concrete, side: DS2 })));
     inst(G.unit, MAT.concI, [{ s: p.s - p.dir * 0.3, u: 0, v: top - 0.2, sx: 15.4, sy: 0.4, sz: 1.2 }]);
   }
 }
@@ -809,7 +819,7 @@ function buildTunnels(a, b) {
     const z0 = zc(s - 0.5), z1 = zc(s + 0.5);
     if ((z0 === 3 && z1 === 4) || (z0 === 4 && z1 === 3) || (z0 === 4 && z1 === 5) || (z0 === 5 && z1 === 4)) {
       plate(s, rect(-7, 7, -1, 8), rect(-BOX_W + 0.01, BOX_W - 0.01, -0.44, BOX_H - 0.01),
-        new THREE.MeshBasicMaterial({ map: T.concrete, color: new THREE.Color().setScalar(lightAt(s, 4, 3) * 0.8), side: DS2 }));
+        withHeadlight(new THREE.MeshBasicMaterial({ map: T.concrete, color: new THREE.Color().setScalar(lightAt(s, 4, 3) * 0.8), side: DS2 })));
     }
   }
 }
@@ -1008,10 +1018,11 @@ function buildOppTrain() {
   const side = new THREE.MeshLambertMaterial({ map: T.trainSide, emissive: 0xffffff, emissiveMap: T.trainSideLit, emissiveIntensity: 0.85 });
   const front = new THREE.MeshLambertMaterial({ map: T.trainFront, emissive: 0xffffff, emissiveMap: T.trainFrontLit, emissiveIntensity: 0.75 });
   const roof = new THREE.MeshLambertMaterial({ color: 0xd9dbdb }), dark = new THREE.MeshLambertMaterial({ color: 0x3a3c3e });
+  [side, front, roof, dark].forEach(withHeadlight);
   const geo = new THREE.BoxGeometry(2.75, 3.25, 17.6);
   const cars = [new THREE.Mesh(geo, [side, side, roof, dark, front, dark]), new THREE.Mesh(geo, [side, side, roof, dark, dark, front])];
   // 하부 기기·대차 (차체와 레일 사이를 채워 떠 보이지 않게)
-  const under = new THREE.MeshLambertMaterial({ color: 0x24272b });
+  const under = withHeadlight(new THREE.MeshLambertMaterial({ color: 0x24272b }));
   const underGeo = mergeGeometries([
     new THREE.BoxGeometry(2.3, 0.45, 15.5).translate(0, -1.75, 0),
     new THREE.BoxGeometry(2.0, 0.55, 2.6).translate(0, -2.0, 6.5),
@@ -1224,26 +1235,11 @@ function updateCamera(dt) {
   // 전조등 (낮에는 거의 티 나지 않고 터널에서 효과)
   const hp = HEAD[train.head];
   if (hp) {
-    Wabs(train.s + 0.2 * D, uT, 1.0, headlight.position);
-    Wabs(train.s + hp.aim * D, uT, 0, headlight.target.position);
-    headlight.intensity = hp.intensity * lerp(0.25, 1, inside); headlight.distance = hp.distance; headlight.angle = hp.angle;
-  } else headlight.intensity = 0;
-  // 바닥 빛 띠: 가운데가 밝고 양옆·먼 쪽으로 흐려짐
-  pool.visible = !!hp && inside > 0.05;
-  if (pool.visible) {
-    const P = pool.geometry.attributes.position, C = pool.geometry.attributes.color;
-    const len = train.head === 'HIGH' ? 130 : 55, k = (train.head === 'HIGH' ? 0.34 : 0.26) * inside;
-    for (let i = 0; i <= POOL_N; i++) {
-      const t = i / POOL_N, d = 2 + Math.pow(t, 1.6) * len;
-      const w = 0.9 + d * 0.035, f = k * smooth(0, 0.06, t) * Math.pow(1 - t, 1.8);
-      for (let j = 0; j < 3; j++) {
-        Wabs(train.s + d * D, uT + (j - 1) * w, -0.16, _v); P.setXYZ(i * 3 + j, _v.x, _v.y, _v.z);
-        const e = j === 1 ? f : 0;
-        C.setXYZ(i * 3 + j, e, e * 0.93, e * 0.8);
-      }
-    }
-    P.needsUpdate = true; C.needsUpdate = true;
-  }
+    Wabs(train.s + 0.2 * D, uT, 1.0, HL.pos.value);
+    Wabs(train.s + hp.aim * D, uT, 0, _v);
+    HL.dir.value.copy(_v).sub(HL.pos.value).normalize();
+    HL.k.value = hp.k * lerp(0.12, 1, inside); HL.range.value = hp.range; HL.cos.value = hp.cos;
+  } else HL.k.value = 0;
 }
 const _b0 = new THREE.Vector3(), _b1 = new THREE.Vector3(), _bx = new THREE.Vector3(), _by = new THREE.Vector3(), _bz = new THREE.Vector3();
 function updateOpp(o, dt) {

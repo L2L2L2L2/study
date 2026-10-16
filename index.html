@@ -13,7 +13,7 @@
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
   } }
   </script>
-  <script src="js/route.js?v=2026101608"></script>
+  <script src="js/route.js?v=2026101612"></script>
   <style>
     :root {
       --bg-dark: #121519;
@@ -5064,6 +5064,25 @@
     }
     .console-op1 .op1-bottom-row { display: flex !important; flex-direction: column !important; gap: 8px !important; width: 100% !important; }
     .console-op1 .op1-bottom-left-col, .console-op1 .op1-bottom-right-col { width: 100% !important; }
+
+    /* ===== 와이드 모니터 (21:9, 32:9 등 가로세로비 2:1 이상) =====
+       ┌ OP2~5 ┬────── 3D 전면 (전체 높이) ──────┬─ DU ─┬─ ADU ─┐
+       │(전체  │                                  ├─ OP1 (방송·출입문·마스콘) ┤
+       └ 높이) ┴──────────────────────────────────┴───────────────┘ */
+    @media (min-aspect-ratio: 2/1) {
+      .sim-workstation-layout {
+        grid-template-columns: 14% 1fr 16% 16% !important;
+        grid-template-rows: 36% 64% !important;
+        grid-template-areas: "side cab du adu" "side cab op1 op1" !important;
+      }
+      .console-op1 { border-left: none; border-top: 1px solid #21262d; }
+    }
+    @media (min-aspect-ratio: 3/1) {   /* 32:9 */
+      .sim-workstation-layout {
+        grid-template-columns: 11% 1fr 14% 14% !important;
+        grid-template-rows: 38% 62% !important;
+      }
+    }
 
     /* DU 화면을 ADU와 같은 모니터 비율로: 우측 설명 칸을 넓혀 줄바꿈으로 행이 길어지지 않게,
        중앙 ESK 칸은 좁히고 두 줄 표기, 값 박스 여백 축소 */
@@ -13339,6 +13358,7 @@ function switchRightOp(opId) {
   }
 
   activeRightPanel = opId;
+  requestAnimationFrame(fitSidePanel);
 
   // 1. 오버레이 버튼 active 토글
   document.querySelectorAll('.cab-op-btn').forEach(btn => {
@@ -13425,7 +13445,45 @@ function updateMmiScalers() {
   fit(duScreen, duWrap);
   fit(aduScreen, aduWrap);
   fitConsoleOp1();
+  fitSidePanel();
+  fitCabOverlays();
 }
+
+/* 와이드 모니터: 3D 화면이 전체 높이로 커지므로 화면 위 OP 탭·속도 OSD·메뉴 버튼도 비례 확대 (기준: 3D 화면 높이 720px) */
+function fitCabOverlays() {
+  const cab = document.getElementById('wrap-CAB_VIEW');
+  if (!cab) return;
+  const wide = window.matchMedia('(min-aspect-ratio: 2/1)').matches;
+  const z = wide ? Math.max(1, Math.min(2.2, cab.clientHeight / 720)) : 1;
+  cab.querySelectorAll('.cab-op-overlay-bar, .cab-osd-overlay, .sim-quick-menu-btn, .sim-quick-menu, .cab-return-badge')
+    .forEach(el => { el.style.zoom = z === 1 ? '' : String(z); });
+}
+window.fitCabOverlays = fitCabOverlays;
+
+/* 와이드 모니터(2:1 이상): 좌측 OP2~OP5 패널을 일반 모니터와 같은 배치(폭 335px 기준)로 두고
+   칸 크기에 맞춰 통째로 확대 → 버튼이 위쪽에 몰리고 아래가 비는 현상 방지. 일반 화면에서는 원래대로 */
+const SIDE_BASE_W = 335;
+function fitSidePanel() {
+  const col = document.getElementById('sim-right-col');
+  if (!col) return;
+  const panel = [...col.children].find(e => e.classList.contains('train-metal-panel') && e.style.display !== 'none' && e.offsetParent !== null);
+  if (!panel) return;
+  if (!window.matchMedia('(min-aspect-ratio: 2/1)').matches) {
+    panel.style.zoom = ''; panel.style.width = ''; panel.style.margin = ''; panel.style.removeProperty('min-height');
+    return;
+  }
+  const cs = getComputedStyle(col);
+  const cw = col.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const ch = col.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  panel.style.zoom = '1'; panel.style.width = SIDE_BASE_W + 'px';
+  panel.style.setProperty('min-height', '0', 'important');   // CSS의 min-height:100% !important 무시하고 실제 내용 높이 측정
+  const nh = panel.scrollHeight;
+  const z = Math.max(0.4, Math.min(cw / SIDE_BASE_W, ch / nh));
+  panel.style.zoom = String(z);
+  panel.style.setProperty('min-height', (ch / z) + 'px', 'important');   // 확대 후에도 칸 높이를 채움
+  panel.style.margin = `0 auto`;
+}
+window.fitSidePanel = fitSidePanel;
 
 // 윈도우 리사이즈 및 초기화 연동
 window.addEventListener('resize', () => {
@@ -13448,6 +13506,6 @@ setTimeout(() => {
 </script>
 
 
-<script type="module" src="js/cabview3d.js?v=2026101608"></script>
+<script type="module" src="js/cabview3d.js?v=2026101612"></script>
 </body>
 </html>
