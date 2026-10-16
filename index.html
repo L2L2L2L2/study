@@ -2687,6 +2687,11 @@
     }
 
     /* [2] 출입문 스위치 패널 */
+    /* OP1 좌측 열: 마이크 패널·출입문 버튼판이 칸 높이를 빈틈없이 채우도록 늘림 */
+    .op1-bottom-left-col > .cob-panel { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-evenly; }
+    .op1-bottom-left-col > .op1-door-plate { flex: 1 1 auto; }
+    /* OP1 우측 열: 마스콘 판도 남는 높이만큼 늘림 (내부 높이는 updateMasconScalers에서 맞춤) */
+    .op1-bottom-right-col > .mascon-frame { flex: 1 1 auto; }
     .op1-door-plate {
       background: #181c22;
       border: 2px solid #363d47;
@@ -7942,8 +7947,12 @@ function updateMasconScalers() {
     const scale = Math.max(0.50, Math.min(1.25, w / 440));
     inner.style.setProperty('--mascon-scale', scale);
     inner.style.transform = `scale(${scale})`;
+    // 판이 내용보다 높게 늘어난 경우(OP1 콘솔 칸) 내부 판 높이도 같이 늘려 아래 빈 공간 제거
+    const avail = frame.clientHeight - 16;
+    const innerH = Math.max(220, frame.closest('.op1-bottom-right-col') ? Math.floor(avail / scale) : 220);
+    inner.style.height = `${innerH}px`;
     if (wrap) {
-      wrap.style.height = `${Math.round(220 * scale)}px`;
+      wrap.style.height = `${Math.round(innerH * scale)}px`;
     }
   });
 }
