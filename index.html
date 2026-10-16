@@ -13701,6 +13701,14 @@ function showBreakerView(view) {
   });
   fitBreakerView();
 }
+/* 명판 이름: 칸에 들어가는 한 크게 (15px부터 줄여 가며, 원래 10.5px 아래로는 줄이지 않음). 노란 스티커는 그대로 */
+function fitPlateLabels(root) {
+  root.querySelectorAll('.cb-plate span:not(.sticker)').forEach(sp => {
+    let fs = 15;
+    sp.style.fontSize = fs + 'px';
+    while (fs > 10.5 && sp.scrollWidth > sp.clientWidth) { fs -= 0.5; sp.style.fontSize = fs + 'px'; }
+  });
+}
 /* 차단기반을 화면(팝업 최대 크기)에 맞춰 통째로 배율 조정 → 스크롤 없이 한 화면에 */
 function fitBreakerView() {
   const modal = document.getElementById('modal-breaker');
@@ -13711,6 +13719,7 @@ function fitBreakerView() {
     const el = document.getElementById(id);
     if (!el || el.style.display === 'none') return;
     el.style.zoom = '1';
+    fitPlateLabels(el);
     const z = Math.max(0.4, Math.min(1.6, availW / el.scrollWidth, availH / el.scrollHeight));
     el.style.zoom = String(z);
   });
