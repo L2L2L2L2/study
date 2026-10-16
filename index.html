@@ -9779,21 +9779,14 @@ function cvDrawOverlayInfo(ctx, st, tun) {
   const msgs = [];
   if (typeof AtoDriverless !== 'undefined' && AtoDriverless.state === 'TERMINATED') {
     msgs.push(['🏁 종착역(' + st.name + ') 운행종료', '당역 종착 / 회차 대기', '#f97316']);
-    msgs.push(['정차제동(HB) 2.0 Bar 체결', '대기 중', '#ef4444']);
   } else {
-    if (typeof AtoDriverless !== 'undefined' && AtoDriverless.isHoldingBrake) {
-      msgs.push(['정차제동(HB) 2.0 Bar 체결', '승강장 정차 중', '#ef4444']);
-    }
     if (cvState.slope <= -0.04) {
       msgs.push(['급경사 하구배 (54‰)', '하강 주의 감속', '#f87171']);
     } else if (cvState.slope >= 0.03) {
       msgs.push(['급경사 상구배 (38‰)', '상승 견인 가속', '#60a5fa']);
     }
-    if (tun.inside) msgs.push(['터널 통과 중', '잔여 ' + Math.round(tun.exit) + ' m', '#7dd3fc']);
-    else if (tun.entry < 250) msgs.push(['터널 진입 예고', Math.round(tun.entry) + ' m 전방', '#fbbf24']);
     if (st.dStart > 0 && st.dStart < 420) msgs.push(['다음역 ' + st.name, Math.round(st.dStart) + ' m', '#a7f3d0']);
     else if (st.dStart <= 0 && st.dEnd > 0) msgs.push([st.name + ' 정차위치', '승강장 진입', '#a7f3d0']);
-    if (cvState.rain > 0.12) msgs.push(['강우 구간', cvState.rain > 0.6 ? '강우 강함' : '약한 비', '#bae6fd']);
   }
   if (!msgs.length) return;
 
