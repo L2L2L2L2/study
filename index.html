@@ -4945,6 +4945,10 @@
     .cb-sch.off .cb-bar { top: 84px; background: linear-gradient(#2a2d31 0%, #141517 40%, #08090a 68%, #4a4e53 72%, #1a1b1d 100%);
       box-shadow: 0 -3px 5px rgba(0,0,0,.45), 0 2px 2px rgba(0,0,0,.5); }
     .cb-sch.off .cb-bar::after { top: 68%; }
+    .exhibit-bar { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 12; display: flex; gap: 8px; align-items: center; }
+    .exhibit-badge { background: rgba(124,58,237,.85); color: #fff; font-weight: 800; font-size: 13px; padding: 6px 12px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+    .exhibit-stop-btn { background: #dc2626; color: #fff; border: 2px solid #fecaca; font-weight: 800; font-size: 13px; padding: 6px 14px; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+    .exhibit-stop-btn:hover { background: #b91c1c; }
     .cab-op-btn.occ-tab-btn {
       background: rgba(109, 40, 217, 0.55) !important;
       border: 1.5px solid #a78bfa !important;
@@ -5390,6 +5394,7 @@
             <div class="quick-menu-header">모의운전 훈련 메뉴</div>
             <button type="button" class="quick-menu-item" onclick="openScenarioModal(); toggleQuickMenu();">📋 시나리오 선택</button>
             <button type="button" class="quick-menu-item" onclick="openStartStationModal(); toggleQuickMenu();">🚉 출발역 선택</button>
+            <button type="button" class="quick-menu-item" onclick="toggleExhibitMode(); toggleQuickMenu();">🎬 전시 모드 (무한 왕복): <span id="exhibit-state">꺼짐</span></button>
             <button type="button" class="quick-menu-item" onclick="returnToFirstStation(); toggleQuickMenu();">🔄 기점역(<span class="dir-first-name">검단오류</span>역)으로 회차</button>
             <button type="button" class="quick-menu-item" onclick="jumpToStation(IC2.P.STN.length - 1); toggleQuickMenu();">📍 종착역(<span class="dir-last-name">운연</span>역)으로 바로 이동</button>
             <button type="button" class="quick-menu-item" onclick="setRunDirection(-IC2.P.dir); toggleQuickMenu();">🔁 운행 방향 전환 (현재: <span class="dir-label">하선 201→227</span>)</button>
@@ -5403,6 +5408,11 @@
             <div id="cab3d-stage" data-win-bottom="0.85"></div>
             <canvas id="cab-view-canvas" width="1024" height="473"></canvas>
             
+            <!-- 전시 모드: 화면 위쪽 가운데 표시 + 종료 버튼 (전시 중에만) -->
+            <div class="exhibit-bar" id="exhibit-bar" style="display:none;">
+              <span class="exhibit-badge">🎬 전시 중 · 무한 왕복</span>
+              <button type="button" class="exhibit-stop-btn" onclick="toggleExhibitMode(false)">⏹ 전시 모드 종료</button>
+            </div>
             <!-- 시뮬레이터 화면 상단 우측: 회차 버튼 (종착역 도착 시 표시) -->
             <button type="button" class="cab-return-badge" id="btn-cab-return-first" onclick="returnToFirstStation()">🔄 처음(<span class="dir-first-name">검단오류</span>역)으로 회차</button>
 
@@ -8568,8 +8578,8 @@ const AtoDriverless = {
           this.isHoldingBrake = true;
           if (typeof updateGaugeUI === 'function') updateGaugeUI(2.0);
           const cabBtn = document.getElementById('btn-cab-return-first');
-          if (cabBtn) cabBtn.classList.add('visible');
-          if (typeof openModal === 'function') {
+          if (cabBtn && !window.__EXHIBIT) cabBtn.classList.add('visible');
+          if (typeof openModal === 'function' && !window.__EXHIBIT) {   // 전시 모드: 안내창 없이 자동 회차
             openModal('modal-terminal-arrival');
           }
           if (typeof showTemporaryHudFeedback === 'function') {
@@ -9515,6 +9525,7 @@ function updateTrainPhysics() {
   const isManualMode = ['FM', 'RM', 'ATPM'].indexOf(driveMode) >= 0;
   updatePositionTags(driveMode);
   updateMainReservoir(dt);
+  exhibitTick(dt);
 
   // [HCR 비상제동] 운전모드 OFF(무인운전 아님) → 비상제동(EB) + 정차제동(HB), BC 4.0 bar
   //  OFF → RM 등 수동모드: EB 완해(VOBC RESET), HB는 유지(2.0 bar)
@@ -13507,6 +13518,42 @@ function setRunDirection(dir, startId) {
 }
 window.setRunDirection = setRunDirection;
 
+/* 전시 모드: 하선 검단오류 → 운연, 종착 후 상선 운연 → 검단오류 … 무인운전으로 끝없이 왕복 */
+const EXHIBIT_TURN_SEC = 8;              // 종착역에서 회차까지 대기 (s)
+window.__EXHIBIT = false;
+let exhibitWait = 0;
+function startExhibitTrain(dir, stationId) {
+  setRunDirection(dir, stationId);       // 진행 방향 전환 + 해당 역 정차 위치 배치 (무인운전 해제됨)
+  setDriveModePosition('OFF');
+  setUnmannedMode(true);                 // 무인운전 재투입 → 정차 상태에서 출발
+  exhibitWait = 0;
+}
+function exhibitTick(dt) {
+  if (!window.__EXHIBIT || typeof AtoDriverless === 'undefined') return;
+  if (AtoDriverless.state !== 'TERMINATED') { exhibitWait = 0; return; }
+  exhibitWait += dt;
+  if (exhibitWait < EXHIBIT_TURN_SEC) return;
+  const terminal = IC2.P.STN[IC2.P.STN.length - 1].id;      // 지금 도착한 종착역에서 반대 방향으로 출발
+  startExhibitTrain(-IC2.P.dir, terminal);
+  showTemporaryHudFeedback(`🎬 [전시 모드] 회차 - ${IC2.P.dir > 0 ? '하선' : '상선'} ${IC2.P.STN[0].name} → ${IC2.P.STN[IC2.P.STN.length - 1].name}`, false);
+}
+function toggleExhibitMode(on) {
+  window.__EXHIBIT = on === undefined ? !window.__EXHIBIT : !!on;
+  const lbl = document.getElementById('exhibit-state');
+  if (lbl) lbl.textContent = window.__EXHIBIT ? '켜짐' : '꺼짐';
+  const bar = document.getElementById('exhibit-bar');
+  if (bar) bar.style.display = window.__EXHIBIT ? 'flex' : 'none';
+  if (window.__EXHIBIT) {
+    closeModal('modal-terminal-arrival');
+    window.__POS_LOST = null;
+    startExhibitTrain(1, '201');
+    showTemporaryHudFeedback('🎬 [전시 모드] 시작 - 하선 검단오류 → 운연 → 상선 운연 → 검단오류 무한 왕복 (무인운전)', false);
+  } else {
+    showTemporaryHudFeedback('🎬 [전시 모드] 종료 - 이번 종착역에서 운행을 마칩니다.', false);
+  }
+}
+window.toggleExhibitMode = toggleExhibitMode;
+
 /* 시뮬레이터 메뉴 → 출발역 선택 */
 function fillStartModalStations() {
   const dir = +document.getElementById('start-dir-select').value;
@@ -13874,7 +13921,7 @@ function fitCabOverlays() {
   if (!cab) return;
   const wide = window.matchMedia('(min-aspect-ratio: 11/5)').matches;
   const z = wide ? Math.max(1, Math.min(2.2, cab.clientHeight / 720)) : 1;
-  cab.querySelectorAll('.cab-op-overlay-bar, .cab-osd-overlay, .sim-quick-menu-btn, .sim-quick-menu, .cab-return-badge')
+  cab.querySelectorAll('.cab-op-overlay-bar, .cab-osd-overlay, .sim-quick-menu-btn, .sim-quick-menu, .cab-return-badge, .exhibit-bar')
     .forEach(el => { el.style.zoom = z === 1 ? '' : String(z); });
 }
 window.fitCabOverlays = fitCabOverlays;
