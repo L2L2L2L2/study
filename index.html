@@ -4909,12 +4909,21 @@
     .cb-pole { width: 40px; }
     .cb-pole.first::before { content: attr(data-spec); position: absolute; top: 4px; left: 3px; right: -80px; font: 700 6.5px/1.25 Arial; color: #15803d; white-space: pre; z-index: 1; }
     .cb-pole::after { content: ''; position: absolute; top: 44px; left: 4px; right: 4px; height: 3px; background: #22c55e; }
-    .cb-sch .cb-bar { position: absolute; left: 5px; height: 24px; background: linear-gradient(#2b2e31, #0d0e0f); border-radius: 3px; transition: top .12s; z-index: 2; }
-    .cb-sch.on .cb-bar { top: 64px; }
-    .cb-sch.off .cb-bar { top: 92px; }
-    .cb-pole .cb-on { position: absolute; top: 120px; left: 0; right: 0; text-align: center; font: 700 7px Arial; color: #111; background: #1f2937; color: #fff; margin: 0 5px; border-radius: 1px; }
-    .cb-sch.off .cb-pole .cb-on { background: #e5e7eb; color: #111; }
-    .cb-sch.off .cb-pole .cb-on::after { content: ''; }
+    /* C60N 손잡이 (실물 기준): 흰 몸체에 살짝 파인 자리 + 극을 잇는 검은 연결 막대 + 막대에 붙은 극별 검은 레버(글씨)
+       ON = 막대 위쪽, 레버가 막대 바로 아래에 'I · ON' / OFF = 레버가 젖혀져 막대 아래쪽, 막대 바로 위에 'O · OFF'
+       (상태 표시창 없음) */
+    .cb-pole .cb-well { position: absolute; top: 56px; left: 4px; right: 4px; height: 66px; border-radius: 3px;
+      background: linear-gradient(90deg, #d4d7da, #eceeef 50%, #cfd3d6); box-shadow: inset 0 2px 3px rgba(0,0,0,.25); }
+    .cb-pole .cb-lever { position: absolute; left: 3px; right: 3px; height: 24px; border-radius: 2px; transition: top .12s;
+      background: linear-gradient(90deg, #1c1e21, #2a2d31 50%, #18191b); color: #f3f4f6; font: 800 7.5px/24px Arial; text-align: center; letter-spacing: .4px; }
+    .cb-sch.on .cb-lever { top: 26px; }
+    .cb-sch.on .cb-lever::after { content: 'I · ON'; }
+    .cb-sch.off .cb-lever { top: 6px; }
+    .cb-sch.off .cb-lever::after { content: 'O · OFF'; }
+    .cb-sch .cb-bar { position: absolute; left: 3px; height: 26px; border-radius: 5px; transition: top .12s; z-index: 2;
+      background: linear-gradient(#4a4e53, #1c1e21 35%, #0e0f10); box-shadow: 0 2px 3px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18); }
+    .cb-sch.on .cb-bar { top: 57px; }
+    .cb-sch.off .cb-bar { top: 87px; }
     .cab-op-btn.occ-tab-btn {
       background: rgba(109, 40, 217, 0.55) !important;
       border: 1.5px solid #a78bfa !important;
@@ -13626,10 +13635,10 @@ function renderBreakers() {
       labels.push(`<b style="left:${x + auxW + poles * 20}px">${label}</b>`);   // 명칭은 차단기 본체(극) 위 가운데
       x += w + 2;
       const polesHtml = Array.from({ length: poles }, (_, i) =>
-        `<div class="cb-pole${i === 0 ? ' first' : ''}" data-spec="${i === 0 ? `Schneider\nC60N\n${rating}\n415V~` : ''}"><div class="cb-on">I - ON</div></div>`).join('');
+        `<div class="cb-pole${i === 0 ? ' first' : ''}" data-spec="${i === 0 ? `Schneider\nC60N\n${rating}\n415V~` : ''}"><div class="cb-well"><div class="cb-lever"></div></div></div>`).join('');
       return `<div class="cb-sch ${st}" data-cb="${id}" onclick="toggleBreaker('${id}')" title="${COMPONENT_REGISTRY[id].name} (${rating})">
         ${aux.map(a => `<div class="cb-aux${a === 'MX' ? ' mx' : ''}"><i></i></div>`).join('')}
-        <div style="position:relative; display:flex;">${polesHtml}<div class="cb-bar" style="width:${poles * 40 - 10}px"></div></div></div>`;
+        <div style="position:relative; display:flex;">${polesHtml}<div class="cb-bar" style="width:${poles * 40 - 6}px"></div></div></div>`;
     });
     return `<div class="cb-hrow"><div class="cb-hplate" style="width:${x + 4}px">${labels.join('')}</div><div class="cb-hrail" style="width:${x + 4}px; box-sizing:border-box">${units.join('')}</div></div>`;
   }).join('');
