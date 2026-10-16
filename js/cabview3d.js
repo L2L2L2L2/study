@@ -18,7 +18,7 @@ const rr = (a, b) => a + (b - a) * rnd();
 const reseed = n => { _seed = (Math.abs(Math.floor(n)) * 7919 + 104729) % 2147483646 + 1; };
 
 /* 외부(운전 로직)에서 받는 열차 상태 */
-const train = { s: SID['201'].stop, v: 0, dir: 1 };   // dir: +1 하선(+u 선로, s 증가) / -1 상선(-u 선로, s 감소)
+const train = { s: SID['201'].stop, v: 0, dir: 1, head: 'LOW' };   // head: 전조등 'LOW' | 'HIGH' | 'OFF'   // dir: +1 하선(+u 선로, s 증가) / -1 상선(-u 선로, s 감소)
 /* 화면 구성: 3D(WebGL) / 전면창 효과(와이퍼·빗방울) / 운전실 창틀 */
 const STAGE = document.getElementById('cab3d-stage') || document.body;
 for (const id of ['c3d-gl', 'c3d-fx', 'c3d-cab']) {
@@ -93,6 +93,31 @@ const hemi = new THREE.HemisphereLight(0xdfe9f3, 0x6a6553, 1.9);
 const sun = new THREE.DirectionalLight(0xfff0dc, 2.3);
 sun.position.set(-0.45, 1, -0.35).multiplyScalar(100);
 scene.add(hemi, sun);
+/* 전조등: 열차 전면에서 선로 앞쪽을 비추는 스포트라이트 (하향 = 평소 / 상향 = 더 밝고 멀리) */
+const HEAD = {
+  LOW:  { intensity: 60, distance: 90, angle: 0.36, aim: 35 },
+  HIGH: { intensity: 160, distance: 220, angle: 0.30, aim: 110 },
+};
+const headlight = new THREE.SpotLight(0xfff4e0, 0, 90, 0.36, 0.55, 1.2);
+headlight.castShadow = false;
+scene.add(headlight, headlight.target);
+/* 전조등 빛 웅덩이: 조명 계산을 안 받는 터널 바닥(도상)에도 비친 느낌을 주는 가산 합성 띠 (선로 곡선을 따라 매 프레임 갱신) */
+const POOL_N = 24;
+const pool = (() => {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array((POOL_N + 1) * 3 * 3), 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array((POOL_N + 1) * 3 * 3), 3));
+  const idx = [];
+  for (let i = 0; i < POOL_N; i++) for (let j = 0; j < 2; j++) {
+    const a = i * 3 + j, b = a + 1, c = a + 3, d = a + 4;
+    idx.push(a, c, b, b, c, d);
+  }
+  g.setIndex(idx);
+  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending,
+    depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
+  m.frustumCulled = false; m.renderOrder = 4; scene.add(m);
+  return m;
+})();
 
 /* =====================================================================
    4. 캔버스 텍스처
@@ -361,7 +386,7 @@ const MAT = {
   metalI: new THREE.MeshLambertMaterial({ color: 0xb8bcc0 }),
   third: new THREE.MeshLambertMaterial({ color: 0x8d9092, vertexColors: true, side: DS2 }),
   thirdI: new THREE.MeshLambertMaterial({ color: 0x6f6a62 }),
-  tag: new THREE.MeshLambertMaterial({ color: 0xf2c200 }),             // 위치 태그 상판 (노란색)
+  tag: new THREE.MeshLambertMaterial({ color: 0xf2c200, emissive: 0x2a1e00 }),   // 위치 태그 상판 (노란색, 전조등에 비춰 보임)
   tagBase: new THREE.MeshLambertMaterial({ color: 0x1c1d1f }),         // 위치 태그 받침
   ground: new THREE.MeshLambertMaterial({ map: T.ground, side: DS2 }),
   road: new THREE.MeshLambertMaterial({ map: T.road, side: DS2 }),
@@ -610,7 +635,7 @@ function buildTrack(a, b) {
   for (let s = Math.ceil(a / 25) * 25; s < b; s += 25) if (!nearXover(s, 4)) for (const c of TRACKS) {
     const l = lightAt(s, c, 0);
     tagBase.push({ s, u: c, v: -0.15, sx: 0.66, sy: 0.07, sz: 0.17, c: l });
-    tags.push({ s, u: c, v: -0.095, sx: 0.44, sy: 0.04, sz: 0.13, c: l });
+    tags.push({ s, u: c, v: -0.095, sx: 0.44, sy: 0.04, sz: 0.13, c: Math.max(l, 0.7) });
   }
   inst(G.unit, MAT.tagBase, tagBase, 300);
   inst(G.unit, MAT.tag, tags, 300);
@@ -666,7 +691,9 @@ function buildViaduct(a, b) {
 function stationFeatures(st, a, b, under) {
   // 승강장 진입부: 노란 역명판 + 녹색 비상대피 유도등 + 끝단 출입문 (+ 지하: 피난 계단)
   const pillars = [], signsF = [], signsB = [], greens = [], doors = [], steps = [], glowG = [];
-  const add = (s, side) => {
+  const add = (s0, side) => {
+    // 역명 기둥은 PSD 시작 끝단에 (고가역 PSD는 승강장 끝에서 4m 앞서 시작)
+    const s = under ? s0 : s0 - side * 4.3;
     if (s < a || s >= b) return;
     const u = side * 4.05, face = s - side * 0.31;
     pillars.push({ s: s + side * 0.0, u, v: 1.05, sx: 0.6, sy: 3.4, sz: 0.6, c: under ? 1.0 : undefined });
@@ -1194,6 +1221,29 @@ function updateCamera(dt) {
   const wet = glass.rain * (1 - inside);                 // 우천: 시정 저하·흐린 조명
   if (wet > 0.001) { scene.fog.color.lerp(FOG_RAIN, wet); scene.fog.density += 0.0035 * wet; }
   hemi.intensity = lerp(1.9, 0.95, inside) * (1 - 0.25 * wet); sun.intensity = lerp(2.3, 0.2, inside) * (1 - 0.7 * wet);
+  // 전조등 (낮에는 거의 티 나지 않고 터널에서 효과)
+  const hp = HEAD[train.head];
+  if (hp) {
+    Wabs(train.s + 0.2 * D, uT, 1.0, headlight.position);
+    Wabs(train.s + hp.aim * D, uT, 0, headlight.target.position);
+    headlight.intensity = hp.intensity * lerp(0.25, 1, inside); headlight.distance = hp.distance; headlight.angle = hp.angle;
+  } else headlight.intensity = 0;
+  // 바닥 빛 띠: 가운데가 밝고 양옆·먼 쪽으로 흐려짐
+  pool.visible = !!hp && inside > 0.05;
+  if (pool.visible) {
+    const P = pool.geometry.attributes.position, C = pool.geometry.attributes.color;
+    const len = train.head === 'HIGH' ? 130 : 55, k = (train.head === 'HIGH' ? 0.34 : 0.26) * inside;
+    for (let i = 0; i <= POOL_N; i++) {
+      const t = i / POOL_N, d = 2 + Math.pow(t, 1.6) * len;
+      const w = 0.9 + d * 0.035, f = k * smooth(0, 0.06, t) * Math.pow(1 - t, 1.8);
+      for (let j = 0; j < 3; j++) {
+        Wabs(train.s + d * D, uT + (j - 1) * w, -0.16, _v); P.setXYZ(i * 3 + j, _v.x, _v.y, _v.z);
+        const e = j === 1 ? f : 0;
+        C.setXYZ(i * 3 + j, e, e * 0.93, e * 0.8);
+      }
+    }
+    P.needsUpdate = true; C.needsUpdate = true;
+  }
 }
 const _b0 = new THREE.Vector3(), _b1 = new THREE.Vector3(), _bx = new THREE.Vector3(), _by = new THREE.Vector3(), _bz = new THREE.Vector3();
 function updateOpp(o, dt) {
@@ -1277,7 +1327,7 @@ function jumpReset() {
   updateChunks(train.s, 99);
 }
 window.CabView3D = {
-  /* s: 실제 위치(m), dir: +1 하선 / -1 상선, v: 속도(m/s), rain: 비 강도 0~1 또는 bool, wiper: 'OFF'|'INT'|'SLOW'|'FAST'|'AUTO', doorsOpen: bool */
+  /* s: 실제 위치(m), dir: +1 하선 / -1 상선, v: 속도(m/s), headlight: 'LOW'|'HIGH'|'OFF', rain: 비 강도 0~1 또는 bool, wiper: 'OFF'|'INT'|'SLOW'|'FAST'|'AUTO', doorsOpen: bool */
   update(st) {
     if (st.dir !== undefined && (st.dir < 0 ? -1 : 1) !== train.dir) {   // 운행 방향 전환 (하선/상선)
       train.dir = st.dir < 0 ? -1 : 1;
@@ -1290,6 +1340,7 @@ window.CabView3D = {
       if (jump) jumpReset();
     }
     if (st.v !== undefined) train.v = Math.max(0, st.v);
+    if (st.headlight !== undefined) train.head = st.headlight;
     if (st.rain !== undefined) glass.rainOn = typeof st.rain === 'number' ? clamp(st.rain, 0, 1) : (st.rain ? 1 : 0);
     if (st.wiper !== undefined && WIPER_MODES.includes(st.wiper)) glass.wiperMode = st.wiper;
   },

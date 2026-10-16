@@ -13,7 +13,7 @@
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
   } }
   </script>
-  <script src="js/route.js?v=2026101603"></script>
+  <script src="js/route.js?v=2026101608"></script>
   <style>
     :root {
       --bg-dark: #121519;
@@ -9662,6 +9662,8 @@ function drawCabViewLoop() {
   if (window.CabView3D) {
     window.CabView3D.update({
       dir: IC2.P.dir,
+      // 전조등 (OP2): 원격·자동·수동하향 = 하향 / 수동상향 = 상향 / OFF = 소등
+      headlight: ({ HIGH: 'HIGH', OFF: 'OFF' })[cvCompState('SW_HEADLIGHT', 'REMOTE')] || 'LOW',
       s: IC2.P.toS(trainDistance),   // 진행방향 거리 → 실제 위치
       v: trainSpeed / 3.6,
       rain: cvState.rain,
@@ -13446,6 +13448,6 @@ setTimeout(() => {
 </script>
 
 
-<script type="module" src="js/cabview3d.js?v=2026101603"></script>
+<script type="module" src="js/cabview3d.js?v=2026101608"></script>
 </body>
 </html>
