@@ -352,7 +352,8 @@ function sideRect(g, x0, x1, y0, y1, fill) {
   }
 }
 const CAR_DOORS = [2.7, 8.1, 13.5];            // 출입문 중심 (뒤끝 기준 m)
-const CAR_WINS = [[0.35, 1.85], [3.55, 7.25], [8.95, 12.65], [14.35, 15.3]];   // 측창 구간
+const CAR_WINS = [[0.35, 1.85], [3.55, 7.25], [8.95, 12.65]];   // 측창 구간
+const CAB_WIN = [14.75, 15.85];                 // 운전실 측창 (검은 패널 안)
 T.trainSide = canvasTex(SIDE_W, SIDE_H, (g, w, h) => {
   g.fillStyle = '#c3c7cb'; g.fillRect(0, 0, w, h);                                    // 은색 차체
   // 지붕 (측면 위쪽 끝 ~ 지붕 가운데)
@@ -369,16 +370,27 @@ T.trainSide = canvasTex(SIDE_W, SIDE_H, (g, w, h) => {
     sideRect(g, c - 0.55, c - 0.08, -0.05, 0.78, '#1f2a33'); sideRect(g, c + 0.08, c + 0.55, -0.05, 0.78, '#1f2a33');
     sideRect(g, c - 0.012, c + 0.012, -1.47, 0.89, '#3d4145');
   }
-  // 운전실 쪽 끝: 검은 면 + 위로 휘어 오르는 주황 띠 + 운전실 측창
-  sideRect(g, 15.7, CAR_L, -1.47, 1.0, '#141618');
-  sideRect(g, 16.25, 17.15, 0.12, 0.84, '#26313a');
-  for (let i = 0; i < 40; i++) {
-    const t = i / 39, x = 15.0 + t * 2.5, rise = Math.pow(t, 1.8) * 1.35;
-    sideRect(g, x, x + 2.5 / 39 + 0.01, -0.40 + rise, -0.16 + rise, '#ef8a1e');
-    sideRect(g, x, x + 2.5 / 39 + 0.01, -0.46 + rise, -0.40 + rise, '#f5f5f3');
+  // 운전실 쪽 끝: 주황·흰 띠가 앞으로 갈수록 아래로 휘어 내려가 은색 앞 덮개 밑단에 닿고, 띠 위쪽은 검은 패널
+  const X0 = 14.25, X1 = 16.75, NS = 60;                 // 곡선 시작 · 앞 덮개 시작 (뒤끝 기준 m)
+  const drop = x => { const t = clamp((x - X0) / (X1 - X0), 0, 1); return Math.pow(t, 1.7) * 1.08; };
+  for (let i = 0; i < NS; i++) {
+    const x = X0 + (X1 - X0) * i / NS, dx = (X1 - X0) / NS + 0.01, d = drop(x + dx / 2);
+    sideRect(g, x, x + dx, -0.16 - d, 1.0, '#141618');                    // 검은 패널 (띠 위)
+    sideRect(g, x, x + dx, -0.40 - d, -0.16 - d, '#ef8a1e');              // 주황 띠
+    sideRect(g, x, x + dx, -0.46 - d, -0.40 - d, '#f5f5f3');              // 흰 줄
+  }
+  sideRect(g, X1, CAR_L, -1.47, 1.0, '#c3c7cb');                           // 은색 앞 덮개
+  sideRect(g, CAB_WIN[0] - 0.05, CAB_WIN[1] + 0.05, -0.05, 0.9, '#0b0c0d');
+  sideRect(g, CAB_WIN[0], CAB_WIN[1], 0.0, 0.84, '#26313a');               // 운전실 측창
+  sideRect(g, 14.45, 14.55, 0.62, 0.84, '#e0412f');                         // 측창 옆 표시등
+  // Fly Incheon 로고 (검은 패널 왼쪽)
+  for (const side of [1, -1]) {
+    const y = (1 - carV(0.35, side)) * h, x = 14.3 / CAR_L * w;
+    g.font = 'bold italic 26px Arial'; g.fillStyle = '#3b82f6'; g.fillText('F', x, y);
+    g.fillStyle = '#ef8a1e'; g.fillText('ly', x + 13, y + 4);
   }
   g.fillStyle = '#1b1d20'; g.font = 'bold 22px Arial';                                 // 편성 번호
-  for (const side of [1, -1]) g.fillText('2135', 14.6 / CAR_L * w, (1 - carV(-1.0, side)) * h);
+  for (const side of [1, -1]) g.fillText('2116', 12.0 / CAR_L * w, (1 - carV(-1.0, side)) * h);
 }, { repeat: false });
 /* 객실 조명 (발광맵: 창 부분만 밝게, 나머지 검정) */
 function litCabin(g, x, y, w, h) {
@@ -397,48 +409,139 @@ T.trainSideLit = canvasTex(SIDE_W, SIDE_H, (g, w, h) => {
     const va = carV(y0, side), vb = carV(y1, side), top = (1 - Math.max(va, vb)) * h, bot = (1 - Math.min(va, vb)) * h;
     litCabin(g, x0 / CAR_L * w, top, (x1 - x0) / CAR_L * w, bot - top); } };
   for (const [a, b] of CAR_WINS) lit(a, b, 0.0, 0.84);
+  lit(CAB_WIN[0], CAB_WIN[1], 0.0, 0.84);
   for (const c of CAR_DOORS) { lit(c - 0.55, c - 0.08, -0.05, 0.78); lit(c + 0.08, c + 0.55, -0.05, 0.78); }
 }, { repeat: false });
 /* 전면: 은색 테두리 안 검은 면 — 창 3개(가운데 비상문)·행선 표시기·전조등/미등·그릴·주황 엠블럼·편성 번호 */
 const FW = 512, FH = 640;
+/* 전면 (실물 사진 기준): 넓은 은색 좌우 덮개 + 위쪽 짙은 회색 띠, 가운데 검은 면
+   위: 창 3개(가운데 비상문은 별도 문틀 안 작은 창) + 와이퍼
+   아래: 검은 가로 리브 / 가운데 주황 가로줄 + 엠블럼 주황 판 / 양쪽 흰 하우징 둥근 전조등 + 빨간 LED 미등 / 편성 번호
+   맨 아래: 검은 리브 띠 + 은색 하부 덮개와 연결기 */
 function frontFace(g, lit) {
-  const W = FW, H = FH;
-  g.fillStyle = lit ? '#000' : '#c3c7cb'; g.fillRect(0, 0, W, H);
-  if (!lit) {
-    g.fillStyle = '#141618'; g.beginPath(); g.roundRect(W * 0.07, H * 0.05, W * 0.86, H * 0.76, 26); g.fill();          // 검은 면
-    g.fillStyle = '#3b3e42'; g.fillRect(0, H * 0.91, W, H * 0.09);                                                     // 하부
-    g.fillStyle = '#1b1d20'; g.font = 'bold 30px Arial'; g.fillText('2135', W * 0.12, H * 0.885);                      // 편성 번호
+  const W = FW, H = FH, X = f => f * W, Y = f => f * H;
+  const L = 0.15, R = 0.85, C0 = 0.395, C1 = 0.605;          // 검은 면 좌우 끝 · 가운데 기둥
+  if (lit) { g.fillStyle = '#000'; g.fillRect(0, 0, W, H); }
+  else {
+    // 은색 덮개 (가장자리로 갈수록 어둡게 → 둥근 느낌)
+    const sg = g.createLinearGradient(0, 0, W, 0);
+    sg.addColorStop(0, '#9da3a9'); sg.addColorStop(0.07, '#d3d7db'); sg.addColorStop(0.15, '#c4c9ce');
+    sg.addColorStop(0.85, '#c4c9ce'); sg.addColorStop(0.93, '#d3d7db'); sg.addColorStop(1, '#9da3a9');
+    g.fillStyle = sg; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#4a4f55'; g.fillRect(X(L), Y(0.055), X(R - L), Y(0.10));                 // 위쪽 짙은 회색 띠
+    g.fillStyle = '#121416'; g.fillRect(X(L), Y(0.15), X(R - L), Y(0.68));                  // 검은 면
+    // 검은 가로 리브 (창 아래 ~ 하단)
+    for (let y = 0.535; y < 0.83; y += 0.0165) { g.fillStyle = '#25282c'; g.fillRect(X(L), Y(y), X(R - L), 3); }
+    // 가운데 기둥: 주황 가로줄 + 엠블럼 주황 판
+    for (let y = 0.535; y < 0.79; y += 0.0165) { if (y > 0.565 && y < 0.645) continue; g.fillStyle = '#d9761a'; g.fillRect(X(C0), Y(y), X(C1 - C0), 4); }
+    g.fillStyle = '#ef8a1e'; g.fillRect(X(C0), Y(0.57), X(C1 - C0), Y(0.072));
+    g.fillStyle = '#f7f1e6'; g.beginPath(); g.moveTo(X(0.48), Y(0.585)); g.lineTo(X(0.52), Y(0.578)); g.lineTo(X(0.515), Y(0.627)); g.lineTo(X(0.475), Y(0.633)); g.fill();
+    g.fillStyle = '#5fb3d9'; g.beginPath(); g.arc(X(0.522), Y(0.618), 7, 0, 7); g.fill();
+    // 하단 검은 리브 띠 + 은색 하부 덮개 + 연결기
+    g.fillStyle = '#16181b'; g.fillRect(X(L - 0.02), Y(0.83), X(R - L + 0.04), Y(0.035));
+    for (let y = 0.835; y < 0.865; y += 0.01) { g.fillStyle = '#2c3035'; g.fillRect(X(L - 0.02), Y(y), X(R - L + 0.04), 2); }
+    g.fillStyle = '#3a3e43'; g.beginPath(); g.roundRect(X(0.41), Y(0.865), X(0.18), Y(0.075), 6); g.fill();
+    g.fillStyle = '#26292d'; g.beginPath(); g.arc(X(0.5), Y(0.905), 16, 0, 7); g.fill();
+    // 편성 번호
+    g.fillStyle = '#ffffff'; g.font = 'bold 30px Arial'; g.fillText('2113', X(0.215), Y(0.80));
   }
-  // 창 (왼쪽 · 가운데 비상문 · 오른쪽)
-  const wins = [[0.12, 0.10, 0.27, 0.32], [0.415, 0.08, 0.17, 0.38], [0.61, 0.10, 0.27, 0.32]];
-  for (const [x, y, w, h] of wins) {
-    if (lit) { g.save(); g.globalAlpha = 0.55; litCabin(g, x * W, y * H, w * W, h * H); g.restore(); }
-    else {
-      const gr = g.createLinearGradient(0, y * H, 0, (y + h) * H); gr.addColorStop(0, '#2c3a46'); gr.addColorStop(1, '#16202a');
-      g.fillStyle = gr; g.beginPath(); g.roundRect(x * W, y * H, w * W, h * H, 6); g.fill();
+  // 창: 왼쪽 · 오른쪽 (안쪽에 한 단 더 들어간 틀) / 가운데 비상문 (문틀 + 작은 창)
+  const glass = (x, y, w, h) => {
+    if (lit) { g.save(); g.globalAlpha = 0.5; litCabin(g, X(x), Y(y), X(w), Y(h)); g.restore(); return; }
+    const gr = g.createLinearGradient(0, Y(y), 0, Y(y + h)); gr.addColorStop(0, '#3d4a56'); gr.addColorStop(0.45, '#26313b'); gr.addColorStop(1, '#151c23');
+    g.fillStyle = gr; g.fillRect(X(x), Y(y), X(w), Y(h));
+    g.fillStyle = 'rgba(255,255,255,.06)'; g.beginPath(); g.moveTo(X(x), Y(y + h * 0.75)); g.lineTo(X(x + w * 0.55), Y(y)); g.lineTo(X(x + w * 0.75), Y(y)); g.lineTo(X(x), Y(y + h)); g.fill();
+  };
+  for (const x of [0.165, 0.625]) {
+    if (!lit) { g.fillStyle = '#0a0b0c'; g.fillRect(X(x), Y(0.16), X(0.21), Y(0.365)); }
+    glass(x + 0.008, 0.168, 0.194, 0.35);
+    if (!lit) { g.strokeStyle = 'rgba(120,130,140,.35)'; g.lineWidth = 2; g.strokeRect(X(x + 0.03), Y(0.25), X(0.15), Y(0.22)); }   // 안쪽 틀
+    // 행선 표시기 (창 위쪽 안)
+    if (!lit) { g.fillStyle = '#0b0b0b'; g.fillRect(X(x + 0.02), Y(0.175), X(0.17), Y(0.035)); }
+    g.fillStyle = '#ff7a1a'; g.font = "bold 15px 'Malgun Gothic'"; g.textAlign = 'center';
+    g.fillText('인천대공원', X(x + 0.105), Y(0.203)); g.textAlign = 'left';
+  }
+  if (!lit) { g.fillStyle = '#0a0b0c'; g.fillRect(X(C0), Y(0.205), X(C1 - C0), Y(0.33)); g.fillStyle = '#1c2026'; g.fillRect(X(C0 + 0.01), Y(0.212), X(C1 - C0 - 0.02), Y(0.318)); }
+  glass(C0 + 0.04, 0.265, C1 - C0 - 0.08, 0.19);
+  // 와이퍼 (양쪽 창 대각선)
+  if (!lit) {
+    g.strokeStyle = '#08090a'; g.lineWidth = 5; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(X(0.30), Y(0.505)); g.lineTo(X(0.215), Y(0.36)); g.stroke();
+    g.beginPath(); g.moveTo(X(0.70), Y(0.505)); g.lineTo(X(0.785), Y(0.36)); g.stroke();
+  }
+  // 전조등 (흰 사각 하우징 + 둥근 램프) · 미등 (빨간 LED)
+  for (const [x0, x1, lx] of [[0.20, 0.385, 0.315], [0.615, 0.80, 0.685]]) {
+    if (!lit) {
+      g.fillStyle = '#e6e9ec'; g.fillRect(X(x0), Y(0.568), X(x1 - x0), Y(0.076));
+      for (let y = 0.575; y < 0.64; y += 0.012) { g.fillStyle = 'rgba(150,156,162,.5)'; g.fillRect(X(x0), Y(y), X(lx - x0 - 0.04), 2); }
+      g.fillStyle = '#f4f5f6'; g.beginPath(); g.arc(X(lx), Y(0.606), 24, 0, 7); g.fill();
     }
+    g.fillStyle = lit ? '#fff6d8' : '#cdbf86'; g.beginPath(); g.arc(X(lx), Y(0.606), lit ? 20 : 16, 0, 7); g.fill();
+    const tx = lx - 0.045;
+    if (!lit) { g.fillStyle = '#2a0c0e'; g.fillRect(X(tx), Y(0.668), X(0.09), Y(0.026)); }
+    g.fillStyle = lit ? '#5a0000' : '#d4232b'; g.fillRect(X(tx + 0.008), Y(0.672), X(0.074), Y(0.018));
   }
-  // 행선 표시기 (양쪽 창 위)
-  for (const x of [0.14, 0.63]) {
-    if (!lit) { g.fillStyle = '#0b0b0b'; g.fillRect(x * W, 0.115 * H, 0.23 * W, 0.045 * H); }
-    g.fillStyle = '#ff7a1a'; g.font = "bold 20px 'Malgun Gothic'"; g.textAlign = 'center';
-    g.fillText('인천대공원', (x + 0.115) * W, 0.152 * H); g.textAlign = 'left';
+}
+/* 신조차 전면: 큰 통유리창 + 위 행선 표시기(왼쪽)·열차번호 LED(오른쪽), 창 아래 주황 가는 줄·표지등,
+   전조등 줄(흰 하우징 + 가운데 엠블럼 주황 판), 빨간 LED 미등, 가로 그릴(가운데 주황 줄), 편성 번호 */
+function frontFaceNew(g, lit) {
+  const W = FW, H = FH, X = f => f * W, Y = f => f * H;
+  const L = 0.15, R = 0.85, C0 = 0.37, C1 = 0.63;
+  if (lit) { g.fillStyle = '#000'; g.fillRect(0, 0, W, H); }
+  else {
+    const sg = g.createLinearGradient(0, 0, W, 0);
+    sg.addColorStop(0, '#9da3a9'); sg.addColorStop(0.07, '#d3d7db'); sg.addColorStop(0.15, '#c4c9ce');
+    sg.addColorStop(0.85, '#c4c9ce'); sg.addColorStop(0.93, '#d3d7db'); sg.addColorStop(1, '#9da3a9');
+    g.fillStyle = sg; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#121416'; g.beginPath(); g.roundRect(X(L), Y(0.10), X(R - L), Y(0.73), [18, 18, 4, 4]); g.fill();   // 검은 면
+    for (let y = 0.64; y < 0.82; y += 0.0165) { g.fillStyle = '#25282c'; g.fillRect(X(L), Y(y), X(R - L), 3); }       // 그릴
+    for (let y = 0.64; y < 0.82; y += 0.0165) { g.fillStyle = '#c96a18'; g.fillRect(X(C0), Y(y), X(C1 - C0), 3); }    // 그릴 가운데 주황 줄
+    for (let y = 0.50; y < 0.555; y += 0.013) { g.fillStyle = '#c96a18'; g.fillRect(X(0.30), Y(y), X(0.40), 3); }     // 창 아래 주황 가는 줄
+    g.fillStyle = '#ef8a1e'; g.fillRect(X(C0), Y(0.565), X(C1 - C0), Y(0.07));                                       // 엠블럼 주황 판
+    g.fillStyle = '#f7f1e6'; g.beginPath(); g.moveTo(X(0.48), Y(0.58)); g.lineTo(X(0.52), Y(0.573)); g.lineTo(X(0.515), Y(0.62)); g.lineTo(X(0.475), Y(0.627)); g.fill();
+    g.fillStyle = '#5fb3d9'; g.beginPath(); g.arc(X(0.522), Y(0.612), 7, 0, 7); g.fill();
+    g.fillStyle = '#9aa0a6'; g.fillRect(0, Y(0.835), W, Y(0.03));                                                     // 하부 은색 띠
+    g.fillStyle = '#2b2f34'; g.fillRect(X(L), Y(0.865), X(R - L), Y(0.135));                                         // 하부
+    g.fillStyle = '#3a3e43'; g.beginPath(); g.roundRect(X(0.39), Y(0.86), X(0.22), Y(0.12), 8); g.fill();              // 연결기 덮개
+    for (const x of [0.17, 0.75]) for (let y = 0.875; y < 0.95; y += 0.018) { g.fillStyle = '#4b5056'; g.fillRect(X(x), Y(y), X(0.08), 4); }
+    g.fillStyle = '#ffffff'; g.font = 'bold 30px Arial'; g.fillText('2038', X(0.18), Y(0.81));                      // 편성 번호
+    // 창 위: 행선 표시기(흰 테두리) · 열차번호 LED
+    g.fillStyle = '#d9dde1'; g.fillRect(X(0.18), Y(0.13), X(0.25), Y(0.075));
+    g.fillStyle = '#1a1d21'; g.fillRect(X(0.188), Y(0.138), X(0.234), Y(0.059));
+    g.fillStyle = '#26292d'; g.fillRect(X(0.58), Y(0.13), X(0.24), Y(0.075));
   }
-  // 그릴 (가로줄)
-  if (!lit) for (let y = 0.47; y < 0.79; y += 0.022) { g.fillStyle = '#2a2d31'; g.fillRect(W * 0.09, y * H, W * 0.82, 4); }
-  // 주황 엠블럼
-  if (!lit) {
-    g.fillStyle = '#ef8a1e'; g.fillRect(W * 0.41, H * 0.47, W * 0.18, H * 0.16);
-    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(W * 0.5, H * 0.55, 14, 0, 7); g.fill();
+  g.fillStyle = '#ff7a1a'; g.font = "bold 17px 'Malgun Gothic'"; g.textAlign = 'center';
+  g.fillText('인천대공원', X(0.305), Y(0.178));
+  g.font = 'bold 24px monospace'; g.fillText('2230', X(0.70), Y(0.18)); g.textAlign = 'left';
+  // 큰 통유리창
+  if (lit) { g.save(); g.globalAlpha = 0.5; litCabin(g, X(0.18), Y(0.235), X(0.64), Y(0.245)); g.restore(); }
+  else {
+    g.fillStyle = '#0a0b0c'; g.beginPath(); g.roundRect(X(0.175), Y(0.228), X(0.65), Y(0.26), 8); g.fill();
+    const gr = g.createLinearGradient(0, Y(0.235), 0, Y(0.48)); gr.addColorStop(0, '#3d4a56'); gr.addColorStop(0.5, '#26313b'); gr.addColorStop(1, '#151c23');
+    g.fillStyle = gr; g.beginPath(); g.roundRect(X(0.183), Y(0.235), X(0.634), Y(0.245), 6); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.06)'; g.beginPath(); g.moveTo(X(0.183), Y(0.42)); g.lineTo(X(0.45), Y(0.235)); g.lineTo(X(0.55), Y(0.235)); g.lineTo(X(0.183), Y(0.48)); g.fill();
+    // 팬터그래프 와이퍼 (가운데 아래 축, 평행 팔 2개, 왼쪽 위로)
+    g.strokeStyle = '#08090a'; g.lineWidth = 5; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(X(0.60), Y(0.545)); g.lineTo(X(0.47), Y(0.34)); g.stroke();
+    g.beginPath(); g.moveTo(X(0.63), Y(0.545)); g.lineTo(X(0.50), Y(0.34)); g.stroke();
+    g.lineWidth = 3; g.beginPath(); g.moveTo(X(0.455), Y(0.255)); g.lineTo(X(0.455), Y(0.46)); g.stroke();
   }
-  // 전조등(흰색) · 미등(빨강)
-  for (const x of [0.13, 0.67]) {
-    g.fillStyle = lit ? '#fffdf4' : '#e9eef2'; g.beginPath(); g.roundRect(x * W, 0.495 * H, 0.2 * W, 0.055 * H, 8); g.fill();
-    if (!lit) { g.fillStyle = '#9aa3aa'; g.beginPath(); g.arc((x + 0.1) * W, 0.522 * H, 13, 0, 7); g.fill(); }
-    g.fillStyle = lit ? '#5a0000' : '#a3141a'; g.fillRect((x + 0.05) * W, 0.585 * H, 0.1 * W, 0.022 * H);
+  // 창 아래 작은 표지등
+  g.fillStyle = lit ? '#fffbe8' : '#e6e9ec'; g.beginPath(); g.arc(X(0.70), Y(0.52), lit ? 13 : 10, 0, 7); g.fill();
+  // 전조등 (흰 하우징 + 둥근 램프) · 미등 (빨간 LED)
+  for (const [x0, x1, lx] of [[0.17, 0.365, 0.27], [0.635, 0.83, 0.73]]) {
+    if (!lit) {
+      g.fillStyle = '#e6e9ec'; g.fillRect(X(x0), Y(0.565), X(x1 - x0), Y(0.07));
+      for (let y = 0.572; y < 0.63; y += 0.012) { g.fillStyle = 'rgba(150,156,162,.5)'; g.fillRect(X(lx + 0.04), Y(y), X(x1 - lx - 0.045), 2); }
+    }
+    g.fillStyle = lit ? '#fff6d8' : '#cdbf86'; g.beginPath(); g.arc(X(lx), Y(0.60), lit ? 20 : 16, 0, 7); g.fill();
+    if (!lit) { g.fillStyle = '#2a0c0e'; g.fillRect(X(lx - 0.055), Y(0.66), X(0.11), Y(0.03)); }
+    g.fillStyle = lit ? '#5a0000' : '#d4232b'; g.fillRect(X(lx - 0.045), Y(0.665), X(0.09), Y(0.02));
   }
 }
 T.trainFront = canvasTex(FW, FH, g => frontFace(g, false), { repeat: false });
+T.trainFrontNew = canvasTex(FW, FH, g => frontFaceNew(g, false), { repeat: false });
+T.trainFrontNewLit = canvasTex(FW, FH, g => frontFaceNew(g, true), { repeat: false });
 T.trainFrontLit = canvasTex(FW, FH, g => frontFace(g, true), { repeat: false });
 
 /* 차체 형상: 단면을 길이 방향으로 뽑은 몸체 + 운전실 쪽 코(앞으로 0.38m, 위로 갈수록 뒤로 기움) + 연결부 마감 */
@@ -1127,10 +1230,12 @@ function buildSkyFar() {
 /* =====================================================================
    7c. 반대 방향 열차 (상선, 역마다 정차)
    ===================================================================== */
-function buildOppTrain() {
-  // 창은 발광맵으로 객실 조명이 켜진 것처럼 (터널에서도 밝게 보임)
+function buildOppTrain(type = 'old') {
+  // 창은 발광맵으로 객실 조명이 켜진 것처럼 (터널에서도 밝게 보임). type: 'old' 기존차(창 3개) / 'new' 신조차(통유리창)
+  const isNew = type === 'new';
   const side = new THREE.MeshLambertMaterial({ map: T.trainSide, emissive: 0xffffff, emissiveMap: T.trainSideLit, emissiveIntensity: 0.85, side: THREE.DoubleSide });
-  const front = new THREE.MeshLambertMaterial({ map: T.trainFront, emissive: 0xffffff, emissiveMap: T.trainFrontLit, emissiveIntensity: 0.8, side: THREE.DoubleSide });
+  const front = new THREE.MeshLambertMaterial({ map: isNew ? T.trainFrontNew : T.trainFront, emissive: 0xffffff,
+    emissiveMap: isNew ? T.trainFrontNewLit : T.trainFrontLit, emissiveIntensity: 0.8, side: THREE.DoubleSide });
   const roof = new THREE.MeshLambertMaterial({ color: 0xd9dbdb }), dark = new THREE.MeshLambertMaterial({ color: 0x3a3c3e, side: THREE.DoubleSide });
   [side, front, roof, dark].forEach(withHeadlight);
   const G0 = buildCarGeometry();
@@ -1154,10 +1259,10 @@ function buildOppTrain() {
   cars.forEach(c => c.add(new THREE.Mesh(underGeo, under)));
   const g = new THREE.Group(); cars.forEach(c => { c.matrixAutoUpdate = false; g.add(c); });
   const hp = new THREE.BufferGeometry(); hp.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, 0], 3));
-  const heads = new THREE.Points(hp, new THREE.PointsMaterial({ map: T.glow, size: 1.6, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
+  const heads = new THREE.Points(hp, new THREE.PointsMaterial({ map: T.glow, size: 0.75, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
   heads.frustumCulled = false; heads.renderOrder = 6; g.add(heads);
   g.visible = false; scene.add(g);
-  return { g, cars, heads, mats: [side, front, roof, under], s: 0, v: 0, a: 0, active: false, dwell: 0, cool: 8 };
+  return { g, cars, heads, mats: [side, front, roof, under], headX: isNew ? 0.61 : 0.53, s: 0, v: 0, a: 0, active: false, dwell: 0, cool: 8 };
 }
 
 
@@ -1390,7 +1495,11 @@ function updateOpp(o, dt) {
     o.v = Math.max(0, o.v + o.a * dt); o.s += od * o.v * dt;
     if (ns && d < 0.4 && o.v < 0.3) { o.dwell = 20; o.v = 0; o.a = 0; o.s = stopPt + od * 0.6; }
   }
-  if ((o.s - train.s) * D + 40 < -150 || o.s < START + 60 || o.s > END - 60) { o.active = false; o.cool = rr(25, 60); o.g.visible = false; return; }
+  if ((o.s - train.s) * D + 40 < -150 || o.s < START + 60 || o.s > END - 60) {
+    o.active = false; o.cool = rr(25, 60); o.g.visible = false;
+    oppIdx ^= 1; opps[oppIdx].cool = o.cool; opp = opps[oppIdx];          // 다음은 다른 형식 (기존차 ↔ 신조차)
+    return;
+  }
   o.g.visible = true;
   // 차체는 앞뒤 대차 중심(±6.5m)을 잇는 방향 → 구배·곡선을 따라 기울어짐
   o.cars.forEach((c, i) => {
@@ -1402,10 +1511,10 @@ function updateOpp(o, dt) {
     _v.addVectors(_b0, _b1).multiplyScalar(0.5).addScaledVector(_by, 1.95);
     _m.setPosition(_v); c.matrix.copy(_m);
   });
-  const lv = clamp(lightAt(o.s, uO, 2), 0.25, 1.6); o.mats.forEach(m => m.color.setScalar(lv));
+  const lv = clamp(lightAt(o.s, uO, 2), 0.45, 1.6);   // 터널에서도 차체 형태가 보이게 최소 밝기 o.mats.forEach(m => m.color.setScalar(lv));
   const p = o.heads.geometry.attributes.position;
-  Wabs(o.s + od * 0.42, uO - 0.62, 1.82, _v); p.setXYZ(0, _v.x, _v.y, _v.z);       // 전면 전조등 (코 끝)
-  Wabs(o.s + od * 0.42, uO + 0.62, 1.82, _v); p.setXYZ(1, _v.x, _v.y, _v.z); p.needsUpdate = true;
+  Wabs(o.s + od * 0.42, uO - o.headX, 1.62, _v); p.setXYZ(0, _v.x, _v.y, _v.z);       // 전면 전조등 (코 끝)
+  Wabs(o.s + od * 0.42, uO + o.headX, 1.62, _v); p.setXYZ(1, _v.x, _v.y, _v.z); p.needsUpdate = true;
 }
 
 /* =====================================================================
@@ -1451,7 +1560,7 @@ function adaptQuality(dt, now) {
 /* =====================================================================
    12. 외부 연동 API + 렌더 루프
    ===================================================================== */
-let opp, sky, far;
+let opp, opps, oppIdx = 0, sky, far;
 function jumpReset() {
   const c = zc(train.s); inside = isUnder(c) ? 1 : 0; exposure = isUnder(c) ? 1.4 : 1;
   opp.active = false; opp.cool = 6; glass.drops.length = 0;
@@ -1477,7 +1586,9 @@ window.CabView3D = {
   },
   setQuality(q) { autoQ = q === 'auto'; if (!autoQ) renderScale = +q; resize(); },
   resize() { resize(); },
-  spawnOncoming(dist = 300, frozen = false) { opp.active = true; opp.s = train.s + dist * train.dir; opp.v = frozen ? 0 : 15; opp.dwell = frozen ? 1e9 : 0; },
+  spawnOncoming(dist = 300, frozen = false, type) {
+    if (type) { const i = type === 'new' ? 1 : 0; if (i !== oppIdx) { opp.active = false; opp.g.visible = false; oppIdx = i; opp = opps[i]; } }
+    opp.active = true; opp.s = train.s + dist * train.dir; opp.v = frozen ? 0 : 15; opp.dwell = frozen ? 1e9 : 0; },
   get stats() { return { fps: Math.round(fps), scale: renderScale, chunks: chunks.size, zone: zc(train.s) }; },
   get renderInfo() { updateCamera(0.016); updateLod(); renderer.render(scene, camera); const r = renderer.info.render; return { calls: r.calls, tris: r.triangles, chunks: chunks.size, geos: renderer.info.memory.geometries }; },
   get glass() { return { rain: glass.rain, wiper: glass.wiperMode }; },
@@ -1485,7 +1596,8 @@ window.CabView3D = {
 
 const t0 = performance.now();
 ({ sky, far } = buildSkyFar());
-opp = buildOppTrain();
+opps = [buildOppTrain('old'), buildOppTrain('new')];
+opp = opps[0];
 updateChunks(train.s, 99);
 resize();
 new ResizeObserver(() => resize()).observe(STAGE);

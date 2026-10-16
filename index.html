@@ -13,7 +13,7 @@
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
   } }
   </script>
-  <script src="js/route.js?v=2026101703"></script>
+  <script src="js/route.js?v=2026101708"></script>
   <style>
     :root {
       --bg-dark: #121519;
@@ -5355,6 +5355,7 @@
           <div id="sim-quick-menu" class="sim-quick-menu" style="display:none;" onclick="event.stopPropagation()">
             <div class="quick-menu-header">모의운전 훈련 메뉴</div>
             <button type="button" class="quick-menu-item" onclick="openScenarioModal(); toggleQuickMenu();">📋 시나리오 선택</button>
+            <button type="button" class="quick-menu-item" onclick="openStartStationModal(); toggleQuickMenu();">🚉 출발역 선택</button>
             <button type="button" class="quick-menu-item" onclick="returnToFirstStation(); toggleQuickMenu();">🔄 기점역(<span class="dir-first-name">검단오류</span>역)으로 회차</button>
             <button type="button" class="quick-menu-item" onclick="jumpToStation(IC2.P.STN.length - 1); toggleQuickMenu();">📍 종착역(<span class="dir-last-name">운연</span>역)으로 바로 이동</button>
             <button type="button" class="quick-menu-item" onclick="setRunDirection(-IC2.P.dir); toggleQuickMenu();">🔁 운행 방향 전환 (현재: <span class="dir-label">하선 201→227</span>)</button>
@@ -7102,6 +7103,33 @@
           <button class="toolbar-btn" onclick="closeModal('modal-scenario-list')">닫기</button>
           <button class="toolbar-btn primary" onclick="loadSelectedScenario()">시나리오 시작</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- [F] 출발역 선택: 운행 방향 + 역 → 그 역 정차 위치(정차제동 체결)에서 시작 -->
+  <div id="modal-start-station" class="modal-backdrop" onclick="if (event.target === this) closeModal('modal-start-station')">
+    <div class="modal-window" style="max-width: 420px;">
+      <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-weight:bold; color:#e2e8f0;">🚉 출발역 선택</span>
+        <span style="cursor:pointer; color:#94a3b8; font-size:18px; font-weight:bold;" onclick="closeModal('modal-start-station')">✕</span>
+      </div>
+      <div class="modal-body" style="padding:16px; display:flex; flex-direction:column; gap:10px;">
+        <div class="form-group">
+          <label>운행 방향</label>
+          <select id="start-dir-select" class="form-control" onchange="fillStartModalStations()">
+            <option value="1">하선 (201 검단오류 → 227 운연)</option>
+            <option value="-1">상선 (227 운연 → 201 검단오류)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>출발역 (정차 위치 · 정차제동 체결 상태로 배치)</label>
+          <select id="start-st-select" class="form-control" size="10" ondblclick="confirmStartStation()"></select>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px; padding:12px 16px;">
+        <button class="toolbar-btn" onclick="closeModal('modal-start-station')">취소</button>
+        <button class="toolbar-btn primary" onclick="confirmStartStation()">이 역에서 출발</button>
       </div>
     </div>
   </div>
@@ -13452,6 +13480,33 @@ function setRunDirection(dir, startId) {
 }
 window.setRunDirection = setRunDirection;
 
+/* 시뮬레이터 메뉴 → 출발역 선택 */
+function fillStartModalStations() {
+  const dir = +document.getElementById('start-dir-select').value;
+  const sel = document.getElementById('start-st-select');
+  const list = dir > 0 ? IC2.STN : IC2.STN.slice().reverse();
+  const cur = cvStationInfo(trainDistance).id;
+  sel.length = 0;
+  list.forEach(st => sel.add(new Option(`${st.id}  ${st.name}${st.type === 'under' ? '  (지하)' : '  (지상)'}`, st.id)));
+  sel.value = (dir === IC2.P.dir && list.some(st => st.id === cur)) ? cur : list[0].id;
+}
+function openStartStationModal() {
+  document.getElementById('start-dir-select').value = String(IC2.P.dir);
+  fillStartModalStations();
+  openModal('modal-start-station');
+}
+function confirmStartStation() {
+  const dir = +document.getElementById('start-dir-select').value;
+  const id = document.getElementById('start-st-select').value;
+  if (!id) return;
+  if (dir !== IC2.P.dir) setRunDirection(dir, id);
+  else placeTrainAtStation(id);
+  closeModal('modal-start-station');
+}
+window.openStartStationModal = openStartStationModal;
+window.fillStartModalStations = fillStartModalStations;
+window.confirmStartStation = confirmStartStation;
+
 /* 지정 역 정차점에 정차 상태로 배치 (운전 모드는 바꾸지 않음) */
 function placeTrainAtStation(target) {
   const idx = IC2.P.STN.findIndex(st => st.id === target || st.name === target);
@@ -13831,6 +13886,6 @@ setTimeout(() => {
 </script>
 
 
-<script type="module" src="js/cabview3d.js?v=2026101703"></script>
+<script type="module" src="js/cabview3d.js?v=2026101708"></script>
 </body>
 </html>
