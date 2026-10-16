@@ -3955,6 +3955,7 @@
     .adu2-top-val.green { color: #00ff00; }
     .adu2-top-val.white { color: #ffffff; }
     .adu2-top-val.yellow { color: #ffff00; }
+    .adu2-top-val.gray { color: #6b6b6b; }
     .adu2-top-val small { font-size: 11px; font-weight: normal; }
 
     .adu2-top-banner {
@@ -5644,7 +5645,7 @@
                   </div>
                   <div class="adu2-top-col">
                     <span class="adu2-top-lbl">ATP</span>
-                    <span class="adu2-top-val yellow" id="adu2-atp-dir">Forward</span>
+                    <span class="adu2-top-val gray" id="adu2-atp-dir">Reverse</span>
                   </div>
                 </div>
 
@@ -9064,7 +9065,12 @@ function updateDuAduDisplay(driveMode, notch, now) {
     if (fsbBanner) fsbBanner.classList.toggle('lit', isFsb);
 
     const atpDirEl = document.getElementById('adu2-atp-dir');
-    if (atpDirEl) atpDirEl.innerText = (revNotch === 'R' ? 'Reverse' : 'Forward');
+    // ATP Reverse: 평소 회색, OP3 ATP후진 스위치 동작 시 노란색
+    if (atpDirEl) {
+      const atpRev = cvCompState('SW_ATP_REV', 'OFF') === 'ON';
+      atpDirEl.innerText = 'Reverse';
+      atpDirEl.className = 'adu2-top-val ' + (atpRev ? 'yellow' : 'gray');
+    }
 
     // Target Point Bar & Distance
     const tpDist = Math.max(0, Math.round(cvStationInfo(trainDistance).dStop));   // 다음 정차점까지
