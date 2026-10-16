@@ -1331,7 +1331,7 @@ const WIPER_KO = { OFF: '끔', INT: '간헐', SLOW: '저속', FAST: '고속', AU
 const glass = { rainOn: false, rain: 0, drops: [], wiperMode: 'AUTO', wiperAngle: 0, wiperTimer: 0 };
 /* 기존 CV_WIPER 제원 (창 높이 376px 기준) */
 /* 축은 유리창 밑단보다 drop만큼 아래(차체 안쪽, 운전실에서는 안 보임) → 팔이 밑단을 넘어 올라옴 (신조차 사진 기준) */
-const WIPER = { ref: 376, drop: 95, aux: [21, -2], arm: 376, park: -0.793, sweep: -2.348, top: 200, bottom: 210, tiltPark: 0.12, tiltSweep: -0.12 };
+const WIPER = { ref: 376, refW: 600, drop: 95, aux: [21, -2], arm: 376, park: -0.793, sweep: -2.348, top: 200, bottom: 210, tiltPark: 0.12, tiltSweep: -0.12 };
 function wiperTiming() {
   switch (glass.wiperMode) {
     case 'INT': return { period: 1.6, pause: 2.2 };
@@ -1349,16 +1349,17 @@ function updateWiper(dt) {
   if (t < m.period) glass.wiperAngle = 0.5 * (1 - Math.cos(t / m.period * Math.PI * 2));
   else glass.wiperAngle += (0 - glass.wiperAngle) * Math.min(1, dt * 8);
 }
+/* 가로는 유리창 폭, 세로는 유리창 높이에 따로 맞춤 → 화면 비율과 무관하게 오른쪽 끝(쉬는 위치) ~ 왼쪽 끝까지 닦음 */
 function wiperGeo(progress) {
-  const k = (WIN.bot - WIN.top) / WIPER.ref, p = clamp(progress, 0, 1);
-  const base = { x: WIN.w / 2, y: WIN.bot + WIPER.drop * k }, aux = { x: base.x + WIPER.aux[0] * k, y: base.y + WIPER.aux[1] * k };
+  const k = (WIN.bot - WIN.top) / WIPER.ref, kx = (WIN.right - WIN.left) / WIPER.refW, p = clamp(progress, 0, 1);
+  const base = { x: WIN.w / 2, y: WIN.bot + WIPER.drop * k }, aux = { x: base.x + WIPER.aux[0] * kx, y: base.y + WIPER.aux[1] * k };
   const ang = WIPER.park + (WIPER.sweep - WIPER.park) * p;
-  const pj = { x: base.x + WIPER.arm * k * Math.cos(ang), y: base.y + WIPER.arm * k * Math.sin(ang) };
+  const pj = { x: base.x + WIPER.arm * kx * Math.cos(ang), y: base.y + WIPER.arm * k * Math.sin(ang) };
   const qj = { x: pj.x + aux.x - base.x, y: pj.y + aux.y - base.y };
   const tilt = WIPER.tiltPark + (WIPER.tiltSweep - WIPER.tiltPark) * p, ub = { x: Math.sin(tilt), y: -Math.cos(tilt) };
   return { k, base, aux, pj, qj, ub,
-    top: { x: pj.x + ub.x * WIPER.top * k, y: pj.y + ub.y * WIPER.top * k },
-    bottom: { x: pj.x - ub.x * WIPER.bottom * k, y: pj.y - ub.y * WIPER.bottom * k } };
+    top: { x: pj.x + ub.x * WIPER.top * kx, y: pj.y + ub.y * WIPER.top * k },
+    bottom: { x: pj.x - ub.x * WIPER.bottom * kx, y: pj.y - ub.y * WIPER.bottom * k } };
 }
 function drawWiper(g) {
   const w = wiperGeo(glass.wiperAngle), k = w.k;
