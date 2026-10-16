@@ -4851,6 +4851,10 @@
     .cb-plate span.sticker { background: #facc15; color: #111; border-radius: 3px; margin: 3px; padding: 4px 2px; font-size: 9.5px; line-height: 1.15; white-space: normal; }
     .cb-abb.sch .cb-body { border-top: 9px solid #e5e7eb; }
     .cb-abb.sch .cb-body::before { content: 'Schneider'; color: #15803d; font-size: 7.5px; }
+    /* Schneider 보조접점(IOF): 빨간 띠 없이 흰 몸체 + 초록 줄, 본체에도 빨간 표시창 없음 */
+    .cb-abb.sch .cb-auxc { border-top: 9px solid #e5e7eb; position: relative; padding-top: 16px; }
+    .cb-abb.sch .cb-auxc::before { content: ''; position: absolute; top: 3px; left: 3px; right: 3px; height: 3px; background: #16a34a; }
+    .cb-abb.sch .cb-wins { display: none; }
     .cb-plate { display: flex; width: 1120px; border: 2px solid #c9cfd4; border-radius: 3px;
       background: linear-gradient(#e6eaed, #b9c0c6); box-shadow: 0 2px 3px rgba(0,0,0,.35); }
     .cb-plate span { flex: none; font: 700 10.5px/1 Arial, sans-serif; color: #2b2f33; text-align: center; padding: 8px 2px; border-right: 1px solid #8d959c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
@@ -13578,9 +13582,9 @@ function renderAbbPanel(elId, rows, pk, model) {
     const rail = row.map((b, c) => {
       const [label, poles, rating, kind] = b, id = cbId(b, r, c, pk), st = COMPONENT_REGISTRY[id].state === 'ON' ? 'on' : 'off';
       const rcbo = kind === 'RCBO', sch = kind === 'SCH';
-      const spec = rcbo ? `DS201L\n${rating}` : sch ? `C60N\n${rating}` : `${model.replace('{p}', poles)}\n${rating}\nUC`;
+      const spec = rcbo ? `DS201L\n${rating}` : sch ? `iC60N  ${rating}` : `${model.replace('{p}', poles)}\n${rating}\nUC`;
       return `<div class="cb-abb ${st}${rcbo ? ' rcbo' : ''}${sch ? ' sch' : ''}" data-cb="${id}" style="width:${cbModules(b) * mw}px" onclick="toggleBreaker('${id}')" title="${COMPONENT_REGISTRY[id].name} (${poles}극 ${rating})">
-        ${rcbo ? '' : `<div class="cb-auxc" style="width:${mw / 2}px">13 21\n14 22</div>`}
+        ${rcbo ? '' : `<div class="cb-auxc" style="width:${mw / 2}px">${sch ? 'IOF' : '13 21\n14 22'}</div>`}
         <div class="cb-body"><div class="cb-spec">${spec}</div><div class="cb-wells">${'<span></span>'.repeat(poles)}</div><div class="cb-handle"></div>
           <div class="cb-wins">${'<i></i>'.repeat(poles)}</div><div class="cb-yl">${label}</div>${rcbo ? '<div class="cb-test"></div>' : ''}</div></div>`;
     }).join('');
