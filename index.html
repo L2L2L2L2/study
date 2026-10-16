@@ -4861,10 +4861,20 @@
       border-top: 9px solid #c8102e; border-radius: 0 2px 2px 0; box-sizing: border-box; }
     .cb-abb .cb-body::before { content: 'ABB'; position: absolute; top: -9px; left: 4px; font: 900 7px/9px Arial; color: #fff; letter-spacing: .5px; }
     .cb-abb .cb-spec { position: absolute; top: 3px; left: 4px; right: 2px; font: 6.5px/1.15 Arial; color: #555; white-space: pre; overflow: hidden; }
-    .cb-abb .cb-handle { position: absolute; left: 4px; right: 4px; height: 30px; background: linear-gradient(#3a3d40, #0f1011); border-radius: 3px;
-      transition: top .12s; box-shadow: 0 2px 3px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.12); }
-    .cb-abb.on .cb-handle { top: 26px; }
-    .cb-abb.off .cb-handle { top: 50px; height: 22px; background: linear-gradient(#e5e7eb, #9ca3af); }
+    /* 손잡이 홈(항상 있음) + 검은 레버: ON = 위로 젖혀져 홈 위쪽을 덮음 / OFF = 아래로 젖혀져 홈 위쪽이 드러남 */
+    /* 극마다 파인 홈 + 각인 글자 (OFF: 위쪽에 '0 OFF' / ON: 아래쪽에 'I ON') */
+    .cb-abb .cb-wells { position: absolute; top: 24px; left: 5px; right: 5px; height: 48px; display: flex; gap: 4px; }
+    .cb-abb .cb-wells span { flex: 1; position: relative; border-radius: 3px; background: linear-gradient(#4a4e52, #7c8186);
+      box-shadow: inset 0 3px 5px rgba(0,0,0,.7); }
+    .cb-abb .cb-wells span::after { position: absolute; left: 0; right: 0; text-align: center; font: 800 6.5px/1 Arial; letter-spacing: .3px;
+      color: rgba(20,22,24,.75); text-shadow: 0 1px 0 rgba(255,255,255,.18); }
+    .cb-abb.off .cb-wells span::after { content: '0 OFF'; top: 7px; }
+    .cb-abb.on .cb-wells span::after { content: 'I ON'; bottom: 6px; }
+    .cb-abb .cb-handle { position: absolute; left: 4px; right: 4px; z-index: 1; border-radius: 3px; transition: top .12s, height .12s; }
+    .cb-abb.on .cb-handle { top: 22px; height: 32px; background: linear-gradient(#1b1c1e, #0c0d0e 70%, #3d4044);
+      box-shadow: 0 3px 3px rgba(0,0,0,.5), inset 0 -2px 0 rgba(255,255,255,.14); }
+    .cb-abb.off .cb-handle { top: 44px; height: 30px; background: linear-gradient(#45494d, #141516 30%, #0b0c0d);
+      box-shadow: 0 -2px 3px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.16); }
     .cb-abb .cb-wins { position: absolute; top: 80px; left: 0; right: 0; display: flex; justify-content: space-around; }
     .cb-abb .cb-wins i { width: 9px; height: 6px; border-radius: 1px; background: #c8102e; }
     .cb-abb.off .cb-wins i { background: #16a34a; }
@@ -7094,7 +7104,7 @@
       <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between;">
         <div style="display:flex; align-items:center;">
           <div class="cb-tabs">
-            <button type="button" class="cb-tab active" id="cb-tab-main" onclick="showBreakerView('main')">주 차단기반</button>
+            <button type="button" class="cb-tab active" id="cb-tab-main" onclick="showBreakerView('main')">주 차단기(신조차)</button>
             <button type="button" class="cb-tab" id="cb-tab-hvac" onclick="showBreakerView('hvac')">냉난방</button>
           </div>
           <span class="cb-hint">차단기를 누르면 투입(ON) / 차단(OFF)이 바뀝니다</span>
@@ -13526,7 +13536,7 @@ function renderBreakers() {
       const spec = rcbo ? `DS201L\n${rating}` : `S20${poles}M\n${rating}\nUC`;
       return `<div class="cb-abb ${st}${rcbo ? ' rcbo' : ''}" id="cbw-${id}" style="width:${cbModules(b) * mw}px" onclick="toggleBreaker('${id}')" title="${COMPONENT_REGISTRY[id].name} (${poles}극 ${rating})">
         ${rcbo ? '' : `<div class="cb-auxc" style="width:${mw / 2}px">13 21\n14 22</div>`}
-        <div class="cb-body"><div class="cb-spec">${spec}</div><div class="cb-handle"></div>
+        <div class="cb-body"><div class="cb-spec">${spec}</div><div class="cb-wells">${'<span></span>'.repeat(poles)}</div><div class="cb-handle"></div>
           <div class="cb-wins">${'<i></i>'.repeat(poles)}</div><div class="cb-yl">${label}</div>${rcbo ? '<div class="cb-test"></div>' : ''}</div></div>`;
     }).join('');
     return `<div class="cb-row"><div class="cb-plate">${plate}</div><div class="cb-rail">${rail}</div></div>`;
