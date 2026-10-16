@@ -5065,11 +5065,11 @@
     .console-op1 .op1-bottom-row { display: flex !important; flex-direction: column !important; gap: 8px !important; width: 100% !important; }
     .console-op1 .op1-bottom-left-col, .console-op1 .op1-bottom-right-col { width: 100% !important; }
 
-    /* ===== 와이드 모니터 (21:9, 32:9 등 가로세로비 2:1 이상) =====
+    /* ===== 와이드 모니터 (21:9, 32:9 등 가로세로비 2.2:1 이상 — 16:9 모니터의 브라우저 창(약 2.02:1)은 제외) =====
        ┌ OP2~5 ┬────── 3D 전면 (전체 높이) ──────┬─ DU ─┬─ ADU ─┐
        │(전체  │                                  ├─ OP1 (방송·출입문·마스콘) ┤
        └ 높이) ┴──────────────────────────────────┴───────────────┘ */
-    @media (min-aspect-ratio: 2/1) {
+    @media (min-aspect-ratio: 11/5) {
       .sim-workstation-layout {
         grid-template-columns: 14% 1fr 16% 16% !important;
         grid-template-rows: 36% 64% !important;
@@ -13453,14 +13453,14 @@ function updateMmiScalers() {
 function fitCabOverlays() {
   const cab = document.getElementById('wrap-CAB_VIEW');
   if (!cab) return;
-  const wide = window.matchMedia('(min-aspect-ratio: 2/1)').matches;
+  const wide = window.matchMedia('(min-aspect-ratio: 11/5)').matches;
   const z = wide ? Math.max(1, Math.min(2.2, cab.clientHeight / 720)) : 1;
   cab.querySelectorAll('.cab-op-overlay-bar, .cab-osd-overlay, .sim-quick-menu-btn, .sim-quick-menu, .cab-return-badge')
     .forEach(el => { el.style.zoom = z === 1 ? '' : String(z); });
 }
 window.fitCabOverlays = fitCabOverlays;
 
-/* 와이드 모니터(2:1 이상): 좌측 OP2~OP5 패널을 일반 모니터와 같은 배치(폭 335px 기준)로 두고
+/* 와이드 모니터(2.2:1 이상): 좌측 OP2~OP5 패널을 일반 모니터와 같은 배치(폭 335px 기준)로 두고
    칸 크기에 맞춰 통째로 확대 → 버튼이 위쪽에 몰리고 아래가 비는 현상 방지. 일반 화면에서는 원래대로 */
 const SIDE_BASE_W = 335;
 function fitSidePanel() {
@@ -13468,7 +13468,7 @@ function fitSidePanel() {
   if (!col) return;
   const panel = [...col.children].find(e => e.classList.contains('train-metal-panel') && e.style.display !== 'none' && e.offsetParent !== null);
   if (!panel) return;
-  if (!window.matchMedia('(min-aspect-ratio: 2/1)').matches) {
+  if (!window.matchMedia('(min-aspect-ratio: 11/5)').matches) {
     panel.style.zoom = ''; panel.style.width = ''; panel.style.margin = ''; panel.style.removeProperty('min-height');
     return;
   }
