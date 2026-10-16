@@ -1043,11 +1043,22 @@ function buildTunnels(a, b) {
   }
   inst(G.unitUp, MAT.metalU, posts);
   inst(G.unit, MAT.lamp, lamps); inst(G.unit, MAT.greenSign, greens); glowPoints(glow, MAT.glowW);
-  /* 박스↔원형 전환부 막음판 */
+  /* 박스↔원형 전환부 막음판: 구멍 = 박스 단면 ∩ 원형 단면
+     (원형은 가운데가 박스보다 넓지만 위 모서리는 박스보다 안쪽 → 박스에서 보면 모서리로 바깥 빈 공간이 보이던 것 막음) */
+  const bw = BOX_W - 0.01, bt = BOX_H - 0.01, R = TUN_R - 0.02;
+  const yAt = x => TUN_CY + Math.sqrt(Math.max(0, R * R - x * x));        // x에서 원 위쪽 높이
+  const xAt = y => Math.sqrt(Math.max(0, R * R - (y - TUN_CY) ** 2));      // y에서 원의 반폭
+  const ySide = Math.min(bt, yAt(bw)), xTop = Math.min(bw, xAt(bt));
+  const hole = [[-bw, -0.44], [bw, -0.44], [bw, ySide]];
+  const t0 = Math.atan2(ySide - TUN_CY, bw), t1 = Math.atan2(bt - TUN_CY, xTop);
+  for (let i = 1; i < 12; i++) { const t = t0 + (t1 - t0) * i / 12; hole.push([R * Math.cos(t), TUN_CY + R * Math.sin(t)]); }
+  hole.push([xTop, bt], [-xTop, bt]);
+  for (let i = 1; i < 12; i++) { const t = (Math.PI - t1) + (t1 - t0) * i / 12; hole.push([R * Math.cos(t), TUN_CY + R * Math.sin(t)]); }
+  hole.push([-bw, ySide]);
   for (let s = Math.ceil(a); s < b; s++) {
     const z0 = zc(s - 0.5), z1 = zc(s + 0.5);
     if ((z0 === 3 && z1 === 4) || (z0 === 4 && z1 === 3) || (z0 === 4 && z1 === 5) || (z0 === 5 && z1 === 4)) {
-      plate(s, rect(-7, 7, -1, 8), rect(-BOX_W + 0.01, BOX_W - 0.01, -0.44, BOX_H - 0.01),
+      plate(s, rect(-7, 7, -1, 8), hole,
         withHeadlight(new THREE.MeshBasicMaterial({ map: T.concrete, color: new THREE.Color().setScalar(lightAt(s, 4, 3) * 0.8), side: DS2 })));
     }
   }
