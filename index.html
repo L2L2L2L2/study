@@ -4872,17 +4872,28 @@
     /* 손잡이 홈(항상 있음) + 검은 레버: ON = 위로 젖혀져 홈 위쪽을 덮음 / OFF = 아래로 젖혀져 홈 위쪽이 드러남 */
     /* 극마다 파인 홈 + 각인 글자 (OFF: 위쪽에 '0 OFF' / ON: 아래쪽에 'I ON') */
     .cb-abb .cb-wells { position: absolute; top: 24px; left: 9px; right: 9px; height: 48px; display: flex; gap: 9px; }   /* 손잡이 머리보다 좁은 목 */
-    .cb-abb .cb-wells span { flex: 1; position: relative; border-radius: 3px; background: linear-gradient(#4a4e52, #7c8186);
-      box-shadow: inset 0 3px 5px rgba(0,0,0,.7); }
+    /* 목(레버 기둥): 가운데 밝고 양옆 어두운 원기둥 명암 + 위쪽 안쪽 그림자 */
+    .cb-abb .cb-wells span { flex: 1; position: relative; border-radius: 3px;
+      background: linear-gradient(90deg, #35393d, #5f6469 35%, #8d9297 52%, #5a5f64 72%, #34383c);
+      box-shadow: inset 0 4px 5px rgba(0,0,0,.75), inset 0 -1px 0 rgba(255,255,255,.12); }
     .cb-abb .cb-wells span::after { position: absolute; left: 0; right: 0; text-align: center; font: 800 6.5px/1 Arial; letter-spacing: .3px;
-      color: rgba(20,22,24,.75); text-shadow: 0 1px 0 rgba(255,255,255,.18); }
+      color: rgba(18,20,22,.8); text-shadow: 0 1px 0 rgba(255,255,255,.22); }
     .cb-abb.off .cb-wells span::after { content: '0 OFF'; top: 7px; }
     .cb-abb.on .cb-wells span::after { content: 'I ON'; bottom: 6px; }
-    .cb-abb .cb-handle { position: absolute; left: 4px; right: 4px; z-index: 1; border-radius: 3px; transition: top .12s, height .12s; }
-    .cb-abb.on .cb-handle { top: 22px; height: 32px; background: linear-gradient(#1b1c1e, #0c0d0e 70%, #3d4044);
-      box-shadow: 0 3px 3px rgba(0,0,0,.5), inset 0 -2px 0 rgba(255,255,255,.14); }
-    .cb-abb.off .cb-handle { top: 44px; height: 30px; background: linear-gradient(#45494d, #141516 30%, #0b0c0d);
-      box-shadow: 0 -2px 3px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.16); }
+    /* 손잡이 머리: 가운데 선을 기준으로 위·아래 두 면이 꺾여 만나는 모양
+       위 면 = 위에서 어둡게 → 선 쪽으로 밝아짐 (빛 받는 면) / 아래 면 = 선 바로 아래 가장 어둡고 → 아래로 조금 밝아짐 (그늘진 면) */
+    .cb-abb .cb-handle { position: absolute; left: 4px; right: 4px; z-index: 1; border-radius: 4px; transition: top .12s, height .12s; }
+    /* 꺾이는 선: ON = 위쪽(30%) → 위 면 짧고 아래 면 길게 / OFF = 아래쪽(70%) → 반대 */
+    .cb-abb .cb-handle::after { content: ''; position: absolute; left: 2px; right: 2px; height: 2px; border-radius: 1px;
+      background: rgba(205,211,217,.55); }
+    .cb-abb.on .cb-handle::after { top: 30%; }
+    .cb-abb.off .cb-handle::after { top: 68%; }
+    .cb-abb.on .cb-handle { top: 22px; height: 32px;
+      background: linear-gradient(#1a1b1d 0%, #4a4e53 30%, #08090a 34%, #141517 60%, #2a2d31 100%);
+      box-shadow: 0 4px 5px rgba(0,0,0,.5); }
+    .cb-abb.off .cb-handle { top: 44px; height: 30px;
+      background: linear-gradient(#2a2d31 0%, #141517 40%, #08090a 68%, #4a4e53 72%, #1a1b1d 100%);
+      box-shadow: 0 -3px 5px rgba(0,0,0,.45), 0 2px 2px rgba(0,0,0,.5); }
     .cb-abb .cb-wins { position: absolute; top: 80px; left: 0; right: 0; display: flex; justify-content: space-around; }
     .cb-abb .cb-wins i { width: 9px; height: 6px; border-radius: 1px; background: #c8102e; }
     .cb-abb.off .cb-wins i { background: #16a34a; }
@@ -4920,10 +4931,15 @@
     .cb-sch.on .cb-lever::after { content: 'I · ON'; }
     .cb-sch.off .cb-lever { top: 6px; }
     .cb-sch.off .cb-lever::after { content: 'O · OFF'; }
-    .cb-sch .cb-bar { position: absolute; left: 3px; height: 26px; border-radius: 5px; transition: top .12s; z-index: 2;
-      background: linear-gradient(#4a4e53, #1c1e21 35%, #0e0f10); box-shadow: 0 2px 3px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18); }
-    .cb-sch.on .cb-bar { top: 57px; }
-    .cb-sch.off .cb-bar { top: 87px; }
+    /* 연결 막대: ABB 손잡이처럼 꺾이는 선 기준 위·아래 면 그라데이션 (ON = 선 위쪽 30% / OFF = 아래쪽 68%) */
+    .cb-sch .cb-bar { position: absolute; left: 3px; height: 26px; border-radius: 5px; transition: top .12s; z-index: 2; }
+    .cb-sch .cb-bar::after { content: ''; position: absolute; left: 3px; right: 3px; height: 2px; border-radius: 1px; background: rgba(205,211,217,.55); }
+    .cb-sch.on .cb-bar { top: 57px; background: linear-gradient(#1a1b1d 0%, #4a4e53 30%, #08090a 34%, #141517 60%, #2a2d31 100%);
+      box-shadow: 0 4px 5px rgba(0,0,0,.5); }
+    .cb-sch.on .cb-bar::after { top: 30%; }
+    .cb-sch.off .cb-bar { top: 87px; background: linear-gradient(#2a2d31 0%, #141517 40%, #08090a 68%, #4a4e53 72%, #1a1b1d 100%);
+      box-shadow: 0 -3px 5px rgba(0,0,0,.45), 0 2px 2px rgba(0,0,0,.5); }
+    .cb-sch.off .cb-bar::after { top: 68%; }
     .cab-op-btn.occ-tab-btn {
       background: rgba(109, 40, 217, 0.55) !important;
       border: 1.5px solid #a78bfa !important;
