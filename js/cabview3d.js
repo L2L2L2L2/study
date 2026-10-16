@@ -1330,7 +1330,8 @@ const WIPER_MODES = ['OFF', 'INT', 'SLOW', 'FAST', 'AUTO'];
 const WIPER_KO = { OFF: '끔', INT: '간헐', SLOW: '저속', FAST: '고속', AUTO: '자동' };
 const glass = { rainOn: false, rain: 0, drops: [], wiperMode: 'AUTO', wiperAngle: 0, wiperTimer: 0 };
 /* 기존 CV_WIPER 제원 (창 높이 376px 기준) */
-const WIPER = { ref: 376, aux: [21, -2], arm: 286, park: -0.793, sweep: -2.348, top: 200, bottom: 210, tiltPark: 0.12, tiltSweep: -0.12 };
+/* 축은 유리창 밑단보다 drop만큼 아래(차체 안쪽, 운전실에서는 안 보임) → 팔이 밑단을 넘어 올라옴 (신조차 사진 기준) */
+const WIPER = { ref: 376, drop: 95, aux: [21, -2], arm: 376, park: -0.793, sweep: -2.348, top: 200, bottom: 210, tiltPark: 0.12, tiltSweep: -0.12 };
 function wiperTiming() {
   switch (glass.wiperMode) {
     case 'INT': return { period: 1.6, pause: 2.2 };
@@ -1350,7 +1351,7 @@ function updateWiper(dt) {
 }
 function wiperGeo(progress) {
   const k = (WIN.bot - WIN.top) / WIPER.ref, p = clamp(progress, 0, 1);
-  const base = { x: WIN.w / 2, y: WIN.bot - 4 * k }, aux = { x: base.x + WIPER.aux[0] * k, y: base.y + WIPER.aux[1] * k };
+  const base = { x: WIN.w / 2, y: WIN.bot + WIPER.drop * k }, aux = { x: base.x + WIPER.aux[0] * k, y: base.y + WIPER.aux[1] * k };
   const ang = WIPER.park + (WIPER.sweep - WIPER.park) * p;
   const pj = { x: base.x + WIPER.arm * k * Math.cos(ang), y: base.y + WIPER.arm * k * Math.sin(ang) };
   const qj = { x: pj.x + aux.x - base.x, y: pj.y + aux.y - base.y };
