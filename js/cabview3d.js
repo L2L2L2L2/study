@@ -361,6 +361,8 @@ const MAT = {
   metalI: new THREE.MeshLambertMaterial({ color: 0xb8bcc0 }),
   third: new THREE.MeshLambertMaterial({ color: 0x8d9092, vertexColors: true, side: DS2 }),
   thirdI: new THREE.MeshLambertMaterial({ color: 0x6f6a62 }),
+  tag: new THREE.MeshLambertMaterial({ color: 0xf2c200 }),             // 위치 태그 상판 (노란색)
+  tagBase: new THREE.MeshLambertMaterial({ color: 0x1c1d1f }),         // 위치 태그 받침
   ground: new THREE.MeshLambertMaterial({ map: T.ground, side: DS2 }),
   road: new THREE.MeshLambertMaterial({ map: T.road, side: DS2 }),
   barrier: new THREE.MeshLambertMaterial({ color: 0xc6dde2, transparent: true, opacity: 0.28, depthWrite: false, side: DS2 }),
@@ -602,6 +604,16 @@ function buildTrack(a, b) {
     for (const s of grid(s0, s1, 0.625)) for (const o of [-0.7535, 0.7535]) seats.push({ s, u: uc(s) + o, v: -0.01, c: lightAt(s, 0, 0) });
   }
   inst(G.seat, MAT.seat, seats, 250);
+  // 위치 태그: 선로 중앙 25m 간격 노란 장치 (VOBC 위치 확인용)
+  //   검은 받침 브래킷(침목 위, 선로 직각) + 납작한 노란 상판
+  const tags = [], tagBase = [];
+  for (let s = Math.ceil(a / 25) * 25; s < b; s += 25) if (!nearXover(s, 4)) for (const c of TRACKS) {
+    const l = lightAt(s, c, 0);
+    tagBase.push({ s, u: c, v: -0.15, sx: 0.66, sy: 0.07, sz: 0.17, c: l });
+    tags.push({ s, u: c, v: -0.095, sx: 0.44, sy: 0.04, sz: 0.13, c: l });
+  }
+  inst(G.unit, MAT.tagBase, tagBase, 300);
+  inst(G.unit, MAT.tag, tags, 300);
   // 제3궤조: 원형 터널은 바깥쪽, 그 외 선로 사이 (전환부·건넘선 구간은 단절)
   const sideAt = s => zc(s) === 4 ? 1 : -1;
   const third = c => hard([[c - 0.07, 0.04], [c + 0.07, 0.04], [c + 0.07, 0.24], [c - 0.07, 0.24], [c - 0.07, 0.04]]);

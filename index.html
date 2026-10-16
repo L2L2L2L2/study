@@ -13,7 +13,7 @@
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
   } }
   </script>
-  <script src="js/route.js?v=2026101504"></script>
+  <script src="js/route.js?v=2026101602"></script>
   <style>
     :root {
       --bg-dark: #121519;
@@ -3873,6 +3873,9 @@
       color: #111111;
       font-weight: 700;
     }
+    /* 고장/이벤트 메시지: 황색 바탕 적색 글씨 */
+    .du2-msg-bar.alarm { background: #e3cf6a; border-color: #b9a646; }
+    .du2-msg-bar.alarm .du2-msg-prefix, .du2-msg-bar.alarm .du2-msg-body { color: #d01010; }
 
     /* 6. 하단 4개 소프트키 버튼 */
     .du2-footer-actions {
@@ -8444,6 +8447,31 @@ function cvNotch() {
   } catch (e) { }
   return cvCompState('SW_MASCON', 'N');
 }
+/* VOBC 위치 상실: 전·후부 VOBC 리셋 시 발생. RM 모드로 선로 위치 태그(25m 간격) 2개를 지나면 해소 */
+function setPositionLost() {
+  const d = new Date(), p2 = n => String(n).padStart(2, '0');
+  window.__POS_LOST = { time: `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`, tags: 0, lastTag: Math.floor(trainDistance / 25) };
+}
+function updatePositionTags(driveMode) {
+  const pl = window.__POS_LOST;
+  if (!pl) return;
+  const tag = Math.floor(trainDistance / 25);
+  if (tag !== pl.lastTag) {
+    if (driveMode === 'RM') pl.tags += Math.abs(tag - pl.lastTag);
+    pl.lastTag = tag;
+    if (pl.tags >= 2) {
+      window.__POS_LOST = null;
+      showTemporaryHudFeedback('🟢 [VOBC] 위치 태그 2개 통과 - 열차 위치 확인 완료 (POSITION LOST 해소)', false);
+    }
+  }
+}
+
+/* DU 하단 메시지: 이벤트 발생 시각과 함께 표시 (예: "MF 10:54:37 HCR 비상제동체결") */
+function duEventMsg(code, text) {
+  const d = new Date(), p2 = n => String(n).padStart(2, '0');
+  window.__DU_EVT_MSG = `${code} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())} ${text}`;
+}
+
 function cvBC() {
   try { if (typeof currentGaugeBC !== 'undefined') return currentGaugeBC; } catch (e) { }
   return 0;
@@ -8622,7 +8650,9 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const isEmgStopLatched = (cvCompState('SW_EMG_STOP', 'RELEASED') === 'LATCHED');
     const isEmgReleaseLatched = (cvCompState('SW_EMG_RELEASE', 'RELEASED') === 'LATCHED');
     const isEmgActive = (isEmgStopLatched && !isEmgReleaseLatched);
-    const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB');
+    const isHcrEb = window.__HCR_EB === true;
+    const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB') || isHcrEb;
+    const isUnmannedNow = driveMode === 'OFF' && cvCompState('SW_WIRELESS_MODE', 'OFF') === 'LIT';
 
     // 운전모드 칩 (FM / RM / ATPM / 무인운전 "Driver less": 청색, 그 외 빈칸)
     const chipMode = document.getElementById('du2-chip-mode');
@@ -8638,7 +8668,10 @@ function updateDuAduDisplay(driveMode, notch, now) {
 
     // 정차제동(HB) 칩: 승강장 정차 중일 때 붉은 배경에 흰 글씨 점등
     const chipHb = document.getElementById('du2-chip-hb');
-    const isHbActive = (typeof AtoDriverless !== 'undefined' && AtoDriverless.isHoldingBrake) || (window.__HOLDING_BRAKE_ACTIVE === true);
+    // 무인운전: ATO 정차제동 / 그 외: HCR·모드전환 후 정차제동 (역행 투입 시 완해)
+    const isHbActive = isUnmannedNow
+      ? (!!window.__POS_LOST || (typeof AtoDriverless !== 'undefined' && AtoDriverless.isHoldingBrake))
+      : (window.__HOLDING_BRAKE_ACTIVE === true);
     setChip(chipHb, isHbActive);
 
     // 비상제동(EB)
@@ -8704,13 +8737,18 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const revArrow = document.getElementById('du2-arrow-rev');
 
     if (fwdArrow && revArrow) {
-      if (revNotch === 'F') {
+      // 전후진제어기를 F/R로 놓아야 화살표 표시 (모드 스위치만 조작 시 없음). 무인운전은 전진
+      const dirNotch = isUnmannedNow ? 'F' : revNotch;
+      const hasDir = !isHcrEb && (dirNotch === 'F' || dirNotch === 'R');
+      fwdArrow.style.visibility = hasDir ? '' : 'hidden';
+      revArrow.style.visibility = hasDir ? '' : 'hidden';
+      if (dirNotch === 'F') {
         // 전진: 열차 진행방향에 맞춰 앞뒤 모두 녹색 ◀
         fwdArrow.innerText = '◀';
         fwdArrow.className = 'du2-arrow-ind active';
         revArrow.innerText = '◀';
         revArrow.className = 'du2-arrow-ind active';
-      } else if (revNotch === 'R') {
+      } else if (dirNotch === 'R') {
         // 후진: 열차 진행방향에 맞춰 앞뒤 모두 녹색 ▶
         fwdArrow.innerText = '▶';
         fwdArrow.className = 'du2-arrow-ind active';
@@ -8789,10 +8827,10 @@ function updateDuAduDisplay(driveMode, notch, now) {
       if (typeof AtoDriverless !== 'undefined' && AtoDriverless.state === 'TERMINATED') {
         alarmEl.style.color = '#f97316';
         alarmEl.innerText = '🏁 [운행종료] 종착역(운연역) 도착 완료 - 회차 대기 중';
-      } else if (typeof AtoDriverless !== 'undefined' && AtoDriverless.isHoldingBrake) {
+      } else if (isUnmannedNow && typeof AtoDriverless !== 'undefined' && AtoDriverless.isHoldingBrake) {
         alarmEl.style.color = '#ef4444';
         alarmEl.innerText = '🛑 [정차제동] 승강장 정차제동(HB 2.0 Bar) 체결 중';
-      } else if (isEbActive) {
+      } else if (isEbActive && !isHcrEb) {   // HCR(모드 OFF) 비상제동은 하단 메시지로만 표시
         alarmEl.style.color = '#ff3333';
         alarmEl.innerText = '🚨 [비상제동] 비상제동 체결 중 (정차 후 복구 요망)';
       } else if (driveMode === 'RM' && rmOverspeedTimer > 0) {
@@ -8837,9 +8875,9 @@ function updateDuAduDisplay(driveMode, notch, now) {
     if (notch.startsWith('B')) {
       const bNum = parseInt(notch.charAt(1), 10) || 1;
       brakePct = Math.round((bNum / 7) * 100);
-    } else if (isEbActive) {
+    } else if (isEbActive && !isHcrEb) {
       brakePct = 100;
-    } else if (cvBC() > 0) {
+    } else if (isUnmannedNow && cvBC() > 0) {
       brakePct = Math.min(100, Math.round((cvBC() / 4.0) * 100));
     }
     const brakePctEl = document.getElementById('du2-brake-pct');
@@ -8880,7 +8918,12 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const isVobc1Comm = !isVobc1Fail && (!!window.__FAULT_VOBC_COMM || !!window.__FAULT_VOBC1_COMM);
     const isVobc2Comm = !isVobc2Fail && (!!window.__FAULT_VOBC_COMM || !!window.__FAULT_VOBC2_COMM);
     const isFmMode = (driveMode === 'FM');
-    const isVobc2Active = (revNotch === 'R') || (window.__ACTIVE_VOBC === 2);
+    // 활성 VOBC: 전후진제어기와 무관. 기본 VOBC1, VOBC 리셋(2~3초) 시 반대쪽으로 전환
+    const isVobc2Active = (window.__ACTIVE_VOBC === 2);
+    const vobcSelected = !isHcrEb && !isFmMode;   // OFF(HCR): VOBC 미선택
+    // 활성 VOBC (DU 녹색 글씨 · Mc 표기 녹색 · ADU Ⓐ 마크 모두 이 값 하나로 표시)
+    const vobc1On = vobcSelected && !isVobc2Active && !isVobc1Fail && !isVobc1Comm;
+    const vobc2On = vobcSelected && isVobc2Active && !isVobc2Fail && !isVobc2Comm;
 
     // DU (운전일반) 신호장치 박스 표시
     // - 고장: 빨간배경에 흰글씨
@@ -8896,7 +8939,7 @@ function updateDuAduDisplay(driveMode, notch, now) {
         vobc1Du.className = 'du2-val-box yellow';
       } else if (isFmMode) {
         vobc1Du.className = 'du2-val-box gray';
-      } else if (!isVobc2Active) {
+      } else if (vobc1On) {
         vobc1Du.className = 'du2-val-box blue active-vobc';
       } else {
         vobc1Du.className = 'du2-val-box blue';
@@ -8909,12 +8952,17 @@ function updateDuAduDisplay(driveMode, notch, now) {
         vobc2Du.className = 'du2-val-box yellow';
       } else if (isFmMode) {
         vobc2Du.className = 'du2-val-box gray';
-      } else if (isVobc2Active) {
+      } else if (vobc2On) {
         vobc2Du.className = 'du2-val-box blue active-vobc';
       } else {
         vobc2Du.className = 'du2-val-box blue';
       }
     }
+    // 선택된 VOBC가 있는 차의 Mc 표기도 녹색
+    const mcLbl1 = document.querySelector('.du2-car-unit.mc1 .du2-car-label');
+    const mcLbl2 = document.querySelector('.du2-car-unit.mc2 .du2-car-label');
+    if (mcLbl1) mcLbl1.style.color = vobc1On ? '#00ff00' : '#ffffff';
+    if (mcLbl2) mcLbl2.style.color = vobc2On ? '#00ff00' : '#ffffff';
 
     // ADU VOBC 1 / 2 표시
     // - FM 모드: VOBC 전원 차단 -> 글씨 위에 사선 엑스(✕) 표시 (네 번째 이미지)
@@ -8936,21 +8984,21 @@ function updateDuAduDisplay(driveMode, notch, now) {
       if (vobc1Adu) {
         const isFault1 = isVobc1Fail || isVobc1Comm;
         vobc1Adu.className = isFault1 ? 'adu2-subsys-line amber' : 'adu2-subsys-line green';
-        vobc1Adu.innerHTML = (!isFault1 && !isVobc2Active) ? 'VOBC 1 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 1';
+        vobc1Adu.innerHTML = vobc1On ? 'VOBC 1 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 1';
       }
       if (vobc2Adu) {
         const isFault2 = isVobc2Fail || isVobc2Comm;
         vobc2Adu.className = isFault2 ? 'adu2-subsys-line amber' : 'adu2-subsys-line green';
-        vobc2Adu.innerHTML = (!isFault2 && isVobc2Active) ? 'VOBC 2 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 2';
+        vobc2Adu.innerHTML = vobc2On ? 'VOBC 2 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 2';
       }
     } else {
       if (vobc1Adu) {
         vobc1Adu.className = 'adu2-subsys-line green';
-        vobc1Adu.innerHTML = isVobc2Active ? 'VOBC 1' : 'VOBC 1 <span class="vobc-active-icon">Ⓐ</span>';
+        vobc1Adu.innerHTML = vobc1On ? 'VOBC 1 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 1';
       }
       if (vobc2Adu) {
         vobc2Adu.className = 'adu2-subsys-line green';
-        vobc2Adu.innerHTML = isVobc2Active ? 'VOBC 2 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 2';
+        vobc2Adu.innerHTML = vobc2On ? 'VOBC 2 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 2';
       }
     }
 
@@ -8974,12 +9022,17 @@ function updateDuAduDisplay(driveMode, notch, now) {
         msgEl.innerText = '[비상제동] RM 허용속도 초과로 비상제동 체결 중 (완전 정차 후 복구 요망)';
       } else if (driveMode === 'RM' && rmOverspeedTimer > 0) {
         msgEl.innerText = `[과속주의] RM 허용속도(15km/h) 초과 감지 - ${(5.0 - rmOverspeedTimer).toFixed(1)}초 후 비상제동`;
+      } else if (window.__DU_EVT_MSG && !isUnmannedNow) {
+        msgEl.innerText = window.__DU_EVT_MSG;
       } else if (isDoorOpen || window.__FAULT_DOOR_FAIL) {
         msgEl.innerText = '[출입문] 출입문 개방 상태 - 역행 차단 중';
       } else {
         msgEl.innerText = '정상 운행 대기 중입니다.';
       }
     }
+
+    const msgBar = msgEl && msgEl.closest('.du2-msg-bar');
+    if (msgBar) msgBar.classList.toggle('alarm', !!window.__DU_EVT_MSG && !isUnmannedNow && msgEl.innerText === window.__DU_EVT_MSG);
 
     // 13. ADU Updates (SelTrac MMI Live Telemetry)
     const dockEl = document.getElementById('adu2-dock-status');
@@ -9107,6 +9160,9 @@ function updateDuAduDisplay(driveMode, notch, now) {
       } else if (isVobc1Comm || isVobc2Comm) {
         log4.innerText = `${hh}:${mm}:${ss} VOBC COMM LOSS`;
         log4.style.color = '#ffaa33';
+      } else if (window.__POS_LOST) {
+        log4.innerText = `${window.__POS_LOST.time} POSITION LOST`;
+        log4.style.color = '#ffffff';
       } else if (isFmMode) {
         log4.innerText = `${hh}:${mm}:${ss} VOBC PWR CUT`;
         log4.style.color = '#ff8888';
@@ -9164,13 +9220,52 @@ function updateTrainPhysics() {
   }
 
   const isManualMode = ['FM', 'RM', 'ATPM'].indexOf(driveMode) >= 0;
+  updatePositionTags(driveMode);
+
+  // [HCR 비상제동] 운전모드 OFF(무인운전 아님) → 비상제동(EB) + 정차제동(HB), BC 4.0 bar
+  //  OFF → RM 등 수동모드: EB 완해(VOBC RESET), HB는 유지(2.0 bar)
+  //  수동모드에서 전후진제어기 F/R + 마스콘 역행 투입 시 HB 완해 후 출발
+  const hcrEb = (driveMode === 'OFF') && !isUnmannedActive;
+  if (hcrEb !== window.__HCR_EB) {
+    if (hcrEb) {
+      window.__HOLDING_BRAKE_ACTIVE = true;
+      duEventMsg('MF', 'HCR 비상제동체결');
+    } else if (window.__HCR_EB === true) {
+      if (isManualMode) {
+        window.__HOLDING_BRAKE_ACTIVE = trainSpeed <= 0.2;
+        updateGaugeUI(window.__HOLDING_BRAKE_ACTIVE ? 2.0 : 0.0);
+        duEventMsg('MCF', 'MC1 VOBC RESET EB');
+      } else {
+        window.__HOLDING_BRAKE_ACTIVE = false;   // 무인운전 투입: ATO가 정차제동 관리
+        updateGaugeUI(2.0);
+      }
+    }
+    window.__HCR_EB = hcrEb;
+  }
+  if (isUnmannedActive) window.__HOLDING_BRAKE_ACTIVE = false;
+  if (hcrEb) {
+    if (currentGaugeBC !== BC_EMG_BAR) updateGaugeUI(BC_EMG_BAR);
+  } else if (isManualMode && window.__HOLDING_BRAKE_ACTIVE) {
+    if ((revNotch === 'F' || revNotch === 'R') && notch.charAt(0) === 'P' && isKeyOn && !isEmgActive && !isRmEbActive) {
+      window.__HOLDING_BRAKE_ACTIVE = false;          // 정차제동 완해 → 역행
+      try { sound.playAirExhaust(0.5, 1200, 0.4); } catch (e) { }
+      updateGaugeUI(0.0);
+    } else if (currentGaugeBC < 2.0) {
+      updateGaugeUI(2.0);                             // 마스콘 N/저단 제동이어도 HB 2.0 bar 유지
+    }
+  }
+
   const canManualTraction = isManualMode && isKeyOn && (revNotch === 'F' || revNotch === 'R') &&
                             isDoorInterlockCleared && !isEmgActive && !isRmEbActive && cvBC() < 0.5;
 
   let target = 0.0, rate = 0.0;
 
-  if (isEmgActive || notch === 'EB' || isRmEbActive) {
+  if (isEmgActive || notch === 'EB' || isRmEbActive || hcrEb) {
     target = 0.0; rate = -5.0; // 비상제동 체결되어 서서히 멈춤
+  } else if (isUnmannedActive && window.__POS_LOST) {
+    // POSITION LOST: 무인운전 램프는 점등되나 열차 위치를 몰라 자동 주행 불가 → 정차제동 유지
+    target = 0.0; rate = -3.5;
+    if (trainSpeed <= 0.2 && currentGaugeBC < 2.0) updateGaugeUI(2.0);
   } else if (isUnmannedActive) {
     // 무인운전(ATO) 모드: AtoDriverless 제어기가 역간 주행, TASC 감속, 역 정차, 출입문/PSD 개폐, 자동 출발 총괄
     if (isDoorInterlockCleared && (cvBC() < 0.5 || isUnmannedActive)) {
@@ -9444,21 +9539,24 @@ function cvDrawOverlayInfo(ctx, st, tun) {
 
   ctx.save();
   ctx.font = '600 13px "Pretendard", -apple-system, sans-serif';
-  let y = 92;
+  // 캔버스는 object-fit: cover로 잘려 보이므로, 실제 보이는 영역의 좌측 상단에 맞춤
+  const cvs = ctx.canvas, k = Math.max(cvs.clientWidth / cvs.width, cvs.clientHeight / cvs.height) || 1;
+  const x = Math.max(0, (cvs.width - cvs.clientWidth / k) / 2) + 10;
+  let y = Math.max(0, (cvs.height - cvs.clientHeight / k) / 2) + 10;
   for (let i = 0; i < msgs.length && i < 3; i++) {
     const m = msgs[i];
     const label = m[0] + '   ' + m[1];
     const w = ctx.measureText(label).width + 22;
     ctx.fillStyle = 'rgba(8,12,18,0.62)';
     ctx.beginPath();
-    if (ctx.roundRect) { ctx.roundRect(116, y, w, 24, 5); ctx.fill(); }
-    else ctx.fillRect(116, y, w, 24);
+    if (ctx.roundRect) { ctx.roundRect(x, y, w, 24, 5); ctx.fill(); }
+    else ctx.fillRect(x, y, w, 24);
     ctx.fillStyle = m[2];
-    ctx.fillRect(116, y, 3, 24);
+    ctx.fillRect(x, y, 3, 24);
     ctx.fillStyle = '#eef4fa';
-    ctx.fillText(m[0], 128, y + 16.5);
+    ctx.fillText(m[0], x + 12, y + 16.5);
     ctx.fillStyle = m[2];
-    ctx.fillText(m[1], 128 + ctx.measureText(m[0] + '   ').width, y + 16.5);
+    ctx.fillText(m[1], x + 12 + ctx.measureText(m[0] + '   ').width, y + 16.5);
     y += 28;
   }
   ctx.restore();
@@ -9633,6 +9731,7 @@ window.jumpToStation = function(target, directStop = false) {
   const targetStop = IC2.STN[idx].stop;
 
   // 역 이동 시 항상 무인운전(ATO) 활성화 및 운전모드 OFF 유지하여 역 정차 보장
+  window.__POS_LOST = null;   // 역 이동(교관 조작)은 위치 확정 상태로 시작
   if (typeof setUnmannedMode === 'function') {
     setUnmannedMode(true);
   }
@@ -10745,6 +10844,7 @@ function startUnmannedPress(evt) {
     showTemporaryHudFeedback("⚠️ [무인모드 인가 불가] 운전모드가 OFF 상태여야 합니다!", true);
     return;
   }
+
   if (!isKeyOff) {
     sound.playError();
     triggerHaptic([40, 40]);
@@ -10832,7 +10932,11 @@ function completeUnmannedModeToggle() {
   const newState = (comp.state === 'LIT') ? 'OFF' : 'LIT';
   setUnmannedMode(newState === 'LIT');
 
-  if (newState === 'LIT') {
+  if (newState === 'LIT' && window.__POS_LOST) {
+    sound.playSuccess();
+    triggerHaptic([50, 40, 70]);
+    showTemporaryHudFeedback("⚠️ [무인운전모드] 인가됨 - 단, POSITION LOST 상태라 자동 운전 제한 (RM 모드로 위치 태그 2개 통과 필요)", true);
+  } else if (newState === 'LIT') {
     sound.playSuccess();
     triggerHaptic([50, 40, 70]);
     showTemporaryHudFeedback("🟢 [무인운전모드 ATO] 3초 인가 완료 - 역별 자동 정차/출발 운행을 시작합니다. (수동 마스콘 조작 차단)", false);
@@ -10991,7 +11095,9 @@ function endVobcResetPress(evt) {
     sound.playSuccess();
     triggerHaptic([40, 50, 80]);
     showVobcToast('해당차 재설정', `VOBC 리셋 완료 (${(elapsed / 1000).toFixed(1)}초 인가)`, 'green');
-    showTemporaryHudFeedback('🟢 [VOBC 리셋] 해당차 재설정', false);
+    // 활성 VOBC를 리셋하면 다른 쪽 VOBC가 활성화됨
+    window.__ACTIVE_VOBC = (window.__ACTIVE_VOBC === 2) ? 1 : 2;
+    showTemporaryHudFeedback(`🟢 [VOBC 리셋] 해당차 재설정 → VOBC${window.__ACTIVE_VOBC} 활성`, false);
 
     if (badgeEl) {
       badgeEl.innerText = '🟢 해당차 재설정 완료';
@@ -11010,7 +11116,9 @@ function endVobcResetPress(evt) {
     sound.playSuccess();
     triggerHaptic([60, 60, 100]);
     showVobcToast('전·후부 VOBC 모두 리셋', `전·후부 VOBC 모두 리셋되어 타임아웃 발생! (${(elapsed / 1000).toFixed(1)}초)`, 'cyan');
-    showTemporaryHudFeedback('⚠️ [VOBC 리셋] 전·후부 VOBC 모두 리셋되어 타임아웃 발생!', true);
+    showTemporaryHudFeedback('⚠️ [VOBC 리셋] 전·후부 VOBC 모두 리셋 → POSITION LOST (RM 모드로 태그 2개 통과 필요)', true);
+    window.__ACTIVE_VOBC = 1;
+    setPositionLost();
 
     if (badgeEl) {
       badgeEl.innerText = '⚡ 전·후부 리셋 (타임아웃 발생)';
@@ -11346,7 +11454,7 @@ function handleComponentTouch(compId) {
     }
 
     // 공압 배기음은 오직 주차제동체결 / 주차제동완해에만 들림 (1.0초)
-    if (compId === 'SW_PARK_SET') window.__PARK_BRAKE_SET = true;
+    if (compId === 'SW_PARK_SET') { window.__PARK_BRAKE_SET = true; duEventMsg('MF', 'MC1 주차제동 체결'); }   // 현 운전실 = MC1
     if (compId === 'SW_PARK_REL') window.__PARK_BRAKE_SET = false;
     if (compId === 'SW_PARK_SET') {
       // 주차제동체결: 스프링 챔버 공기가 1초간 빠지며 강력 체결 (묵직한 칙~~~~)
@@ -13289,6 +13397,6 @@ setTimeout(() => {
 </script>
 
 
-<script type="module" src="js/cabview3d.js?v=2026101504"></script>
+<script type="module" src="js/cabview3d.js?v=2026101602"></script>
 </body>
 </html>
