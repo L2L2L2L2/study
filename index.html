@@ -7329,6 +7329,57 @@ class SoundEngine {
     osc.start();
     osc.stop(this.ctx.currentTime + 0.09);
   }
+  // 소형 차단기(MCB) 레버 조작음: 레버 마찰 "스르" → 스프링 "딸깍!" → 잔진동 "탁"
+  // isOn: 투입(올림)은 조금 묵직하게, 차단(내림)은 조금 가볍고 높게
+  playBreakerToggle(isOn = true) {
+    if (this.isMuted) return;
+    this.init();
+    if (!this.ctx) return;
+    const c = this.ctx, now = c.currentTime;
+    const noiseBurst = (t, dur, type, freq, q, vol) => {
+      const len = Math.max(1, Math.floor(c.sampleRate * dur));
+      const buffer = c.createBuffer(1, len, c.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+      const src = c.createBufferSource();
+      src.buffer = buffer;
+      const filter = c.createBiquadFilter();
+      filter.type = type;
+      filter.frequency.setValueAtTime(freq, t);
+      filter.Q.setValueAtTime(q, t);
+      const gain = c.createGain();
+      gain.gain.setValueAtTime(vol, t);
+      src.connect(filter);
+      filter.connect(gain);
+      gain.connect(c.destination);
+      src.start(t);
+    };
+    const bodyTick = (t, freq, dur, vol) => {
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.6, t + dur);
+      gain.gain.setValueAtTime(vol, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      osc.connect(gain);
+      gain.connect(c.destination);
+      osc.start(t);
+      osc.stop(t + dur + 0.01);
+    };
+    const pitch = isOn ? 1 : 1.25;
+    // 1. 레버가 밀리는 짧은 마찰음
+    noiseBurst(now, 0.03, 'bandpass', 1800 * pitch, 0.8, 0.12);
+    // 2. 스프링이 넘어가며 걸리는 "딸깍!" (플라스틱 고음 + 케이스 울림)
+    const snap = now + 0.035;
+    noiseBurst(snap, 0.012, 'highpass', 3500 * pitch, 0.7, 0.9);
+    noiseBurst(snap, 0.02, 'bandpass', 2400 * pitch, 6, 0.6);
+    bodyTick(snap, (isOn ? 1100 : 1400), 0.03, 0.35);
+    bodyTick(snap, (isOn ? 180 : 230), 0.05, isOn ? 0.4 : 0.25);
+    // 3. 레버가 끝에 닿는 작은 잔진동 "탁"
+    const settle = snap + 0.022;
+    noiseBurst(settle, 0.008, 'bandpass', 3000 * pitch, 4, 0.25);
+  }
   // 공압 에어 릴리즈 및 배기 (칙~ / 슉~) 사운드 (1초 배기)
   playAirExhaust(duration = 1.0, filterFreq = 1100, volume = 0.7) {
     if (this.isMuted) return;
@@ -13767,7 +13818,7 @@ function toggleBreaker(id) {
   if (!comp) return;
   comp.state = comp.state === 'ON' ? 'OFF' : 'ON';
   document.querySelectorAll(`[data-cb="${id}"]`).forEach(el => { el.classList.toggle('on', comp.state === 'ON'); el.classList.toggle('off', comp.state !== 'ON'); });
-  try { sound.playHeavyLatch(); triggerHaptic(25); } catch (e) { }
+  try { sound.playBreakerToggle(comp.state === 'ON'); triggerHaptic(25); } catch (e) { }
   showTemporaryHudFeedback(`🔌 [${comp.name}] ${comp.state === 'ON' ? '투입 (ON)' : '차단 (OFF)'}`, comp.state !== 'ON');
   if (currentMode === 'REC') promptRecordStep(id, comp.name, comp.state);
   else evaluateStepAction(id, comp.state);
