@@ -19,6 +19,7 @@
 > | `js/cabview3d.js` | 3D 전면 전망 (Three.js r160, 열차 주변만 생성) |
 > | `view-demo.html` | 3D 전면 전망 단독 시험 페이지 |
 > | `old/index.html` | 이전 버전 (단일 파일) |
+> | `old/gemini.html` | 좌측 패널 단독 변형본 (보관용) |
 >
 > 새 버전은 파일이 나뉘어 있어 GitHub Pages 같은 웹 서버로 열어야 합니다 (로컬: `python -m http.server`).
 
