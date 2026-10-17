@@ -8755,6 +8755,9 @@ function updatePositionTags(driveMode) {
   }
 }
 
+/* 취급 중인 운전실: 하선 = MC1, 상선 = 종착역에서 회차해 MC2가 앞 운전실 */
+const cabName = () => (IC2.P.dir > 0 ? 'MC1' : 'MC2');
+
 /* DU 하단 메시지: 이벤트 발생 시각과 함께 표시 (예: "MF 10:54:37 HCR 비상제동체결") */
 function duEventMsg(code, text) {
   const d = new Date(), p2 = n => String(n).padStart(2, '0');
@@ -9536,7 +9539,7 @@ function updateTrainPhysics() {
       if (isManualMode) {
         window.__HOLDING_BRAKE_ACTIVE = trainSpeed <= 0.2;
         updateGaugeUI(window.__HOLDING_BRAKE_ACTIVE ? 2.0 : 0.0);
-        duEventMsg('MCF', 'MC1 VOBC RESET EB');
+        duEventMsg('MCF', `${cabName()} VOBC RESET EB`);
       } else {
         window.__HOLDING_BRAKE_ACTIVE = false;   // 무인운전 투입: ATO가 정차제동 관리
         updateGaugeUI(2.0);
@@ -11752,7 +11755,7 @@ function handleComponentTouch(compId) {
     }
 
     // 공압 배기음은 오직 주차제동체결 / 주차제동완해에만 들림 (1.0초)
-    if (compId === 'SW_PARK_SET') { window.__PARK_BRAKE_SET = true; duEventMsg('MF', 'MC1 주차제동 체결'); }   // 현 운전실 = MC1
+    if (compId === 'SW_PARK_SET') { window.__PARK_BRAKE_SET = true; duEventMsg('MF', `${cabName()} 주차제동 체결`); }   // 취급 운전실 기준
     if (compId === 'SW_PARK_REL') window.__PARK_BRAKE_SET = false;
     if (compId === 'SW_PARK_SET') {
       // 주차제동체결: 스프링 챔버 공기가 1초간 빠지며 강력 체결 (묵직한 칙~~~~)
