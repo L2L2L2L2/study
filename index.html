@@ -13,7 +13,7 @@
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
   } }
   </script>
-  <script src="js/route.js?v=2026101716"></script>
+  <script src="js/route.js?v=2026101717"></script>
   <style>
     :root {
       --bg-dark: #121519;
@@ -5394,6 +5394,7 @@
             <div class="quick-menu-header">모의운전 훈련 메뉴</div>
             <button type="button" class="quick-menu-item" onclick="openScenarioModal(); toggleQuickMenu();">📋 시나리오 선택</button>
             <button type="button" class="quick-menu-item" onclick="openStartStationModal(); toggleQuickMenu();">🚉 출발역 선택</button>
+            <button type="button" class="quick-menu-item" onclick="cycleViewQuality();">🖥️ 3D 화질: <span id="view-quality-label">자동</span></button>
             <button type="button" class="quick-menu-item" onclick="toggleExhibitMode(); toggleQuickMenu();">🎬 전시 모드 (무한 왕복): <span id="exhibit-state">꺼짐</span></button>
             <button type="button" class="quick-menu-item" onclick="returnToFirstStation(); toggleQuickMenu();">🔄 기점역(<span class="dir-first-name">검단오류</span>역)으로 회차</button>
             <button type="button" class="quick-menu-item" onclick="jumpToStation(IC2.P.STN.length - 1); toggleQuickMenu();">📍 종착역(<span class="dir-last-name">운연</span>역)으로 바로 이동</button>
@@ -9838,9 +9839,9 @@ function cvDrawOverlayInfo(ctx, st, tun) {
   ctx.save();
   ctx.font = '600 13px "Pretendard", -apple-system, sans-serif';
   // 캔버스는 object-fit: cover로 잘려 보이므로, 실제 보이는 영역의 좌측 상단에 맞춤
-  const cvs = ctx.canvas, k = Math.max(cvs.clientWidth / cvs.width, cvs.clientHeight / cvs.height) || 1;
-  const x = Math.max(0, (cvs.width - cvs.clientWidth / k) / 2) + 10;
-  let y = Math.max(0, (cvs.height - cvs.clientHeight / k) / 2) + 10;
+  const cvs = ctx.canvas, k = Math.max(cvs.clientWidth / CV.W, cvs.clientHeight / CV.H) || 1;   // 논리 좌표(1024×473) 기준
+  const x = Math.max(0, (CV.W - cvs.clientWidth / k) / 2) + 10;
+  let y = Math.max(0, (CV.H - cvs.clientHeight / k) / 2) + 10;
   for (let i = 0; i < msgs.length && i < 3; i++) {
     const m = msgs[i];
     const label = m[0] + '   ' + m[1];
@@ -9956,6 +9957,11 @@ function drawCabViewLoop() {
     if ((cvState.frame % 12) === 0) cvState.visible = !!canvas.offsetParent;
     if (cvState.visible) {
       const ctx = cvState.ctx;
+      // 화면에 늘려 보이는 배율 × 화면 배율만큼 고해상도로 그림 (좌표계는 1024×473 그대로) → 큰 화면에서도 글씨 선명
+      const q = Math.min(4, Math.max(1, (window.devicePixelRatio || 1) * Math.max(canvas.clientWidth / CV.W, canvas.clientHeight / CV.H)));
+      const bw = Math.round(CV.W * q), bh = Math.round(CV.H * q);
+      if (canvas.width !== bw || canvas.height !== bh) { canvas.width = bw; canvas.height = bh; }
+      ctx.setTransform(bw / CV.W, 0, 0, bh / CV.H, 0, 0);
       ctx.clearRect(0, 0, CV.W, CV.H);
       cvDrawOverlayInfo(ctx, cvStationInfo(trainDistance), cvTunnelInfo(trainDistance));
     }
@@ -13518,6 +13524,27 @@ function setRunDirection(dir, startId) {
 }
 window.setRunDirection = setRunDirection;
 
+/* 3D 화질 선택 (메뉴): 자동 → 선명(100%) → 보통(75%) → 가볍게(55%). 선택은 이 PC 브라우저에 기억 */
+const VIEW_QUALITY = [['auto', '자동'], ['1', '선명'], ['0.75', '보통'], ['0.55', '가볍게']];
+function applyViewQuality(i) {
+  const [q, label] = VIEW_QUALITY[i];
+  if (window.CabView3D) window.CabView3D.setQuality(q);
+  const el = document.getElementById('view-quality-label');
+  if (el) el.textContent = label;
+  try { localStorage.setItem('ic2.viewQuality', String(i)); } catch (e) { }
+}
+function cycleViewQuality() {
+  let i = 0; try { i = +localStorage.getItem('ic2.viewQuality') || 0; } catch (e) { }
+  i = (i + 1) % VIEW_QUALITY.length;
+  applyViewQuality(i);
+  showTemporaryHudFeedback(`🖥️ 3D 화질: ${VIEW_QUALITY[i][1]}`, false);
+}
+window.cycleViewQuality = cycleViewQuality;
+window.addEventListener('cabview3d-ready', () => {
+  let i = 0; try { i = +localStorage.getItem('ic2.viewQuality') || 0; } catch (e) { }
+  if (i) applyViewQuality(i);
+});
+
 /* 전시 모드: 하선 검단오류 → 운연, 종착 후 상선 운연 → 검단오류 … 무인운전으로 끝없이 왕복 */
 const EXHIBIT_TURN_SEC = 8;              // 종착역에서 회차까지 대기 (s)
 window.__EXHIBIT = false;
@@ -13972,6 +13999,6 @@ setTimeout(() => {
 </script>
 
 
-<script type="module" src="js/cabview3d.js?v=2026101716"></script>
+<script type="module" src="js/cabview3d.js?v=2026101717"></script>
 </body>
 </html>

@@ -1579,8 +1579,9 @@ function adaptQuality(dt, now) {
   if (fpsAcc < 1) return;
   fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0;
   if (!autoQ || now - lastAdj < 2500 || now - t0 < 5000) return;   // 시작 직후(선로 생성 중)에는 조절하지 않음
-  if (fps < 42 && renderScale > 0.5) { renderScale = Math.max(0.5, renderScale - 0.1); lastAdj = now; resize(); }
-  else if (fps > 57 && renderScale < 1) { renderScale = Math.min(1, renderScale + 0.05); lastAdj = now; resize(); }
+  // 해상도는 정말 느릴 때(35fps 미만)만 낮추고, 최저 60%까지만 (큰 화면에서 지나치게 거칠어지지 않게)
+  if (fps < 35 && renderScale > 0.6) { renderScale = Math.max(0.6, renderScale - 0.08); lastAdj = now; resize(); }
+  else if (fps > 50 && renderScale < 1) { renderScale = Math.min(1, renderScale + 0.05); lastAdj = now; resize(); }
 }
 
 
@@ -1612,7 +1613,7 @@ window.CabView3D = {
     if (st.rain !== undefined) glass.rainOn = typeof st.rain === 'number' ? clamp(st.rain, 0, 1) : (st.rain ? 1 : 0);
     if (st.wiper !== undefined && WIPER_MODES.includes(st.wiper)) glass.wiperMode = st.wiper;
   },
-  setQuality(q) { autoQ = q === 'auto'; if (!autoQ) renderScale = +q; resize(); },
+  setQuality(q) { autoQ = q === 'auto'; if (!autoQ) renderScale = +q; else renderScale = Math.max(renderScale, 0.85); resize(); },
   resize() { resize(); },
   spawnOncoming(dist = 300, frozen = false, type) {
     if (type) { const i = type === 'new' ? 1 : 0; if (i !== oppIdx) { opp.active = false; opp.g.visible = false; oppIdx = i; opp = opps[i]; } }
