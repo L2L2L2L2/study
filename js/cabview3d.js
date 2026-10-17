@@ -1428,9 +1428,18 @@ function updateRain(g, dt) {
     if (segDist2(d.x, d.y, w.bottom, w.top) < rB || segDist2(d.x, d.y, w.base, w.pj) < rA || d.y > WIN.bot || d.x > WIN.right) drops.splice(i, 1);
   }
   for (const d of drops) {
-    g.fillStyle = 'rgba(232,241,248,0.30)'; g.beginPath(); g.ellipse(d.x, d.y, d.r * 0.8, d.r * 1.15, 0, 0, 6.2832); g.fill();
+    // 미끄러지는 방울: 뒤로 끝이 투명해지는 가는 물자국 (방울보다 가늘게) + 진행 방향으로 살짝 길쭉한 방울
+    const mv = d.v > 1.4, ang = Math.atan2(d.v * 6, wind * 3);           // 진행 방향 (아래·바람 쪽)
+    if (mv) {
+      const tx = d.x - wind * 3 * k * 1.6, ty = d.y - d.v * 6 * k * 1.6;
+      const gr = g.createLinearGradient(d.x, d.y, tx, ty);
+      gr.addColorStop(0, 'rgba(226,238,246,0.16)'); gr.addColorStop(1, 'rgba(226,238,246,0)');
+      g.strokeStyle = gr; g.lineWidth = d.r * 0.45; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(d.x, d.y - d.r * 0.4); g.lineTo(tx, ty); g.stroke();
+    }
+    const stretch = mv ? Math.min(1.6, 1 + d.v * 0.12) : 1;
+    g.fillStyle = 'rgba(232,241,248,0.30)'; g.beginPath(); g.ellipse(d.x, d.y, d.r * 0.8, d.r * 1.15 * stretch, mv ? ang - Math.PI / 2 : 0, 0, 6.2832); g.fill();
     g.fillStyle = 'rgba(255,255,255,0.55)'; g.beginPath(); g.arc(d.x - d.r * 0.28, d.y - d.r * 0.34, d.r * 0.3, 0, 6.2832); g.fill();
-    if (d.v > 1.4) { g.strokeStyle = 'rgba(226,238,246,0.22)'; g.lineWidth = d.r * 0.8; g.beginPath(); g.moveTo(d.x, d.y); g.lineTo(d.x - wind * 3 * k, d.y - d.v * 6 * k); g.stroke(); }
   }
   if (glass.rain > 0.25 && outdoor) {                     // 공중 빗줄기
     g.strokeStyle = `rgba(214,226,238,${0.12 + glass.rain * 0.16})`; g.lineWidth = Math.max(1, k);
