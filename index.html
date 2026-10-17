@@ -9031,17 +9031,13 @@ function updateDuAduDisplay(driveMode, notch, now) {
       const hasDir = !isHcrEb && (dirNotch === 'F' || dirNotch === 'R');
       fwdArrow.style.visibility = hasDir ? '' : 'hidden';
       revArrow.style.visibility = hasDir ? '' : 'hidden';
-      if (dirNotch === 'F') {
-        // 전진: 열차 진행방향에 맞춰 앞뒤 모두 녹색 ◀
-        fwdArrow.innerText = '◀';
+      // 진행 쪽: 하선은 Mc1 쪽(◀), 상선은 종착역에서 회차해 Mc2 운전실이 앞이므로 Mc2 쪽(▶). 후진(R)이면 반대
+      const towardMc1 = (dirNotch === 'F') === (IC2.P.dir > 0);
+      if (hasDir) {
+        const arrow = towardMc1 ? '◀' : '▶';
+        fwdArrow.innerText = arrow;
         fwdArrow.className = 'du2-arrow-ind active';
-        revArrow.innerText = '◀';
-        revArrow.className = 'du2-arrow-ind active';
-      } else if (dirNotch === 'R') {
-        // 후진: 열차 진행방향에 맞춰 앞뒤 모두 녹색 ▶
-        fwdArrow.innerText = '▶';
-        fwdArrow.className = 'du2-arrow-ind active';
-        revArrow.innerText = '▶';
+        revArrow.innerText = arrow;
         revArrow.className = 'du2-arrow-ind active';
       } else {
         // N 중립: 회색으로 방향선택 없이 나타남 (◀ Mc1 Mc2 ▶)
