@@ -8922,6 +8922,7 @@ function drawAduSpeedoGauge(speed, driveMode) {
   }
 }
 
+let lastDuAduUpdate = 0;
 function updateDuAduDisplay(driveMode, notch, now) {
   try {
     // 1. DU Live Date & Time
@@ -9689,7 +9690,8 @@ function updateTrainPhysics() {
   cvUpdateRollNoise(trainSpeed);
 
   updateCabOSD(notch, revNotch, isUnmannedActive, driveMode);
-  updateDuAduDisplay(driveMode, notch, now);
+  // DU·ADU 화면은 초당 20회만 갱신 (매 프레임 갱신은 프레임당 수 ms를 써서 3D 화면이 느려짐)
+  if (now - lastDuAduUpdate >= 50) { lastDuAduUpdate = now; updateDuAduDisplay(driveMode, notch, now); }
 
   // 원격 관제 실시간 텔레메트리 전송 (Supabase 트래픽 최적화: 적응형 브로드캐스트)
   if (typeof TrainRemote !== 'undefined' && TrainRemote.isConnected && TrainRemote.role === 'STUDENT') {
