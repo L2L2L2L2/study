@@ -3506,7 +3506,7 @@
     .sim-du-box .du2-status-strip { flex: 0 0 auto; border-left: none; }
     .sim-du-box .du2-sub-bar .du2-meter-item { white-space: nowrap; gap: 2px; }
     .sim-du-box .du2-sub-bar .du2-meter-item:first-of-type { margin-left: auto; }
-    .sim-du-box .du2-sub-bar .du2-meter-label { font-size: 10px; padding: 1px 2px; }
+    .sim-du-box .du2-sub-bar .du2-meter-label { font-size: 10px; padding: 0 2px; }
     .sim-du-box .du2-sub-bar .du2-val-big-green { font-size: 21px; }
     .sim-du-box .du2-sub-bar .du2-val-big-red { font-size: 19px; }
     .sim-du-box .du2-sub-bar .du2-meter-unit { font-size: 9.5px; }
@@ -3546,8 +3546,12 @@
     .du2-meter-label.red {
       background: #ff0000;
       color: #ffffff;
-      padding: 1px 3px;
+      padding: 0 3px;
+      align-self: stretch;          /* EB 칩처럼 상태 바 위아래를 꽉 채움 */
+      display: flex;
+      align-items: center;
     }
+    .du2-meter-item:has(.du2-meter-label.red) { align-self: stretch; align-items: center; }
     .du2-val-big-green {
       color: #00ff00;
       font-size: 24px;
@@ -5908,10 +5912,10 @@
                     <span class="adu2-clock-time" id="adu2-clock-time">11:37:14</span>
                   </div>
                   <div class="adu2-bottom-logs" id="adu2-bottom-logs">
-                    <div id="adu2-log-1">11:34:54 HOLD</div>
-                    <div id="adu2-log-2">11:34:08 SKIP</div>
-                    <div id="adu2-log-3">11:34:40 FSB FAIL</div>
-                    <div id="adu2-log-4">11:34:24 TCMS LINK OK</div>
+                    <div id="adu2-log-1">00:00:00</div>
+                    <div id="adu2-log-2">00:00:00</div>
+                    <div id="adu2-log-3">00:00:00</div>
+                    <div id="adu2-log-4">00:00:00</div>
                   </div>
                   <div class="adu2-bottom-btn-wrap">
                     <button type="button" class="adu2-setup-btn" onclick="showTemporaryHudFeedback('ℹ️ [ADU Setup] SelTrac MMI 환경설정 메뉴', false)">Setup</button>
@@ -9057,12 +9061,17 @@ function updateMainReservoir(dt) {
   updateMrInterlocks();
 }
 
-/* VOBC 위치 상실: 전·후부 VOBC 리셋 시 발생. RM 모드로 선로 위치 태그(25m 간격) 2개를 지나면 해소 */
+/* VOBC 위치 상실: 전·후부 VOBC 리셋, FM 모드 전환 시 발생. RM 모드로 선로 위치 태그(25m 간격) 2개를 지나면 해소 */
 function setPositionLost() {
   const d = new Date(), p2 = n => String(n).padStart(2, '0');
   window.__POS_LOST = { time: `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`, tags: 0, lastTag: Math.floor(trainDistance / 25) };
 }
 function updatePositionTags(driveMode) {
+  // FM 모드는 VOBC 전원이 차단되어 열차 위치를 잃음 → POSITION LOST (RM으로 태그 2개 다시 통과해야 무인운전 가능)
+  if (driveMode === 'FM') {
+    if (!window.__POS_LOST) setPositionLost();
+    else window.__POS_LOST.tags = 0;
+  }
   const pl = window.__POS_LOST;
   if (!pl) return;
   const tag = Math.floor(trainDistance / 25);
@@ -9265,7 +9274,7 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const isEmgReleaseLatched = (cvCompState('SW_EMG_RELEASE', 'RELEASED') === 'LATCHED');
     const isEmgActive = (isEmgStopLatched && !isEmgReleaseLatched);
     const isHcrEb = window.__HCR_EB === true;
-    const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB') || isHcrEb || isMrLowEbActive() || !!window.__VOBC_ALL_DOWN;
+    const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB') || isHcrEb || isMrLowEbActive() || !!window.__VOBC_ALL_DOWN || !!window.__CB_EB;
     const isUnmannedNow = driveMode === 'OFF' && cvCompState('SW_WIRELESS_MODE', 'OFF') === 'LIT';
 
     // 운전모드 칩 (FM / RM / ATPM / 무인운전 "Driver less": 청색, 그 외 빈칸)
@@ -9770,46 +9779,13 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const log2 = document.getElementById('adu2-log-2');
     const log3 = document.getElementById('adu2-log-3');
     const log4 = document.getElementById('adu2-log-4');
-    if (isRmEbActive) {
-      if (log1) log1.innerText = `${hh}:${mm}:${ss} RM OVERSPEED EB`;
-      if (log2) log2.innerText = `${hh}:${mm}:${ss} TRAIN EMERGENCY STOP`;
-    } else if (driveMode === 'RM' && rmOverspeedTimer > 0) {
-      if (log1) log1.innerText = `${hh}:${mm}:${ss} OVERSPEED WARN (${(5.0 - rmOverspeedTimer).toFixed(1)}s)`;
-      if (log2) log2.innerText = `${hh}:${mm}:${ss} SPEED > 15 KM/H`;
-    } else if (!isDoorInterlockCleared) {
-      if (log1) log1.innerText = `${hh}:${mm}:${ss} TRAIN DOOR OPEN`;
-      if (log2) log2.innerText = `${hh}:${mm}:${ss} TRACTION INHIBITED`;
-    } else if (window.__MR_LOW) {
-      if (log1) log1.innerText = `${hh}:${mm}:${ss} MR PRESSURE LOW`;
-      if (log2) log2.innerText = `${hh}:${mm}:${ss} ${isMrLowEbActive() ? 'EMERGENCY BRAKE' : (isMrTractionCut() ? 'TRACTION INHIBITED' : 'MR BYPASS')}`;
-    } else if (isParkBrakeTractionCut()) {
-      if (log1) log1.innerText = `${hh}:${mm}:${ss} PARKING BRAKE APPLIED`;
-      if (log2) log2.innerText = `${hh}:${mm}:${ss} TRACTION INHIBITED`;
-    } else {
-      if (log1) log1.innerText = `${hh}:34:54 HOLD`;
-      if (log2) log2.innerText = `${hh}:34:08 SKIP`;
-    }
-
+    // 메시지는 요청된 것만 현시 (현재: 1줄 RESET EB, 4줄 POSITION LOST). 특이사항이 없으면 시간만 표시
+    if (log1) log1.innerText = isEbActive ? `${hh}:${mm}:${ss} RESET EB` : `${hh}:${mm}:${ss}`;
+    if (log2) log2.innerText = `${hh}:${mm}:${ss}`;
+    if (log3) log3.innerText = `${hh}:${mm}:${ss}`;
     if (log4) {
-      if (isTcmsFail) {
-        log4.innerText = `${hh}:${mm}:${ss} TCMS LINK FAIL`;
-        log4.style.color = '#ff4444';
-      } else if (isVobc1Fail || isVobc2Fail) {
-        log4.innerText = `${hh}:${mm}:${ss} VOBC FAULT`;
-        log4.style.color = '#ffaa33';
-      } else if (isVobc1Comm || isVobc2Comm) {
-        log4.innerText = `${hh}:${mm}:${ss} VOBC COMM LOSS`;
-        log4.style.color = '#ffaa33';
-      } else if (window.__POS_LOST) {
-        log4.innerText = `${window.__POS_LOST.time} POSITION LOST`;
-        log4.style.color = '#ffffff';
-      } else if (isFmMode) {
-        log4.innerText = `${hh}:${mm}:${ss} VOBC PWR CUT`;
-        log4.style.color = '#ff8888';
-      } else {
-        log4.innerText = `${hh}:34:24 TCMS LINK OK`;
-        log4.style.color = '#ffffff';
-      }
+      log4.innerText = window.__POS_LOST ? `${window.__POS_LOST.time} POSITION LOST` : `${hh}:${mm}:${ss}`;
+      log4.style.color = '#ffffff';
     }
 
     // Draw ADU Speedo
