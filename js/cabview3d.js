@@ -215,6 +215,7 @@ T.header = canvasTex(64, 256, (g, w, h) => {   // PSD 상부 은색 곡면 헤�
 });
 /* PSD 모듈 3.6m × 2.35m : 고정창(광고) + 양개문, 주황 문틀, 주황 상단띠 */
 const PSD_MOD = 3.6, PSD_H = 2.35;
+const PLAT_V = 0.915;            // 승강장 상면 = 객실 바닥 높이 (레일면 기준 915mm, 제원)
 function makePSDTex(ads) {
   return canvasTex(1024, 668, (g, w, h) => {
     const m = w / PSD_MOD;                    // px per m
@@ -933,11 +934,11 @@ function stationFeatures(st, a, b, under) {
     const s = under ? s0 : s0 - side * 4.3;
     if (s < a || s >= b) return;
     const u = side * 4.05, face = s - side * 0.31;
-    pillars.push({ s: s + side * 0.0, u, v: 1.05, sx: 0.6, sy: 3.4, sz: 0.6, c: under ? 1.0 : undefined });
+    pillars.push({ s: s + side * 0.0, u, v: PLAT_V, sx: 0.6, sy: 4.45 - PLAT_V, sz: 0.6, c: under ? 1.0 : undefined });
     (side > 0 ? signsF : signsB).push({ s: face, u, v: 3.25 });
     greens.push({ s: face, u: u + side * 0.55, v: 3.75, sx: 0.35, sy: 0.16, sz: 0.06 });
     W(face - side * 0.1, u + side * 0.55, 3.75, _v); glowG.push(_v.x, _v.y, _v.z);
-    if (under) doors.push({ s: s - side * 0.17, u: side * 5.6, v: 2.08, yaw: side > 0 ? 0 : Math.PI });
+    if (under) doors.push({ s: s - side * 0.17, u: side * 5.6, v: PLAT_V + 1.03, yaw: side > 0 ? 0 : Math.PI });
     if (under) steps.push({ s: s - side * 2.0, u: side * 4.2, v: 0, yaw: side > 0 ? Math.PI : 0 });
   };
   add(st.s0, +1); add(st.s1, -1);
@@ -950,10 +951,10 @@ function stationFeatures(st, a, b, under) {
   // 정차위치표지: 측면(PSD 부착, 흑색 바탕 백색 숫자) + 전면(선로 중앙, 백색 반사재 적색 숫자)
   //   바닥 표지 = 정차 시 열차 앞끝 / PSD 표지 = 운전자 옆(앞끝에서 1m 뒤) → 우측 측창으로 확인
   const SIDE_BACK = 1.0;
-  if (st.stop - SIDE_BACK >= a && st.stop - SIDE_BACK < b) inst(G.stopR, under ? MAT.stopU : MAT.stopA, [{ s: st.stop - SIDE_BACK, u: 3.69, v: 2.6 }]);
+  if (st.stop - SIDE_BACK >= a && st.stop - SIDE_BACK < b) inst(G.stopR, under ? MAT.stopU : MAT.stopA, [{ s: st.stop - SIDE_BACK, u: 3.69, v: PLAT_V + 1.55 }]);
   if (st.stop >= a && st.stop < b) inst(G.stopFront, MAT.stopFront, [{ s: st.stop, u: TRK, v: -0.30 }]);
   // 상선 (반대편 선로, s 감소 방향 진행)
-  if (st.oppStop + SIDE_BACK >= a && st.oppStop + SIDE_BACK < b) inst(G.stopR, under ? MAT.stopU : MAT.stopA, [{ s: st.oppStop + SIDE_BACK, u: -3.69, v: 2.6, yaw: Math.PI }]);
+  if (st.oppStop + SIDE_BACK >= a && st.oppStop + SIDE_BACK < b) inst(G.stopR, under ? MAT.stopU : MAT.stopA, [{ s: st.oppStop + SIDE_BACK, u: -3.69, v: PLAT_V + 1.55, yaw: Math.PI }]);
   if (st.oppStop >= a && st.oppStop < b) inst(G.stopFront, MAT.stopFront, [{ s: st.oppStop, u: -TRK, v: -0.30, yaw: Math.PI }]);
 }
 
@@ -961,17 +962,17 @@ function buildStationA(a, b) {
   for (const [s0, s1] of segs(a, b, z => z === 1)) {
     const st = stationAt((s0 + s1) / 2), e0 = Math.max(s0, st.s0 - 4), e1 = Math.min(s1, st.s1 + 4);
     const under = (s, u, v) => (v > 1 && Math.abs(u) < 9 ? 0.82 : v < -0.7 ? 0.7 : 0.95);
-    const plat = hard([[4.9, -0.45], [3.76, -0.45], [3.76, 1.05], [3.76, 1.05], [9.0, 1.05], [9.0, -1.2], [2.6, -2.7]]);
+    const plat = hard([[4.9, -0.45], [3.76, -0.45], [3.76, PLAT_V], [3.76, PLAT_V], [9.0, PLAT_V], [9.0, -1.2], [2.6, -2.7]]);
     extrude({ s0, s1, step: 2, lines: [plat, mirror(plat)], mat: MAT.concrete, color: under });
-    extrude({ s0, s1, step: 2, lines: [[[3.76, 1.051], [9.0, 1.051]], [[-9.0, 1.051], [-3.76, 1.051]]], mat: MAT.tileA, uvU: 2.4, uvS: 2.4, color: () => 0.85 });
+    extrude({ s0, s1, step: 2, lines: [[[3.76, PLAT_V + 0.001], [9.0, PLAT_V + 0.001]], [[-9.0, PLAT_V + 0.001], [-3.76, PLAT_V + 0.001]]], mat: MAT.tileA, uvU: 2.4, uvS: 2.4, color: () => 0.85 });
     if (e1 > e0) extrude({ s0: e0, s1: e1, step: PSD_MOD, lines: [[[3.73, 1.05], [3.73, 1.05 + PSD_H]], [[-3.73, 1.05], [-3.73, 1.05 + PSD_H]]],
       mat: MAT.psdA, swapUV: true, uvS: PSD_MOD, uvU: PSD_H, color: () => 0.92, order: 3 });
-    extrude({ s0, s1, step: 4, lines: [[[8.85, 1.05], [8.85, 5.6]], [[-8.85, 1.05], [-8.85, 5.6]]], mat: MAT.glassWall, swapUV: true, uvS: 1.8, uvU: 4.55, order: 2 });
+    extrude({ s0, s1, step: 4, lines: [[[8.85, PLAT_V], [8.85, 5.6]], [[-8.85, PLAT_V], [-8.85, 5.6]]], mat: MAT.glassWall, swapUV: true, uvS: 1.8, uvU: 4.55, order: 2 });
     const arch = []; for (let i = 0; i <= 18; i++) { const u = -9.8 + 19.6 * i / 18; arch.push([u, 5.7 + 3.1 * (1 - (u / 9.8) ** 2)]); }
     extrude({ s0, s1, step: 4, lines: [arch], mat: MAT.roof, uvU: 2, uvS: 6, color: () => 0.8 });
     if (!G.rib) G.rib = shared(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(arch.map(p => new THREE.Vector3(p[0], p[1] - 0.18, 0))), 40, 0.13, 6, false));
     const ribs = [], cols = [], piers = [];
-    for (const s of grid(s0, s1, 7.2, st.s0 % 7.2)) { ribs.push({ s, u: 0, v: 0 }); for (const u of [-8.5, 8.5]) cols.push({ s, u, v: 1.05, sx: 0.45, sy: 4.75, sz: 0.45 }); }
+    for (const s of grid(s0, s1, 7.2, st.s0 % 7.2)) { ribs.push({ s, u: 0, v: 0 }); for (const u of [-8.5, 8.5]) cols.push({ s, u, v: PLAT_V, sx: 0.45, sy: 5.8 - PLAT_V, sz: 0.45 }); }
     for (const s of grid(s0, s1, 30)) for (const u of [-5.5, 5.5]) piers.push({ s, u, v: -Y(s), sy: Y(s) - 1.4, sx: 0.9, sz: 0.9 });
     inst(G.rib, MAT.white, ribs); inst(G.unitUp, MAT.white, cols); inst(G.pier, MAT.concI, piers);
     stationFeatures(st, s0, s1, false);
@@ -1067,7 +1068,7 @@ function buildTunnels(a, b) {
 function buildStationB(a, b) {
   for (const [s0, s1] of segs(a, b, z => z === 5)) {
     const st = stationAt((s0 + s1) / 2);
-    const under = hard([[BOX_W, -0.45], [3.76, -0.45], [3.76, 1.05]]);
+    const under = hard([[BOX_W, -0.45], [3.76, -0.45], [3.76, PLAT_V]]);
     extrude({ s0, s1, step: 1.2, lines: [under, mirror(under)], mat: MAT.boxWall, color: (s, u, v) => 0.6 * L(s, u, v) });
     extrude({ s0, s1, step: 1.2, lines: [floorLine(-3.76, 3.76)], mat: MAT.slabU, uvU: 3, uvS: 3, color: L });
     extrude({ s0, s1, step: PSD_MOD, lines: [[[3.73, 1.05], [3.73, 1.05 + PSD_H]], [[-3.73, 1.05], [-3.73, 1.05 + PSD_H]]],
@@ -1075,13 +1076,13 @@ function buildStationB(a, b) {
     const hdr = [[3.73, 3.4], [3.9, 3.75], [4.0, 4.3], [3.95, 4.85], [3.7, BOX_H]];
     extrude({ s0, s1, step: 1.2, lines: [hdr, mirror(hdr)], mat: MAT.headerB, uvU: 2, uvS: 1.2, swapUV: true, color: () => 0.8 });
     extrude({ s0, s1, step: 1.2, lines: [[[-3.7, BOX_H], [3.7, BOX_H]]], mat: MAT.boxWall, color: () => 0.55 });
-    extrude({ s0, s1, step: 2.4, lines: [[[3.76, 1.05], [10, 1.05]], [[-10, 1.05], [-3.76, 1.05]]], mat: MAT.tileB, uvU: 2.4, uvS: 2.4, color: () => 0.95 });
+    extrude({ s0, s1, step: 2.4, lines: [[[3.76, PLAT_V], [10, PLAT_V]], [[-10, PLAT_V], [-3.76, PLAT_V]]], mat: MAT.tileB, uvU: 2.4, uvS: 2.4, color: () => 0.95 });
     extrude({ s0, s1, step: 2.4, lines: [[[3.9, 4.4], [10, 4.4]], [[-10, 4.4], [-3.9, 4.4]]], mat: MAT.ceilB, uvU: 2.4, uvS: 2.4, color: () => 0.9 });
-    extrude({ s0, s1, step: 2.4, lines: [[[10, 1.05], [10, 4.4]], [[-10, 1.05], [-10, 4.4]]], mat: MAT.wallB, uvU: 3.35, uvS: 2.4, swapUV: true, color: () => 0.85 });
-    extrude({ s0, s1, step: 4.8, lines: [[[4.15, 1.056], [4.45, 1.056]], [[-4.45, 1.056], [-4.15, 1.056]]], mat: MAT.tactile });
+    extrude({ s0, s1, step: 2.4, lines: [[[10, PLAT_V], [10, 4.4]], [[-10, PLAT_V], [-10, 4.4]]], mat: MAT.wallB, uvU: 4.4 - PLAT_V, uvS: 2.4, swapUV: true, color: () => 0.85 });
+    extrude({ s0, s1, step: 4.8, lines: [[[4.15, PLAT_V + 0.006], [4.45, PLAT_V + 0.006]], [[-4.45, PLAT_V + 0.006], [-4.15, PLAT_V + 0.006]]], mat: MAT.tactile });
     const strips = [], pcols = [];
     for (const s of grid(s0, s1, 2.4, 1.2)) for (const u of [5.6, 8.0, -5.6, -8.0]) strips.push({ s, u, v: 4.38, sx: 0.22, sy: 0.03, sz: 1.8 });
-    for (const s of grid(s0, s1, 9.6, st.s0 + 6)) for (const u of [-7.6, 7.6]) pcols.push({ s, u, v: 1.05, sx: 0.7, sy: 3.35, sz: 0.7 });
+    for (const s of grid(s0, s1, 9.6, st.s0 + 6)) for (const u of [-7.6, 7.6]) pcols.push({ s, u, v: PLAT_V, sx: 0.7, sy: 4.4 - PLAT_V, sz: 0.7 });
     inst(G.unit, MAT.lamp, strips); inst(G.unitUp, MAT.wallBI, pcols);
     // 승강장 끝 막음벽
     const ends = [];
@@ -1507,6 +1508,12 @@ function updateCamera(dt) {
   } else HL.k.value = 0;
 }
 const _b0 = new THREE.Vector3(), _b1 = new THREE.Vector3(), _bx = new THREE.Vector3(), _by = new THREE.Vector3(), _bz = new THREE.Vector3();
+/* 반대편 열차 실제 치수 (제원): 차체 길이 16.35m, 폭 2.65m, 지붕(냉방기 포함) 레일면 위 3.6m, 연결면간 34.4m
+   모델(17.6 × 2.77 × 3.25m)을 비율로 줄여 맞춤. 차체 하단 레일면 위 약 0.35m */
+const OPP_DIM = (() => {
+  const scale = new THREE.Vector3(2.65 / 2.77, 2.95 / CAR_H, 16.35 / CAR_L);
+  return { scale, len: 16.35, pitch: 34.4 / 2, bogie: 6.5 * scale.z, cy: 0.35 + 1.625 * scale.y };
+})();
 function updateOpp(o, dt) {
   const D = train.dir, od = -D, uO = od * TRK;         // od: 반대 열차 진행방향, uO: 반대 열차 선로
   if (!o.active) {
@@ -1537,20 +1544,21 @@ function updateOpp(o, dt) {
     return;
   }
   o.g.visible = true;
-  // 차체는 앞뒤 대차 중심(±6.5m)을 잇는 방향 → 구배·곡선을 따라 기울어짐
+  // 차체는 앞뒤 대차 중심을 잇는 방향 → 구배·곡선을 따라 기울어짐
   o.cars.forEach((c, i) => {
-    const sc = o.s - od * (8.8 + i * 18.2);
-    Wabs(sc + od * 6.5, uO, 0, _b0); Wabs(sc - od * 6.5, uO, 0, _b1);
+    const sc = o.s - od * (OPP_DIM.len / 2 + i * OPP_DIM.pitch);
+    Wabs(sc + od * OPP_DIM.bogie, uO, 0, _b0); Wabs(sc - od * OPP_DIM.bogie, uO, 0, _b1);
     _bz.subVectors(_b0, _b1).normalize();                 // 로컬 +Z = 진행방향 = 전면
     _bx.crossVectors(_bU, _bz).normalize(); _by.crossVectors(_bz, _bx);
-    _m.makeBasis(_bx, _by, _bz);
-    _v.addVectors(_b0, _b1).multiplyScalar(0.5).addScaledVector(_by, 1.95);
+    _m.makeBasis(_bx, _by, _bz).scale(OPP_DIM.scale);
+    _v.addVectors(_b0, _b1).multiplyScalar(0.5).addScaledVector(_by, OPP_DIM.cy);
     _m.setPosition(_v); c.matrix.copy(_m);
   });
   const lv = clamp(lightAt(o.s, uO, 2), 0.45, 1.6);   // 터널에서도 차체 형태가 보이게 최소 밝기 o.mats.forEach(m => m.color.setScalar(lv));
   const p = o.heads.geometry.attributes.position;
-  Wabs(o.s + od * 0.42, uO - o.headX, 1.62, _v); p.setXYZ(0, _v.x, _v.y, _v.z);       // 전면 전조등 (코 끝)
-  Wabs(o.s + od * 0.42, uO + o.headX, 1.62, _v); p.setXYZ(1, _v.x, _v.y, _v.z); p.needsUpdate = true;
+  const hx = o.headX * OPP_DIM.scale.x, hy = OPP_DIM.cy - 0.33 * OPP_DIM.scale.y;
+  Wabs(o.s + od * 0.4, uO - hx, hy, _v); p.setXYZ(0, _v.x, _v.y, _v.z);       // 전면 전조등 (코 끝)
+  Wabs(o.s + od * 0.4, uO + hx, hy, _v); p.setXYZ(1, _v.x, _v.y, _v.z); p.needsUpdate = true;
 }
 
 /* =====================================================================

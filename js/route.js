@@ -20,7 +20,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const TRK = 2.2;                 // 선로 중심 ↔ 노선 중심 (선간 4.4m)
 const EYE = 2.3;                 // 레일면 위 운전자 눈높이
 const PLAT = 75;                 // 승강장 길이 (4량 기준)
-const TRAIN_LEN = 37.5;          // 2량 1편성
+const TRAIN_LEN = 34.4;          // 2량 1편성 (연결면간 거리, 제원)
 const VMAX = 80 / 3.6;
 
 /* [번호, 역명, 앞역과 거리(m), 형식, 레일면 높이(m, 지면=0)] — 역간거리는 노선도 기준 */
