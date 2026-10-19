@@ -508,8 +508,8 @@ function frontFace(g, lit) {
     g.fillStyle = '#ff7a1a'; g.font = "bold 15px 'Malgun Gothic'"; g.textAlign = 'center';
     g.fillText(OPP_DEST, X(x + 0.105), Y(0.203)); g.textAlign = 'left';
   }
-  if (!lit) { g.fillStyle = '#0a0b0c'; g.fillRect(X(C0), Y(0.205), X(C1 - C0), Y(0.33)); g.fillStyle = '#1c2026'; g.fillRect(X(C0 + 0.01), Y(0.212), X(C1 - C0 - 0.02), Y(0.318)); }
-  glass(C0 + 0.04, 0.265, C1 - C0 - 0.08, 0.19);
+  if (!lit) { g.fillStyle = '#0a0b0c'; g.fillRect(X(C0), Y(0.16), X(C1 - C0), Y(0.365)); }
+  glass(C0 + 0.008, 0.168, C1 - C0 - 0.016, 0.35);                                        // 가운데 창: 양옆 창과 같은 높이, 얇은 테두리
   // 와이퍼 (양쪽 창 대각선)
   if (!lit) {
     g.strokeStyle = '#08090a'; g.lineWidth = 5; g.lineCap = 'round';

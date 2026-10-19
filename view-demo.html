@@ -63,8 +63,8 @@
 </div>
 <div id="loading">3D 노선 생성 중…</div>
 
-<script src="js/route.js?v=2026101901"></script>
-<script type="module" src="js/cabview3d.js?v=2026101903"></script>
+<script src="js/route.js?v=2026101904"></script>
+<script type="module" src="js/cabview3d.js?v=2026101904"></script>
 <script type="module">
 const { clamp, STN, SID, S, START, END, TRAIN_LEN, VMAX, PORTALS, CANAL, grade, zc, limitAt, curLimit, nextStation, atStation } = window.IC2;
 const rr = (a, b) => a + (b - a) * Math.random();
@@ -198,7 +198,7 @@ window.CabDemo = {
   stations: STN, portals: PORTALS, canal: CANAL,
 };
 document.getElementById('loading').remove();
-flash('A: 자동운전 · ↑/↓: 노치 · Space: 비상 · R: 비 · F: 와이퍼');
+flash(window.IC2 && window.IC2.custom ? '경로 편집기에서 만든 노선으로 보는 중입니다' : 'A: 자동운전 · ↑/↓: 노치 · Space: 비상 · R: 비 · F: 와이퍼');
 let last = performance.now();
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;

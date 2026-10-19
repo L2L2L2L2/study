@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>인천2호선 경로 편집기</title>
+<!--
+  노선 데이터(js/route.js 의 ROUTE_DATA) 편집 페이지
+  - 표에 역·곡선·구배·건넘선을 입력하면 평면도·종단도·제한속도를 route.js 와 같은 계산(IC2_build)으로 바로 그림
+  - 입력값은 이 브라우저(localStorage)에만 저장됨. 서버로 보내지 않음
+  - 3D 미리보기: view-demo.html?route=custom / 완성되면 '코드 내보내기'로 route.js 에 반영
+-->
+<style>
+  :root { --bg: #0e1116; --panel: #161b22; --panel2: #1c222b; --line: #2b323c; --text: #e6edf3; --muted: #8b949e;
+    --elev: #4c9aff; --cut: #f2b134; --tun: #9aa3ad; --st: #ffffff; --limit: #ff7b72; --sel: #ffd33d;
+    --right: #ff9f43; --left: #36c5f0; --bad: #ff6b6b; --ok: #3fb950; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif; font-size: 13px; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+  button:hover { border-color: #4b5563; background: #222a35; }
+  button.primary { background: #1f6f43; border-color: #2ea043; }
+  button.small { padding: 2px 7px; font-size: 12px; }
+  header { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 16px; margin: 0 8px 0 0; }
+  header .grow { flex: 1; }
+  #status { font-size: 12px; color: var(--muted); }
+  #status.bad { color: var(--bad); }
+  .wrap { display: grid; grid-template-columns: minmax(380px, 46%) 1fr; height: calc(100% - 52px); }
+  @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; height: auto; } }
+  .left { border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+  .tabs { display: flex; gap: 2px; padding: 8px 10px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .tabs button { border-radius: 6px 6px 0 0; border-bottom: none; background: transparent; color: var(--muted); }
+  .tabs button.on { background: var(--panel); color: var(--text); border-color: var(--line); }
+  .pane { flex: 1; overflow: auto; padding: 10px; background: var(--panel); min-height: 300px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .help { color: var(--muted); font-size: 12px; line-height: 1.6; margin: 0 0 8px; }
+  .help code, p code { background: #0b0f14; padding: 0 4px; border-radius: 3px; color: #c9d1d9; }
+  table { border-collapse: collapse; width: 100%; }
+  th { position: sticky; top: -10px; background: var(--panel); color: var(--muted); font-weight: 600; font-size: 12px; text-align: left; padding: 4px; border-bottom: 1px solid var(--line); z-index: 1; }
+  td { padding: 2px 3px; border-bottom: 1px solid #20262f; }
+  tr.sel td { background: rgba(255, 211, 61, .10); }
+  td input, td select { width: 100%; background: #0d1117; border: 1px solid #262d36; border-radius: 4px; padding: 3px 5px; min-width: 0; }
+  td input:focus, td select:focus { outline: none; border-color: #58a6ff; }
+  td input.bad { border-color: var(--bad); background: #2a1215; }
+  td.d { color: var(--muted); font-size: 12px; white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+  td.x { width: 28px; text-align: center; }
+  .right { display: grid; grid-template-rows: auto minmax(220px, 1.25fr) minmax(160px, 1fr) 110px auto; gap: 8px; padding: 8px; min-height: 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; display: flex; flex-direction: column; min-height: 0; }
+  .card h2 { margin: 0 0 4px; font-size: 12px; color: var(--muted); font-weight: 600; display: flex; gap: 8px; align-items: center; }
+  .card h2 span { font-weight: 400; }
+  canvas { display: block; width: 100%; flex: 1; min-height: 0; cursor: crosshair; }
+  #cursorBox { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 12px; }
+  #cursorBox b { font-variant-numeric: tabular-nums; }
+  #warn { font-size: 12px; max-height: 120px; overflow: auto; }
+  #warn div { padding: 2px 0; cursor: pointer; color: #e3b341; }
+  #warn div.err { color: var(--bad); }
+  #warn div:hover { text-decoration: underline; }
+  #tip { position: fixed; pointer-events: none; background: rgba(13,17,23,.95); border: 1px solid var(--line); border-radius: 6px;
+    padding: 6px 8px; font-size: 12px; line-height: 1.5; display: none; z-index: 20; white-space: nowrap; }
+  dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 10px; width: min(900px, 94vw); padding: 14px; }
+  dialog::backdrop { background: rgba(0,0,0,.55); }
+  dialog textarea { width: 100%; height: 55vh; background: #0b0f14; border: 1px solid var(--line); border-radius: 6px; padding: 8px;
+    font-family: Consolas, 'D2Coding', monospace; font-size: 12px; white-space: pre; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .kv { display: grid; grid-template-columns: 170px 1fr; gap: 6px 10px; align-items: center; max-width: 560px; }
+  .kv input { background: #0d1117; border: 1px solid #262d36; border-radius: 4px; padding: 4px 6px; }
+  #toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: #1f6f43; padding: 7px 14px; border-radius: 6px;
+    opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 30; }
+</style>
+</head>
+<body>
+<header>
+  <h1>경로 편집기</h1>
+  <button id="undo" title="Ctrl+Z">↶ 되돌리기</button>
+  <button id="redo" title="Ctrl+Y">↷ 다시</button>
+  <button id="preview" class="primary" title="이 경로로 3D 전면 전망을 새 탭에서 엽니다">3D 미리보기</button>
+  <button id="sim" title="이 경로로 시뮬레이터(index.html)를 새 탭에서 엽니다">시뮬레이터에서 열기</button>
+  <button id="export">코드 내보내기</button>
+  <button id="saveFile">파일로 저장</button>
+  <button id="openFile">파일 열기</button>
+  <input id="fileIn" type="file" accept=".json,application/json" hidden>
+  <button id="reset" title="route.js 에 들어 있는 현재 노선으로 되돌립니다">기본 노선으로</button>
+  <span class="grow"></span>
+  <span id="status"></span>
+</header>
+<div class="wrap">
+  <div class="left">
+    <div class="tabs" id="tabs"></div>
+    <div class="pane" id="pane"></div>
+  </div>
+  <div class="right">
+    <div class="card"><div id="cursorBox"><span>그래프를 클릭하면 그 위치가 여기 표시되고, 표의 <b>+ 추가</b>가 그 위치로 새 줄을 만듭니다.</span></div></div>
+    <div class="card"><h2>평면도 <span>휠: 확대 · 끌기: 이동 · 더블클릭: 전체 · 주황 = 우곡선, 하늘 = 좌곡선</span></h2><canvas id="plan"></canvas></div>
+    <div class="card"><h2>종단도 (레일면 높이, 지면 0 m) <span>휠: 확대 · 끌기: 이동 · 더블클릭: 전체</span></h2><canvas id="prof"></canvas></div>
+    <div class="card"><h2>제한속도 (km/h)</h2><canvas id="speed"></canvas></div>
+    <div class="card"><h2>확인할 점</h2><div id="warn"></div></div>
+  </div>
+</div>
+<div id="tip"></div>
+<div id="toast"></div>
+<dialog id="dlg">
+  <div class="row" style="justify-content:space-between;margin-bottom:8px">
+    <b>코드 내보내기</b>
+    <div class="row"><button id="copyCode">복사</button><button id="dlRoute">route.js 파일로 받기</button><button id="closeDlg">닫기</button></div>
+  </div>
+  <p class="help"><code>js/route.js</code>에서 <code>/* ROUTE_DATA 시작 */</code>부터 <code>/* ROUTE_DATA 끝 */</code>까지를 아래 내용으로 바꾸면 시뮬레이터 기본 노선이 됩니다.
+    <b>route.js 파일로 받기</b>는 그 부분만 바꾼 route.js 전체를 내려받습니다. 반영 후에는 html 파일들의 <code>route.js?v=</code> 숫자를 올려 주세요.</p>
+  <textarea id="code" readonly></textarea>
+</dialog>
+<script src="js/route.js?v=2026101904"></script>
+<script>
+'use strict';
+const clone = o => JSON.parse(JSON.stringify(o));
+const BASE = clone(window.IC2_DEFAULT);
+const KEY = 'ic2.routeData';
+const PROTECTED = ['201', '202', '206', '207', '208', '225', '226'];   // 3D 경관·아라뱃길 등이 번호로 참조하는 역
+const ZONE_KO = ['고가', '고가역', 'U형 개착', '박스 터널', '원형 터널', '지하역'];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const $ = id => document.getElementById(id);
+
+/* ---------- 상태 ---------- */
+let data = load() || clone(BASE);
+let R = null, buildErr = null;            // R: 마지막으로 성공한 IC2
+let tab = 'curves', sel = null, cursor = null;
+const hist = [], fut = [];
+function load() {
+  try { const d = JSON.parse(localStorage.getItem(KEY) || 'null'); return d && Array.isArray(d.stations) ? d : null; } catch (e) { return null; }
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { /* 저장 불가 (사생활 보호 모드 등) */ } }
+function commit() {                        // 변경 확정: 되돌리기 기록 + 저장 + 다시 계산
+  hist.push(lastSnap); if (hist.length > 200) hist.shift(); fut.length = 0;
+  lastSnap = JSON.stringify(data); save(); rebuild();
+}
+let lastSnap = JSON.stringify(data);
+function undo() { if (!hist.length) return; fut.push(JSON.stringify(data)); data = JSON.parse(hist.pop()); lastSnap = JSON.stringify(data); save(); renderPane(); rebuild(); }
+function redo() { if (!fut.length) return; hist.push(JSON.stringify(data)); data = JSON.parse(fut.pop()); lastSnap = JSON.stringify(data); save(); renderPane(); rebuild(); }
+
+/* ---------- 위치 표기 (route.js 의 pos 와 같은 규칙, 표 계산용) ---------- */
+function stationS() { const m = {}; let s = 0; for (const st of data.stations) { s += +st[2] || 0; m[st[0]] = s; } return m; }
+function posOf(p, SS = stationS()) {
+  const last = data.stations.length ? SS[data.stations[data.stations.length - 1][0]] : 0;
+  const t = String(p ?? '').trim();
+  if (t === 'START') return -400;
+  if (t === 'END') return last + 450;
+  let m = /^K\s*(-?\d+(?:\.\d+)?)$/i.exec(t);
+  if (m) return +m[1] - (+data.chainage0 || 0);
+  m = /^(\d+)\s*(?:([+-])\s*(\d+(?:\.\d+)?))?$/.exec(t);
+  if (m && SS[m[1]] !== undefined) return SS[m[1]] + (m[2] ? (m[2] === '-' ? -1 : 1) * +m[3] : 0);
+  return NaN;
+}
+function relOf(s) {                        // s → '205+312' (직전 역 기준)
+  const SS = stationS(); let best = null;
+  for (const st of data.stations) if (SS[st[0]] <= s + 1e-6) best = st[0];
+  if (!best) { const f = data.stations[0][0]; return `${f}-${Math.round(SS[f] - s)}`; }
+  const d = Math.round(s - SS[best]); return d ? `${best}+${d}` : best;
+}
+const km = s => (s / 1000).toFixed(3) + ' km';
+const nameOf = id => (data.stations.find(st => st[0] === id) || [])[1] || '';
+
+/* ---------- 계산 (route.js 의 build 그대로) ---------- */
+function rebuild() {
+  try { R = window.IC2_build(data); buildErr = null; } catch (e) { buildErr = e.message || String(e); if (!R) R = window.IC2_build(BASE); }
+  const st = $('status');
+  st.textContent = buildErr ? '⚠ ' + buildErr + ' (그래프는 마지막 정상 상태)' : `역 ${data.stations.length} · 곡선 ${data.curves.length} · 구배 ${data.grades.rows.length} · 건넘선 ${data.xovers.length} · 이 브라우저에 자동 저장됨`;
+  st.className = buildErr ? 'bad' : '';
+  updateDerived(); drawAll(); checkAll();
+}
+
+/* ---------- 표 ---------- */
+const TABS = {
+  stations: { label: '역', rows: () => data.stations },
+  curves: { label: '곡선·제한속도', rows: () => data.curves },
+  grades: { label: '구배(높낮이)', rows: () => data.grades.rows },
+  xovers: { label: '건넘선', rows: () => data.xovers },
+  settings: { label: '설정·위치 표기' },
+};
+const COLS = {
+  stations: [
+    { h: '번호', k: 0, w: 56 }, { h: '역명', k: 1, w: 110 }, { h: '앞역과 거리 m', k: 2, num: true, w: 90 },
+    { h: '형식', k: 3, sel: [['elev', '고가'], ['under', '지하']], w: 70 }, { h: '높이(참고)', k: 4, num: true, w: 70 },
+    { h: '중심 위치', d: r => km(stationS()[r[0]]) }],
+  curves: [
+    { h: '중심 위치', k: 0, pos: true, w: 92 }, { h: '제한구간 m', k: 1, num: true, w: 74 }, { h: '반경 R', k: 2, num: true, w: 70 },
+    { h: '방향', k: 3, sel: [[1, '우'], [-1, '좌']], w: 54 }, { h: '속도 km/h', k: 4, num: true, w: 64 },
+    { h: '구간', d: r => { const c = posOf(r[0]); return isNaN(c) ? '?' : `${((c - r[1] / 2) / 1000).toFixed(3)} ~ ${km(c + r[1] / 2)}`; } }],
+  grades: [
+    { h: '시작 위치', k: 0, pos: true, w: 92 }, { h: '구배 ‰', k: 1, num: true, w: 62 }, { h: '길이 m', k: 2, num: true, w: 74 },
+    { h: '메모', k: 3, w: 150 }, { h: '끝 높이', d: (r, i) => gradeEnds()[i] }],
+  xovers: [
+    { h: '시작 위치', k: 0, pos: true, w: 100 }, { h: '끝 위치', k: 1, pos: true, w: 100 },
+    { h: '방향', k: 2, sel: [['/', '/ 우측(본선)→좌측 선로'], ['\\', '\\ 좌측→우측(본선) 선로']], w: 190 },
+    { h: '길이', d: r => { const a = posOf(r[0]), b = posOf(r[1]); return isNaN(a + b) ? '?' : (b - a).toFixed(0) + ' m'; } }],
+};
+const HELP = {
+  stations: '역 순서대로 <b>앞역과의 거리</b>(첫 역은 0)를 넣습니다. 거리를 바꾸면 그 뒤의 역과, 역 기준으로 적은 곡선·구배가 함께 밀립니다. <b>형식</b>은 승강장 모양(고가역·지하역)을 정하고, 실제 높이는 <b>구배</b> 탭에서 정해집니다. 3D 경관이 쓰는 역(' + PROTECTED.join(', ') + ')은 지울 수 없습니다.',
+  curves: '곡선 하나가 <b>3D 선로 모양</b>과 <b>제한속도</b>를 함께 정합니다. 제한구간은 중심 앞뒤로 절반씩이고, 원곡선은 그보다 40 m 짧으며 양 끝에 완화곡선(최대 25 m)이 붙습니다. 곡선 없이 속도제한만 넣으려면 반경을 <code>1e9</code>처럼 아주 크게 주세요. 방향은 하선(201→227) 진행 기준입니다.',
+  grades: '<b>시작 높이</b>에서 출발해 아래 구간들을 순서대로 적용합니다. 구간 사이는 <b>수평</b>이고, 꺾이는 곳은 자동으로 부드럽게 다듬어집니다. 높이에 따라 고가(+2.6 m 초과) / U형 개착 / 터널(−5.3 m 미만)이 자동으로 정해집니다. 역 앞뒤 40 m 이상은 수평으로 두세요.',
+  xovers: '건넘선 위치입니다(보통 36 m). <code>/</code>는 하선 진행 기준 우측(본선) 선로에서 좌측 선로로, <code>\\</code>는 반대로 건너갑니다.',
+};
+function gradeEnds() {
+  const SS = stationS(); let y = +data.grades.y0;
+  const rows = data.grades.rows.map((r, i) => ({ i, s: posOf(r[0], SS), g: +r[1], L: +r[2] }));
+  const out = []; rows.slice().sort((a, b) => a.s - b.s).forEach(r => { y += r.g / 1000 * r.L; out[r.i] = isNaN(r.s) ? '?' : y.toFixed(2) + ' m'; });
+  return out;
+}
+function renderTabs() {
+  $('tabs').innerHTML = Object.entries(TABS).map(([k, t]) => `<button data-t="${k}" class="${k === tab ? 'on' : ''}">${t.label}</button>`).join('');
+}
+$('tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; tab = b.dataset.t; sel = null; renderTabs(); renderPane(); drawAll(); });
+function esc(v) { return String(v ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+function renderPane() {
+  const pane = $('pane');
+  if (tab === 'settings') { renderSettings(); return; }
+  const rows = TABS[tab].rows(), cols = COLS[tab];
+  let h = `<p class="help">${HELP[tab]}</p>`;
+  if (tab === 'grades') h += `<div class="bar">시작 높이 (노선 시작점 레일면, m) <input id="y0" value="${esc(data.grades.y0)}" style="width:90px;background:#0d1117;border:1px solid #262d36;border-radius:4px;padding:3px 5px"></div>`;
+  h += `<div class="bar"><button class="small" id="add">+ 추가${cursor !== null && tab !== 'stations' ? ' (선택 위치 ' + relOf(cursor) + ')' : ''}</button>`;
+  if (tab !== 'stations') h += `<button class="small" id="sort">위치순 정렬</button>`;
+  h += `</div><table><thead><tr>${cols.map(c => `<th style="${c.w ? 'width:' + c.w + 'px' : ''}">${c.h}</th>`).join('')}<th></th></tr></thead><tbody>`;
+  rows.forEach((r, i) => {
+    h += `<tr data-i="${i}" class="${sel === i ? 'sel' : ''}">`;
+    cols.forEach((c, ci) => {
+      if (c.d) { h += `<td class="d" data-c="${ci}"></td>`; return; }
+      if (c.sel) h += `<td><select data-k="${c.k}">${c.sel.map(([v, l]) => `<option value="${esc(v)}" ${String(r[c.k]) === String(v) ? 'selected' : ''}>${l}</option>`).join('')}</select></td>`;
+      else h += `<td><input data-k="${c.k}" value="${esc(r[c.k])}" ${c.num ? 'inputmode="decimal"' : ''} ${c.pos ? 'placeholder="202+406"' : ''}></td>`;
+    });
+    const lock = tab === 'stations' && PROTECTED.includes(String(r[0]));
+    h += `<td class="x"><button class="small" data-del="${i}" ${lock ? 'disabled title="3D 경관에서 쓰는 역"' : 'title="삭제"'}>✕</button></td></tr>`;
+  });
+  pane.innerHTML = h + '</tbody></table>';
+  updateDerived();
+}
+function renderSettings() {
+  $('pane').innerHTML = `
+  <p class="help">위치는 아래 표기 중 아무 것으로나 넣을 수 있습니다. 내보내기 코드에도 넣은 그대로 남습니다.</p>
+  <table style="max-width:620px;margin-bottom:12px"><tbody>
+    <tr><td><code>202+406</code></td><td>202 왕길역 <b>중심</b>에서 하선 방향(201→227)으로 406 m 지난 곳</td></tr>
+    <tr><td><code>218-245</code></td><td>218 주안역 중심보다 245 m 앞</td></tr>
+    <tr><td><code>K3456.2</code></td><td>도면 거리정표 3456.2 m (아래 <b>도면 기점</b> 값으로 환산)</td></tr>
+    <tr><td><code>START</code> / <code>END</code></td><td>노선 시작(검단오류 중심 400 m 앞) / 끝(마지막 역 중심 450 m 뒤)</td></tr>
+  </tbody></table>
+  <div class="kv">
+    <label>도면 기점 (검단오류역 중심의<br>도면 거리정표, m)</label><input id="ch0" value="${esc(data.chainage0 || 0)}">
+    <label>변환해 보기</label><div class="row"><input id="cv" placeholder="K3456 또는 205+120" style="width:170px"> <span id="cvOut" class="help" style="margin:0"></span></div>
+  </div>
+  <p class="help" style="margin-top:14px">도면의 거리정표를 그대로 쓰려면, 도면에서 검단오류역 중심의 거리정표를 <b>도면 기점</b>에 넣고 위치를 <code>K</code>로 시작해 적으면 됩니다.
+  저장 위치: 이 브라우저(localStorage). 다른 컴퓨터로 옮기려면 <b>파일로 저장</b> / <b>파일 열기</b>를 쓰세요.</p>`;
+  const conv = () => { const v = $('cv').value.trim(); if (!v) { $('cvOut').textContent = ''; return; } const s = posOf(v);
+    $('cvOut').textContent = isNaN(s) ? '형식 오류' : `= ${relOf(s)} = K${(s + (+data.chainage0 || 0)).toFixed(1)} = ${km(s)} (s)`; };
+  $('cv').addEventListener('input', conv);
+  $('ch0').addEventListener('change', e => { const v = +e.target.value; if (!isFinite(v)) { e.target.classList.add('bad'); return; } data.chainage0 = v; commit(); conv(); });
+}
+function updateDerived() {
+  if (tab === 'settings') return;
+  const rows = TABS[tab].rows(), cols = COLS[tab], SS = stationS();
+  document.querySelectorAll('#pane tbody tr').forEach(tr => {
+    const i = +tr.dataset.i, r = rows[i]; if (!r) return;
+    tr.querySelectorAll('td.d').forEach(td => { try { td.textContent = cols[+td.dataset.c].d(r, i); } catch (e) { td.textContent = '?'; } });
+    tr.querySelectorAll('input[data-k]').forEach(inp => {
+      const c = cols.find(c => String(c.k) === inp.dataset.k);
+      const bad = c.pos ? isNaN(posOf(inp.value, SS)) : c.num ? !isFinite(+inp.value) || inp.value.trim() === '' : false;
+      inp.classList.toggle('bad', bad);
+    });
+  });
+}
+let typingT = 0;
+$('pane').addEventListener('input', e => {
+  const el = e.target; if (el.id === 'y0') { clearTimeout(typingT); typingT = setTimeout(() => { if (isFinite(+el.value)) { data.grades.y0 = +el.value; commit(); } }, 350); return; }
+  const tr = el.closest('tr'); if (!tr || el.dataset.k === undefined) return;
+  const r = TABS[tab].rows()[+tr.dataset.i], c = COLS[tab].find(c => String(c.k) === el.dataset.k);
+  r[c.k] = c.num ? (el.value.trim() === '' || !isFinite(+el.value) ? el.value : +el.value) : c.sel && typeof c.sel[0][0] === 'number' ? +el.value : el.value;
+  clearTimeout(typingT); typingT = setTimeout(commit, el.tagName === 'SELECT' ? 0 : 350);
+});
+$('pane').addEventListener('focusin', e => { const tr = e.target.closest('tbody tr'); if (tr) select(+tr.dataset.i, true); });
+$('pane').addEventListener('click', e => {
+  const t = e.target;
+  if (t.dataset.del !== undefined) { TABS[tab].rows().splice(+t.dataset.del, 1); sel = null; commit(); renderPane(); return; }
+  if (t.id === 'add') { addRow(); return; }
+  if (t.id === 'sort') { const rows = TABS[tab].rows(), SS = stationS(); rows.sort((a, b) => (posOf(a[0], SS) || 0) - (posOf(b[0], SS) || 0)); sel = null; commit(); renderPane(); return; }
+  const tr = t.closest('tbody tr'); if (tr && t.tagName !== 'INPUT' && t.tagName !== 'SELECT') select(+tr.dataset.i, true);
+});
+function addRow() {
+  const p = cursor !== null ? relOf(cursor) : null, rows = TABS[tab].rows();
+  if (tab === 'stations') {
+    const i = sel ?? rows.length - 1, ids = data.stations.map(r => +r[0]).filter(isFinite);
+    rows.splice(i + 1, 0, [String(Math.max(...ids) + 1), '새 역', 1000, 'under', -15]);
+    sel = i + 1;
+  } else if (tab === 'curves') { rows.push([p || relOf(R.STN[0].s + 300), 200, 500, 1, 60]); sel = rows.length - 1; }
+  else if (tab === 'grades') { rows.push([p || relOf(R.STN[0].s + 300), 0, 100, '']); sel = rows.length - 1; }
+  else if (tab === 'xovers') { const s = cursor ?? R.STN[0].s; rows.push([relOf(s), relOf(s + 36), '/']); sel = rows.length - 1; }
+  commit(); renderPane(); focusSel();
+}
+function select(i, focus) {
+  sel = i;
+  document.querySelectorAll('#pane tbody tr').forEach(tr => tr.classList.toggle('sel', +tr.dataset.i === i));
+  if (focus) focusSel(); else drawAll();
+}
+/* 선택한 줄 위치로 그래프 이동 */
+function selRange() {
+  if (sel === null || tab === 'settings') return null;
+  const r = TABS[tab].rows()[sel]; if (!r) return null;
+  if (tab === 'stations') { const s = stationS()[r[0]]; return isNaN(s) ? null : [s - 37.5, s + 37.5]; }
+  if (tab === 'curves') { const c = posOf(r[0]); return isNaN(c) ? null : [c - r[1] / 2, c + r[1] / 2]; }
+  if (tab === 'grades') { const a = posOf(r[0]); return isNaN(a) ? null : [a, a + (+r[2] || 0)]; }
+  if (tab === 'xovers') { const a = posOf(r[0]), b = posOf(r[1]); return isNaN(a + b) ? null : [a, b]; }
+}
+function focusSel() {
+  const rg = selRange();
+  if (rg) { const m = (rg[0] + rg[1]) / 2, half = Math.max(500, (rg[1] - rg[0]) * 1.2); view.a = m - half; view.b = m + half; planFocus(m, half * 1.6); }
+  drawAll();
+}
+
+/* ---------- 그래프 공통 ---------- */
+const view = { a: -400, b: 30000 };      // 종단·속도 공통 가로 범위 (s)
+function setup(cv) {
+  const dpr = devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  return { g, w, h };
+}
+const zoneColor = c => c <= 1 ? css('--elev') : c === 2 ? css('--cut') : css('--tun');
+const idxOf = s => Math.max(0, Math.min(R.NS - 1, Math.round((s - R.START) / R.DS)));
+function strokeZones(g, i0, i1, step, pt, width) {
+  let i = i0;
+  while (i < i1) {
+    const z = R.ZC[i] <= 1 ? 0 : R.ZC[i] === 2 ? 2 : 3;
+    let j = i; while (j < i1 && (R.ZC[j] <= 1 ? 0 : R.ZC[j] === 2 ? 2 : 3) === z) j++;
+    g.beginPath(); for (let k = i; k <= j; k += step) { const [x, y] = pt(k); k === i ? g.moveTo(x, y) : g.lineTo(x, y); }
+    const [xe, ye] = pt(j); g.lineTo(xe, ye);
+    g.strokeStyle = zoneColor(R.ZC[i]); g.lineWidth = width; g.setLineDash(z === 3 ? [7, 4] : []); g.stroke();
+    i = j;
+  }
+  g.setLineDash([]);
+}
+function clampView() {
+  const span = Math.max(150, Math.min(R.END - R.START, view.b - view.a));
+  let a = view.a; a = Math.max(R.START, Math.min(R.END - span, a)); view.a = a; view.b = a + span;
+}
+
+/* ---------- 평면도 ---------- */
+const plan = { sc: 0, ox: 0, oy: 0, fit: true };
+const PX_ = i => -R.PZ[i], PY_ = i => R.PX[i];
+function planFit(w, h) {
+  let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+  for (let i = 0; i < R.NS; i += 10) { const X = PX_(i), Y = PY_(i); minX = Math.min(minX, X); maxX = Math.max(maxX, X); minY = Math.min(minY, Y); maxY = Math.max(maxY, Y); }
+  const pad = 30; plan.sc = Math.min((w - pad * 2) / (maxX - minX), (h - pad * 2) / (maxY - minY));
+  plan.ox = w / 2 - (minX + maxX) / 2 * plan.sc; plan.oy = h / 2 - (minY + maxY) / 2 * plan.sc;
+}
+function planFocus(s, span) {
+  const cv = $('plan'), w = cv.clientWidth, h = cv.clientHeight, i = idxOf(s);
+  plan.fit = false; plan.sc = Math.min(w, h) / span; plan.ox = w / 2 - PX_(i) * plan.sc; plan.oy = h / 2 - PY_(i) * plan.sc;
+}
+function drawPlan() {
+  const cv = $('plan'), { g, w, h } = setup(cv);
+  if (plan.fit) planFit(w, h);
+  const pt = i => [plan.ox + PX_(i) * plan.sc, plan.oy + PY_(i) * plan.sc];
+  const step = Math.max(1, Math.floor(2 / plan.sc));
+  // 곡선 구간 (방향 색)
+  R.CURVES.forEach(([c, wd, , dir], n) => {
+    const i0 = idxOf(c - wd / 2), i1 = idxOf(c + wd / 2);
+    g.beginPath(); for (let k = i0; k <= i1; k += step) { const [x, y] = pt(k); k === i0 ? g.moveTo(x, y) : g.lineTo(x, y); }
+    g.strokeStyle = dir > 0 ? css('--right') : css('--left'); g.globalAlpha = .45; g.lineWidth = 9; g.stroke(); g.globalAlpha = 1;
+  });
+  strokeZones(g, 0, R.NS - 1, step, pt, 3);
+  drawSelPlan(g, pt, step);
+  // 건넘선
+  for (const [a, b] of R.XOVERS) { const [x, y] = pt(idxOf((a + b) / 2)); g.strokeStyle = '#c792ea'; g.lineWidth = 2; g.strokeRect(x - 4, y - 4, 8, 8); }
+  // 역
+  g.font = 'bold 11px sans-serif';
+  const dense = plan.sc < 0.06;
+  R.STN.forEach((st, n) => {
+    const [x, y] = pt(idxOf(st.s));
+    g.fillStyle = css('--st'); g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill();
+    if (dense && n % 2) return;
+    g.fillStyle = css('--text'); g.fillText(`${st.id} ${st.name}`, x + 7, y - 6);
+  });
+  if (cursor !== null) { const [x, y] = pt(idxOf(cursor)); g.strokeStyle = css('--sel'); g.lineWidth = 2; g.beginPath(); g.arc(x, y, 8, 0, 7); g.stroke(); }
+  // 축척
+  const bar = [100, 200, 500, 1000, 2000, 5000].find(m => m * plan.sc > 70) || 5000;
+  g.strokeStyle = css('--muted'); g.fillStyle = css('--muted'); g.lineWidth = 2; g.font = '11px sans-serif';
+  g.beginPath(); g.moveTo(w - 16 - bar * plan.sc, h - 12); g.lineTo(w - 16, h - 12); g.stroke(); g.fillText(bar >= 1000 ? bar / 1000 + ' km' : bar + ' m', w - 16 - bar * plan.sc, h - 17);
+}
+function drawSelPlan(g, pt, step) {
+  const rg = selRange(); if (!rg) return;
+  const i0 = idxOf(Math.min(rg[0], rg[1])), i1 = idxOf(Math.max(rg[0], rg[1]));
+  g.beginPath(); for (let k = i0; k <= i1; k += step) { const [x, y] = pt(k); k === i0 ? g.moveTo(x, y) : g.lineTo(x, y); }
+  const [xe, ye] = pt(i1); g.lineTo(xe, ye);
+  g.strokeStyle = css('--sel'); g.lineWidth = 5; g.stroke();
+}
+
+/* ---------- 종단 / 속도 ---------- */
+function hAxis(g, w, h, padL, padR, padB) {
+  clampView();
+  const sx = s => padL + (s - view.a) / (view.b - view.a) * (w - padL - padR);
+  const span = view.b - view.a, tick = [50, 100, 200, 500, 1000, 2000, 5000].find(t => span / t <= 14) || 5000;
+  g.strokeStyle = css('--line'); g.fillStyle = css('--muted'); g.font = '10px sans-serif'; g.lineWidth = 1;
+  for (let k = Math.ceil(view.a / tick) * tick; k <= view.b; k += tick) {
+    const x = sx(k); g.beginPath(); g.moveTo(x, 4); g.lineTo(x, h - padB); g.stroke();
+    g.fillText(tick >= 1000 ? (k / 1000) + 'km' : (k / 1000).toFixed(tick >= 100 ? 1 : 2) + 'km', x - 10, h - padB + 12);
+  }
+  return sx;
+}
+function shadeSel(g, sx, top, bot) {
+  const rg = selRange(); if (!rg) return;
+  const x0 = sx(Math.min(...rg)), x1 = sx(Math.max(...rg));
+  g.fillStyle = 'rgba(255,211,61,.16)'; g.fillRect(x0, top, Math.max(2, x1 - x0), bot - top);
+}
+function drawProfile() {
+  const cv = $('prof'), { g, w, h } = setup(cv);
+  const padL = 44, padR = 10, padT = 18, padB = 16;
+  const sx = hAxis(g, w, h, padL, padR, padB);
+  const i0 = idxOf(view.a), i1 = idxOf(view.b);
+  let lo = 1e9, hi = -1e9; for (let i = i0; i <= i1; i += 5) { lo = Math.min(lo, R.PY[i]); hi = Math.max(hi, R.PY[i]); }
+  lo = Math.min(lo, -6) - 3; hi = Math.max(hi, 3) + 3;
+  const sy = y => padT + (hi - y) / (hi - lo) * (h - padT - padB);
+  shadeSel(g, sx, padT, h - padB);
+  g.fillStyle = 'rgba(120,90,60,.16)'; g.fillRect(padL, sy(0), w - padL - padR, h - padB - sy(0));
+  g.strokeStyle = '#8a6a4a'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(padL, sy(0)); g.lineTo(w - padR, sy(0)); g.stroke();
+  g.setLineDash([3, 4]); g.lineWidth = 1;
+  for (const [y, t, c] of [[2.6, '고가 경계', '--elev'], [-5.3, '터널 경계', '--tun']]) {
+    g.strokeStyle = css(c); g.globalAlpha = .5; g.beginPath(); g.moveTo(padL, sy(y)); g.lineTo(w - padR, sy(y)); g.stroke(); g.globalAlpha = 1;
+    g.fillStyle = css(c); g.font = '10px sans-serif'; g.fillText(t, w - padR - 50, sy(y) - 3);
+  }
+  g.setLineDash([]);
+  g.fillStyle = css('--muted'); g.font = '10px sans-serif';
+  const yt = (hi - lo) > 40 ? 10 : 5; for (let y = Math.ceil(lo / yt) * yt; y <= hi; y += yt) g.fillText((y > 0 ? '+' : '') + y + 'm', 4, sy(y) + 3);
+  g.save(); g.beginPath(); g.rect(padL, 0, w - padL - padR, h); g.clip();
+  strokeZones(g, i0, i1, Math.max(1, Math.floor((i1 - i0) / w / 2)), i => [sx(R.START + i * R.DS), sy(R.PY[i])], 2.5);
+  // 구배 값 표기
+  g.font = 'bold 10px sans-serif'; g.fillStyle = css('--cut');
+  for (const [p, gr, len] of data.grades.rows) {
+    const a = posOf(p); if (isNaN(a) || a + len < view.a || a > view.b || !gr) continue;
+    const m = a + len / 2, x = sx(m); if (sx(a + len) - sx(a) < 26) continue;
+    g.fillText((gr > 0 ? '+' : '') + gr + '‰', x - 12, sy(R.PY[idxOf(m)]) - 6);
+  }
+  // 역
+  g.textAlign = 'center';
+  R.STN.forEach((st, n) => {
+    if (st.s < view.a - 50 || st.s > view.b + 50) return;
+    const x = sx(st.s), y = sy(R.Y(st.s));
+    g.fillStyle = css('--st'); g.fillRect(x - 3, y - 3, 6, 6);
+    g.fillStyle = css('--text'); g.font = '10px sans-serif'; g.fillText(st.name, x, n % 2 ? padT - 6 : padT + 5);
+  });
+  g.textAlign = 'left';
+  if (cursor !== null) { g.strokeStyle = css('--sel'); g.lineWidth = 1; g.beginPath(); g.moveTo(sx(cursor), padT); g.lineTo(sx(cursor), h - padB); g.stroke(); }
+  g.restore();
+  profMap.prof = { padL, padR };
+}
+function drawSpeed() {
+  const cv = $('speed'), { g, w, h } = setup(cv);
+  const padL = 44, padR = 10, padT = 6, padB = 16;
+  const sx = hAxis(g, w, h, padL, padR, padB);
+  const vMax = 85, sy = v => padT + (vMax - v) / vMax * (h - padT - padB);
+  shadeSel(g, sx, padT, h - padB);
+  g.fillStyle = css('--muted'); g.font = '10px sans-serif';
+  for (const v of [30, 50, 70, 80]) { g.fillText(v, 18, sy(v) + 3); g.strokeStyle = 'rgba(255,255,255,.06)'; g.beginPath(); g.moveTo(padL, sy(v)); g.lineTo(w - padR, sy(v)); g.stroke(); }
+  g.save(); g.beginPath(); g.rect(padL, 0, w - padL - padR, h); g.clip();
+  const st = Math.max(1, (view.b - view.a) / w);
+  g.beginPath(); for (let s = view.a; s <= view.b; s += st) { const v = R.limitAt(s) * 3.6; s === view.a ? g.moveTo(sx(s), sy(v)) : g.lineTo(sx(s), sy(v)); }
+  g.strokeStyle = css('--limit'); g.lineWidth = 1.8; g.stroke();
+  for (const s of R.STN) { g.fillStyle = css('--st'); g.fillRect(sx(s.s) - 1, padT, 2, 6); }
+  if (cursor !== null) { g.strokeStyle = css('--sel'); g.lineWidth = 1; g.beginPath(); g.moveTo(sx(cursor), padT); g.lineTo(sx(cursor), h - padB); g.stroke(); }
+  g.restore();
+}
+const profMap = {};
+let drawQueued = false;
+function drawAll() { if (drawQueued) return; drawQueued = true; requestAnimationFrame(() => { drawQueued = false; if (!R) return; drawPlan(); drawProfile(); drawSpeed(); }); }
+
+/* ---------- 마우스: 정보·클릭·확대·이동 ---------- */
+const tip = $('tip');
+function infoAt(s) {
+  const i = idxOf(s), cur = R.CURVES.find(([c, wd]) => Math.abs(s - c) < wd / 2);
+  return `<b>${relOf(s)}</b> · ${km(s)}${data.chainage0 ? ' · K' + (s + +data.chainage0).toFixed(1) : ''}<br>${ZONE_KO[R.ZC[i]]} · 레일면 ${R.PY[i].toFixed(2)} m · 구배 ${(R.grade(s) * 1000).toFixed(1)}‰<br>` +
+    `제한속도 ${Math.round(R.limitAt(s) * 3.6)} km/h` + (cur ? ` · 곡선 R${cur[2]} ${cur[3] > 0 ? '우' : '좌'}` : '');
+}
+function sFromProf(e) { const r = e.target.getBoundingClientRect(), mx = e.clientX - r.left, p = profMap.prof || { padL: 44, padR: 10 };
+  return view.a + (mx - p.padL) / (r.width - p.padL - p.padR) * (view.b - view.a); }
+function sFromPlan(e) {
+  const r = e.target.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+  let best = -1, bd = 1e18; const step = Math.max(1, Math.floor(1 / plan.sc));
+  for (let i = 0; i < R.NS; i += step) { const x = plan.ox + PX_(i) * plan.sc, y = plan.oy + PY_(i) * plan.sc, d = (x - mx) ** 2 + (y - my) ** 2; if (d < bd) { bd = d; best = i; } }
+  return bd < 400 ? R.START + best * R.DS : null;
+}
+function showTip(e, s) { if (s === null || s < R.START || s > R.END) { tip.style.display = 'none'; return; } tip.innerHTML = infoAt(s); tip.style.display = 'block'; tip.style.left = (e.clientX + 14) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; }
+function setCursor(s) {
+  cursor = s;
+  $('cursorBox').innerHTML = `선택 위치 <b>${relOf(s)}</b> <span>(${nameOf(relOf(s).split(/[+-]/)[0])}) · ${km(s)}${data.chainage0 ? ' · K' + (s + +data.chainage0).toFixed(1) : ''}</span>
+    <button class="small" id="copyPos">위치 복사</button><button class="small" id="clrPos">선택 해제</button>`;
+  if (tab !== 'settings') { const b = $('add'); if (b && tab !== 'stations') b.textContent = `+ 추가 (선택 위치 ${relOf(s)})`; }
+  drawAll();
+}
+$('cursorBox').addEventListener('click', e => {
+  if (e.target.id === 'copyPos') copy(relOf(cursor));
+  if (e.target.id === 'clrPos') { cursor = null; $('cursorBox').innerHTML = '<span>그래프를 클릭하면 그 위치가 여기 표시됩니다.</span>'; const b = $('add'); if (b) b.textContent = '+ 추가'; drawAll(); }
+});
+function dragZoom(cv, onDrag, onWheel, onPick, onDbl, sOfEvent) {
+  let down = null, moved = false;
+  cv.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; moved = false; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', e => {
+    if (down) { const dx = e.clientX - down.x, dy = e.clientY - down.y; if (Math.abs(dx) + Math.abs(dy) > 3) moved = true; if (moved) { onDrag(dx, dy); down = { x: e.clientX, y: e.clientY }; drawAll(); } tip.style.display = 'none'; return; }
+    showTip(e, sOfEvent(e));
+  });
+  cv.addEventListener('pointerup', e => { if (down && !moved) { const s = sOfEvent(e); if (s !== null && s >= R.START && s <= R.END) setCursor(s); } down = null; });
+  cv.addEventListener('pointerleave', () => { tip.style.display = 'none'; });
+  cv.addEventListener('wheel', e => { e.preventDefault(); onWheel(e); drawAll(); }, { passive: false });
+  cv.addEventListener('dblclick', () => { onDbl(); drawAll(); });
+}
+dragZoom($('plan'),
+  (dx, dy) => { plan.fit = false; plan.ox += dx; plan.oy += dy; },
+  e => { const r = e.target.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top, k = Math.exp(-e.deltaY * 0.0015);
+    plan.fit = false; plan.ox = mx - (mx - plan.ox) * k; plan.oy = my - (my - plan.oy) * k; plan.sc *= k; },
+  null, () => { plan.fit = true; }, sFromPlan);
+for (const id of ['prof', 'speed']) dragZoom($(id),
+  dx => { const r = $(id).getBoundingClientRect(), ds = dx / (r.width - 54) * (view.b - view.a); view.a -= ds; view.b -= ds; },
+  e => { const s = sFromProf(e), k = Math.exp(e.deltaY * 0.0015); view.a = s - (s - view.a) * k; view.b = s + (view.b - s) * k; },
+  null, () => { view.a = R.START; view.b = R.END; }, sFromProf);
+
+/* ---------- 확인할 점 ---------- */
+function checkAll() {
+  const out = [], SS = stationS();
+  if (buildErr) out.push({ err: true, t: buildErr });
+  const ids = new Set();
+  data.stations.forEach((r, i) => {
+    if (ids.has(String(r[0]))) out.push({ err: true, t: `역 번호 ${r[0]} 중복`, tab: 'stations', i }); ids.add(String(r[0]));
+    if (i > 0 && !(+r[2] > 0)) out.push({ err: true, t: `${r[0]} ${r[1]}: 앞역과 거리가 0 이하`, tab: 'stations', i });
+  });
+  for (const id of PROTECTED) if (!ids.has(id)) out.push({ err: true, t: `역 ${id}이(가) 없음 — 3D 경관이 이 역 번호를 씁니다`, tab: 'stations' });
+  if (R && !buildErr) {
+    R.STN.forEach((st, i) => {
+      const y = R.Y(st.s);
+      if (st.type === 'elev' && y <= 2.6) out.push({ t: `${st.id} ${st.name}: 고가역인데 레일면 ${y.toFixed(1)} m (고가는 +2.6 m 초과)`, tab: 'stations', i });
+      if (st.type === 'under' && y > -5.3) out.push({ t: `${st.id} ${st.name}: 지하역인데 레일면 ${y.toFixed(1)} m (터널은 −5.3 m 미만)`, tab: 'stations', i });
+      const dy = Math.abs(R.Y(st.s - 40) - R.Y(st.s + 40));
+      if (dy > 0.08) out.push({ t: `${st.id} ${st.name}: 승강장이 기울어짐 (앞뒤 40 m 높이차 ${dy.toFixed(2)} m)`, tab: 'stations', i });
+    });
+  }
+  data.curves.forEach((r, i) => {
+    const c = posOf(r[0], SS);
+    if (isNaN(c)) out.push({ err: true, t: `곡선 ${i + 1}: 위치 "${r[0]}" 형식 오류`, tab: 'curves', i });
+    if (!(+r[2] > 0)) out.push({ err: true, t: `곡선 ${r[0]}: 반경이 0 이하`, tab: 'curves', i });
+    else if (+r[2] < 80) out.push({ t: `곡선 ${r[0]}: 반경 ${r[2]} m는 매우 급함`, tab: 'curves', i });
+    if (+r[4] > 80) out.push({ t: `곡선 ${r[0]}: 속도 ${r[4]}는 최고속도 80 km/h보다 큼 (효과 없음)`, tab: 'curves', i });
+    if (!(+r[1] >= 20)) out.push({ err: true, t: `곡선 ${r[0]}: 제한구간이 너무 짧음`, tab: 'curves', i });
+  });
+  const cs = data.curves.map((r, i) => ({ i, c: posOf(r[0], SS), w: +r[1], r })).filter(x => !isNaN(x.c)).sort((a, b) => a.c - b.c);
+  for (let k = 1; k < cs.length; k++) if (cs[k].c - cs[k].w / 2 < cs[k - 1].c + cs[k - 1].w / 2 - 1)
+    out.push({ t: `곡선 ${cs[k - 1].r[0]} 과 ${cs[k].r[0]} 의 구간이 겹침 (겹친 곳은 곡률이 더해지고 낮은 속도 적용)`, tab: 'curves', i: cs[k].i });
+  data.grades.rows.forEach((r, i) => {
+    if (isNaN(posOf(r[0], SS))) out.push({ err: true, t: `구배 ${i + 1}: 위치 "${r[0]}" 형식 오류`, tab: 'grades', i });
+    if (Math.abs(+r[1]) > 60) out.push({ t: `구배 ${r[0]}: ${r[1]}‰는 매우 급함`, tab: 'grades', i });
+    if (!(+r[2] > 0)) out.push({ err: true, t: `구배 ${r[0]}: 길이가 0 이하`, tab: 'grades', i });
+  });
+  data.xovers.forEach((r, i) => { const a = posOf(r[0], SS), b = posOf(r[1], SS);
+    if (isNaN(a + b)) out.push({ err: true, t: `건넘선 ${i + 1}: 위치 형식 오류`, tab: 'xovers', i });
+    else if (b - a < 20) out.push({ t: `건넘선 ${r[0]}: 길이 ${(b - a).toFixed(0)} m (끝 위치가 시작보다 뒤여야 함)`, tab: 'xovers', i }); });
+  $('warn').innerHTML = out.length ? out.map((o, n) => `<div class="${o.err ? 'err' : ''}" data-n="${n}">${o.err ? '✕' : '△'} ${esc(o.t)}</div>`).join('') : '<span style="color:var(--ok)">문제 없음</span>';
+  $('warn').onclick = e => { const d = e.target.closest('div[data-n]'); if (!d) return; const o = out[+d.dataset.n]; if (!o.tab) return;
+    tab = o.tab; renderTabs(); renderPane(); if (o.i !== undefined) select(o.i, true); };
+}
+
+/* ---------- 내보내기 / 파일 / 미리보기 ---------- */
+const q = v => `'${String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+const n = v => { const x = +v; return isFinite(x) ? String(+x.toFixed(4)) : '0'; };
+function codeText() {
+  const L = [];
+  L.push('/* ROUTE_DATA 시작 */', 'const ROUTE_DATA = {', `  chainage0: ${n(data.chainage0 || 0)},`);
+  L.push("  /* [번호, 역명, 앞역과 거리(m), 형식 'elev' 고가 | 'under' 지하, 레일면 높이(참고값, 실제 높이는 grades)] — 역간거리는 노선도 기준 */", '  stations: [');
+  for (const r of data.stations) L.push(`    [${q(r[0])}, ${q(r[1])}, ${n(r[2])}, ${q(r[3])}, ${n(r[4])}],`);
+  L.push('  ],', '  /* 곡선: [중심 위치, 제한구간 길이(m), 반경 R, 방향(+1 우/-1 좌), 설계속도 km/h] */', '  curves: [');
+  for (const r of data.curves) L.push(`    [${q(r[0])}, ${n(r[1])}, ${n(r[2])}, ${+r[3] < 0 ? -1 : +1}, ${n(r[4])}],`);
+  L.push('  ],', '  /* 종단: 시작 높이 y0(START 지점 레일면, m) + [시작 위치, 구배 ‰, 길이 m, 메모] — 구간 사이는 수평, 꺾이는 곳은 종곡선으로 다듬음 */',
+    '  grades: {', `    y0: ${n(data.grades.y0)},`, '    rows: [');
+  for (const r of data.grades.rows) L.push(`      [${q(r[0])}, ${n(r[1])}, ${n(r[2])}${r[3] ? ', ' + q(r[3]) : ''}],`);
+  L.push('    ],', '  },', "  /* 건넘선: [시작 위치, 끝 위치, '/'=본선(+u)→반대선 / '\\\\'=반대선→본선] */", '  xovers: [');
+  for (const r of data.xovers) L.push(`    [${q(r[0])}, ${q(r[1])}, ${q(r[2])}],`);
+  L.push('  ],', '};', '/* ROUTE_DATA 끝 */');
+  return L.join('\n');
+}
+function download(name, text, type) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function toast(t) { const el = $('toast'); el.textContent = t; el.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.opacity = 0, 1800); }
+function copy(t) { (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('복사했습니다: ' + (t.length > 30 ? '코드' : t)), () => toast('복사하지 못했습니다. 직접 선택해 복사하세요')); }
+$('export').onclick = () => { $('code').value = codeText(); $('dlg').showModal(); };
+$('closeDlg').onclick = () => $('dlg').close();
+$('copyCode').onclick = () => copy($('code').value);
+$('dlRoute').onclick = async () => {
+  try {
+    const src = await (await fetch('js/route.js', { cache: 'no-store' })).text();
+    const re = /\/\* ROUTE_DATA 시작 \*\/[\s\S]*?\/\* ROUTE_DATA 끝 \*\//;
+    if (!re.test(src)) throw new Error('marker');
+    download('route.js', src.replace(re, () => codeText()), 'text/javascript');
+  } catch (e) { toast('route.js를 읽지 못했습니다. 코드를 복사해 직접 붙여 넣으세요'); }
+};
+$('saveFile').onclick = () => download('ic2-route.json', JSON.stringify(data, null, 1), 'application/json');
+$('openFile').onclick = () => $('fileIn').click();
+$('fileIn').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { const d = JSON.parse(await f.text()); if (!Array.isArray(d.stations) || !d.grades) throw 0; data = d; commit(); renderPane(); toast('불러왔습니다'); }
+  catch (err) { toast('경로 파일 형식이 아닙니다'); }
+  e.target.value = '';
+};
+$('reset').onclick = () => { if (!confirm('편집한 내용을 지우고 route.js 의 현재 노선으로 되돌릴까요? (되돌리기로 복구 가능)')) return; data = clone(BASE); commit(); renderPane(); };
+$('undo').onclick = undo; $('redo').onclick = redo;
+function openWith(page) {
+  if (buildErr) { toast('오류를 먼저 고쳐 주세요'); return; }
+  save(); window.open(page + '?route=custom', '_blank');
+}
+$('preview').onclick = () => openWith('view-demo.html');
+$('sim').onclick = () => openWith('index.html');
+addEventListener('keydown', e => {
+  if (!(e.ctrlKey || e.metaKey) || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+  else if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) { e.preventDefault(); redo(); }
+});
+addEventListener('resize', drawAll);
+
+renderTabs(); renderPane(); rebuild();
+view.a = R.START; view.b = R.END;
+drawAll();
+</script>
+</body>
+</html>
