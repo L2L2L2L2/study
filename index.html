@@ -6965,14 +6965,6 @@
             <span id="occ-fault-status-tag" style="font-size:10px; color:#94a3b8; margin-left:auto; font-weight:700;">정상 운행 중</span>
           </div>
           <div class="occ-fault-actions">
-            <button type="button" id="btn-fault-door" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('DOOR_LOCK_FAIL')">
-              <span>🚨 출입문 닫힘 불량</span>
-              <span id="fault-lbl-door" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
-            </button>
-            <button type="button" id="btn-fault-eb" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('EB_STUCK')">
-              <span>🚨 비상제동 불완해 (고착)</span>
-              <span id="fault-lbl-eb" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
-            </button>
             <button type="button" id="btn-fault-vobc" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('VOBC_FAIL')">
               <span>🚨 VOBC 고장 (DU 적색 / ADU 앰버)</span>
               <span id="fault-lbl-vobc" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
@@ -7022,10 +7014,10 @@
           <div class="occ-hint-row">
             <select id="inst-hint-target" class="form-control" style="flex:1; font-size:11px; padding:7px 8px; background:#080b10;">
               <option value="SW_EMG_RELEASE">[OP3] 비상제동완해 (안전커버 내부)</option>
-              <option value="SW_DOOR_BYPASS">[OP4] 출입문 바이패스</option>
-              <option value="SW_LOW_SPEED">[OP3] 저속도 바이패스</option>
-              <option value="SW_RESCUE">[OP3] 구원운전 로터리</option>
-              <option value="SW_ATP_REV">[OP3] ATP후진 로터리</option>
+              <option value="SW_PARK_REL">[OP3] 주차제동완해</option>
+              <option value="SW_PARK_BP">[OP5] 주차제동BP</option>
+              <option value="SW_MR_BP">[OP5] 주공기BP</option>
+              <option value="SW_RESCUE_DRIVE">[OP3] 구원운전 로터리</option>
               <option value="SW_VOBC_RESET">[OP5] VOBC리셋 버튼 (롱프레스)</option>
               <option value="SW_FORCE_REL">[OP3] 강제완해</option>
               <option value="SW_WIRELESS_MODE">[OP3] 무인모드 (3초 인가)</option>
@@ -10076,7 +10068,7 @@ function updateTrainPhysics() {
     const isMoving = trainSpeed > 0.1;
     const minInterval = isMoving ? 350 : 1500;
     const currentBCVal = cvBC();
-    const isEmgVal = isEmgActive || (notch === 'EB') || !!window.__FAULT_EB_STUCK;
+    const isEmgVal = isEmgActive || (notch === 'EB');
     const keyVal = isKeyOn ? 'ON' : 'OFF';
 
     const last = TrainRemote._lastTelemetry || {};
@@ -10650,8 +10642,6 @@ const TrainRemote = {
   room: 'train-room-01',
   userName: '운전연습생 1',
   activeFaults: {
-    DOOR_LOCK_FAIL: false,
-    EB_STUCK: false,
     VOBC_FAIL: false,
     VOBC_COMM: false,
     TCMS_FAIL: false,
@@ -11098,21 +11088,9 @@ const TrainRemote = {
     this.activeFaults[faultType] = !this.activeFaults[faultType];
     const isAct = this.activeFaults[faultType];
 
-    const btnDoor = document.getElementById('btn-fault-door');
-    const btnEb = document.getElementById('btn-fault-eb');
-    const lblDoor = document.getElementById('fault-lbl-door');
-    const lblEb = document.getElementById('fault-lbl-eb');
     const statusTag = document.getElementById('occ-fault-status-tag');
 
-    if (faultType === 'DOOR_LOCK_FAIL') {
-      if (btnDoor) btnDoor.classList.toggle('active', isAct);
-      if (lblDoor) lblDoor.innerText = isAct ? '🚨 고장 발생 중 (클릭 시 복구)' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] 출입문 닫힘 불량(고장) ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    } else if (faultType === 'EB_STUCK') {
-      if (btnEb) btnEb.classList.toggle('active', isAct);
-      if (lblEb) lblEb.innerText = isAct ? '🚨 비상제동 불완해 고착 중' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] 비상제동 불완해 고착 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    } else if (faultType === 'VOBC_FAIL') {
+    if (faultType === 'VOBC_FAIL') {
       const btnV = document.getElementById('btn-fault-vobc');
       const lblV = document.getElementById('fault-lbl-vobc');
       if (btnV) btnV.classList.toggle('active', isAct);
@@ -11158,8 +11136,7 @@ const TrainRemote = {
       this.addLog(`[비상 고장 인가] MR 공기누설${sev ? ' 심화' : ''} ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
     }
 
-    const anyActive = this.activeFaults.DOOR_LOCK_FAIL || this.activeFaults.EB_STUCK ||
-      this.activeFaults.VOBC_FAIL || this.activeFaults.VOBC_COMM || this.activeFaults.TCMS_FAIL || this.activeFaults.PARK_REL_FAIL ||
+    const anyActive = this.activeFaults.VOBC_FAIL || this.activeFaults.VOBC_COMM || this.activeFaults.TCMS_FAIL || this.activeFaults.PARK_REL_FAIL ||
       this.activeFaults.MR_LEAK || this.activeFaults.MR_LEAK_SEVERE ||
       this.activeFaults.DU_FAIL || this.activeFaults.ADU_FAIL || this.activeFaults.VOBC1_FAIL;
     if (statusTag) {
@@ -11175,41 +11152,7 @@ const TrainRemote = {
   },
 
   applyFaultOnStudent(faultType, active) {
-    if (faultType === 'DOOR_LOCK_FAIL') {
-      window.__FAULT_DOOR_FAIL = active;
-      const lampD = document.getElementById('occ-lamp-door');
-      if (lampD) {
-        if (active) {
-          lampD.classList.remove('lit-green');
-          lampD.classList.add('blink-amber');
-          lampD.innerText = '⚠️ 출입문 고장 (점멸)';
-        } else {
-          lampD.classList.remove('blink-amber');
-          lampD.classList.add('lit-green');
-          lampD.innerText = '🚪 출입문 닫힘';
-        }
-      }
-      const lampDoor = document.getElementById('lamp-door');
-      if (lampDoor) {
-        if (active) {
-          lampDoor.classList.remove('lit');
-          lampDoor.classList.add('blinking');
-        } else if (!isDoorOpen) {
-          lampDoor.classList.remove('blinking');
-          lampDoor.classList.add('lit');
-        }
-      }
-      if (active) {
-        alert('🚨 [관제실 비상 통보] 출입문 닫힘 신호 루프 불량 발생!\n출입문 표시등이 점멸하며 역행(Traction) 출력이 차단됩니다.\nOP4 패널의 [출입문 바이패스] 스위치를 "바이패스" 위치로 절체하십시오.');
-      }
-    } else if (faultType === 'EB_STUCK') {
-      window.__FAULT_EB_STUCK = active;
-      if (active) {
-        currentGaugeBC = BC_EMG_BAR;
-        updateGaugeUI(BC_EMG_BAR, currentGaugeMR);
-        alert('🚨 [관제실 비상 통보] 비상제동 완해 불량(고착) 발생!\n비상제동 완해 절차를 수행하십시오.');
-      }
-    } else if (faultType === 'VOBC_FAIL') {
+    if (faultType === 'VOBC_FAIL') {
       window.__FAULT_VOBC_FAIL = active;
       if (active) {
         showTemporaryHudFeedback('🚨 [신호 고장] VOBC 고장 인가 (DU 적색 / ADU 앰버)', true);
