@@ -22,7 +22,7 @@
 > | `old/index.html` | 이전 버전 (단일 파일) |
 > | `old/gemini.html` | 좌측 패널 단독 변형본 (보관용) |
 >
-> 새 버전은 파일이 나뉘어 있어 GitHub Pages 같은 웹 서버로 열어야 합니다 (로컬: `python -m http.server`).
+> 새 버전은 파일이 나뉘어 있어 GitHub Pages 같은 웹 서버로 열어야 합니다 (로컬: `python -m http.server`). 노선 편집은 `route-editor.html`에서 합니다.
 
 ---
 
