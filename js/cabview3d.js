@@ -252,6 +252,41 @@ function makePSDTex(ads) {
 }
 T.psdA = makePSDTex(false);
 T.psdB = makePSDTex(false);
+/* 고가역 승강장 끝 편개 출입문 (PSD 형식, 당겨서 여는 문) 1.3m × 2.485m (승강장 바닥 ~ PSD 상단) */
+const EDOOR_W = 1.3, EDOOR_H = 3.4 - PLAT_V;
+T.psdDoor = canvasTex(512, 979, (g, w, h) => {
+  const m = w / EDOOR_W, X = x => x * m, Yp = y => h - y * m;
+  g.clearRect(0, 0, w, h);
+  g.fillStyle = 'rgba(62,80,88,0.40)'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#c9cccf'; g.fillRect(0, Yp(0.1), w, X(0.1));                        // 하부 씰
+  g.fillStyle = '#e8931c'; g.fillRect(0, 0, X(0.1), h); g.fillRect(w - X(0.1), 0, X(0.1), h);   // 주황 문설주
+  g.fillStyle = '#ec9a22'; g.fillRect(0, 0, w, X(0.2));                               // 상단 주황띠
+  g.strokeStyle = '#b8bcc0'; g.lineWidth = X(0.05);
+  g.strokeRect(X(0.14), Yp(2.2), X(1.02), X(2.08));                                   // 문짝 테 (편개)
+  g.fillStyle = '#d9dcde'; g.fillRect(X(0.24), Yp(1.45), X(0.05), X(0.6));           // 당김 손잡이 (세로 봉)
+  g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(X(0.16), Yp(1.08), X(0.98), X(0.04));   // 안전띠 스티커
+  g.fillStyle = '#ffffff'; g.fillRect(X(0.48), Yp(1.62), X(0.4), X(0.16));
+  g.fillStyle = '#1d5fa8'; g.font = `bold ${X(0.1)}px 'Malgun Gothic', sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText('당기세요', X(0.68), Yp(1.54));
+});
+T.panel = canvasTex(256, 256, (g, w, h) => {      // 고가역 끝벽 패널 (1.2m 반복)
+  g.fillStyle = '#e4e6e7'; g.fillRect(0, 0, w, h);
+  g.fillStyle = 'rgba(120,125,130,.45)'; g.fillRect(0, 0, 3, h); g.fillRect(0, 0, w, 3);
+});
+T.elevDoor = canvasTex(256, 256, (g, w, h) => {   // 엘리베이터 승강장 문 (스테인리스 2짝 + 문틀)
+  g.fillStyle = '#7d8286'; g.fillRect(0, 0, w, h);
+  const gr = g.createLinearGradient(0, 0, w, 0);
+  gr.addColorStop(0, '#b9bec2'); gr.addColorStop(0.5, '#d7dbde'); gr.addColorStop(1, '#aeb3b7');
+  g.fillStyle = gr; g.fillRect(w * 0.08, h * 0.08, w * 0.84, h * 0.92);
+  g.fillStyle = 'rgba(40,40,40,.6)'; g.fillRect(w * 0.497, h * 0.08, w * 0.006, h * 0.92);
+  g.fillStyle = 'rgba(150,200,220,.55)'; g.fillRect(w * 0.3, h * 0.2, w * 0.12, h * 0.4); g.fillRect(w * 0.58, h * 0.2, w * 0.12, h * 0.4);
+});
+T.escStep = canvasTex(128, 64, (g, w, h) => {      // 에스컬레이터 디딤판: 진행방향 홈 + 양옆 노란 경계선 + 디딤판 이음 (0.4m)
+  g.fillStyle = '#55595c'; g.fillRect(0, 0, w, h);
+  g.fillStyle = 'rgba(20,20,20,.55)'; for (let x = 6; x < w - 6; x += 4) g.fillRect(x, 0, 1.5, h);
+  g.fillStyle = '#e6b31e'; g.fillRect(0, 0, 7, h); g.fillRect(w - 7, 0, 7, h);
+  g.fillStyle = 'rgba(15,15,15,.8)'; g.fillRect(0, 0, w, 3);
+});
 T.glassWall = canvasTex(256, 512, (g, w, h) => {      // 고가역 외벽 커튼월 (1.8m × 4.5m)
   g.clearRect(0, 0, w, h); g.fillStyle = 'rgba(190,210,215,0.18)'; g.fillRect(0, 0, w, h);
   g.fillStyle = '#d7dadc'; g.fillRect(0, 0, 8, h); g.fillRect(0, h - 10, w, 10); g.fillRect(0, h * 0.42, w, 6); g.fillRect(0, 0, w, 6);
@@ -632,6 +667,18 @@ const MAT = {
   psdA: new THREE.MeshLambertMaterial({ map: T.psdA, transparent: true, side: DS2, depthWrite: false, vertexColors: true }),
   psdB: new THREE.MeshBasicMaterial({ map: T.psdB, transparent: true, side: DS2, depthWrite: false, vertexColors: true }),
   glassWall: new THREE.MeshLambertMaterial({ map: T.glassWall, transparent: true, side: DS2, depthWrite: false }),
+  headerA: new THREE.MeshLambertMaterial({ map: T.header, vertexColors: true, side: DS2 }),
+  psdDoor: new THREE.MeshLambertMaterial({ map: T.psdDoor, transparent: true, side: DS2, depthWrite: false }),
+  wallA: new THREE.MeshLambertMaterial({ map: T.panel, side: DS2 }),
+  roomA: new THREE.MeshLambertMaterial({ color: 0xd5d8da }),
+  elevDoor: new THREE.MeshLambertMaterial({ map: T.elevDoor, side: DS2 }),
+  escA: new THREE.MeshLambertMaterial({ map: T.escStep, vertexColors: true, side: DS2 }),
+  escU: new THREE.MeshBasicMaterial({ map: T.escStep, vertexColors: true, side: DS2 }),
+  metalB: new THREE.MeshBasicMaterial({ color: 0xb4b8bb, vertexColors: true, side: DS2 }),
+  handrail: new THREE.MeshBasicMaterial({ color: 0x18191a, side: DS2 }),
+  stairA: new THREE.MeshLambertMaterial({ color: 0xd3cfc7 }),
+  stairU: new THREE.MeshBasicMaterial({ color: 0xc9c4ba }),
+  nosing: new THREE.MeshBasicMaterial({ color: 0x3c3f42 }),
   tileA: new THREE.MeshLambertMaterial({ map: T.tile, vertexColors: true, side: DS2 }),
   roof: new THREE.MeshLambertMaterial({ map: T.roof, vertexColors: true, side: DS2 }),
   white: new THREE.MeshLambertMaterial({ color: 0xf0f2f3 }),
@@ -755,11 +802,14 @@ function colored(geo, rgb) {
   for (let i = 0; i < n; i++) a.set(rgb, i * 3);
   geo.setAttribute('color', new THREE.BufferAttribute(a, 3)); return geo;
 }
-function plate(s, outer, hole, mat) {
+/* 선로 직각 평판 (u,v 평면). uv = 좌표(m) / uvK. shared: 공용 재질(청크 해제 시 폐기하지 않음) */
+function plate(s, outer, hole, mat, { uvK = 1, shared = false } = {}) {
   const sh = new THREE.Shape(outer.map(p => new THREE.Vector2(p[0], p[1])));
-  if (hole) sh.holes.push(new THREE.Path(hole.map(p => new THREE.Vector2(p[0], p[1]))));
-  mat.userData.chunkOwned = true;
-  const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), mat);
+  for (const h of hole ? (Array.isArray(hole[0][0]) ? hole : [hole]) : []) sh.holes.push(new THREE.Path(h.map(p => new THREE.Vector2(p[0], p[1]))));
+  if (!shared) mat.userData.chunkOwned = true;
+  const geo = new THREE.ShapeGeometry(sh);
+  if (uvK !== 1) { const uv = geo.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / uvK, uv.getY(i) / uvK); }
+  const m = new THREE.Mesh(geo, mat);
   basisAt(s, _m); W(s, 0, 0, _v); _m.setPosition(_v); m.matrix.copy(_m); m.matrixAutoUpdate = false;
   TARGET.add(m);
 }
@@ -798,6 +848,7 @@ const G = {
     return g;
   })()),
   door: shared(new THREE.PlaneGeometry(1.0, 2.05)),
+  quad: shared(new THREE.PlaneGeometry(1, 1)),
 };
 {
   // 운전석에서 보이는 윗면·앞면만 (삼각형 8개)
@@ -958,17 +1009,188 @@ function stationFeatures(st, a, b, under) {
   if (st.oppStop >= a && st.oppStop < b) inst(G.stopFront, MAT.stopFront, [{ s: st.oppStop, u: -TRK, v: -0.30, yaw: Math.PI }]);
 }
 
+/* ---------- 승강장 에스컬레이터·계단 ----------
+   고가역(검단오류·왕길·검암·검바위·인천대공원): 승강장에서 아래층(대합실)으로 내려감
+   지하역: 위층(대합실)에서 승강장으로 내려옴
+   하선 승강장(+u): 에스컬레이터 = s1 끝(엘리베이터 쪽), 계단 = s0 끝(창고 쪽). 상선 승강장(-u)은 역 중심 점대칭
+   d = 승강장 출입구(승강장 바닥과 만나는 끝)에서 멀어지는 거리, h(d) = 승강장 바닥과의 높이차 */
+const LINK = {
+  elev: { H: 4.0, oA: 6.0, oB: 8.15, eu0: 6.15, eu1: 7.85 },     // 바닥 개구부 oA~oB (기둥 u=8.5 바깥쪽 회피)
+  under: { H: 5.0, oA: 8.05, oB: 10, eu0: 8.15, eu1: 9.85 },     // 천장 개구부 oA~벽(u=10)
+};
+const HEADROOM = 2.3, LINK_END = 3;               // 계단·에스컬레이터 위 유효높이, 승강장 끝에서 띄우는 거리
+function profile(pts) {                            // 꺾은선 [[d, h]] → h(d)
+  return d => {
+    if (d <= pts[0][0]) return pts[0][1];
+    for (let i = 1; i < pts.length; i++) if (d <= pts[i][0]) { const [d0, h0] = pts[i - 1], [d1, h1] = pts[i]; return h0 + (h1 - h0) * (d - d0) / (d1 - d0); }
+    return pts[pts.length - 1][1];
+  };
+}
+const linkCache = new Map();
+function linkDims(under) {
+  const k = under ? 'under' : 'elev';
+  if (linkCache.has(k)) return linkCache.get(k);
+  const D = LINK[k], H = D.H;
+  // 에스컬레이터: 수평 1.2m + 30° 경사 + 수평 1.2m, 꺾이는 곳은 1.2m 구간에서 완만하게
+  const K = Math.tan(Math.PI / 6), F0 = 1.2, F1 = F0 + H / K, LE = F1 + 1.2, tab = [[0, 0]];
+  let h = 0;
+  for (let d = 0.05; d <= LE + 1e-6; d += 0.05) {
+    const sl = K * smooth(F0 - 0.6, F0 + 0.6, d - 0.025) * (1 - smooth(F1 - 0.6, F1 + 0.6, d - 0.025));
+    h += sl * 0.05; tab.push([d, h]);
+  }
+  const hs = H / h; tab.forEach(p => { p[1] *= hs; });
+  const esc = profile(tab);
+  // 계단: 단높이 ~0.155m, 디딤판 0.3m, 중간 참 1.2m
+  const n = Math.round(H / 0.155) & ~1, r = H / n, treads = [];
+  let d = 0;
+  for (let i = 0; i < n; i++) { const len = i === n / 2 - 1 ? 1.2 : 0.3; treads.push({ d0: d, d1: d + len, h: (i + 1) * r }); d += len; }
+  const LS = d;
+  const nose = []; treads.forEach(t => nose.push([t.d0, t.h], [t.d1, t.h]));
+  const stairRail = profile([[0, 0], ...treads.map(t => [t.d0 + 0.15, t.h])]);
+  // 지하역 천장 개구부는 유효높이를 확보하는 곳부터
+  const firstAt = (f, L) => { const need = 4.4 - HEADROOM - PLAT_V; for (let x = 0; x < L; x += 0.1) if (f(x) >= need) return x; return L; };
+  const out = {
+    ...D, esc, LE, treads, LS, stairRail,
+    escOpen: under ? [firstAt(esc, LE), LE + 0.3] : [0, LE],
+    stairOpen: under ? [firstAt(profile(nose), LS), LS + 0.3] : [0, LS + 0.4],
+  };
+  linkCache.set(k, out); return out;
+}
+/* 역 st의 에스컬레이터·계단 배치: { kind, side, e: 출입구 s, dir: 멀어지는 방향, open: [s0, s1] 개구부 } */
+function stationLinks(st, under) {
+  const L = linkDims(under), out = [];
+  for (const side of [1, -1]) for (const kind of ['esc', 'stair']) {
+    const len = kind === 'esc' ? L.LE : L.LS, op = kind === 'esc' ? L.escOpen : L.stairOpen;
+    const atS1 = (kind === 'esc') === (side > 0);                 // 하선: 에스컬레이터 s1 끝 / 상선: 점대칭
+    const dir = atS1 ? 1 : -1, e = atS1 ? st.s1 - LINK_END - len : st.s0 + LINK_END + len;
+    const o0 = e + dir * op[0], o1 = e + dir * op[1];
+    out.push({ kind, side, e, dir, len, open: [Math.min(o0, o1), Math.max(o0, o1)] });
+  }
+  return out;
+}
+/* 개구부를 피해 [s0,s1)을 나눈 구간: [[a, b, hole|null]] */
+function splitByHoles(s0, s1, holes) {
+  const cuts = [s0, s1];
+  for (const h of holes) for (const x of h.open) if (x > s0 && x < s1) cuts.push(x);
+  cuts.sort((x, y) => x - y);
+  const out = [];
+  for (let i = 0; i < cuts.length - 1; i++) {
+    const m = (cuts[i] + cuts[i + 1]) / 2;
+    if (cuts[i + 1] - cuts[i] > 1e-3) out.push([cuts[i], cuts[i + 1], holes.find(h => m > h.open[0] && m < h.open[1]) || null]);
+  }
+  return out;
+}
+function buildLinks(st, a, b, under) {
+  const L = linkDims(under), sgn = under ? 1 : -1;                 // 지하: 올라감 / 고가: 내려감
+  const lit = under ? (() => 0.95) : null;
+  const mats = under ? { esc: MAT.escU, metal: MAT.metalB, stair: MAT.stairU } : { esc: MAT.escA, metal: MAT.metal, stair: MAT.stairA };
+  const treads = [], noses = [], rails = [];
+  for (const k of stationLinks(st, under)) {
+    const lo = Math.max(a, Math.min(k.e, k.e + k.dir * k.len)), hi = Math.min(b, Math.max(k.e, k.e + k.dir * k.len));
+    const U = u => u * k.side, dOf = s => (s - k.e) * k.dir;
+    if (k.kind === 'esc') {
+      if (hi > lo) {
+        const v = s => PLAT_V + (under ? 0.03 : 0) + sgn * L.esc(dOf(s));
+        const steps = s => [[[U(L.eu0 + 0.09), v(s)], [U(L.eu1 - 0.09), v(s)]]];
+        extrude({ s0: lo, s1: hi, step: 0.25, lines: steps, mat: mats.esc, uvU: L.eu1 - L.eu0 - 0.18, uvS: 0.4, color: lit });
+        // 측판(스테인리스): 고가 = 트러스 하부까지 / 지하 = 승강장 바닥부터 막힘
+        const side = u => s => { const y = v(s), bot = under ? Math.min(PLAT_V, y - 0.55) : y - 0.55; return [[U(u), bot], [U(u), y + 0.14]]; };
+        extrude({ s0: lo, s1: hi, step: 0.25, lines: s => [side(L.eu0)(s), side(L.eu1)(s), [[U(L.eu0), v(s) + 0.14], [U(L.eu0 + 0.09), v(s) + 0.14]], [[U(L.eu1 - 0.09), v(s) + 0.14], [U(L.eu1), v(s) + 0.14]]],
+          mat: mats.metal, color: lit || (() => 0.92) });
+        if (!under) extrude({ s0: lo, s1: hi, step: 0.25, lines: s => [[[U(L.eu0), v(s) - 0.55], [U(L.eu1), v(s) - 0.55]]], mat: mats.metal, color: () => 0.6 });
+        // 유리 난간 + 검은 손잡이
+        extrude({ s0: lo, s1: hi, step: 0.25, lines: s => [[[U(L.eu0 + 0.045), v(s) + 0.14], [U(L.eu0 + 0.045), v(s) + 0.93]], [[U(L.eu1 - 0.045), v(s) + 0.14], [U(L.eu1 - 0.045), v(s) + 0.93]]], mat: MAT.barrier, order: 2 });
+        const hr = u => s => hard([[U(u - 0.045), v(s) + 0.92], [U(u - 0.045), v(s) + 0.99], [U(u + 0.045), v(s) + 0.99], [U(u + 0.045), v(s) + 0.92]]);
+        extrude({ s0: lo, s1: hi, step: 0.25, lines: s => [hr(L.eu0 + 0.045)(s), hr(L.eu1 - 0.045)(s)], mat: MAT.handrail });
+      }
+    } else {
+      const uc = U((L.eu0 + L.eu1) / 2), w = L.eu1 - L.eu0 - 0.1;
+      for (const t of L.treads) {
+        const s = k.e + k.dir * (t.d0 + t.d1) / 2;
+        if (s < a || s >= b) continue;
+        const top = PLAT_V + sgn * t.h, bot = under ? PLAT_V : PLAT_V - L.H;
+        treads.push({ s, u: uc, v: Math.min(top, bot), sx: w, sy: Math.max(0.02, Math.abs(top - bot)), sz: t.d1 - t.d0, c: under ? 0.95 : undefined });
+        noses.push({ s: k.e + k.dir * (t.d0 + 0.03), u: uc, v: top - 0.012, sx: w + 0.002, sy: 0.03, sz: 0.06 });
+      }
+      if (hi > lo) {
+        const hv = s => PLAT_V + sgn * L.stairRail(dOf(s)) + 0.9;
+        extrude({ s0: lo, s1: hi, step: 0.3, lines: s => [sqTube(U(L.eu0 + 0.02), hv(s)), sqTube(U(L.eu1 - 0.02), hv(s))], mat: mats.metal, color: lit || (() => 1) });
+        for (const s of grid(lo, hi, 1.5)) for (const u of [L.eu0 + 0.02, L.eu1 - 0.02]) {
+          const y = PLAT_V + sgn * L.stairRail(dOf(s));
+          rails.push({ s, u: U(u), v: y, sx: 0.04, sy: 0.9, sz: 0.04 });
+        }
+      }
+    }
+  }
+  inst(G.unitUp, mats.stair, treads); inst(G.unit, MAT.nosing, noses); inst(G.unitUp, under ? MAT.metalU : MAT.metalI, rails);
+}
+
+const archV = u => 5.7 + 3.1 * (1 - (u / 9.8) ** 2);   // 고가역 지붕 곡면 높이
+const EDOOR_U0 = 4.45;                                  // 끝벽 출입문 시작 u (역명 기둥 u=3.75~4.35 뒤를 피함)
 function buildStationA(a, b) {
   for (const [s0, s1] of segs(a, b, z => z === 1)) {
     const st = stationAt((s0 + s1) / 2), e0 = Math.max(s0, st.s0 - 4), e1 = Math.min(s1, st.s1 + 4);
     const under = (s, u, v) => (v > 1 && Math.abs(u) < 9 ? 0.82 : v < -0.7 ? 0.7 : 0.95);
-    const plat = hard([[4.9, -0.45], [3.76, -0.45], [3.76, PLAT_V], [3.76, PLAT_V], [9.0, PLAT_V], [9.0, -1.2], [2.6, -2.7]]);
-    extrude({ s0, s1, step: 2, lines: [plat, mirror(plat)], mat: MAT.concrete, color: under });
-    extrude({ s0, s1, step: 2, lines: [[[3.76, PLAT_V + 0.001], [9.0, PLAT_V + 0.001]], [[-9.0, PLAT_V + 0.001], [-3.76, PLAT_V + 0.001]]], mat: MAT.tileA, uvU: 2.4, uvS: 2.4, color: () => 0.85 });
-    if (e1 > e0) extrude({ s0: e0, s1: e1, step: PSD_MOD, lines: [[[3.73, 1.05], [3.73, 1.05 + PSD_H]], [[-3.73, 1.05], [-3.73, 1.05 + PSD_H]]],
-      mat: MAT.psdA, swapUV: true, uvS: PSD_MOD, uvU: PSD_H, color: () => 0.92, order: 3 });
+    // 승강장 바닥 (에스컬레이터·계단 개구부는 아래층까지 뚫린 피트)
+    const LK = linkDims(false), links = stationLinks(st, false), pitV = PLAT_V - LK.H, T0 = 0.001;
+    for (const side of [1, -1]) {
+      const fl = side > 0 ? (l => l) : mirror;
+      for (const [p0, p1, h] of splitByHoles(s0, s1, links.filter(k => k.side === side))) {
+        const top = h ? [[3.76, PLAT_V], [LK.oA, PLAT_V], [LK.oA, pitV], [LK.oB, pitV], [LK.oB, PLAT_V], [9.0, PLAT_V]] : [[3.76, PLAT_V], [9.0, PLAT_V]];
+        extrude({ s0: p0, s1: p1, step: 2, lines: [fl(hard([[4.9, -0.45], [3.76, -0.45], ...top, [9.0, -1.2], [2.6, -2.7]]))], mat: MAT.concrete, color: under });
+        const tiles = h ? [[[3.76, PLAT_V + T0], [LK.oA, PLAT_V + T0]], [[LK.oB, PLAT_V + T0], [9.0, PLAT_V + T0]], [[LK.oA, pitV + T0], [LK.oB, pitV + T0]]] : [[[3.76, PLAT_V + T0], [9.0, PLAT_V + T0]]];
+        extrude({ s0: p0, s1: p1, step: 2, lines: tiles.map(fl), mat: MAT.tileA, uvU: 2.4, uvS: 2.4, color: () => 0.85 });
+      }
+    }
+    // 개구부 난간 (유리, 출입구 쪽은 열림) + 피트 끝벽
+    const rail = [], pitEnds = [];
+    for (const k of links) {
+      const [o0, o1] = k.open, r0 = Math.max(s0, o0), r1 = Math.min(s1, o1), U = u => u * k.side;
+      if (r1 > r0) {
+        extrude({ s0: r0, s1: r1, step: 3, lines: [[[U(LK.oA), PLAT_V], [U(LK.oA), PLAT_V + 1.1]], [[U(LK.oB), PLAT_V], [U(LK.oB), PLAT_V + 1.1]]], mat: MAT.barrier, order: 2 });
+        extrude({ s0: r0, s1: r1, step: 3, lines: [sqTube(U(LK.oA), PLAT_V + 1.1), sqTube(U(LK.oB), PLAT_V + 1.1)], mat: MAT.metal });
+      }
+      const far = k.dir > 0 ? o1 : o0;
+      if (far >= s0 && far < s1) rail.push({ s: far - k.dir * 0.02, u: U((LK.oA + LK.oB) / 2), v: PLAT_V, sx: LK.oB - LK.oA, sy: 1.1, sz: 0.03 });
+      for (const x of [o0, o1]) if (x >= s0 && x < s1) pitEnds.push([x, U(LK.oA), U(LK.oB)]);
+    }
+    inst(G.unitUp, MAT.barrier, rail);
+    for (const [x, u0, u1] of pitEnds) plate(x, rect(Math.min(u0, u1), Math.max(u0, u1), pitV, PLAT_V), null, MAT.concI, { uvK: 4, shared: true });
+    buildLinks(st, s0, s1, false);
+    if (e1 > e0) {
+      extrude({ s0: e0, s1: e1, step: PSD_MOD, lines: [[[3.73, 1.05], [3.73, 1.05 + PSD_H]], [[-3.73, 1.05], [-3.73, 1.05 + PSD_H]]],
+        mat: MAT.psdA, swapUV: true, uvS: PSD_MOD, uvU: PSD_H, color: () => 0.92, order: 3 });
+      // PSD 위를 지붕까지 막음: 은색 헤더 + 유리 상부창 (지하역처럼 승강장이 선로와 완전히 분리)
+      const hdr = [[3.73, 3.4], [3.84, 3.6], [3.9, 3.95], [3.84, 4.25], [3.73, 4.4]];
+      extrude({ s0: e0, s1: e1, step: 1.2, lines: [hdr, mirror(hdr)], mat: MAT.headerA, uvU: 2, uvS: 1.2, swapUV: true, color: () => 0.95 });
+      const tv = archV(3.73) - 0.02;
+      extrude({ s0: e0, s1: e1, step: 1.8, lines: [[[3.73, 4.4], [3.73, tv]], [[-3.73, 4.4], [-3.73, tv]]], mat: MAT.glassWall, swapUV: true, uvS: 1.8, uvU: tv - 4.4, order: 2 });
+    }
+    // 승강장 양 끝 막음벽: 선로 쪽은 PSD 형식 편개 출입문(당겨서 엶), 나머지는 벽
+    //   하선 승강장: s1 끝 벽 너머 엘리베이터, s0 끝 벽 너머 창고 (상선 승강장은 점대칭)
+    const ends = [st.s0 - 4, st.s1 + 4], doors = [], elevDoors = [], rooms = [];
+    for (const [i, x] of ends.entries()) {
+      const out = i ? 1 : -1;                                   // 벽 바깥쪽 방향 (s)
+      for (const side of [1, -1]) {
+        const U = u => u * side, elev = (out > 0) === (side > 0);
+        if (x >= s0 && x < s1) {
+          const outer = [[3.73, PLAT_V], [8.85, PLAT_V]];
+          for (let j = 0; j <= 10; j++) { const u = 8.85 - (8.85 - 3.73) * j / 10; outer.push([u, archV(u) - 0.05]); }
+          const hole = rect(EDOOR_U0, EDOOR_U0 + EDOOR_W, PLAT_V, 3.4);
+          plate(x, outer.map(p => [U(p[0]), p[1]]), hole.map(p => [U(p[0]), p[1]]), MAT.wallA, { uvK: 1.2, shared: true });
+          doors.push({ s: x, u: U(EDOOR_U0 + EDOOR_W / 2), v: (PLAT_V + 3.4) / 2, sx: EDOOR_W, sy: EDOOR_H, yaw: out > 0 ? 0 : Math.PI });
+          if (elev) elevDoors.push({ s: x - out * 0.03, u: U(7.15), v: PLAT_V + 1.15, sx: 1.7, sy: 2.3, yaw: out > 0 ? 0 : Math.PI });
+        }
+        // 벽 너머 방 (열차에서는 그냥 벽으로 보임)
+        const len = elev ? 2.6 : 4.5, cs = x + out * (len / 2 + 0.05);
+        if (cs >= s0 && cs < s1) rooms.push(elev
+          ? { s: cs, u: U(7.15), v: pitV - 0.4, sx: 2.5, sy: 6.2 - pitV + 0.4, sz: len }
+          : { s: cs, u: U((EDOOR_U0 + EDOOR_W + 0.25 + 8.85) / 2), v: PLAT_V, sx: 8.85 - EDOOR_U0 - EDOOR_W - 0.25, sy: 5.4 - PLAT_V, sz: len });
+      }
+    }
+    inst(G.quad, MAT.psdDoor, doors); inst(G.quad, MAT.elevDoor, elevDoors); inst(G.unitUp, MAT.roomA, rooms);
     extrude({ s0, s1, step: 4, lines: [[[8.85, PLAT_V], [8.85, 5.6]], [[-8.85, PLAT_V], [-8.85, 5.6]]], mat: MAT.glassWall, swapUV: true, uvS: 1.8, uvU: 4.55, order: 2 });
-    const arch = []; for (let i = 0; i <= 18; i++) { const u = -9.8 + 19.6 * i / 18; arch.push([u, 5.7 + 3.1 * (1 - (u / 9.8) ** 2)]); }
+    const arch = []; for (let i = 0; i <= 18; i++) { const u = -9.8 + 19.6 * i / 18; arch.push([u, archV(u)]); }
     extrude({ s0, s1, step: 4, lines: [arch], mat: MAT.roof, uvU: 2, uvS: 6, color: () => 0.8 });
     if (!G.rib) G.rib = shared(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(arch.map(p => new THREE.Vector3(p[0], p[1] - 0.18, 0))), 40, 0.13, 6, false));
     const ribs = [], cols = [], piers = [];
@@ -1077,11 +1299,27 @@ function buildStationB(a, b) {
     extrude({ s0, s1, step: 1.2, lines: [hdr, mirror(hdr)], mat: MAT.headerB, uvU: 2, uvS: 1.2, swapUV: true, color: () => 0.8 });
     extrude({ s0, s1, step: 1.2, lines: [[[-3.7, BOX_H], [3.7, BOX_H]]], mat: MAT.boxWall, color: () => 0.55 });
     extrude({ s0, s1, step: 2.4, lines: [[[3.76, PLAT_V], [10, PLAT_V]], [[-10, PLAT_V], [-3.76, PLAT_V]]], mat: MAT.tileB, uvU: 2.4, uvS: 2.4, color: () => 0.95 });
-    extrude({ s0, s1, step: 2.4, lines: [[[3.9, 4.4], [10, 4.4]], [[-10, 4.4], [-3.9, 4.4]]], mat: MAT.ceilB, uvU: 2.4, uvS: 2.4, color: () => 0.9 });
-    extrude({ s0, s1, step: 2.4, lines: [[[10, PLAT_V], [10, 4.4]], [[-10, PLAT_V], [-10, 4.4]]], mat: MAT.wallB, uvU: 4.4 - PLAT_V, uvS: 2.4, swapUV: true, color: () => 0.85 });
+    // 천장 (에스컬레이터·계단 위는 위층으로 뚫린 통로)
+    const LK = linkDims(true), links = stationLinks(st, true), topV = PLAT_V + LK.H + 3.0;
+    for (const side of [1, -1]) {
+      const fl = side > 0 ? (l => l) : mirror;
+      for (const [p0, p1, h] of splitByHoles(s0, s1, links.filter(k => k.side === side))) {
+        extrude({ s0: p0, s1: p1, step: 2.4, lines: [fl([[3.9, 4.4], [h ? LK.oA : 10, 4.4]])], mat: MAT.ceilB, uvU: 2.4, uvS: 2.4, color: () => 0.9 });
+        extrude({ s0: p0, s1: p1, step: 2.4, lines: [fl([[10, PLAT_V], [10, h ? topV : 4.4]])], mat: MAT.wallB, uvU: 4.4 - PLAT_V, uvS: 2.4, swapUV: true, color: () => 0.85 });
+        if (h) {
+          extrude({ s0: p0, s1: p1, step: 2.4, lines: [fl([[LK.oA, 4.4], [LK.oA, topV]])], mat: MAT.wallB, uvU: 4.4 - PLAT_V, uvS: 2.4, swapUV: true, color: () => 0.75 });
+          extrude({ s0: p0, s1: p1, step: 2.4, lines: [fl([[LK.oA, topV], [10, topV]])], mat: MAT.ceilB, uvU: 2.4, uvS: 2.4, color: () => 0.8 });
+        }
+      }
+    }
+    for (const k of links) for (const x of k.open) if (x >= s0 && x < s1)
+      plate(x, rect(Math.min(k.side * LK.oA, k.side * 10), Math.max(k.side * LK.oA, k.side * 10), 4.4, topV), null, MAT.wallBI, { uvK: 2.4, shared: true });
+    const inHole = (s, u) => links.some(k => Math.sign(u) === k.side && Math.abs(u) > LK.oA - 0.3 && s > k.open[0] - 1 && s < k.open[1] + 1);
+    buildLinks(st, s0, s1, true);
     extrude({ s0, s1, step: 4.8, lines: [[[4.15, PLAT_V + 0.006], [4.45, PLAT_V + 0.006]], [[-4.45, PLAT_V + 0.006], [-4.15, PLAT_V + 0.006]]], mat: MAT.tactile });
     const strips = [], pcols = [];
-    for (const s of grid(s0, s1, 2.4, 1.2)) for (const u of [5.6, 8.0, -5.6, -8.0]) strips.push({ s, u, v: 4.38, sx: 0.22, sy: 0.03, sz: 1.8 });
+    for (const s of grid(s0, s1, 2.4, 1.2)) for (const u of [5.6, 8.0, -5.6, -8.0]) if (!inHole(s, u)) strips.push({ s, u, v: 4.38, sx: 0.22, sy: 0.03, sz: 1.8 });
+    for (const k of links) { const s = (k.open[0] + k.open[1]) / 2; if (s >= s0 && s < s1) strips.push({ s, u: k.side * (LK.oA + 10) / 2, v: topV - 0.03, sx: 0.22, sy: 0.03, sz: 3.0 }); }
     for (const s of grid(s0, s1, 9.6, st.s0 + 6)) for (const u of [-7.6, 7.6]) pcols.push({ s, u, v: PLAT_V, sx: 0.7, sy: 4.4 - PLAT_V, sz: 0.7 });
     inst(G.unit, MAT.lamp, strips); inst(G.unitUp, MAT.wallBI, pcols);
     // 승강장 끝 막음벽
