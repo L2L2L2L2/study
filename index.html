@@ -9061,12 +9061,17 @@ function updateMainReservoir(dt) {
   updateMrInterlocks();
 }
 
-/* VOBC 위치 상실: 전·후부 VOBC 리셋 시 발생. RM 모드로 선로 위치 태그(25m 간격) 2개를 지나면 해소 */
+/* VOBC 위치 상실: 전·후부 VOBC 리셋, FM 모드 전환 시 발생. RM 모드로 선로 위치 태그(25m 간격) 2개를 지나면 해소 */
 function setPositionLost() {
   const d = new Date(), p2 = n => String(n).padStart(2, '0');
   window.__POS_LOST = { time: `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`, tags: 0, lastTag: Math.floor(trainDistance / 25) };
 }
 function updatePositionTags(driveMode) {
+  // FM 모드는 VOBC 전원이 차단되어 열차 위치를 잃음 → POSITION LOST (RM으로 태그 2개 다시 통과해야 무인운전 가능)
+  if (driveMode === 'FM') {
+    if (!window.__POS_LOST) setPositionLost();
+    else window.__POS_LOST.tags = 0;
+  }
   const pl = window.__POS_LOST;
   if (!pl) return;
   const tag = Math.floor(trainDistance / 25);
