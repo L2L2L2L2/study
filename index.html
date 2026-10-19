@@ -3670,6 +3670,15 @@
     .du2-door-block.fault {
       background: #ff0000 !important; /* 고장 빨강 */
     }
+    /* TCMS 통신고장: 출입문과 기기 정보(회색·파랑) 모두 노란 바탕 검은 글씨 */
+    .du2-tcms-wrapper.tcms-fail .du2-door-block,
+    .du2-tcms-wrapper.tcms-fail .du2-val-box.gray,
+    .du2-tcms-wrapper.tcms-fail .du2-val-box.blue,
+    .du2-tcms-wrapper.tcms-fail .du2-val-box.active-vobc {
+      background: #ffd400 !important;
+      color: #000000 !important;
+      border-color: #b8960a !important;
+    }
 
     .du2-car-code {
       color: #ffffff;
@@ -4856,6 +4865,9 @@
     .cb-tab { padding: 5px 14px; border-radius: 6px; border: 1px solid #4b5563; background: #1f2937; color: #cbd5e1; font-weight: 700; cursor: pointer; font-size: 13px; }
     .cb-tab.active { background: #b45309; border-color: #f59e0b; color: #fff; }
     .cb-hint { color: #94a3b8; font-size: 11.5px; margin-left: 12px; }
+    .cb-type-toggle { display: flex; margin-left: 10px; padding: 2px; border-radius: 999px; border: 1px solid #4b5563; background: #111827; cursor: pointer; }
+    .cb-type-opt { padding: 3px 11px; border-radius: 999px; color: #94a3b8; font-weight: 700; font-size: 12px; }
+    .cb-type-opt.active { background: #2563eb; color: #fff; }
     /* 주 차단기반 (ABB) */
     .cb-cabinet { background: linear-gradient(#8f969c, #7d848a); padding: 18px 26px 22px; display: flex; flex-direction: column; gap: 20px; }
     .cb-row { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
@@ -7210,17 +7222,21 @@
       <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between;">
         <div style="display:flex; align-items:center;">
           <div class="cb-tabs">
-            <button type="button" class="cb-tab active" id="cb-tab-old" onclick="showBreakerView('old')">주 차단기(기존차)</button>
-            <button type="button" class="cb-tab" id="cb-tab-main" onclick="showBreakerView('main')">주 차단기(신조차)</button>
+            <button type="button" class="cb-tab active" id="cb-tab-mc1" onclick="showBreakerView('mc1')">MC1 차단기</button>
+            <button type="button" class="cb-tab" id="cb-tab-mc2" onclick="showBreakerView('mc2')">MC2 차단기</button>
             <button type="button" class="cb-tab" id="cb-tab-hvac" onclick="showBreakerView('hvac')">냉난방 스위치</button>
+            <!-- 차종 토글: MC1·MC2 배전반 배치를 기존차 / 신조차로 전환 (같은 이름 차단기는 상태 공유) -->
+            <button type="button" class="cb-type-toggle" id="cb-type-toggle" onclick="toggleBreakerTrainType()" title="차종 전환 (기존차 / 신조차)">
+              <span class="cb-type-opt active" data-type="O">기존차</span><span class="cb-type-opt" data-type="N">신조차</span>
+            </button>
           </div>
           <span class="cb-hint">차단기를 누르면 투입(ON) / 차단(OFF)이 바뀝니다</span>
         </div>
         <span style="cursor:pointer; color:#94a3b8; font-size:18px; font-weight:bold;" onclick="closeModal('modal-breaker')">✕</span>
       </div>
       <div class="modal-body">
-        <div id="cb-view-old" class="cb-cabinet"></div>
-        <div id="cb-view-main" class="cb-cabinet" style="display:none;"></div>
+        <div id="cb-view-mc1" class="cb-cabinet"></div>
+        <div id="cb-view-mc2" class="cb-cabinet" style="display:none;"></div>
         <div id="cb-view-hvac" class="cb-hvac" style="display:none;"></div>
       </div>
     </div>
@@ -8068,6 +8084,42 @@ const DEFAULT_SCENARIOS = [
         targetName: "구원운전",
         expectedState: "RESCUE",
         instruction: "구원연결을 시행합니다. OP3 [구원운전] 스위치를 '구원' 위치로 절체하십시오."
+      }
+    ]
+  },
+  {
+    id: "SCN_TCMS_CU_RESET",
+    title: "4. TCMS 통신고장(MC1 CU 통신고장) 시 CU 스위치 재투입",
+    description: "ADU 우측 하단 TCMS가 적색, DU 출입문과 기기 정보가 노란 바탕으로 바뀌고 'MF 시간 MC1 CU 통신고장' 메시지가 현시된 상황입니다. MC1·MC2 배전반의 CU 스위치(CCUCB)를 모두 차단했다가 복귀하여 TCMS를 복구합니다.",
+    faults: ["TCMS_FAIL"],
+    steps: [
+      {
+        step: 1,
+        target: "CB_CCUCB",
+        targetName: "MC1 CU 스위치",
+        expectedState: "OFF",
+        instruction: "차단기반 [MC1 차단기] 탭에서 CU 스위치(CCUCB)를 차단(OFF)하십시오."
+      },
+      {
+        step: 2,
+        target: "CB_CCUCB_MC2",
+        targetName: "MC2 CU 스위치",
+        expectedState: "OFF",
+        instruction: "[MC2 차단기] 탭에서 CU 스위치(CCUCB)를 차단(OFF)하십시오."
+      },
+      {
+        step: 3,
+        target: "CB_CCUCB",
+        targetName: "MC1 CU 스위치",
+        expectedState: "ON",
+        instruction: "[MC1 차단기] 탭에서 CU 스위치(CCUCB)를 다시 투입(ON)하십시오."
+      },
+      {
+        step: 4,
+        target: "CB_CCUCB_MC2",
+        targetName: "MC2 CU 스위치",
+        expectedState: "ON",
+        instruction: "[MC2 차단기] 탭에서 CU 스위치(CCUCB)를 다시 투입(ON)하여 TCMS 복구를 확인하십시오."
       }
     ]
   }
@@ -9356,6 +9408,9 @@ function updateDuAduDisplay(driveMode, notch, now) {
 
     // 9. VOBC Signaling Status & TCMS Status
     const isTcmsFail = !!window.__FAULT_TCMS_FAIL;
+    // TCMS 통신고장: DU 출입문·기기 정보(회색/파랑)를 노란 바탕 검은 글씨로
+    const duWrap = document.querySelector('.du2-tcms-wrapper');
+    if (duWrap) duWrap.classList.toggle('tcms-fail', isTcmsFail);
     const tcmsEl = document.getElementById('adu2-subsys-tcms');
     if (tcmsEl) {
       tcmsEl.className = isTcmsFail ? 'adu2-subsys-line red' : 'adu2-subsys-line green';
@@ -11041,6 +11096,9 @@ const TrainRemote = {
       }
     } else if (faultType === 'TCMS_FAIL') {
       window.__FAULT_TCMS_FAIL = active;
+      (window.__OCC_FAULTS = window.__OCC_FAULTS || {}).TCMS_FAIL = active;
+      tcmsCuAllOffSeen = false;
+      if (active) duEventMsg('MF', 'MC1 CU 통신고장');
       if (active) {
         showTemporaryHudFeedback('🚨 [차량 통신] TCMS 통신 이상 발생 (ADU 적색)', true);
       }
@@ -13811,6 +13869,17 @@ function applyScenario(sc) {
   window.__FAULT_MR_LEAK = (scFaults.includes('MR_LEAK_SEVERE') || occFaults.MR_LEAK_SEVERE) ? 'SEVERE'
     : (scFaults.includes('MR_LEAK') || occFaults.MR_LEAK) ? 'MODERATE' : null;
   window.__MR_LOW = false; window.__MR_CRIT = false;
+  window.__FAULT_TCMS_FAIL = scFaults.includes('TCMS_FAIL') || !!occFaults.TCMS_FAIL;
+  tcmsCuAllOffSeen = false;
+  window.__DU_EVT_MSG = null;
+  if (window.__FAULT_TCMS_FAIL) duEventMsg('MF', 'MC1 CU 통신고장');
+  // 차단기 상태 초기화 (SPARE = 차단, 나머지 = 투입)
+  registerBreakers();
+  Object.keys(COMPONENT_REGISTRY).forEach(id => {
+    const c = COMPONENT_REGISTRY[id];
+    if (c.type === 'BREAKER') c.state = c.name.includes('SPARE') ? 'OFF' : 'ON';
+  });
+  if (document.getElementById('modal-breaker') && document.getElementById('modal-breaker').style.display === 'flex') renderBreakers();
   updateGaugeUI(undefined, 9.0);
   // 시작 운전 상태 (이 조작은 시나리오 판정에서 제외)
   if (sc && sc.setup) {
@@ -14049,22 +14118,27 @@ const CB_HVAC_ROWS = [
   [['AuxHEAT1', ['OF', 'OF', 'MX'], 3, 'C16A'], ['AuxHEAT2', ['OF', 'OF', 'MX'], 3, 'C16A'], ['ACCON', 0, 2, 'C10A'], ['VFN', 1, 1, 'C3A'], ['TCN', 1, 1, 'C3A'], ['DHeN1', 1, 3, 'C6A']],
   [['UN1', 1, 3, 'C40A'], ['UN2', 1, 3, 'C40A'], ['RHeN1', 2, 3, 'C25A'], ['RHeN2', 2, 3, 'C16A'], ['LFFN', 1, 3, 'C3A']],
 ];
-const cbId = (b, r, c, panel = 'N') => b[4] || ('CB_' + b[0].replace(/[^A-Za-z0-9]/g, '_') +
-  (b[0] === 'SPARE' ? `_${panel === 'N' ? '' : panel}${r + 1}${String.fromCharCode(65 + c)}` : ''));
+/* MC1 배전반 = 기존 ID 그대로, MC2 배전반 = ID 뒤에 '_MC2'. 기존차·신조차의 같은 이름 차단기는 같은 ID(상태 공유) */
+const cbId = (b, r, c, panel = 'N', car = 'MC1') => (b[4] || ('CB_' + b[0].replace(/[^A-Za-z0-9]/g, '_') +
+  (b[0] === 'SPARE' ? `_${panel === 'N' ? '' : panel}${r + 1}${String.fromCharCode(65 + c)}` : ''))) + (car === 'MC2' ? '_MC2' : '');
+let cbTrainType = 'O';   // 차단기반 차종: 'O' 기존차 / 'N' 신조차
 function registerBreakers() {
-  [[CB_MAIN_ROWS, 'N'], [CB_OLD_ROWS, 'O']].forEach(([rows, pk]) => rows.forEach((row, r) => row.forEach((b, c) => {
-    const id = cbId(b, r, c, pk);
+  ['MC1', 'MC2'].forEach(car => [[CB_MAIN_ROWS, 'N'], [CB_OLD_ROWS, 'O']].forEach(([rows, pk]) => rows.forEach((row, r) => row.forEach((b, c) => {
+    const id = cbId(b, r, c, pk, car);
     if (!COMPONENT_REGISTRY[id]) COMPONENT_REGISTRY[id] = {
-      name: `차단기 ${b[0]}${b[0] === 'SPARE' ? ` (${pk === 'O' ? '기존차' : '신조차'})` : ''}`, type: 'BREAKER', state: b[0] === 'SPARE' ? 'OFF' : 'ON', panel: 'CB' };
-  })));
+      name: `${car} 차단기 ${b[0]}${b[0] === 'SPARE' ? ` (${pk === 'O' ? '기존차' : '신조차'})` : ''}`, type: 'BREAKER', state: b[0] === 'SPARE' ? 'OFF' : 'ON', panel: 'CB' };
+  }))));
   CB_HVAC_ROWS.forEach(row => row.forEach(([label]) => {
     const id = 'CB_' + label;
     if (!COMPONENT_REGISTRY[id]) COMPONENT_REGISTRY[id] = { name: `냉난방 차단기 ${label}`, type: 'BREAKER', state: 'ON', panel: 'HVAC' };
   }));
 }
 function renderBreakers() {
-  renderAbbPanel('cb-view-old', CB_OLD_ROWS, 'O', 'S28{p} UC');
-  renderAbbPanel('cb-view-main', CB_MAIN_ROWS, 'N', 'S20{p}M');
+  ['MC1', 'MC2'].forEach(car => {
+    const el = 'cb-view-' + car.toLowerCase();
+    if (cbTrainType === 'O') renderAbbPanel(el, CB_OLD_ROWS, 'O', 'S28{p} UC', car);
+    else renderAbbPanel(el, CB_MAIN_ROWS, 'N', 'S20{p}M', car);
+  });
   const hvac = document.getElementById('cb-view-hvac');
   if (hvac) hvac.innerHTML = CB_HVAC_ROWS.map(row => {
     let x = 4; const labels = [];
@@ -14084,7 +14158,7 @@ function renderBreakers() {
   }).join('');
 }
 /* ABB 주 차단기반 그리기. 신조차(N): 줄마다 폭을 맞춤 / 기존차(O): 같은 칸 폭으로 실물처럼 줄 길이가 다름 */
-function renderAbbPanel(elId, rows, pk, model) {
+function renderAbbPanel(elId, rows, pk, model, car = 'MC1') {
   const el = document.getElementById(elId);
   if (!el) return;
   const uniform = pk === 'O';
@@ -14095,7 +14169,7 @@ function renderAbbPanel(elId, rows, pk, model) {
     const short = uniform && mods < maxMod ? ' short' : '';
     const plate = row.map(b => `<span class="${/[가-힣]/.test(b[0]) ? 'sticker' : ''}" style="width:${cbModules(b) * mw}px" title="${b[0]}">${b[0]}</span>`).join('');
     const rail = row.map((b, c) => {
-      const [label, poles, rating, kind] = b, id = cbId(b, r, c, pk), st = COMPONENT_REGISTRY[id].state === 'ON' ? 'on' : 'off';
+      const [label, poles, rating, kind] = b, id = cbId(b, r, c, pk, car), st = COMPONENT_REGISTRY[id].state === 'ON' ? 'on' : 'off';
       const rcbo = kind === 'RCBO', sch = kind === 'SCH';
       const spec = rcbo ? `DS201L\n${rating}` : sch ? `iC60N  ${rating}` : `${model.replace('{p}', poles)}\n${rating}\nUC`;
       return `<div class="cb-abb ${st}${rcbo ? ' rcbo' : ''}${sch ? ' sch' : ''}" data-cb="${id}" style="width:${cbModules(b) * mw}px" onclick="toggleBreaker('${id}')" title="${COMPONENT_REGISTRY[id].name} (${poles}극 ${rating})">
@@ -14106,6 +14180,22 @@ function renderAbbPanel(elId, rows, pk, model) {
     return `<div class="cb-row"><div class="cb-plate${short}">${plate}</div><div class="cb-rail${short}">${rail}</div></div>`;
   }).join('');
 }
+/* TCMS 고장(MC1 CU 통신고장): MC1·MC2 배전반 CU 스위치(CCUCB)를 모두 차단했다가 다시 투입하면 복구 */
+const TCMS_CU_IDS = ['CB_CCUCB', 'CB_CCUCB_MC2'];
+let tcmsCuAllOffSeen = false;
+function checkTcmsCuReset() {
+  if (!window.__FAULT_TCMS_FAIL) { tcmsCuAllOffSeen = false; return; }
+  const st = TCMS_CU_IDS.map(id => (COMPONENT_REGISTRY[id] || {}).state);
+  if (st.every(x => x === 'OFF')) tcmsCuAllOffSeen = true;
+  else if (tcmsCuAllOffSeen && st.every(x => x === 'ON')) {
+    tcmsCuAllOffSeen = false;
+    window.__FAULT_TCMS_FAIL = false;
+    if (window.__OCC_FAULTS) window.__OCC_FAULTS.TCMS_FAIL = false;
+    window.__DU_EVT_MSG = null;
+    showTemporaryHudFeedback('✅ [TCMS 복구] MC1·MC2 CU 스위치 재투입으로 TCMS 통신이 정상 복구되었습니다', false);
+  }
+}
+
 function toggleBreaker(id) {
   const comp = COMPONENT_REGISTRY[id];
   if (!comp) return;
@@ -14113,12 +14203,21 @@ function toggleBreaker(id) {
   document.querySelectorAll(`[data-cb="${id}"]`).forEach(el => { el.classList.toggle('on', comp.state === 'ON'); el.classList.toggle('off', comp.state !== 'ON'); });
   try { sound.playBreakerToggle(comp.state === 'ON'); triggerHaptic(25); } catch (e) { }
   showTemporaryHudFeedback(`🔌 [${comp.name}] ${comp.state === 'ON' ? '투입 (ON)' : '차단 (OFF)'}`, comp.state !== 'ON');
+  checkTcmsCuReset();
   if (currentMode === 'REC') promptRecordStep(id, comp.name, comp.state);
   else evaluateStepAction(id, comp.state);
   broadcastStudentState(id, comp.state);
 }
+function toggleBreakerTrainType() {
+  cbTrainType = cbTrainType === 'O' ? 'N' : 'O';
+  document.querySelectorAll('#cb-type-toggle .cb-type-opt').forEach(el => el.classList.toggle('active', el.dataset.type === cbTrainType));
+  try { sound.playClick(); } catch (e) { }
+  renderBreakers();
+  fitBreakerView();
+}
+window.toggleBreakerTrainType = toggleBreakerTrainType;
 function showBreakerView(view) {
-  ['old', 'main', 'hvac'].forEach(v => {
+  ['mc1', 'mc2', 'hvac'].forEach(v => {
     document.getElementById('cb-view-' + v).style.display = view === v ? '' : 'none';
     document.getElementById('cb-tab-' + v).classList.toggle('active', view === v);
   });
@@ -14138,7 +14237,7 @@ function fitBreakerView() {
   if (!modal || modal.style.display === 'none') return;
   const head = modal.querySelector('.modal-header');
   const availW = innerWidth * 0.98 - 4, availH = innerHeight * 0.97 - (head ? head.offsetHeight : 50) - 4;
-  ['cb-view-old', 'cb-view-main', 'cb-view-hvac'].forEach(id => {
+  ['cb-view-mc1', 'cb-view-mc2', 'cb-view-hvac'].forEach(id => {
     const el = document.getElementById(id);
     if (!el || el.style.display === 'none') return;
     el.style.zoom = '1';
