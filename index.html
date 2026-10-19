@@ -9655,14 +9655,24 @@ function updateTrainPhysics() {
       else if (notch === 'P3') { target = 65.0; rate = 5.0; }
       else if (notch === 'P4') { target = 80.0; rate = 6.2; }
     } else { 
-      target = 0.0; rate = -0.04; 
+      target = 0.0; rate = 0.0;   // 견인 불가: 타행과 같음 (주행저항·구배만)
     }
   } else {
-    target = 0.0; rate = -0.04; // 타행(N) 시 자연 감속 (미세한 구름/공기 저항: 10초당 0.4km/h 수준으로 부드럽고 여유로운 타행감)
+    target = 0.0; rate = 0.0;   // 타행(N): 제동·견인 없음 → 아래 주행저항 + 구배만으로 감속
   }
 
-  /* 구배 저항 */
-  const gradeAcc = -cvState.slope * 9.8 * 0.62;
+  /* 주행저항 + 곡선저항 + 구배 (km/h/s, 회전부 관성계수 1.08 반영)
+     출발·주행저항 r = 1.65 + 0.0247v + 0.00028v² [kgf/t] (전동차 실험식, 지하 단선 터널은 공기저항 1.6배)
+     곡선저항 600/R [kgf/t], 구배 1‰ = 1 kgf/t.  1 kgf/t = 0.00981 m/s² = 0.0327 km/h/s (관성계수 포함)
+     예) 평지 60km/h 타행: 약 0.14 km/h/s (10초에 1.4km/h), 터널 0.16, 30‰ 상구배는 여기에 약 1.0 km/h/s 추가 */
+  const KGF_T = 0.00981 * 3.6 / 1.08;
+  const vKmh = trainSpeed;
+  const inTunnel = IC2.isUnder(IC2.zc(IC2.P.toS(trainDistance)));
+  const curvR = Math.abs(cvCurv(trainDistance));
+  const resKgf = vKmh > 0.05
+    ? 1.65 + 0.0247 * vKmh + 0.00028 * vKmh * vKmh * (inTunnel ? 1.6 : 1.0) + 600 * curvR
+    : 0;
+  const gradeAcc = -cvState.slope * 1000 * KGF_T - resKgf * KGF_T;
 
   trainTargetSpeed = target;
   trainAccelRate = rate;
