@@ -7005,6 +7005,10 @@
               <span>🚨 ADU 고장 (화면 꺼짐)</span>
               <span id="fault-lbl-adu" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
             </button>
+            <button type="button" id="btn-fault-vobc1" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('VOBC1_FAIL')">
+              <span>🚨 VOBC1 고장 (VOBC2 자동 절체)</span>
+              <span id="fault-lbl-vobc1" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
+            </button>
             <button type="button" id="btn-occ-radio-test" class="occ-fault-toggle-btn occ-radio-test-btn" onclick="playOccRadioTest()" title="관제 음성 무전 테스트 방송 송출 (클릭 시 TTS 및 무전 효과음 재생)">
               <span>🎙️ 관제 음성무전 테스트</span>
               <span id="fault-lbl-radio-test" class="occ-fault-sub">선로 확인 지령 (TTS)</span>
@@ -8179,6 +8183,39 @@ const DEFAULT_SCENARIOS = [
         targetName: "해당차 ADUCB",
         expectedState: "ON",
         instruction: "해당차 ADUCB를 다시 투입(ON)하여 ADU 화면 복구를 확인하십시오."
+      }
+    ]
+  },
+  {
+    id: "SCN_VOBC1_FAIL",
+    title: "7. VOBC1 고장(VOBC2 자동 절체) 시 MC1 VOBC 차단기 리셋",
+    description: "VOBC1이 고장 나 VOBC2로 자동 절체된 상황입니다. ADU의 VOBC1이 빨간 글씨, VOBC2에 Ⓐ가 붙고 DU의 MC1 VOBC 칸이 빨간 바탕이 됩니다. 관제 지시에 따라 해당차(MC1) VOBCCB1·VOBCCB2·VOBCDICB를 리셋하여 VOBC1을 정상으로 복귀시킵니다.",
+    faults: ["VOBC1_FAIL"],
+    steps: [
+      {
+        step: 1,
+        type: "REPORT",
+        target: "OCC_REPORT",
+        targetName: "관제 보고",
+        instruction: "ADU VOBC1 빨간 글씨, VOBC2 Ⓐ, DU MC1 VOBC 빨간 바탕을 확인하고 [📡 관제 보고]를 누르십시오.",
+        report: "관제, VOBC1 고장으로 VOBC2로 절체되었습니다.",
+        occReply: "알았다. 해당차 VOBC 리셋 조치 바란다."
+      },
+      {
+        step: 2,
+        target: "CB_VOBCCB1",
+        allOf: ["CB_VOBCCB1", "CB_VOBCCB2", "CB_VOBCDICB"],
+        targetName: "MC1 VOBC 차단기",
+        expectedState: "OFF",
+        instruction: "차단기반 [MC1 차단기] 탭에서 VOBCCB1, VOBCCB2, VOBCDICB를 모두 차단(OFF)하십시오."
+      },
+      {
+        step: 3,
+        target: "CB_VOBCCB1",
+        allOf: ["CB_VOBCCB1", "CB_VOBCCB2", "CB_VOBCDICB"],
+        targetName: "MC1 VOBC 차단기",
+        expectedState: "ON",
+        instruction: "VOBCCB1, VOBCCB2, VOBCDICB를 모두 다시 투입(ON)하여 VOBC1 정상 복귀를 확인하십시오."
       }
     ]
   }
@@ -9491,9 +9528,12 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const isVobc1Comm = !isVobc1Fail && (!!window.__FAULT_VOBC_COMM || !!window.__FAULT_VOBC1_COMM);
     const isVobc2Comm = !isVobc2Fail && (!!window.__FAULT_VOBC_COMM || !!window.__FAULT_VOBC2_COMM);
     const isFmMode = (driveMode === 'FM');
-    // 활성 VOBC: 전후진제어기와 무관. 기본 VOBC1, VOBC 리셋(2~3초) 시 반대쪽으로 전환
+    // 활성 VOBC: 전후진제어기와 무관. 기본 VOBC1 (OFF 모드 포함), VOBC 리셋(2~3초) 시 반대쪽으로 전환
+    // 활성 VOBC가 고장 나면 정상인 반대쪽으로 자동 절체 (고장 복구 후에도 절체된 쪽 유지)
+    if (window.__ACTIVE_VOBC !== 2 && (isVobc1Fail || isVobc1Comm) && !isVobc2Fail && !isVobc2Comm) window.__ACTIVE_VOBC = 2;
+    else if (window.__ACTIVE_VOBC === 2 && (isVobc2Fail || isVobc2Comm) && !isVobc1Fail && !isVobc1Comm) window.__ACTIVE_VOBC = 1;
     const isVobc2Active = (window.__ACTIVE_VOBC === 2);
-    const vobcSelected = !isHcrEb && !isFmMode;   // OFF(HCR): VOBC 미선택
+    const vobcSelected = !isFmMode;
     // 활성 VOBC (DU 녹색 글씨 · Mc 표기 녹색 · ADU Ⓐ 마크 모두 이 값 하나로 표시)
     const vobc1On = vobcSelected && !isVobc2Active && !isVobc1Fail && !isVobc1Comm;
     const vobc2On = vobcSelected && isVobc2Active && !isVobc2Fail && !isVobc2Comm;
@@ -9556,7 +9596,8 @@ function updateDuAduDisplay(driveMode, notch, now) {
     } else if (isVobc1Fail || isVobc2Fail || isVobc1Comm || isVobc2Comm) {
       if (vobc1Adu) {
         const isFault1 = isVobc1Fail || isVobc1Comm;
-        vobc1Adu.className = isFault1 ? 'adu2-subsys-line amber' : 'adu2-subsys-line green';
+        // VOBC1 단독 고장(VOBC1_FAIL): 빨간 글씨 / 그 외 고장·통신고장: 앰버
+        vobc1Adu.className = window.__FAULT_VOBC1_FAIL ? 'adu2-subsys-line red' : (isFault1 ? 'adu2-subsys-line amber' : 'adu2-subsys-line green');
         vobc1Adu.innerHTML = vobc1On ? 'VOBC 1 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 1';
       }
       if (vobc2Adu) {
@@ -10610,7 +10651,8 @@ const TrainRemote = {
     MR_LEAK: false,
     MR_LEAK_SEVERE: false,
     DU_FAIL: false,
-    ADU_FAIL: false
+    ADU_FAIL: false,
+    VOBC1_FAIL: false
   },
   _lastPhysicsBroadcast: 0,
   logCount: 0,
@@ -11086,6 +11128,12 @@ const TrainRemote = {
       if (btnP) btnP.classList.toggle('active', isAct);
       if (lblP) lblP.innerText = isAct ? '🚨 주차제동 완해 불능 인가 중' : '정상 (클릭 시 고장 인가)';
       this.addLog(`[비상 고장 인가] 주차제동 완해 불능 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
+    } else if (faultType === 'VOBC1_FAIL') {
+      const btnV1 = document.getElementById('btn-fault-vobc1');
+      const lblV1 = document.getElementById('fault-lbl-vobc1');
+      if (btnV1) btnV1.classList.toggle('active', isAct);
+      if (lblV1) lblV1.innerText = isAct ? '🚨 VOBC1 고장 인가 중' : '정상 (클릭 시 고장 인가)';
+      this.addLog(`[비상 고장 인가] VOBC1 고장 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
     } else if (faultType === 'DU_FAIL' || faultType === 'ADU_FAIL') {
       const k = faultType === 'DU_FAIL' ? 'du' : 'adu';
       const btnS = document.getElementById('btn-fault-' + k);
@@ -11105,7 +11153,7 @@ const TrainRemote = {
     const anyActive = this.activeFaults.DOOR_LOCK_FAIL || this.activeFaults.EB_STUCK ||
       this.activeFaults.VOBC_FAIL || this.activeFaults.VOBC_COMM || this.activeFaults.TCMS_FAIL || this.activeFaults.PARK_REL_FAIL ||
       this.activeFaults.MR_LEAK || this.activeFaults.MR_LEAK_SEVERE ||
-      this.activeFaults.DU_FAIL || this.activeFaults.ADU_FAIL;
+      this.activeFaults.DU_FAIL || this.activeFaults.ADU_FAIL || this.activeFaults.VOBC1_FAIL;
     if (statusTag) {
       statusTag.innerText = anyActive ? '⚠️ 비상 고장 주입 운용 중' : '정상 운행 중';
       statusTag.style.color = anyActive ? '#f87171' : '#94a3b8';
@@ -11170,6 +11218,14 @@ const TrainRemote = {
       if (active) duEventMsg('MF', 'MC1 CU 통신고장');
       if (active) {
         showTemporaryHudFeedback('🚨 [차량 통신] TCMS 통신 이상 발생 (ADU 적색)', true);
+      }
+    } else if (faultType === 'VOBC1_FAIL') {
+      (window.__OCC_FAULTS = window.__OCC_FAULTS || {}).VOBC1_FAIL = active;
+      window.__FAULT_VOBC1_FAIL = active;
+      vobc1CbAllOff = false;
+      if (active) {
+        duEventMsg('MF', 'MC1 VOBC 고장');
+        showTemporaryHudFeedback('🚨 [신호 고장] VOBC1 고장 → VOBC2 자동 절체', true);
       }
     } else if (faultType === 'DU_FAIL' || faultType === 'ADU_FAIL') {
       (window.__OCC_FAULTS = window.__OCC_FAULTS || {})[faultType] = active;
@@ -13955,6 +14011,10 @@ function applyScenario(sc) {
   window.__FAULT_ADU_FAIL = scFaults.includes('ADU_FAIL') || !!occFaults.ADU_FAIL;
   screenFaultCbOff = {};
   applyScreenFaults();
+  window.__FAULT_VOBC1_FAIL = scFaults.includes('VOBC1_FAIL') || !!occFaults.VOBC1_FAIL;
+  vobc1CbAllOff = false;
+  window.__ACTIVE_VOBC = 1;
+  if (window.__FAULT_VOBC1_FAIL) duEventMsg('MF', 'MC1 VOBC 고장');
   // 차단기 상태 초기화 (SPARE = 차단, 나머지 = 투입)
   registerBreakers();
   Object.keys(COMPONENT_REGISTRY).forEach(id => {
@@ -14310,6 +14370,21 @@ function applyScreenFaults() {
   if (adu) adu.classList.toggle('screen-off', !!window.__FAULT_ADU_FAIL);
 }
 
+/* VOBC1 고장: MC1 VOBCCB1·VOBCCB2·VOBCDICB를 모두 차단했다가 다시 투입하면 VOBC1 정상 복귀 (활성은 절체된 VOBC2 유지) */
+const VOBC1_RESET_IDS = ['CB_VOBCCB1', 'CB_VOBCCB2', 'CB_VOBCDICB'];
+let vobc1CbAllOff = false;
+function checkVobc1Reset() {
+  if (!window.__FAULT_VOBC1_FAIL) { vobc1CbAllOff = false; return; }
+  const st = VOBC1_RESET_IDS.map(id => (COMPONENT_REGISTRY[id] || {}).state);
+  if (st.every(x => x === 'OFF')) vobc1CbAllOff = true;
+  else if (vobc1CbAllOff && st.every(x => x === 'ON')) {
+    vobc1CbAllOff = false;
+    window.__FAULT_VOBC1_FAIL = false;
+    if (window.__OCC_FAULTS) window.__OCC_FAULTS.VOBC1_FAIL = false;
+    showTemporaryHudFeedback('✅ [VOBC1 복구] MC1 VOBCCB1·VOBCCB2·VOBCDICB 리셋으로 VOBC1이 정상 복귀되었습니다', false);
+  }
+}
+
 function toggleBreaker(id) {
   const comp = COMPONENT_REGISTRY[id];
   if (!comp) return;
@@ -14319,6 +14394,7 @@ function toggleBreaker(id) {
   showTemporaryHudFeedback(`🔌 [${comp.name}] ${comp.state === 'ON' ? '투입 (ON)' : '차단 (OFF)'}`, comp.state !== 'ON');
   checkTcmsCuReset();
   checkScreenFaultReset(id, comp.state);
+  checkVobc1Reset();
   if (currentMode === 'REC') promptRecordStep(id, comp.name, comp.state);
   else evaluateStepAction(id, comp.state);
   broadcastStudentState(id, comp.state);
