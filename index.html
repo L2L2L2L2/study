@@ -14381,9 +14381,10 @@ function applyScreenFaults() {
   if (du) du.classList.toggle('screen-off', !!window.__FAULT_DU_FAIL || cbIsOff(cabCbId('CB_DUCB')));
   if (adu) adu.classList.toggle('screen-off', !!window.__FAULT_ADU_FAIL || cbIsOff(cabCbId('CB_ADUCB')));
 }
-/* CU 스위치(CCUCB·CCUDOCB·CCUDICB) 중 하나라도 차단 → TCMS 통신고장 표시 */
-const tcmsCuOffCar = () => ['MC1', 'MC2'].find(car => TCMS_CU_IDS[car].some(cbIsOff));
-const isTcmsCuCbOff = () => !!tcmsCuOffCar();
+/* CU 스위치(CCUCB·CCUDOCB·CCUDICB): 한쪽 차만 차단하면 반대편 CU로 절체되어 정상 현시.
+   MC1·MC2 모두 CU 스위치가 하나 이상 차단되어 있을 때만 TCMS 통신고장 표시 */
+const isCarCuDown = car => TCMS_CU_IDS[car].some(cbIsOff);
+const isTcmsCuCbOff = () => isCarCuDown('MC1') && isCarCuDown('MC2');
 /* VOBC 차단기(VOBCCB1·VOBCCB2·VOBCDICB) 중 하나라도 차단 → 그 차 VOBC 고장 (MC1 = VOBC1, MC2 = VOBC2) */
 const isVobcCbOff = car => ['CB_VOBCCB1', 'CB_VOBCCB2', 'CB_VOBCDICB'].some(id => cbIsOff(id + (car === 2 ? '_MC2' : '')));
 
@@ -14413,8 +14414,7 @@ function toggleBreaker(id) {
   checkScreenFaultReset(id, comp.state);
   applyScreenFaults();
   if (/^CB_CCU(CB|DOCB|DICB)(_MC2)?$/.test(id)) {
-    const car = tcmsCuOffCar();
-    if (car) duEventMsg('MF', `${car} CU 통신고장`);
+    if (isTcmsCuCbOff()) duEventMsg('MF', 'MC1 CU 통신고장');
     else if (!window.__FAULT_TCMS_FAIL && /CU 통신고장$/.test(window.__DU_EVT_MSG || '')) window.__DU_EVT_MSG = null;
   }
   checkVobc1Reset();
