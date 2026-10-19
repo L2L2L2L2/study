@@ -265,10 +265,19 @@ T.psdDoor = canvasTex(512, 979, (g, w, h) => {
   g.strokeRect(X(0.14), Yp(2.2), X(1.02), X(2.08));                                   // 문짝 테 (편개)
   g.fillStyle = '#d9dcde'; g.fillRect(X(0.24), Yp(1.45), X(0.05), X(0.6));           // 당김 손잡이 (세로 봉)
   g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(X(0.16), Yp(1.08), X(0.98), X(0.04));   // 안전띠 스티커
-  g.fillStyle = '#ffffff'; g.fillRect(X(0.48), Yp(1.62), X(0.4), X(0.16));
-  g.fillStyle = '#1d5fa8'; g.font = `bold ${X(0.1)}px 'Malgun Gothic', sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillText('당기세요', X(0.68), Yp(1.54));
 });
+T.exitSign = canvasTex(256, 192, (g, w, h) => {   // 피난구 유도등: 녹색 바탕 + 흰 문 + 달리는 사람 (녹색)
+  g.fillStyle = '#e9eeec'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#19b86e'; g.fillRect(14, 12, w - 28, h - 24);
+  g.fillStyle = '#ffffff'; g.fillRect(70, 30, 116, 132);
+  g.strokeStyle = '#19b86e'; g.fillStyle = '#19b86e'; g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = 15;
+  g.beginPath(); g.arc(138, 50, 11, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.moveTo(130, 70); g.lineTo(115, 108); g.stroke();                              // 몸통
+  g.beginPath(); g.moveTo(92, 92); g.lineTo(108, 74); g.lineTo(130, 70); g.lineTo(146, 90); g.lineTo(166, 94); g.stroke();   // 팔
+  g.beginPath(); g.moveTo(115, 108); g.lineTo(140, 122); g.lineTo(150, 148); g.stroke();         // 앞다리
+  g.beginPath(); g.moveTo(115, 108); g.lineTo(100, 132); g.lineTo(78, 136); g.stroke();          // 뒷다리
+  g.fillRect(150, 136, 36, 12);
+}, { repeat: false });
 T.panel = canvasTex(256, 256, (g, w, h) => {      // 고가역 끝벽 패널 (1.2m 반복)
   g.fillStyle = '#e4e6e7'; g.fillRect(0, 0, w, h);
   g.fillStyle = 'rgba(120,125,130,.45)'; g.fillRect(0, 0, 3, h); g.fillRect(0, 0, w, 3);
@@ -696,6 +705,7 @@ const MAT = {
   lamp: new THREE.MeshBasicMaterial({ color: new THREE.Color(3.2, 3.1, 2.9) }),
   doorGlow: new THREE.MeshBasicMaterial({ color: new THREE.Color(2.0, 2.0, 1.95), side: DS2 }),
   greenSign: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.2, 1.6, 0.6) }),
+  exitSign: new THREE.MeshBasicMaterial({ map: T.exitSign, color: new THREE.Color(1.35, 1.35, 1.35) }),
   stopU: new THREE.MeshBasicMaterial({ map: T.stop }),
   stopA: new THREE.MeshLambertMaterial({ map: T.stop }),
   stopFront: new THREE.MeshBasicMaterial({ map: T.stopFront, color: new THREE.Color(1.15, 1.15, 1.15), side: DS2 }),   // 반사재: 조명 영향 적게
@@ -832,6 +842,8 @@ const G = {
   pier: shared(new THREE.CylinderGeometry(1, 1.08, 1, 16).translate(0, 0.5, 0)),
   signFwd: shared(new THREE.PlaneGeometry(0.34, 0.95)),                         // 진입 열차를 향함(-s 방향)
   signBack: shared(new THREE.PlaneGeometry(0.34, 0.95).rotateY(Math.PI)),
+  exitFwd: shared(new THREE.PlaneGeometry(0.4, 0.3)),                            // 피난구 유도등 표시면
+  exitBack: shared(new THREE.PlaneGeometry(0.4, 0.3).rotateY(Math.PI)),
   stopR: shared(new THREE.PlaneGeometry(0.4, 0.4).rotateY(-Math.PI / 2)),
   stopFront: shared((() => {
     // 삼각기둥: 진입 열차 쪽(로컬 +Z)으로 경사면, 폭(선로 직각) 1.0m, 높이 0.16m, 깊이 0.18m
@@ -978,8 +990,8 @@ function buildViaduct(a, b) {
 }
 
 function stationFeatures(st, a, b, under) {
-  // 승강장 진입부: 노란 역명판 + 녹색 비상대피 유도등 + 끝단 출입문 (+ 지하: 피난 계단)
-  const pillars = [], signsF = [], signsB = [], greens = [], doors = [], steps = [], glowG = [];
+  // 승강장 진입부: 노란 역명판 + 피난구 유도등(끝단 출입문 중앙 위) + 끝단 출입문 (+ 지하: 피난 계단)
+  const pillars = [], signsF = [], signsB = [], greens = [], exitF = [], exitB = [], doors = [], steps = [], glowG = [];
   const add = (s0, side) => {
     // 역명 기둥은 PSD 시작 끝단에 (고가역 PSD는 승강장 끝에서 4m 앞서 시작)
     const s = under ? s0 : s0 - side * 4.3;
@@ -987,8 +999,11 @@ function stationFeatures(st, a, b, under) {
     const u = side * 4.05, face = s - side * 0.31;
     pillars.push({ s: s + side * 0.0, u, v: PLAT_V, sx: 0.6, sy: 4.45 - PLAT_V, sz: 0.6, c: under ? 1.0 : undefined });
     (side > 0 ? signsF : signsB).push({ s: face, u, v: 3.25 });
-    greens.push({ s: face, u: u + side * 0.55, v: 3.75, sx: 0.35, sy: 0.16, sz: 0.06 });
-    W(face - side * 0.1, u + side * 0.55, 3.75, _v); glowG.push(_v.x, _v.y, _v.z);
+    // 유도등은 같은 높이에서 출입문 중앙 위로 (고가역은 끝벽 바깥면에 붙임)
+    const gu = side * (under ? 5.6 : EDOOR_U0 + EDOOR_W / 2), gs = under ? face : s0 - side * 4 - side * 0.05, gv = 3.75;
+    greens.push({ s: gs + side * 0.03, u: gu, v: gv, sx: 0.46, sy: 0.36, sz: 0.06 });
+    (side > 0 ? exitF : exitB).push({ s: gs - side * 0.01, u: gu, v: gv });
+    W(gs - side * 0.1, gu, gv, _v); glowG.push(_v.x, _v.y, _v.z);
     if (under) doors.push({ s: s - side * 0.17, u: side * 5.6, v: PLAT_V + 1.03, yaw: side > 0 ? 0 : Math.PI });
     if (under) steps.push({ s: s - side * 2.0, u: side * 4.2, v: 0, yaw: side > 0 ? Math.PI : 0 });
   };
@@ -996,7 +1011,7 @@ function stationFeatures(st, a, b, under) {
   const pm = under ? MAT.wallBI : MAT.white;
   inst(G.unitUp, pm, pillars);
   inst(G.signFwd, signMat(st, under), signsF); inst(G.signBack, signMat(st, under), signsB);
-  inst(G.unit, MAT.greenSign, greens); glowPoints(glowG, MAT.glowG);
+  inst(G.unit, MAT.metalU, greens); inst(G.exitFwd, MAT.exitSign, exitF); inst(G.exitBack, MAT.exitSign, exitB); glowPoints(glowG, MAT.glowG);
   inst(G.door, MAT.doorGlow, doors);
   inst(G.steps, MAT.metalU, steps);
   // 정차위치표지: 측면(PSD 부착, 흑색 바탕 백색 숫자) + 전면(선로 중앙, 백색 반사재 적색 숫자)
@@ -1062,7 +1077,10 @@ function stationLinks(st, under) {
   for (const side of [1, -1]) for (const kind of ['esc', 'stair']) {
     const len = kind === 'esc' ? L.LE : L.LS, op = kind === 'esc' ? L.escOpen : L.stairOpen;
     const atS1 = (kind === 'esc') === (side > 0);                 // 하선: 에스컬레이터 s1 끝 / 상선: 점대칭
-    const dir = atS1 ? 1 : -1, e = atS1 ? st.s1 - LINK_END - len : st.s0 + LINK_END + len;
+    // 출입구: 지하역 = 승강장 중앙 쪽(위층으로 올라감) / 고가역 = 승강장 끝벽 쪽(중앙 쪽으로 내려감)
+    //   → 어느 역이든 내려가는 사람은 끝벽 쪽에서 중앙 쪽으로 이동
+    const dir = (atS1 ? 1 : -1) * (under ? 1 : -1);
+    const e = under ? (atS1 ? st.s1 - LINK_END - len : st.s0 + LINK_END + len) : (atS1 ? st.s1 - LINK_END : st.s0 + LINK_END);
     const o0 = e + dir * op[0], o1 = e + dir * op[1];
     out.push({ kind, side, e, dir, len, open: [Math.min(o0, o1), Math.max(o0, o1)] });
   }
