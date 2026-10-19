@@ -5150,6 +5150,9 @@
       background: #000000 !important;
       box-sizing: border-box !important;
     }
+    /* DU / ADU 장치 고장: 화면 전체 꺼짐 (검은 화면) */
+    .screen-off .mmi-screen * { visibility: hidden !important; }
+    .screen-off .mmi-screen { background: #000 !important; }
     .sim-mmi-box .mmi-screen {
       flex: 1 !important;
       width: 100% !important;
@@ -6994,6 +6997,14 @@
               <span>🚨 MR 공기누설 심화 (4.0 bar 미만)</span>
               <span id="fault-lbl-mr-severe" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
             </button>
+            <button type="button" id="btn-fault-du" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('DU_FAIL')">
+              <span>🚨 DU 고장 (화면 꺼짐)</span>
+              <span id="fault-lbl-du" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
+            </button>
+            <button type="button" id="btn-fault-adu" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('ADU_FAIL')">
+              <span>🚨 ADU 고장 (화면 꺼짐)</span>
+              <span id="fault-lbl-adu" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
+            </button>
             <button type="button" id="btn-occ-radio-test" class="occ-fault-toggle-btn occ-radio-test-btn" onclick="playOccRadioTest()" title="관제 음성 무전 테스트 방송 송출 (클릭 시 TTS 및 무전 효과음 재생)">
               <span>🎙️ 관제 음성무전 테스트</span>
               <span id="fault-lbl-radio-test" class="occ-fault-sub">선로 확인 지령 (TTS)</span>
@@ -8124,6 +8135,50 @@ const DEFAULT_SCENARIOS = [
         targetName: "MC2 CU 스위치",
         expectedState: "ON",
         instruction: "MC2의 CCUCB, CCUDOCB, CCUDICB를 모두 다시 투입(ON)하여 TCMS 복구를 확인하십시오."
+      }
+    ]
+  },
+  {
+    id: "SCN_DU_FAIL",
+    title: "5. DU 고장(화면 꺼짐) 시 DUCB 차단 후 복귀",
+    description: "DU 화면이 아무것도 표시되지 않는 고장입니다. 해당차(취급 운전실) 차단기반의 DUCB를 차단했다가 복귀하여 DU 화면을 복구합니다.",
+    faults: ["DU_FAIL"],
+    steps: [
+      {
+        step: 1,
+        target: "CB_DUCB@CAB",
+        targetName: "해당차 DUCB",
+        expectedState: "OFF",
+        instruction: "DU 화면이 꺼진 것을 확인하고, 차단기반에서 해당차 DUCB를 차단(OFF)하십시오."
+      },
+      {
+        step: 2,
+        target: "CB_DUCB@CAB",
+        targetName: "해당차 DUCB",
+        expectedState: "ON",
+        instruction: "해당차 DUCB를 다시 투입(ON)하여 DU 화면 복구를 확인하십시오."
+      }
+    ]
+  },
+  {
+    id: "SCN_ADU_FAIL",
+    title: "6. ADU 고장(화면 꺼짐) 시 ADUCB 차단 후 복귀",
+    description: "ADU 화면이 아무것도 표시되지 않는 고장입니다. 해당차(취급 운전실) 차단기반의 ADUCB를 차단했다가 복귀하여 ADU 화면을 복구합니다.",
+    faults: ["ADU_FAIL"],
+    steps: [
+      {
+        step: 1,
+        target: "CB_ADUCB@CAB",
+        targetName: "해당차 ADUCB",
+        expectedState: "OFF",
+        instruction: "ADU 화면이 꺼진 것을 확인하고, 차단기반에서 해당차 ADUCB를 차단(OFF)하십시오."
+      },
+      {
+        step: 2,
+        target: "CB_ADUCB@CAB",
+        targetName: "해당차 ADUCB",
+        expectedState: "ON",
+        instruction: "해당차 ADUCB를 다시 투입(ON)하여 ADU 화면 복구를 확인하십시오."
       }
     ]
   }
@@ -10553,7 +10608,9 @@ const TrainRemote = {
     TCMS_FAIL: false,
     PARK_REL_FAIL: false,
     MR_LEAK: false,
-    MR_LEAK_SEVERE: false
+    MR_LEAK_SEVERE: false,
+    DU_FAIL: false,
+    ADU_FAIL: false
   },
   _lastPhysicsBroadcast: 0,
   logCount: 0,
@@ -11029,6 +11086,13 @@ const TrainRemote = {
       if (btnP) btnP.classList.toggle('active', isAct);
       if (lblP) lblP.innerText = isAct ? '🚨 주차제동 완해 불능 인가 중' : '정상 (클릭 시 고장 인가)';
       this.addLog(`[비상 고장 인가] 주차제동 완해 불능 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
+    } else if (faultType === 'DU_FAIL' || faultType === 'ADU_FAIL') {
+      const k = faultType === 'DU_FAIL' ? 'du' : 'adu';
+      const btnS = document.getElementById('btn-fault-' + k);
+      const lblS = document.getElementById('fault-lbl-' + k);
+      if (btnS) btnS.classList.toggle('active', isAct);
+      if (lblS) lblS.innerText = isAct ? `🚨 ${k.toUpperCase()} 고장 인가 중` : '정상 (클릭 시 고장 인가)';
+      this.addLog(`[비상 고장 인가] ${k.toUpperCase()} 고장 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
     } else if (faultType === 'MR_LEAK' || faultType === 'MR_LEAK_SEVERE') {
       const sev = faultType === 'MR_LEAK_SEVERE';
       const btnM = document.getElementById(sev ? 'btn-fault-mr-severe' : 'btn-fault-mr');
@@ -11040,7 +11104,8 @@ const TrainRemote = {
 
     const anyActive = this.activeFaults.DOOR_LOCK_FAIL || this.activeFaults.EB_STUCK ||
       this.activeFaults.VOBC_FAIL || this.activeFaults.VOBC_COMM || this.activeFaults.TCMS_FAIL || this.activeFaults.PARK_REL_FAIL ||
-      this.activeFaults.MR_LEAK || this.activeFaults.MR_LEAK_SEVERE;
+      this.activeFaults.MR_LEAK || this.activeFaults.MR_LEAK_SEVERE ||
+      this.activeFaults.DU_FAIL || this.activeFaults.ADU_FAIL;
     if (statusTag) {
       statusTag.innerText = anyActive ? '⚠️ 비상 고장 주입 운용 중' : '정상 운행 중';
       statusTag.style.color = anyActive ? '#f87171' : '#94a3b8';
@@ -11106,6 +11171,11 @@ const TrainRemote = {
       if (active) {
         showTemporaryHudFeedback('🚨 [차량 통신] TCMS 통신 이상 발생 (ADU 적색)', true);
       }
+    } else if (faultType === 'DU_FAIL' || faultType === 'ADU_FAIL') {
+      (window.__OCC_FAULTS = window.__OCC_FAULTS || {})[faultType] = active;
+      window['__FAULT_' + faultType] = active;
+      screenFaultCbOff[faultType] = false;
+      applyScreenFaults();
     } else if (faultType === 'MR_LEAK' || faultType === 'MR_LEAK_SEVERE') {
       const f = (window.__OCC_FAULTS = window.__OCC_FAULTS || {});
       f[faultType] = active;
@@ -13351,8 +13421,9 @@ function evaluateStepAction(compId, state) {
   if (!currentScenario || !currentScenario.steps[currentStepIndex]) return;
   const targetStep = currentScenario.steps[currentStepIndex];
 
-  // 정답 조작 판정
-  const targets = [targetStep.target].concat(targetStep.altTargets || []);
+  // 정답 조작 판정 ('...@CAB' = 해당차(취급 운전실) 차단기: MC1이면 그대로, MC2면 '_MC2')
+  const resolve = t => (typeof t === 'string' && t.endsWith('@CAB')) ? cabCbId(t.slice(0, -4)) : t;
+  const targets = [targetStep.target].concat(targetStep.altTargets || []).map(resolve);
   const states = targetStep.expectedStates || [targetStep.expectedState];
   const isMatch = targets.includes(compId) &&
     (states.includes(state) ||
@@ -13880,6 +13951,10 @@ function applyScenario(sc) {
   tcmsCuState = { MC1: '', MC2: '' };
   window.__DU_EVT_MSG = null;
   if (window.__FAULT_TCMS_FAIL) duEventMsg('MF', 'MC1 CU 통신고장');
+  window.__FAULT_DU_FAIL = scFaults.includes('DU_FAIL') || !!occFaults.DU_FAIL;
+  window.__FAULT_ADU_FAIL = scFaults.includes('ADU_FAIL') || !!occFaults.ADU_FAIL;
+  screenFaultCbOff = {};
+  applyScreenFaults();
   // 차단기 상태 초기화 (SPARE = 차단, 나머지 = 투입)
   registerBreakers();
   Object.keys(COMPONENT_REGISTRY).forEach(id => {
@@ -14210,6 +14285,31 @@ function checkTcmsCuReset() {
   }
 }
 
+/* DU / ADU 고장: 해당차(취급 운전실) DUCB / ADUCB를 차단했다가 다시 투입하면 화면 복구 */
+const SCREEN_FAULTS = { DU_FAIL: { cb: 'CB_DUCB', name: 'DU' }, ADU_FAIL: { cb: 'CB_ADUCB', name: 'ADU' } };
+const cabCbId = base => base + (cabName() === 'MC2' ? '_MC2' : '');
+let screenFaultCbOff = {};
+function checkScreenFaultReset(id, state) {
+  Object.keys(SCREEN_FAULTS).forEach(f => {
+    if (!window['__FAULT_' + f]) { screenFaultCbOff[f] = false; return; }
+    if (id !== cabCbId(SCREEN_FAULTS[f].cb)) return;
+    if (state === 'OFF') screenFaultCbOff[f] = true;
+    else if (screenFaultCbOff[f]) {
+      screenFaultCbOff[f] = false;
+      window['__FAULT_' + f] = false;
+      if (window.__OCC_FAULTS) window.__OCC_FAULTS[f] = false;
+      applyScreenFaults();
+      showTemporaryHudFeedback(`✅ [${SCREEN_FAULTS[f].name} 복구] ${cabName()} ${SCREEN_FAULTS[f].cb.slice(3)} 재투입으로 화면이 복구되었습니다`, false);
+    }
+  });
+}
+function applyScreenFaults() {
+  const du = document.getElementById('sim-du-box');
+  const adu = document.getElementById('sim-adu-box');
+  if (du) du.classList.toggle('screen-off', !!window.__FAULT_DU_FAIL);
+  if (adu) adu.classList.toggle('screen-off', !!window.__FAULT_ADU_FAIL);
+}
+
 function toggleBreaker(id) {
   const comp = COMPONENT_REGISTRY[id];
   if (!comp) return;
@@ -14218,6 +14318,7 @@ function toggleBreaker(id) {
   try { sound.playBreakerToggle(comp.state === 'ON'); triggerHaptic(25); } catch (e) { }
   showTemporaryHudFeedback(`🔌 [${comp.name}] ${comp.state === 'ON' ? '투입 (ON)' : '차단 (OFF)'}`, comp.state !== 'ON');
   checkTcmsCuReset();
+  checkScreenFaultReset(id, comp.state);
   if (currentMode === 'REC') promptRecordStep(id, comp.name, comp.state);
   else evaluateStepAction(id, comp.state);
   broadcastStudentState(id, comp.state);
