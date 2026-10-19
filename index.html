@@ -9779,48 +9779,13 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const log2 = document.getElementById('adu2-log-2');
     const log3 = document.getElementById('adu2-log-3');
     const log4 = document.getElementById('adu2-log-4');
-    if (isRmEbActive) {
-      if (log1) log1.innerText = `${hh}:${mm}:${ss} RM OVERSPEED EB`;
-      if (log2) log2.innerText = `${hh}:${mm}:${ss} TRAIN EMERGENCY STOP`;
-    } else if (driveMode === 'RM' && rmOverspeedTimer > 0) {
-      if (log1) log1.innerText = `${hh}:${mm}:${ss} OVERSPEED WARN (${(5.0 - rmOverspeedTimer).toFixed(1)}s)`;
-      if (log2) log2.innerText = `${hh}:${mm}:${ss} SPEED > 15 KM/H`;
-    } else if (!isDoorInterlockCleared) {
-      if (log1) log1.innerText = `${hh}:${mm}:${ss} TRAIN DOOR OPEN`;
-      if (log2) log2.innerText = `${hh}:${mm}:${ss} TRACTION INHIBITED`;
-    } else if (window.__MR_LOW) {
-      if (log1) log1.innerText = `${hh}:${mm}:${ss} MR PRESSURE LOW`;
-      if (log2) log2.innerText = `${hh}:${mm}:${ss} ${isMrLowEbActive() ? 'EMERGENCY BRAKE' : (isMrTractionCut() ? 'TRACTION INHIBITED' : 'MR BYPASS')}`;
-    } else if (isParkBrakeTractionCut()) {
-      if (log1) log1.innerText = `${hh}:${mm}:${ss} PARKING BRAKE APPLIED`;
-      if (log2) log2.innerText = `${hh}:${mm}:${ss} TRACTION INHIBITED`;
-    } else {
-      // 특이사항 없음: 시간만 표시
-      if (log1) log1.innerText = `${hh}:${mm}:${ss}`;
-      if (log2) log2.innerText = `${hh}:${mm}:${ss}`;
-    }
+    // 메시지는 요청된 것만 현시 (현재: POSITION LOST). 특이사항이 없으면 시간만 표시
+    if (log1) log1.innerText = `${hh}:${mm}:${ss}`;
+    if (log2) log2.innerText = `${hh}:${mm}:${ss}`;
     if (log3) log3.innerText = `${hh}:${mm}:${ss}`;
-
     if (log4) {
-      if (isTcmsFail) {
-        log4.innerText = `${hh}:${mm}:${ss} TCMS LINK FAIL`;
-        log4.style.color = '#ff4444';
-      } else if (isVobc1Fail || isVobc2Fail) {
-        log4.innerText = `${hh}:${mm}:${ss} VOBC FAULT`;
-        log4.style.color = '#ffaa33';
-      } else if (isVobc1Comm || isVobc2Comm) {
-        log4.innerText = `${hh}:${mm}:${ss} VOBC COMM LOSS`;
-        log4.style.color = '#ffaa33';
-      } else if (window.__POS_LOST) {
-        log4.innerText = `${window.__POS_LOST.time} POSITION LOST`;
-        log4.style.color = '#ffffff';
-      } else if (isFmMode) {
-        log4.innerText = `${hh}:${mm}:${ss} VOBC PWR CUT`;
-        log4.style.color = '#ff8888';
-      } else {
-        log4.innerText = `${hh}:${mm}:${ss}`;
-        log4.style.color = '#ffffff';
-      }
+      log4.innerText = window.__POS_LOST ? `${window.__POS_LOST.time} POSITION LOST` : `${hh}:${mm}:${ss}`;
+      log4.style.color = '#ffffff';
     }
 
     // Draw ADU Speedo
