@@ -18,6 +18,7 @@
 > | `js/route.js` | 노선 데이터 (역간거리, 곡선·설계속도, 구배, 건넘선, 지상/지하 구간) |
 > | `js/cabview3d.js` | 3D 전면 전망 (Three.js r160, 열차 주변만 생성) |
 > | `view-demo.html` | 3D 전면 전망 단독 시험 페이지 |
+> | `route-editor.html` | 노선 편집기 (곡선·구배·역·건넘선 표 편집, 평면·종단·제한속도 그래프, `route.js` 코드 내보내기). 편집 내용은 브라우저에만 저장되고 `?route=custom`으로 미리보기 |
 > | `old/index.html` | 이전 버전 (단일 파일) |
 > | `old/gemini.html` | 좌측 패널 단독 변형본 (보관용) |
 >
