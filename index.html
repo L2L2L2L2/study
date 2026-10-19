@@ -8227,10 +8227,23 @@ let currentGaugeBC = BC_DEFAULT_BAR;
 let currentGaugeMR = 9.0;
 let emgStopRotation = 0; // 비상제동체결 버튼 회전 각도 (0~360도)
 
+// OP3 구원운전 스위치 '비상' + RM·FM 모드: 역행 P1~P4는 모두 P4, 제동 B1~B7은 모두 B7으로 동작
+function isRescueEmergencyDrive() {
+  const mode = COMPONENT_REGISTRY.SW_DRIVE_MODE ? COMPONENT_REGISTRY.SW_DRIVE_MODE.state : 'OFF';
+  return COMPONENT_REGISTRY.SW_RESCUE_DRIVE && COMPONENT_REGISTRY.SW_RESCUE_DRIVE.state === 'EMERGENCY' &&
+         (mode === 'RM' || mode === 'FM');
+}
+function effectiveNotch(notch) {
+  if (!notch || !isRescueEmergencyDrive()) return notch;
+  if (/^P[1-4]$/.test(notch)) return 'P4';
+  if (/^B[1-7]$/.test(notch)) return 'B7';
+  return notch;
+}
+
 // 현재 일반 운전/제동 조건에 따른 정상 제동통 압력 계산
 function getNormalBrakePressure() {
   const masconComp = COMPONENT_REGISTRY['SW_MASCON'];
-  const notch = masconComp ? (masconComp.notch || masconComp.state || 'N') : 'N';
+  const notch = effectiveNotch(masconComp ? (masconComp.notch || masconComp.state || 'N') : 'N');
   if (notch === 'EB') return 4.0;
   if (notch === 'B1') return 2.3;
   if (notch === 'B2') return 2.7;
@@ -9834,7 +9847,8 @@ function updateTrainPhysics() {
 
   const driveMode = cvCompState('SW_DRIVE_MODE', 'OFF');
   const isUnmannedActive = (cvCompState('SW_WIRELESS_MODE', 'OFF') === 'LIT') && (driveMode === 'OFF');
-  const notch = cvNotch();
+  const leverNotch = cvNotch();                 // 화면 표시용 마스콘 실제 위치
+  const notch = effectiveNotch(leverNotch);     // 동작용 노치 (구원운전 비상 시 P4/B7)
   const revNotch = cvCompState('SW_REVERSER', 'N');
   const isKeyOn = cvCompState('SW_MASTER_KEY', 'OFF') === 'ON';
   const isEmgActive = (cvCompState('SW_EMG_STOP', 'RELEASED') === 'LATCHED') &&
@@ -9847,7 +9861,8 @@ function updateTrainPhysics() {
   const isParkCut = isParkBrakeTractionCut() || isMrTractionCut();
   // 보조 비상제동: MR 6.0 bar 미만(비상제동완해 전) 또는 VOBC1·VOBC2 모두 고장
   const isVobcAllDownEb = updateVobcAllDown();   // 매 프레임 판정 (복귀 시 POSITION LOST 처리 포함)
-  const isAuxEb = isMrLowEbActive() || isVobcAllDownEb;
+  const isCbEb = updateEbLoopCbEb();             // CACB·EBLCB 차단 → 비상제동 루프 개방
+  const isAuxEb = isMrLowEbActive() || isVobcAllDownEb || isCbEb;
 
   // [RM 모드 과속 감시 및 비상제동(EB) 인터록]
   // FM: 제한 없음 (최대 80km/h까지 주행 가능)
@@ -9884,6 +9899,13 @@ function updateTrainPhysics() {
     updateGaugeUI(getNormalBrakePressure());
   }
   window.__MR_EB_APPLIED = isAuxEb;
+
+  // 구원운전 비상 전환(스위치·모드 변경) 시 상용제동 노치의 BC 압력을 다시 맞춤
+  const rescueEmg = isRescueEmergencyDrive();
+  if (rescueEmg !== !!window.__RESCUE_EMG_LAST) {
+    window.__RESCUE_EMG_LAST = rescueEmg;
+    if (/^B[1-7]$/.test(leverNotch) && !isAuxEb && !isEmgActive && !isRmEbActive) updateGaugeUI(getNormalBrakePressure());
+  }
 
   // [HCR 비상제동] 운전모드 OFF(무인운전 아님) → 비상제동(EB) + 정차제동(HB), BC 4.0 bar
   //  OFF → RM 등 수동모드: EB 완해(VOBC RESET), HB는 유지(2.0 bar)
@@ -10059,17 +10081,20 @@ function updateTrainPhysics() {
   }
   cvUpdateRollNoise(trainSpeed);
 
-  updateCabOSD(notch, revNotch, isUnmannedActive, driveMode);
+  updateCabOSD(leverNotch, revNotch, isUnmannedActive, driveMode);
   // DU·ADU 화면은 초당 20회만 갱신 (매 프레임 갱신은 프레임당 수 ms를 써서 3D 화면이 느려짐)
-  if (now - lastDuAduUpdate >= 50) { lastDuAduUpdate = now; updateDuAduDisplay(driveMode, notch, now); }
+  if (now - lastDuAduUpdate >= 50) { lastDuAduUpdate = now; updateDuAduDisplay(driveMode, leverNotch, now); }
 
   // 원격 관제 실시간 텔레메트리 전송 (Supabase 트래픽 최적화: 적응형 브로드캐스트)
   if (typeof TrainRemote !== 'undefined' && TrainRemote.isConnected && TrainRemote.role === 'STUDENT') {
     const isMoving = trainSpeed > 0.1;
     const minInterval = isMoving ? 350 : 1500;
     const currentBCVal = cvBC();
-    const isEmgVal = isEmgActive || (notch === 'EB');
+    // 실제 비상제동 상태 (안전루프·RM 과속·HCR·MR 저압·VOBC 전체 고장 포함)
+    const isEmgVal = isEmgActive || (notch === 'EB') || isRmEbActive || hcrEb || isAuxEb || !!(window.__MR_CRIT && window.__PARK_BRAKE_SET);
     const keyVal = isKeyOn ? 'ON' : 'OFF';
+    const parkVal = window.__PARK_BRAKE_SET === true;
+    const isPowering = notch.charAt(0) === 'P' && canManualTraction;
 
     const last = TrainRemote._lastTelemetry || {};
     const stateChanged = (
@@ -10079,7 +10104,8 @@ function updateTrainPhysics() {
       last.isEmg !== isEmgVal ||
       last.masterKey !== keyVal ||
       (last.isMoving !== undefined && last.isMoving !== isMoving) ||
-      (last.bc !== undefined && Math.abs(last.bc - currentBCVal) > 0.3)
+      (last.bc !== undefined && Math.abs(last.bc - currentBCVal) > 0.3) ||
+      last.doorOpen !== isDoorOpen || last.parkBrake !== parkVal || last.isPowering !== isPowering
     );
 
     if (stateChanged || !TrainRemote._lastPhysicsBroadcast || (now - TrainRemote._lastPhysicsBroadcast >= minInterval)) {
@@ -10091,7 +10117,10 @@ function updateTrainPhysics() {
         isEmg: isEmgVal,
         masterKey: keyVal,
         isMoving: isMoving,
-        bc: currentBCVal
+        bc: currentBCVal,
+        doorOpen: isDoorOpen,
+        parkBrake: parkVal,
+        isPowering: isPowering
       };
       TrainRemote.sendStudentAction({
         type: 'TELEMETRY',
@@ -10103,6 +10132,9 @@ function updateTrainPhysics() {
         masterKey: keyVal,
         isUnmanned: isUnmannedActive,
         isEmg: isEmgVal,
+        isPowering: isPowering,
+        doorOpen: isDoorOpen,
+        parkBrake: parkVal,
         bcPressure: currentBCVal,
         mrPressure: (typeof currentGaugeMR !== 'undefined') ? currentGaugeMR : 9.0
       });
@@ -10969,6 +11001,20 @@ const TrainRemote = {
       const nameEl = document.getElementById('inst-mon-name');
       if (nameEl) nameEl.innerText = msg.studentName || '연결됨';
       this.addLog(`[학생 접속] ${msg.studentName} 학생이 훈련에 참가하였습니다.`, 'green');
+      // 학생이 나중에 접속(또는 새로고침)해도 이미 인가 중인 고장을 그대로 받도록 다시 전송
+      Object.keys(this.activeFaults).forEach(f => {
+        if (this.activeFaults[f]) this.sendInstructorCommand({ type: 'INJECT_FAULT', fault: f, active: true });
+      });
+      return;
+    }
+
+    if (msg.type === 'FAULT_CLEARED') {
+      // 학생이 차단기 리셋 등으로 고장을 복구함 → 관제 버튼도 정상으로 되돌림
+      if (this.activeFaults[msg.fault]) {
+        this.activeFaults[msg.fault] = false;
+        this.updateFaultButtonUI(msg.fault, false);
+        this.addLog(`[고장 복구] ${msg.studentName || '학생'} 조치로 ${this.faultLabel(msg.fault)} 복구`, 'green');
+      }
       return;
     }
 
@@ -11034,6 +11080,9 @@ const TrainRemote = {
       if (isEmg) {
         bcStatus.innerText = `🚨 비상제동 체결 (${bc} bar)`;
         bcStatus.style.color = '#ef4444';
+      } else if (data.parkBrake) {
+        bcStatus.innerText = `🅿️ 주차제동 체결 (${bc} bar)`;
+        bcStatus.style.color = '#f59e0b';
       } else if (isServiceBrake) {
         bcStatus.innerText = `🛑 상용제동 ${notch}단 (${bc} bar)`;
         bcStatus.style.color = '#f59e0b';
@@ -11069,9 +11118,16 @@ const TrainRemote = {
     const lampLead = document.getElementById('occ-lamp-lead');
     const lampAto = document.getElementById('occ-lamp-ato');
 
-    const isBraking = isServiceBrake || isEmg || parseFloat(bc) > 0.5;
+    const isBraking = isServiceBrake || isEmg || !!data.parkBrake || parseFloat(bc) > 0.5;
     if (lampBrake) lampBrake.classList.toggle('lit-red', isBraking);
-    if (lampPower) lampPower.classList.toggle('lit-green', notch.startsWith('P'));
+    // 역행 램프: 마스콘이 P여도 주차제동·OP5 스위치 등으로 역행회로가 차단되면 소등
+    const powering = (typeof data.isPowering === 'boolean') ? data.isPowering : notch.startsWith('P');
+    if (lampPower) lampPower.classList.toggle('lit-green', powering);
+    if (lampDoor && typeof data.doorOpen === 'boolean') {
+      lampDoor.classList.toggle('blink-amber', data.doorOpen);
+      lampDoor.classList.toggle('lit-green', !data.doorOpen);
+      lampDoor.innerText = data.doorOpen ? '🚪 출입문 열림 (점멸)' : '🚪 출입문 닫힘';
+    }
     if (lampEmg) lampEmg.classList.toggle('lit-red', isEmg);
     const isOccLead = (data.driveMode === 'RM' || data.driveMode === 'FM') &&
                       (data.masterKey === 'ON') &&
@@ -11088,67 +11144,41 @@ const TrainRemote = {
     this.activeFaults[faultType] = !this.activeFaults[faultType];
     const isAct = this.activeFaults[faultType];
 
-    const statusTag = document.getElementById('occ-fault-status-tag');
-
-    if (faultType === 'VOBC_FAIL') {
-      const btnV = document.getElementById('btn-fault-vobc');
-      const lblV = document.getElementById('fault-lbl-vobc');
-      if (btnV) btnV.classList.toggle('active', isAct);
-      if (lblV) lblV.innerText = isAct ? '🚨 VOBC 고장 인가 중' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] VOBC 장치 고장 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    } else if (faultType === 'VOBC_COMM') {
-      const btnVc = document.getElementById('btn-fault-vobc-comm');
-      const lblVc = document.getElementById('fault-lbl-vobc-comm');
-      if (btnVc) btnVc.classList.toggle('active', isAct);
-      if (lblVc) lblVc.innerText = isAct ? '⚠️ VOBC 통신 두절 중' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] VOBC 통신 두절 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'amber' : 'green');
-    } else if (faultType === 'TCMS_FAIL') {
-      const btnT = document.getElementById('btn-fault-tcms');
-      const lblT = document.getElementById('fault-lbl-tcms');
-      if (btnT) btnT.classList.toggle('active', isAct);
-      if (lblT) lblT.innerText = isAct ? '🚨 TCMS 통신이상 인가 중' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] TCMS 통신 이상 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    } else if (faultType === 'PARK_REL_FAIL') {
-      const btnP = document.getElementById('btn-fault-park');
-      const lblP = document.getElementById('fault-lbl-park');
-      if (btnP) btnP.classList.toggle('active', isAct);
-      if (lblP) lblP.innerText = isAct ? '🚨 주차제동 완해 불능 인가 중' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] 주차제동 완해 불능 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    } else if (faultType === 'VOBC1_FAIL') {
-      const btnV1 = document.getElementById('btn-fault-vobc1');
-      const lblV1 = document.getElementById('fault-lbl-vobc1');
-      if (btnV1) btnV1.classList.toggle('active', isAct);
-      if (lblV1) lblV1.innerText = isAct ? '🚨 VOBC1 고장 인가 중' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] VOBC1 고장 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    } else if (faultType === 'DU_FAIL' || faultType === 'ADU_FAIL') {
-      const k = faultType === 'DU_FAIL' ? 'du' : 'adu';
-      const btnS = document.getElementById('btn-fault-' + k);
-      const lblS = document.getElementById('fault-lbl-' + k);
-      if (btnS) btnS.classList.toggle('active', isAct);
-      if (lblS) lblS.innerText = isAct ? `🚨 ${k.toUpperCase()} 고장 인가 중` : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] ${k.toUpperCase()} 고장 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    } else if (faultType === 'MR_LEAK' || faultType === 'MR_LEAK_SEVERE') {
-      const sev = faultType === 'MR_LEAK_SEVERE';
-      const btnM = document.getElementById(sev ? 'btn-fault-mr-severe' : 'btn-fault-mr');
-      const lblM = document.getElementById(sev ? 'fault-lbl-mr-severe' : 'fault-lbl-mr');
-      if (btnM) btnM.classList.toggle('active', isAct);
-      if (lblM) lblM.innerText = isAct ? '🚨 MR 공기누설 인가 중' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] MR 공기누설${sev ? ' 심화' : ''} ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    }
-
-    const anyActive = this.activeFaults.VOBC_FAIL || this.activeFaults.VOBC_COMM || this.activeFaults.TCMS_FAIL || this.activeFaults.PARK_REL_FAIL ||
-      this.activeFaults.MR_LEAK || this.activeFaults.MR_LEAK_SEVERE ||
-      this.activeFaults.DU_FAIL || this.activeFaults.ADU_FAIL || this.activeFaults.VOBC1_FAIL;
-    if (statusTag) {
-      statusTag.innerText = anyActive ? '⚠️ 비상 고장 주입 운용 중' : '정상 운행 중';
-      statusTag.style.color = anyActive ? '#f87171' : '#94a3b8';
-    }
+    this.updateFaultButtonUI(faultType, isAct);
+    this.addLog(`[비상 고장 인가] ${this.faultLabel(faultType)} ${isAct ? '발생' : '해제'} 전송`, isAct ? (faultType === 'VOBC_COMM' ? 'amber' : 'red') : 'green');
 
     this.sendInstructorCommand({
       type: 'INJECT_FAULT',
       fault: faultType,
       active: isAct
     });
+  },
+
+  faultLabel(faultType) {
+    return ({
+      VOBC_FAIL: 'VOBC 장치 고장', VOBC_COMM: 'VOBC 통신 두절', TCMS_FAIL: 'TCMS 통신 이상',
+      PARK_REL_FAIL: '주차제동 완해 불능', MR_LEAK: 'MR 공기누설', MR_LEAK_SEVERE: 'MR 공기누설 심화',
+      DU_FAIL: 'DU 고장', ADU_FAIL: 'ADU 고장', VOBC1_FAIL: 'VOBC1 고장'
+    })[faultType] || faultType;
+  },
+
+  updateFaultButtonUI(faultType, isAct) {
+    const key = ({
+      VOBC_FAIL: 'vobc', VOBC_COMM: 'vobc-comm', TCMS_FAIL: 'tcms', PARK_REL_FAIL: 'park',
+      MR_LEAK: 'mr', MR_LEAK_SEVERE: 'mr-severe', DU_FAIL: 'du', ADU_FAIL: 'adu', VOBC1_FAIL: 'vobc1'
+    })[faultType];
+    if (!key) return;
+    const btn = document.getElementById('btn-fault-' + key);
+    const lbl = document.getElementById('fault-lbl-' + key);
+    if (btn) btn.classList.toggle('active', isAct);
+    if (lbl) lbl.innerText = isAct ? `🚨 ${this.faultLabel(faultType)} 인가 중` : '정상 (클릭 시 고장 인가)';
+
+    const anyActive = Object.values(this.activeFaults).some(Boolean);
+    const statusTag = document.getElementById('occ-fault-status-tag');
+    if (statusTag) {
+      statusTag.innerText = anyActive ? '⚠️ 비상 고장 주입 운용 중' : '정상 운행 중';
+      statusTag.style.color = anyActive ? '#f87171' : '#94a3b8';
+    }
   },
 
   applyFaultOnStudent(faultType, active) {
@@ -11217,7 +11247,8 @@ const TrainRemote = {
       message: message
     });
 
-    this.addLog(`[지령 발송] ➔ 대상 부품: ${target}${message ? ` | "${message}"` : ''}`, 'blue');
+    const tName = (COMPONENT_REGISTRY[target] && COMPONENT_REGISTRY[target].name) || target;
+    this.addLog(`[지령 발송] ➔ 대상 부품: ${tName}${message ? ` | "${message}"` : ''}`, 'blue');
     if (msgInput) msgInput.value = '';
     triggerHaptic(20);
   },
@@ -11250,11 +11281,13 @@ const TrainRemote = {
   },
 
   showRemoteHint(target, message, instructorName) {
-    const compEl = document.getElementById(`comp-${target}`);
-    if (compEl) {
-      compEl.classList.add('hint-highlight');
-      setTimeout(() => compEl.classList.remove('hint-highlight'), 5000);
-      compEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const comp = COMPONENT_REGISTRY[target];
+    if (comp && comp.panel) switchPanelView(comp.panel);   // 대상 스위치가 있는 패널로 전환
+    const wrapEl = document.getElementById(`wrap-${target}`) || document.getElementById(`comp-${target}`);
+    if (wrapEl) {
+      wrapEl.classList.add('target-hint-pulse');
+      setTimeout(() => wrapEl.classList.remove('target-hint-pulse'), 5000);
+      wrapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     const toast = document.getElementById('vobc-result-toast');
@@ -11265,7 +11298,7 @@ const TrainRemote = {
     if (toast && title && desc) {
       if (icon) icon.innerText = '📡';
       title.innerText = `관제 지령 (${instructorName || '종합관제'})`;
-      desc.innerText = message || `지정 부품 [${target}]을(를) 확인 및 조작하십시오.`;
+      desc.innerText = message || `[${(comp && comp.name) || target}] 스위치를 확인 및 조작하십시오.`;
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 4000);
     }
@@ -12941,12 +12974,13 @@ function setMasconNotch(notch, silent = false) {
       lampApply.classList.remove('lit');
     }
 
-    // 3) 상용 제동 (B1 ~ B7): B4~B7은 4.0 bar 동일, B3은 3.0 bar, B1(2.3) / B2(2.7)
+    // 3) 상용 제동 (B1 ~ B7): B4~B7은 4.0 bar 동일, B3은 3.0 bar, B1(2.3) / B2(2.7) (구원운전 비상 시 모두 B7)
     if (notch.startsWith('B')) {
+      const bNotch = effectiveNotch(notch);
       let bcVal = 4.0;
-      if (notch === 'B1') bcVal = 2.3;
-      else if (notch === 'B2') bcVal = 2.7;
-      else if (notch === 'B3') bcVal = 3.0;
+      if (bNotch === 'B1') bcVal = 2.3;
+      else if (bNotch === 'B2') bcVal = 2.7;
+      else if (bNotch === 'B3') bcVal = 3.0;
       else if (notch === 'B4' || notch === 'B5' || notch === 'B6' || notch === 'B7') bcVal = 4.0;
 
       updateGaugeUI(bcVal);
@@ -14294,13 +14328,19 @@ function checkTcmsCuReset() {
   if (tcmsCuState.MC1 === 'DONE' && tcmsCuState.MC2 === 'DONE') {
     tcmsCuState = { MC1: '', MC2: '' };
     window.__FAULT_TCMS_FAIL = false;
-    if (window.__OCC_FAULTS) window.__OCC_FAULTS.TCMS_FAIL = false;
+    clearOccFault('TCMS_FAIL');
     window.__DU_EVT_MSG = null;
     showTemporaryHudFeedback('✅ [TCMS 복구] MC1·MC2 CU 스위치(CCUCB·CCUDOCB·CCUDICB) 재투입으로 TCMS 통신이 정상 복구되었습니다', false);
   }
 }
 
 /* DU / ADU 고장: 해당차(취급 운전실) DUCB / ADUCB를 차단했다가 다시 투입하면 화면 복구 */
+/* 학습자가 조치로 복구한 관제 인가 고장: 학습자 쪽 기록을 지우고 관제 화면 버튼도 정상으로 돌리도록 알림 */
+function clearOccFault(f) {
+  if (!window.__OCC_FAULTS || !window.__OCC_FAULTS[f]) return;
+  window.__OCC_FAULTS[f] = false;
+  if (typeof TrainRemote !== 'undefined') TrainRemote.sendStudentAction({ type: 'FAULT_CLEARED', fault: f });
+}
 const SCREEN_FAULTS = { DU_FAIL: { cb: 'CB_DUCB', name: 'DU' }, ADU_FAIL: { cb: 'CB_ADUCB', name: 'ADU' } };
 const cabCbId = base => base + (cabName() === 'MC2' ? '_MC2' : '');
 let screenFaultCbOff = {};
@@ -14312,7 +14352,7 @@ function checkScreenFaultReset(id, state) {
     else if (screenFaultCbOff[f]) {
       screenFaultCbOff[f] = false;
       window['__FAULT_' + f] = false;
-      if (window.__OCC_FAULTS) window.__OCC_FAULTS[f] = false;
+      clearOccFault(f);
       applyScreenFaults();
       showTemporaryHudFeedback(`✅ [${SCREEN_FAULTS[f].name} 복구] ${cabName()} ${SCREEN_FAULTS[f].cb.slice(3)} 재투입으로 화면이 복구되었습니다`, false);
     }
@@ -14320,6 +14360,20 @@ function checkScreenFaultReset(id, state) {
 }
 /* 차단기가 차단(OFF) 상태인지 (차단기반을 아직 안 열어 등록 전이면 투입으로 봄) */
 const cbIsOff = id => (COMPONENT_REGISTRY[id] || {}).state === 'OFF';
+/* CACB 또는 EBLCB (MC1·MC2 어느 쪽이든) 차단 → 비상제동 루프가 끊겨 비상제동 체결. 재투입하면 해소 */
+const EB_LOOP_CBS = ['CB_CACB', 'CB_EBLCB', 'CB_CACB_MC2', 'CB_EBLCB_MC2'];
+function updateEbLoopCbEb() {
+  const off = EB_LOOP_CBS.filter(cbIsOff);
+  const on = off.length > 0;
+  if (on && !window.__CB_EB) {
+    const id = off[0];
+    duEventMsg('MF', `${id.endsWith('_MC2') ? 'MC2' : 'MC1'} ${id.replace(/^CB_|_MC2$/g, '')} 차단 비상제동`);
+    showTemporaryHudFeedback(`🚨 [비상제동] ${id.replace(/^CB_|_MC2$/g, '')} 차단으로 비상제동 루프 개방`, true);
+  }
+  if (!on && window.__CB_EB && /차단 비상제동$/.test(window.__DU_EVT_MSG || '')) window.__DU_EVT_MSG = null;
+  window.__CB_EB = on;
+  return on;
+}
 /* DU / ADU 화면 꺼짐: 고장 또는 해당차 DUCB / ADUCB 차단 */
 function applyScreenFaults() {
   const du = document.getElementById('sim-du-box');
@@ -14360,7 +14414,7 @@ function checkVobc1Reset() {
   else if (vobc1CbAllOff && st.every(x => x === 'ON')) {
     vobc1CbAllOff = false;
     window.__FAULT_VOBC1_FAIL = false;
-    if (window.__OCC_FAULTS) window.__OCC_FAULTS.VOBC1_FAIL = false;
+    clearOccFault('VOBC1_FAIL');
     showTemporaryHudFeedback('✅ [VOBC1 복구] MC1 VOBCCB1·VOBCCB2·VOBCDICB 리셋으로 VOBC1이 정상 복귀되었습니다', false);
   }
 }
