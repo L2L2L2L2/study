@@ -8472,6 +8472,16 @@ function closeTrainDoors(isAuto = false) {
 /* ---------------------------------------------------------------------------
    무인운전(ATO / Driverless) 전자동 역간 운행 및 PSD 연동 제어기
 --------------------------------------------------------------------------- */
+/* 인천2호선 전동차 제원 (설계 최고 90 / 최고 운행 80 km/h, 표정속도 36.5 km/h 이상)
+   가속도 3.96 km/h/s (0~30km/h), 상용 감속 3.96, 비상 4.68 km/h/s (만차 직선 평탄)
+   중량: 공차 31.5 t/량, 만차 44.3 t/량 → 2량 편성 공차 63 t / 만차 88.6 t
+   견인·제동력은 응하중 제어로 만차까지 같은 가감속도를 내므로, 중량은 주행저항(공기저항)에만 반영 */
+const TRAIN_SPEC = {
+  accel: 3.96, vBase: 30, brakeDecel: 3.96, ebDecel: 4.68,
+  massEmptyT: 63.0, massFullT: 88.6,
+  massT: 63.0,          // 현재 편성 중량 (기본 공차)
+};
+
 const AtoDriverless = {
   state: 'CRUISING', // 'CRUISING', 'BRAKING', 'STOPPED', 'DWELLING', 'DOOR_CLOSING', 'DEPARTING', 'TERMINATED'
   targetSpeed: 0.0,
@@ -8578,7 +8588,7 @@ const AtoDriverless = {
       } else {
         this.targetSpeed = Math.max(0.0, tSpeed);
         if (speed > tSpeed) {
-          this.accelRate = -Math.min(4.2, (speed - tSpeed) * 1.5 + 0.6);
+          this.accelRate = -Math.min(TRAIN_SPEC.brakeDecel, (speed - tSpeed) * 1.5 + 0.6);
         } else {
           this.accelRate = Math.min(2.0, (tSpeed - speed) * 1.2);
         }
@@ -9618,7 +9628,7 @@ function updateTrainPhysics() {
   let target = 0.0, rate = 0.0;
 
   if (isEmgActive || notch === 'EB' || isRmEbActive || hcrEb) {
-    target = 0.0; rate = -5.0; // 비상제동 체결되어 서서히 멈춤
+    target = 0.0; rate = -TRAIN_SPEC.ebDecel; // 비상제동 4.68 km/h/s
   } else if (isUnmannedActive && window.__POS_LOST) {
     // POSITION LOST: 무인운전 램프는 점등되나 열차 위치를 몰라 자동 주행 불가 → 정차제동 유지
     target = 0.0; rate = -3.5;
@@ -9640,20 +9650,16 @@ function updateTrainPhysics() {
     }
   } else if (isManualMode && notch.charAt(0) === 'B') {
     target = 0.0;
-    if (notch === 'B1') rate = -1.2;
-    else if (notch === 'B2') rate = -2.0;
-    else if (notch === 'B3') rate = -3.0;
-    else if (notch === 'B4') rate = -4.0;
-    else if (notch === 'B5') rate = -4.8;
-    else if (notch === 'B6') rate = -5.6;
-    else rate = -6.4;
+    // 상용제동 B1~B7: 최대(B7) 3.96 km/h/s를 7단으로 균등 분할
+    rate = -TRAIN_SPEC.brakeDecel * (+notch.charAt(1) || 7) / 7;
   } else if (isManualMode && notch.charAt(0) === 'P') {
     if (canManualTraction) {
       // FM 및 RM 모두 P1~P4 당김 가능 (최대 80km/h까지, RM은 15km/h 초과 시 상기 비상제동 인터록 적용)
-      if (notch === 'P1') { target = 25.0; rate = 2.2; }
-      else if (notch === 'P2') { target = 45.0; rate = 3.6; }
-      else if (notch === 'P3') { target = 65.0; rate = 5.0; }
-      else if (notch === 'P4') { target = 80.0; rate = 6.2; }
+      // 노치별 견인력 비율 (P4 = 최대 3.96 km/h/s, 30km/h 이상은 아래 정출력 특성으로 감소)
+      if (notch === 'P1') { target = 25.0; rate = TRAIN_SPEC.accel * 0.25; }
+      else if (notch === 'P2') { target = 45.0; rate = TRAIN_SPEC.accel * 0.5; }
+      else if (notch === 'P3') { target = 65.0; rate = TRAIN_SPEC.accel * 0.75; }
+      else if (notch === 'P4') { target = 80.0; rate = TRAIN_SPEC.accel; }
     } else { 
       target = 0.0; rate = 0.0;   // 견인 불가: 타행과 같음 (주행저항·구배만)
     }
@@ -9661,16 +9667,20 @@ function updateTrainPhysics() {
     target = 0.0; rate = 0.0;   // 타행(N): 제동·견인 없음 → 아래 주행저항 + 구배만으로 감속
   }
 
+  /* 견인 특성: 0~30km/h 정견인력(3.96 km/h/s), 그 이상은 정출력 → 가속도 ∝ 30/v (60km/h에서 1.98) */
+  if (rate > 0) rate = Math.min(rate, TRAIN_SPEC.accel * Math.min(1, TRAIN_SPEC.vBase / Math.max(1, trainSpeed)));
+
   /* 주행저항 + 곡선저항 + 구배 (km/h/s, 회전부 관성계수 1.08 반영)
-     출발·주행저항 r = 1.65 + 0.0247v + 0.00028v² [kgf/t] (전동차 실험식, 지하 단선 터널은 공기저항 1.6배)
+     기계저항 1.65 + 0.0247v [kgf/t] (전동차 실험식)
+     공기저항 ½ρ·CdA·v² 를 편성 중량으로 나눔 (CdA ≈ 8 m²: 폭 2.65m 2량 단편성) → 0.0378v²/M [kgf/t], 지하 단선 터널 1.6배
      곡선저항 600/R [kgf/t], 구배 1‰ = 1 kgf/t.  1 kgf/t = 0.00981 m/s² = 0.0327 km/h/s (관성계수 포함)
-     예) 평지 60km/h 타행: 약 0.14 km/h/s (10초에 1.4km/h), 터널 0.16, 30‰ 상구배는 여기에 약 1.0 km/h/s 추가 */
+     예) 공차 63t 평지 60km/h 타행: 약 0.17 km/h/s, 터널 0.21, 30‰ 상구배는 여기에 약 1.0 km/h/s 추가 */
   const KGF_T = 0.00981 * 3.6 / 1.08;
   const vKmh = trainSpeed;
   const inTunnel = IC2.isUnder(IC2.zc(IC2.P.toS(trainDistance)));
   const curvR = Math.abs(cvCurv(trainDistance));
   const resKgf = vKmh > 0.05
-    ? 1.65 + 0.0247 * vKmh + 0.00028 * vKmh * vKmh * (inTunnel ? 1.6 : 1.0) + 600 * curvR
+    ? 1.65 + 0.0247 * vKmh + (0.0378 / TRAIN_SPEC.massT) * vKmh * vKmh * (inTunnel ? 1.6 : 1.0) + 600 * curvR
     : 0;
   const gradeAcc = -cvState.slope * 1000 * KGF_T - resKgf * KGF_T;
 
@@ -9687,8 +9697,8 @@ function updateTrainPhysics() {
       trainSpeed = Math.max(0.0, trainSpeed + rate * dt);
       if (trainSpeed <= 0.05) trainSpeed = 0.0;
     } else if (isManualMode && notch.charAt(0) === 'P') {
-      // 감단(P4->P1 등) 시 하위 목표 속도까지 안전 감속
-      trainSpeed = Math.max(target, trainSpeed - 2.2 * dt);
+      // 노치 속도 상한 초과: 견인 차단 → 타행과 같이 주행저항·구배만 (하구배면 계속 가속될 수 있음)
+      trainSpeed = trainSpeed + gradeAcc * dt;
     } else if (notch.charAt(0) === 'B' || isUnmannedActive) {
       // 상용 제동 체결 상태: 제동력 + 구배 저항 반영
       trainSpeed = Math.max(target, trainSpeed + (rate + gradeAcc) * dt);
