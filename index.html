@@ -9503,7 +9503,8 @@ function updateDuAduDisplay(driveMode, notch, now) {
     if (bc2b) bc2b.innerText = bcStr;
 
     // 9. VOBC Signaling Status & TCMS Status
-    const isTcmsFail = !!window.__FAULT_TCMS_FAIL;
+    applyScreenFaults();
+    const isTcmsFail = !!window.__FAULT_TCMS_FAIL || isTcmsCuCbOff();   // 고장 또는 CU 스위치 차단
     // TCMS 통신고장: DU 출입문·기기 정보(회색/파랑)를 노란 바탕 검은 글씨로
     const duWrap = document.querySelector('.du2-tcms-wrapper');
     if (duWrap) duWrap.classList.toggle('tcms-fail', isTcmsFail);
@@ -9523,8 +9524,9 @@ function updateDuAduDisplay(driveMode, notch, now) {
       }
     }
 
-    const isVobc1Fail = !!window.__FAULT_VOBC_FAIL || !!window.__FAULT_VOBC1_FAIL;
-    const isVobc2Fail = !!window.__FAULT_VOBC_FAIL || !!window.__FAULT_VOBC2_FAIL;
+    const isVobc1CbOff = isVobcCbOff(1), isVobc2CbOff = isVobcCbOff(2);
+    const isVobc1Fail = !!window.__FAULT_VOBC_FAIL || !!window.__FAULT_VOBC1_FAIL || isVobc1CbOff;
+    const isVobc2Fail = !!window.__FAULT_VOBC_FAIL || !!window.__FAULT_VOBC2_FAIL || isVobc2CbOff;
     const isVobc1Comm = !isVobc1Fail && (!!window.__FAULT_VOBC_COMM || !!window.__FAULT_VOBC1_COMM);
     const isVobc2Comm = !isVobc2Fail && (!!window.__FAULT_VOBC_COMM || !!window.__FAULT_VOBC2_COMM);
     const isFmMode = (driveMode === 'FM');
@@ -9597,12 +9599,12 @@ function updateDuAduDisplay(driveMode, notch, now) {
       if (vobc1Adu) {
         const isFault1 = isVobc1Fail || isVobc1Comm;
         // VOBC1 단독 고장(VOBC1_FAIL): 빨간 글씨 / 그 외 고장·통신고장: 앰버
-        vobc1Adu.className = window.__FAULT_VOBC1_FAIL ? 'adu2-subsys-line red' : (isFault1 ? 'adu2-subsys-line amber' : 'adu2-subsys-line green');
+        vobc1Adu.className = (window.__FAULT_VOBC1_FAIL || isVobc1CbOff) ? 'adu2-subsys-line red' : (isFault1 ? 'adu2-subsys-line amber' : 'adu2-subsys-line green');
         vobc1Adu.innerHTML = vobc1On ? 'VOBC 1 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 1';
       }
       if (vobc2Adu) {
         const isFault2 = isVobc2Fail || isVobc2Comm;
-        vobc2Adu.className = isFault2 ? 'adu2-subsys-line amber' : 'adu2-subsys-line green';
+        vobc2Adu.className = (window.__FAULT_VOBC2_FAIL || isVobc2CbOff) ? 'adu2-subsys-line red' : (isFault2 ? 'adu2-subsys-line amber' : 'adu2-subsys-line green');
         vobc2Adu.innerHTML = vobc2On ? 'VOBC 2 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 2';
       }
     } else {
@@ -14363,12 +14365,20 @@ function checkScreenFaultReset(id, state) {
     }
   });
 }
+/* 차단기가 차단(OFF) 상태인지 (차단기반을 아직 안 열어 등록 전이면 투입으로 봄) */
+const cbIsOff = id => (COMPONENT_REGISTRY[id] || {}).state === 'OFF';
+/* DU / ADU 화면 꺼짐: 고장 또는 해당차 DUCB / ADUCB 차단 */
 function applyScreenFaults() {
   const du = document.getElementById('sim-du-box');
   const adu = document.getElementById('sim-adu-box');
-  if (du) du.classList.toggle('screen-off', !!window.__FAULT_DU_FAIL);
-  if (adu) adu.classList.toggle('screen-off', !!window.__FAULT_ADU_FAIL);
+  if (du) du.classList.toggle('screen-off', !!window.__FAULT_DU_FAIL || cbIsOff(cabCbId('CB_DUCB')));
+  if (adu) adu.classList.toggle('screen-off', !!window.__FAULT_ADU_FAIL || cbIsOff(cabCbId('CB_ADUCB')));
 }
+/* CU 스위치(CCUCB·CCUDOCB·CCUDICB) 중 하나라도 차단 → TCMS 통신고장 표시 */
+const tcmsCuOffCar = () => ['MC1', 'MC2'].find(car => TCMS_CU_IDS[car].some(cbIsOff));
+const isTcmsCuCbOff = () => !!tcmsCuOffCar();
+/* VOBC 차단기(VOBCCB1·VOBCCB2·VOBCDICB) 중 하나라도 차단 → 그 차 VOBC 고장 (MC1 = VOBC1, MC2 = VOBC2) */
+const isVobcCbOff = car => ['CB_VOBCCB1', 'CB_VOBCCB2', 'CB_VOBCDICB'].some(id => cbIsOff(id + (car === 2 ? '_MC2' : '')));
 
 /* VOBC1 고장: MC1 VOBCCB1·VOBCCB2·VOBCDICB를 모두 차단했다가 다시 투입하면 VOBC1 정상 복귀 (활성은 절체된 VOBC2 유지) */
 const VOBC1_RESET_IDS = ['CB_VOBCCB1', 'CB_VOBCCB2', 'CB_VOBCDICB'];
@@ -14394,6 +14404,12 @@ function toggleBreaker(id) {
   showTemporaryHudFeedback(`🔌 [${comp.name}] ${comp.state === 'ON' ? '투입 (ON)' : '차단 (OFF)'}`, comp.state !== 'ON');
   checkTcmsCuReset();
   checkScreenFaultReset(id, comp.state);
+  applyScreenFaults();
+  if (/^CB_CCU(CB|DOCB|DICB)(_MC2)?$/.test(id)) {
+    const car = tcmsCuOffCar();
+    if (car) duEventMsg('MF', `${car} CU 통신고장`);
+    else if (!window.__FAULT_TCMS_FAIL && /CU 통신고장$/.test(window.__DU_EVT_MSG || '')) window.__DU_EVT_MSG = null;
+  }
   checkVobc1Reset();
   if (currentMode === 'REC') promptRecordStep(id, comp.name, comp.state);
   else evaluateStepAction(id, comp.state);
