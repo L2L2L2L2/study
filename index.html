@@ -3427,15 +3427,12 @@
     .du2-logo-badge {
       background: #ffffff;
       border-radius: 3px;
-      padding: 2px 8px;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
       width: fit-content;
+      overflow: hidden;
     }
-    .du2-logo-text { display: flex; flex-direction: column; line-height: 1; }
-    .du2-logo-text .fly { font-size: 13px; font-weight: 900; font-style: italic; color: #1f6fc4; letter-spacing: -0.3px; }
-    .du2-logo-text .city { font-size: 9px; font-weight: 700; color: #5b6573; margin-top: 1px; }
+    .du2-logo-img { display: block; height: 30px; width: auto; }
     .du2-header-title {
       font-size: 24px;
       font-weight: 900;
@@ -3547,7 +3544,9 @@
       font-weight: 800;
     }
     .du2-meter-label.red {
-      color: #ff3333;
+      background: #ff0000;
+      color: #ffffff;
+      padding: 1px 3px;
     }
     .du2-val-big-green {
       color: #00ff00;
@@ -3712,6 +3711,7 @@
     .du2-leg-box.white { background: #ffffff; }
     .du2-leg-box.blue { background: #0000ff; }
     .du2-leg-box.red { background: #ff0000; }
+    .du2-leg-box.magenta { background: #ff00ff; }
     .du2-leg-box.bypass {
       background: #000000;
       color: #ffffff;
@@ -5484,13 +5484,8 @@
                 <!-- 1. 최상단 헤더 -->
                 <div class="du2-top-header">
                   <div class="du2-logo-badge">
-                    <!-- 실물 DU 로고: 곡선 엠블럼 + Fly(이탤릭) / Incheon 2단 -->
-                    <svg width="30" height="26" viewBox="0 0 30 26" fill="none" aria-hidden="true">
-                      <path d="M3 21 C6 12, 13 6, 24 5" stroke="#1f6fc4" stroke-width="3.2" stroke-linecap="round"/>
-                      <path d="M6 24 C10 17, 15 14, 22 13" stroke="#e5322d" stroke-width="3" stroke-linecap="round"/>
-                      <path d="M19 9 C22 8.5, 25 9.5, 27 11.5" stroke="#3aa655" stroke-width="2.4" stroke-linecap="round"/>
-                    </svg>
-                    <span class="du2-logo-text"><span class="fly">Fly</span><span class="city">Incheon</span></span>
+                    <!-- 실물 DU 로고 (Fly Incheon) -->
+                    <svg class="du2-logo-img" xmlns="http://www.w3.org/2000/svg" viewBox="6 14 264 92" role="img" aria-label="Fly Incheon"><path d="M0 0 C91.74 0 183.48 0 278 0 C278 41.58 278 83.16 278 126 C186.26 126 94.52 126 0 126 C0 84.42 0 42.84 0 0 Z " fill="#FDFEFE" transform="translate(0,0)"/><path d="M0 0 C4.53 1.65 6.87 4.79 9 9 C9.93 15.14 9.92 21.45 6.25 26.66 C2.48 30.71 -1.18 31.22 -6.5 31.5 C-11.05 31.37 -13.69 30.71 -16.85 27.4 C-17.23 26.94 -17.61 26.48 -18 26 C-18.62 25.3 -19.24 24.6 -19.88 23.88 C-21.81 18.94 -22.19 13.12 -20.27 8.09 C-19.31 6.56 -19.31 6.56 -17 4 C-16.34 3.22 -15.68 2.43 -15 1.62 C-10.17 -0.99 -5.36 -0.72 0 0 Z " fill="#FBFDFD" transform="translate(211,60)"/><path d="M0 0 C4.34 3.24 8.17 7.24 9.89 12.41 C10.56 19.82 10.54 26.34 5.89 32.41 C1.31 37.17 -2.23 39.5 -9 39.7 C-15.18 39.77 -20.310 39.75 -25.11 35.41 C-29.89 30.5 -32.24 25.29 -32.55 18.47 C-32.33 12.48 -30.57 8.04 -26.46 3.65 C-18.81 -3.26 -9.3 -5.27 0 0 Z M-24.11 9.41 C-26.99 14.11 -26.97 19.07 -26.11 24.41 C-24.06 28.42 -21.22 32.37 -17.11 34.41 C-11.19 35.22 -5.5 35.14 -0.48 31.65 C2.92 28.58 3.69 26 4.24 21.6 C4.53 15.61 4.2 11.45 0.38 6.71 C-4 2.87 -8.5 2.87 -14.12 2.96 C-18.69 3.65 -21.34 5.79 -24.11 9.41 Z " fill="#41AAC4" transform="translate(216.109375,56.58984375)"/><path d="M0 0 C8.58 0 17.16 0 26 0 C26 1.65 26 3.3 26 5 C19.4 5 12.8 5 6 5 C6 8.96 6 12.92 6 17 C12.27 17 18.54 17 25 17 C25 18.98 25 20.96 25 23 C18.73 23 12.46 23 6 23 C6 26.96 6 30.92 6 35 C13.26 35 20.52 35 28 35 C28 36.98 28 38.96 28 41 C18.76 41 9.52 41 0 41 C0 27.47 0 13.94 0 0 Z " fill="#4CAEC7" transform="translate(150,55)"/><path d="M0 0 C1.65 0 3.3 0 5 0 C5 5.61 5 11.22 5 17 C11.93 17 18.86 17 26 17 C26 11.39 26 5.78 26 0 C27.98 0 29.96 0 32 0 C32.03 5.68 32.04 11.36 32.05 17.03 C32.06 18.97 32.07 20.9 32.08 22.83 C32.09 25.61 32.09 28.38 32.1 31.15 C32.1 32.02 32.11 32.89 32.11 33.79 C32.11 34.59 32.11 35.39 32.11 36.21 C32.12 36.92 32.12 37.63 32.12 38.36 C32 40 32 40 31 41 C29.35 41 27.7 41 26 41 C26 34.73 26 28.46 26 22 C19.07 22 12.14 22 5 22 C5 27.94 5 33.88 5 40 C3.35 40 1.7 40 0 40 C0 26.8 0 13.6 0 0 Z " fill="#40A9C4" transform="translate(108,55)"/><path d="M0 0 C2.77 -0.27 2.77 -0.27 6 0 C7.91 1.77 7.91 1.77 9.62 4.38 C9.94 4.85 10.26 5.32 10.59 5.8 C11.32 6.88 12.03 7.97 12.74 9.07 C14.2 11.31 15.69 13.52 17.18 15.74 C20.14 20.14 23.07 24.57 26 29 C26.33 19.43 26.66 9.86 27 0 C29.31 0 31.62 0 34 0 C34 13.53 34 27.06 34 41 C26 41 26 41 24.05 39.53 C23.61 38.85 23.16 38.16 22.71 37.45 C21.93 36.29 21.93 36.29 21.13 35.11 C20.34 33.83 20.34 33.83 19.53 32.54 C18.97 31.68 18.4 30.82 17.82 29.93 C16.02 27.18 14.26 24.4 12.5 21.62 C11.29 19.76 10.07 17.9 8.85 16.04 C6.64 12.64 4.43 9.23 2.26 5.81 C1.82 5.12 1.38 4.43 0.93 3.72 C0 2 0 2 0 0 Z " fill="#2D4C8E" transform="translate(226,55)"/><path d="M0 0 C0.46 0.29 0.92 0.58 1.4 0.88 C1.4 2.2 1.4 3.52 1.4 4.88 C-0.58 5.87 -0.58 5.87 -2.6 6.88 C-2.6 6.22 -2.6 5.55 -2.6 4.88 C-8.48 3.17 -15.13 2.54 -20.6 5.5 C-24.37 9.98 -26.19 13.94 -25.96 19.79 C-25.17 24.39 -23.19 28.37 -19.8 31.58 C-17.07 33.19 -15.26 33.28 -12.1 33.25 C-11.16 33.26 -10.22 33.27 -9.26 33.27 C-6.24 32.82 -4.85 31.88 -2.6 29.88 C-0.66 30.69 -0.66 30.69 1.4 31.88 C1.73 32.87 2.06 33.85 2.4 34.88 C-3.1 39.06 -8.4 39.75 -15.15 39.38 C-20.41 38.61 -23.93 36.71 -27.6 32.88 C-31.49 27.11 -33.63 20.82 -32.6 13.88 C-29.92 6.27 -26.22 1.57 -19.35 -2.44 C-12.22 -4.22 -6.39 -3.64 0 0 Z " fill="#42AAC5" transform="translate(94.6015625,57.125)"/><path d="M0 0 C7 0 7 0 8.83 1.47 C9.5 2.5 9.5 2.5 10.18 3.55 C10.7 4.32 11.22 5.1 11.76 5.89 C12.29 6.74 12.82 7.59 13.37 8.46 C13.94 9.32 14.51 10.18 15.09 11.07 C16.9 13.82 18.67 16.6 20.44 19.38 C21.66 21.24 22.88 23.1 24.1 24.96 C26.32 28.36 28.54 31.77 30.72 35.19 C31.17 35.88 31.61 36.57 32.06 37.28 C33 39 33 39 33 41 C30.22 41.27 30.22 41.27 27 41 C25.12 39.3 25.12 39.3 23.44 36.75 C23.12 36.28 22.81 35.82 22.48 35.34 C21.3 33.58 20.15 31.79 19 30 C17.87 28.27 16.73 26.54 15.6 24.82 C12.37 19.9 9.19 14.95 6 10 C5.67 20.23 5.34 30.46 5 41 C3.35 41 1.7 41 0 41 C0 27.47 0 13.94 0 0 Z " fill="#2D4C8E" transform="translate(28,55)"/><path d="M0 0 C2.31 0 4.62 0 7 0 C7 13.53 7 27.06 7 41 C4.36 41 1.72 41 -1 41 C-1 40.67 -1 40.34 -1 40 C0.98 40 2.96 40 5 40 C4.57 39.46 4.13 38.92 3.68 38.36 C-2 30.34 -1.56 23.73 -0.88 14.38 C-0.8 12.98 -0.72 11.58 -0.65 10.18 C-0.47 6.78 -0.24 3.39 0 0 Z " fill="#244389" transform="translate(253,55)"/><path d="M0 0 C1.65 0 3.3 0 5 0 C5 13.2 5 26.4 5 40 C3.35 40 1.7 40 0 40 C0 26.8 0 13.6 0 0 Z " fill="#2A488C" transform="translate(13,55)"/><path d="M0 0 C1.32 0.33 2.64 0.66 4 1 C4.66 3.31 5.32 5.62 6 8 C6.99 5.69 7.98 3.38 9 1 C10.32 1 11.64 1 13 1 C13.66 2.65 14.32 4.3 15 6 C17.22 4.07 17.22 4.07 18 1 C18.99 1 19.98 1 21 1 C20.41 5.82 19.03 9.59 17 14 C15.12 13.88 15.12 13.88 13 13 C11.75 9.94 11.75 9.94 11 7 C10.01 9.31 9.02 11.62 8 14 C6.68 14 5.36 14 4 14 C3.33 12.23 2.66 10.46 2 8.69 C1.63 7.7 1.26 6.72 0.88 5.7 C0 3 0 3 0 0 Z " fill="#4AAEC7" transform="translate(123,28)"/><path d="M0 0 C2 2 2 2 2.2 4.6 C2.17 5.6 2.15 6.6 2.12 7.62 C2.11 8.63 2.09 9.63 2.07 10.66 C2.04 11.82 2.04 11.82 2 13 C0.21 13.05 -1.58 13.09 -3.38 13.12 C-4.37 13.15 -5.37 13.17 -6.4 13.2 C-9 13 -9 13 -11 11 C-10.75 8.44 -10.75 8.44 -10 6 C-7 4.5 -4.34 4.94 -1 5 C-1.33 4.34 -1.66 3.68 -2 3 C-4.31 3 -6.62 3 -9 3 C-9 2.01 -9 1.02 -9 0 C-5.48 -1.17 -3.58 -0.84 0 0 Z " fill="#63B9CF" transform="translate(97,29)"/><path d="M0 0 C3.12 0.25 3.12 0.25 4.81 1.41 C6.65 3.98 6.42 5.81 6.31 8.94 C6.29 9.93 6.26 10.93 6.23 11.95 C6.2 12.71 6.16 13.47 6.12 14.25 C4.5 14.3 2.88 14.34 1.25 14.38 C0.35 14.4 -0.56 14.42 -1.49 14.45 C-3.88 14.25 -3.88 14.25 -5.88 12.25 C-5.32 7.69 -5.32 7.69 -3.88 6.25 C-1.54 6.11 0.78 6.21 3.12 6.25 C2.79 5.59 2.47 4.93 2.12 4.25 C0.15 4.25 -1.84 4.25 -3.88 4.25 C-3.88 0.34 -3.88 0.34 0 0 Z " fill="#3FA9C4" transform="translate(151.875,27.75)"/><path d="M0 0 C1.65 0 3.3 0 5 0 C5 8.25 5 16.5 5 25 C3.35 25 1.7 25 0 25 C0 16.75 0 8.5 0 0 Z " fill="#264589" transform="translate(28,71)"/><path d="M0 0 C0.33 0 0.66 0 1 0 C1.33 9.57 1.66 19.14 2 29 C2.99 29 3.98 29 5 29 C5.33 19.43 5.66 9.86 6 0 C6.33 0 6.66 0 7 0 C7 13.53 7 27.06 7 41 C4.36 41 1.72 41 -1 41 C-1 40.67 -1 40.34 -1 40 C0.98 40 2.96 40 5 40 C4.57 39.46 4.13 38.92 3.68 38.36 C-2 30.34 -1.56 23.73 -0.88 14.38 C-0.8 12.98 -0.72 11.58 -0.65 10.18 C-0.47 6.78 -0.24 3.39 0 0 Z " fill="#82B2CD" transform="translate(253,55)"/><path d="M0 0 C1.32 0 2.64 0 4 0 C4.99 2.31 5.98 4.62 7 7 C7.99 4.69 8.98 2.38 10 0 C10.99 0 11.98 0 13 0 C11.9 6.77 10.09 13.39 6 19 C2.69 20.12 2.69 20.12 0 20 C0 18.68 0 17.36 0 16 C1.32 15.67 2.64 15.34 4 15 C3.44 9.59 2.07 5.02 0 0 Z " fill="#4EAFC8" transform="translate(160,29)"/><path d="M0 0 C-0.33 0.99 -0.66 1.98 -1 3 C-2.65 2.67 -4.3 2.34 -6 2 C-6 2.99 -6 3.98 -6 5 C-3.03 5.49 -3.03 5.49 0 6 C0.62 8.38 0.62 8.38 1 11 C-1 13 -1 13 -2.95 13.2 C-3.66 13.17 -4.38 13.15 -5.12 13.12 C-5.85 13.11 -6.57 13.09 -7.32 13.07 C-8.15 13.04 -8.15 13.04 -9 13 C-9.33 12.01 -9.66 11.02 -10 10 C-7.69 10 -5.38 10 -3 10 C-3 9.34 -3 8.68 -3 8 C-4.45 7.63 -4.45 7.630 -5.94 7.25 C-9 6 -9 6 -10.06 4.06 C-10 2 -10 2 -9 0.19 C-5.86 -1.68 -3.51 -0.73 0 0 Z " fill="#41AAC5" transform="translate(185,29)"/><path d="M0 0 C1.32 0 2.64 0 4 0 C4 6.93 4 13.86 4 21 C2.68 21 1.36 21 0 21 C0 14.07 0 7.14 0 0 Z " fill="#56B3CB" transform="translate(109,21)"/><path d="M0 0 C1.32 0 2.64 0 4 0 C4 6.93 4 13.86 4 21 C2.68 21 1.36 21 0 21 C0 14.07 0 7.14 0 0 Z " fill="#58B2CA" transform="translate(102,21)"/><path d="M0 0 C0.99 0 1.98 0 3 0 C4.12 3.58 4.12 7.04 4.06 10.75 C4.06 11.35 4.05 11.95 4.05 12.57 C4.04 14.05 4.02 15.52 4 17 C3.67 16.34 3.34 15.68 3 15 C2.01 15 1.02 15 0 15 C-0.33 15.66 -0.66 16.32 -1 17 C-1.03 14.92 -1.05 12.83 -1.06 10.75 C-1.07 10.16 -1.08 9.58 -1.09 8.97 C-1.11 5.82 -0.95 3.02 0 0 Z " fill="#2B7AA9" transform="translate(255,69)"/><path d="M0 0 C1.46 0.09 2.92 0.2 4.38 0.31 C5.59 0.4 5.59 0.4 6.84 0.49 C9 1 9 1 10.29 2.36 C11 4 11 4 11 7 C9.38 7.05 7.75 7.09 6.12 7.12 C5.22 7.15 4.32 7.17 3.38 7.2 C1 7 1 7 -1 5 C-0.62 2.38 -0.62 2.38 0 0 Z " fill="#46ACC6" transform="translate(87,35)"/><path d="M0 0 C0.66 0 1.32 0 2 0 C2.29 0.97 2.58 1.94 2.88 2.94 C3.64 6.11 3.64 6.11 6 7 C5.67 9.31 5.34 11.62 5 14 C3.06 14.56 3.06 14.56 1 15 C0 14 0 14 -0.1 10.84 C-0.09 9.54 -0.08 8.24 -0.06 6.94 C-0.06 6.27 -0.05 5.61 -0.05 4.93 C-0.04 3.29 -0.02 1.64 0 0 Z " fill="#2B7AA9" transform="translate(28,57)"/><path d="M0 0 C1.65 0 3.3 0 5 0 C5 2.64 5 5.28 5 8 C3.68 8.33 2.36 8.66 1 9 C-0.5 6 -0.06 3.34 0 0 Z " fill="#275F9A" transform="translate(28,71)"/><path d="M0 0 C0.99 0 1.98 0 3 0 C3.33 3.3 3.66 6.6 4 10 C3.67 9.01 3.34 8.02 3 7 C1.68 7.99 0.36 8.98 -1 10 C-0.67 6.7 -0.34 3.4 0 0 Z " fill="#275F9A" transform="translate(255,69)"/><path d="M0 0 C1.32 0.66 2.64 1.32 4 2 C4 4.31 4 6.62 4 9 C3.34 8.67 2.68 8.34 2 8 C2 7.34 2 6.68 2 6 C-0.31 6 -2.62 6 -5 6 C-5 5.34 -5 4.68 -5 4 C-2.69 4 -0.38 4 2 4 C1.34 2.68 0.68 1.36 0 0 Z " fill="#35A4C1" transform="translate(94,30)"/><path d="M0 0 C2.97 0 5.94 0 9 0 C9 0.99 9 1.98 9 3 C6.36 3 3.72 3 1 3 C0.67 2.01 0.34 1.02 0 0 Z " fill="#55B3CB" transform="translate(175,39)"/><path d="M0 0 C1.45 0.03 1.45 0.03 2.94 0.06 C2.94 1.38 2.94 2.7 2.94 4.06 C0.63 4.06 -1.68 4.06 -4.06 4.06 C-4.06 0.08 -4.06 0.08 0 0 Z " fill="#55B3CB" transform="translate(152.0625,27.9375)"/><path d="M0 0 C0.99 0 1.98 0 3 0 C2.52 4.22 1.83 6.8 -1 10 C-1.12 3.38 -1.12 3.38 0 0 Z " fill="#3BA7C3" transform="translate(141,29)"/><path d="M0 0 C0.66 0 1.32 0 2 0 C2.29 0.97 2.58 1.94 2.88 2.94 C3.64 6.11 3.64 6.11 6 7 C4.33 7.04 2.67 7.04 1 7 C0 6 0 6 -0.06 2.94 C-0.04 1.97 -0.02 1 0 0 Z " fill="#329FBE" transform="translate(28,57)"/><path d="M0 0 C1.65 0 3.3 0 5 0 C4.67 1.32 4.34 2.64 4 4 C2.35 3.67 0.7 3.34 -1 3 C-0.67 2.01 -0.34 1.02 0 0 Z " fill="#D5ECF2" transform="translate(150,36)"/><path d="M0 0 C1.32 0 2.64 0 4 0 C4.33 1.98 4.66 3.96 5 6 C4.01 5.67 3.02 5.34 2 5 C0.81 2.44 0.81 2.44 0 0 Z " fill="#3CA8C3" transform="translate(160,29)"/><path d="M0 0 C1.32 0 2.64 0 4 0 C3.67 1.32 3.34 2.64 3 4 C1.68 4 0.36 4 -1 4 C-0.67 2.68 -0.34 1.36 0 0 Z " fill="#E1F1F5" transform="translate(91,36)"/><path d="M0 0 C1.32 0.66 2.64 1.32 4 2 C3.34 3.32 2.68 4.64 2 6 C1.01 5.67 0.02 5.34 -1 5 C-0.67 3.35 -0.34 1.7 0 0 Z " fill="#52B0C9" transform="translate(87,35)"/><path d="M0 0 C1.65 0 3.3 0 5 0 C5.33 0.99 5.66 1.98 6 3 C4.02 3 2.04 3 0 3 C0 2.01 0 1.02 0 0 Z " fill="#DDEFF4" transform="translate(90,31)"/><path d="M0 0 C1.32 0 2.64 0 4 0 C4 1.32 4 2.64 4 4 C2.68 4 1.36 4 0 4 C0 2.68 0 1.36 0 0 Z " fill="#3DA8C3" transform="translate(127,38)"/><path d="M0 0 C1.32 0 2.64 0 4 0 C4 1.65 4 3.3 4 5 C2.65 3.69 1.31 2.35 0 1 C0 0.67 0 0.34 0 0 Z " fill="#37A5C1" transform="translate(254,87)"/><path d="M0 0 C2.31 0.33 4.62 0.66 7 1 C6.67 1.99 6.34 2.98 6 4 C5.34 4 4.68 4 4 4 C4 3.01 4 2.02 4 1 C2.68 0.67 1.36 0.34 0 0 Z " fill="#61B8CF" transform="translate(178,28)"/><path d="M0 0 C0.33 1.32 0.66 2.64 1 4 C0.01 4.49 0.01 4.49 -1 5 C-1 4.34 -1 3.68 -1 3 C-1.66 3 -2.32 3 -3 3 C-2 1 -2 1 0 0 Z " fill="#5BB4CB" transform="translate(185,36)"/><path d="M0 0 C0.99 0 1.98 0 3 0 C2.67 1.32 2.34 2.64 2 4 C1.34 4 0.68 4 0 4 C0 2.68 0 1.36 0 0 Z " fill="#3BA7C3" transform="translate(170,29)"/><path d="M0 0 C0.99 1.32 1.98 2.64 3 4 C2.34 4.66 1.68 5.32 1 6 C0 5 0 5 -0.06 2.44 C-0.04 1.63 -0.02 0.83 0 0 Z " fill="#4DAFC8" transform="translate(165,41)"/><path d="M0 0 C0.33 0 0.66 0 1 0 C1 1.65 1 3.3 1 5 C0.01 4.67 -0.98 4.34 -2 4 C-2 3.34 -2 2.68 -2 2 C-1.34 2 -0.68 2 0 2 C0 1.34 0 0.68 0 0 Z " fill="#44AAC5" transform="translate(127,32)"/><path d="M0 0 C0.99 0.33 1.98 0.66 3 1 C3 1.66 3 2.32 3 3 C1.68 3 0.36 3 -1 3 C-0.67 2.01 -0.34 1.02 0 0 Z " fill="#E3F2F6" transform="translate(152,31)"/></svg>
                   </div>
                   <div class="du2-header-title">운 전 일 반</div>
                   <div class="du2-datetime-wrap">
@@ -5602,6 +5597,9 @@
                         <span class="du2-leg-box white"></span> 개
                         <span class="du2-leg-box blue" style="margin-left:4px;"></span> 폐
                         <span class="du2-leg-box red" style="margin-left:4px;"></span> 고장
+                      </div>
+                      <div class="du2-leg-line">
+                        <span class="du2-leg-box magenta"></span> 비상핸들
                       </div>
                     </div>
                   </div>
@@ -6965,14 +6963,6 @@
             <span id="occ-fault-status-tag" style="font-size:10px; color:#94a3b8; margin-left:auto; font-weight:700;">정상 운행 중</span>
           </div>
           <div class="occ-fault-actions">
-            <button type="button" id="btn-fault-door" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('DOOR_LOCK_FAIL')">
-              <span>🚨 출입문 닫힘 불량</span>
-              <span id="fault-lbl-door" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
-            </button>
-            <button type="button" id="btn-fault-eb" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('EB_STUCK')">
-              <span>🚨 비상제동 불완해 (고착)</span>
-              <span id="fault-lbl-eb" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
-            </button>
             <button type="button" id="btn-fault-vobc" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('VOBC_FAIL')">
               <span>🚨 VOBC 고장 (DU 적색 / ADU 앰버)</span>
               <span id="fault-lbl-vobc" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
@@ -7022,10 +7012,10 @@
           <div class="occ-hint-row">
             <select id="inst-hint-target" class="form-control" style="flex:1; font-size:11px; padding:7px 8px; background:#080b10;">
               <option value="SW_EMG_RELEASE">[OP3] 비상제동완해 (안전커버 내부)</option>
-              <option value="SW_DOOR_BYPASS">[OP4] 출입문 바이패스</option>
-              <option value="SW_LOW_SPEED">[OP3] 저속도 바이패스</option>
-              <option value="SW_RESCUE">[OP3] 구원운전 로터리</option>
-              <option value="SW_ATP_REV">[OP3] ATP후진 로터리</option>
+              <option value="SW_PARK_REL">[OP3] 주차제동완해</option>
+              <option value="SW_PARK_BP">[OP5] 주차제동BP</option>
+              <option value="SW_MR_BP">[OP5] 주공기BP</option>
+              <option value="SW_RESCUE_DRIVE">[OP3] 구원운전 로터리</option>
               <option value="SW_VOBC_RESET">[OP5] VOBC리셋 버튼 (롱프레스)</option>
               <option value="SW_FORCE_REL">[OP3] 강제완해</option>
               <option value="SW_WIRELESS_MODE">[OP3] 무인모드 (3초 인가)</option>
@@ -8235,10 +8225,23 @@ let currentGaugeBC = BC_DEFAULT_BAR;
 let currentGaugeMR = 9.0;
 let emgStopRotation = 0; // 비상제동체결 버튼 회전 각도 (0~360도)
 
+// OP3 구원운전 스위치 '비상' + RM·FM 모드: 역행 P1~P4는 모두 P4, 제동 B1~B7은 모두 B7으로 동작
+function isRescueEmergencyDrive() {
+  const mode = COMPONENT_REGISTRY.SW_DRIVE_MODE ? COMPONENT_REGISTRY.SW_DRIVE_MODE.state : 'OFF';
+  return COMPONENT_REGISTRY.SW_RESCUE_DRIVE && COMPONENT_REGISTRY.SW_RESCUE_DRIVE.state === 'EMERGENCY' &&
+         (mode === 'RM' || mode === 'FM');
+}
+function effectiveNotch(notch) {
+  if (!notch || !isRescueEmergencyDrive()) return notch;
+  if (/^P[1-4]$/.test(notch)) return 'P4';
+  if (/^B[1-7]$/.test(notch)) return 'B7';
+  return notch;
+}
+
 // 현재 일반 운전/제동 조건에 따른 정상 제동통 압력 계산
 function getNormalBrakePressure() {
   const masconComp = COMPONENT_REGISTRY['SW_MASCON'];
-  const notch = masconComp ? (masconComp.notch || masconComp.state || 'N') : 'N';
+  const notch = effectiveNotch(masconComp ? (masconComp.notch || masconComp.state || 'N') : 'N');
   if (notch === 'EB') return 4.0;
   if (notch === 'B1') return 2.3;
   if (notch === 'B2') return 2.7;
@@ -9262,7 +9265,7 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const isEmgReleaseLatched = (cvCompState('SW_EMG_RELEASE', 'RELEASED') === 'LATCHED');
     const isEmgActive = (isEmgStopLatched && !isEmgReleaseLatched);
     const isHcrEb = window.__HCR_EB === true;
-    const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB') || isHcrEb || isMrLowEbActive();
+    const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB') || isHcrEb || isMrLowEbActive() || !!window.__VOBC_ALL_DOWN;
     const isUnmannedNow = driveMode === 'OFF' && cvCompState('SW_WIRELESS_MODE', 'OFF') === 'LIT';
 
     // 운전모드 칩 (FM / RM / ATPM / 무인운전 "Driver less": 청색, 그 외 빈칸)
@@ -9503,7 +9506,8 @@ function updateDuAduDisplay(driveMode, notch, now) {
     if (bc2b) bc2b.innerText = bcStr;
 
     // 9. VOBC Signaling Status & TCMS Status
-    const isTcmsFail = !!window.__FAULT_TCMS_FAIL;
+    applyScreenFaults();
+    const isTcmsFail = !!window.__FAULT_TCMS_FAIL || isTcmsCuCbOff();   // 고장 또는 CU 스위치 차단
     // TCMS 통신고장: DU 출입문·기기 정보(회색/파랑)를 노란 바탕 검은 글씨로
     const duWrap = document.querySelector('.du2-tcms-wrapper');
     if (duWrap) duWrap.classList.toggle('tcms-fail', isTcmsFail);
@@ -9523,8 +9527,9 @@ function updateDuAduDisplay(driveMode, notch, now) {
       }
     }
 
-    const isVobc1Fail = !!window.__FAULT_VOBC_FAIL || !!window.__FAULT_VOBC1_FAIL;
-    const isVobc2Fail = !!window.__FAULT_VOBC_FAIL || !!window.__FAULT_VOBC2_FAIL;
+    const isVobc1CbOff = isVobcCbOff(1), isVobc2CbOff = isVobcCbOff(2);
+    const isVobc1Fail = !!window.__FAULT_VOBC_FAIL || !!window.__FAULT_VOBC1_FAIL || isVobc1CbOff;
+    const isVobc2Fail = !!window.__FAULT_VOBC_FAIL || !!window.__FAULT_VOBC2_FAIL || isVobc2CbOff;
     const isVobc1Comm = !isVobc1Fail && (!!window.__FAULT_VOBC_COMM || !!window.__FAULT_VOBC1_COMM);
     const isVobc2Comm = !isVobc2Fail && (!!window.__FAULT_VOBC_COMM || !!window.__FAULT_VOBC2_COMM);
     const isFmMode = (driveMode === 'FM');
@@ -9597,12 +9602,12 @@ function updateDuAduDisplay(driveMode, notch, now) {
       if (vobc1Adu) {
         const isFault1 = isVobc1Fail || isVobc1Comm;
         // VOBC1 단독 고장(VOBC1_FAIL): 빨간 글씨 / 그 외 고장·통신고장: 앰버
-        vobc1Adu.className = window.__FAULT_VOBC1_FAIL ? 'adu2-subsys-line red' : (isFault1 ? 'adu2-subsys-line amber' : 'adu2-subsys-line green');
+        vobc1Adu.className = (window.__FAULT_VOBC1_FAIL || isVobc1CbOff) ? 'adu2-subsys-line red' : (isFault1 ? 'adu2-subsys-line amber' : 'adu2-subsys-line green');
         vobc1Adu.innerHTML = vobc1On ? 'VOBC 1 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 1';
       }
       if (vobc2Adu) {
         const isFault2 = isVobc2Fail || isVobc2Comm;
-        vobc2Adu.className = isFault2 ? 'adu2-subsys-line amber' : 'adu2-subsys-line green';
+        vobc2Adu.className = (window.__FAULT_VOBC2_FAIL || isVobc2CbOff) ? 'adu2-subsys-line red' : (isFault2 ? 'adu2-subsys-line amber' : 'adu2-subsys-line green');
         vobc2Adu.innerHTML = vobc2On ? 'VOBC 2 <span class="vobc-active-icon">Ⓐ</span>' : 'VOBC 2';
       }
     } else {
@@ -9820,6 +9825,10 @@ function isParkBrakeTractionCut() {
   if (window.__PARK_BRAKE_SET !== true) return false;
   return window.__MR_CRIT === true || cvCompState('SW_PARK_BP', 'NORMAL') !== 'BYPASS';
 }
+/* OP5 고속도차단기동작 / PWM차단 중 하나라도 취급(눌림) → 수동 운전 역행 불가 */
+function isOp5TractionCut() {
+  return cvCompState('SW_HB_ACTION', 'RELEASED') === 'LATCHED' || cvCompState('SW_PWM_CUT', 'RELEASED') === 'LATCHED';
+}
 /* MR 6.0 bar 미만: 역행회로 차단 → OP5 주공기BP(바이패스)로 역행회로 구성 */
 function isMrTractionCut() {
   return window.__MR_LOW === true && cvCompState('SW_MR_BP', 'NORMAL') !== 'BYPASS';
@@ -9836,7 +9845,8 @@ function updateTrainPhysics() {
 
   const driveMode = cvCompState('SW_DRIVE_MODE', 'OFF');
   const isUnmannedActive = (cvCompState('SW_WIRELESS_MODE', 'OFF') === 'LIT') && (driveMode === 'OFF');
-  const notch = cvNotch();
+  const leverNotch = cvNotch();                 // 화면 표시용 마스콘 실제 위치
+  const notch = effectiveNotch(leverNotch);     // 동작용 노치 (구원운전 비상 시 P4/B7)
   const revNotch = cvCompState('SW_REVERSER', 'N');
   const isKeyOn = cvCompState('SW_MASTER_KEY', 'OFF') === 'ON';
   const isEmgActive = (cvCompState('SW_EMG_STOP', 'RELEASED') === 'LATCHED') &&
@@ -9847,7 +9857,10 @@ function updateTrainPhysics() {
   const isDoorBypassed = (cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
   const isDoorInterlockCleared = isDoorClosed || isDoorBypassed;
   const isParkCut = isParkBrakeTractionCut() || isMrTractionCut();
-  const isMrEb = isMrLowEbActive();
+  // 보조 비상제동: MR 6.0 bar 미만(비상제동완해 전) 또는 VOBC1·VOBC2 모두 고장
+  const isVobcAllDownEb = updateVobcAllDown();   // 매 프레임 판정 (복귀 시 POSITION LOST 처리 포함)
+  const isCbEb = updateEbLoopCbEb();             // CACB·EBLCB 차단 → 비상제동 루프 개방
+  const isAuxEb = isMrLowEbActive() || isVobcAllDownEb || isCbEb;
 
   // [RM 모드 과속 감시 및 비상제동(EB) 인터록]
   // FM: 제한 없음 (최대 80km/h까지 주행 가능)
@@ -9877,13 +9890,20 @@ function updateTrainPhysics() {
   exhibitTick(dt);
   if (currentScenario) checkScenarioArrival();
 
-  // [MR 저하 비상제동] 6.0 bar 미만: BC 4.0 bar 유지, 비상제동완해 시 상용 제동압으로 복귀
-  if (isMrEb) {
+  // [MR 저하 / VOBC 양계 고장 비상제동] BC 4.0 bar 유지, 해소 시 상용 제동압으로 복귀
+  if (isAuxEb) {
     if (currentGaugeBC !== BC_EMG_BAR) updateGaugeUI(BC_EMG_BAR);
   } else if (window.__MR_EB_APPLIED) {
     updateGaugeUI(getNormalBrakePressure());
   }
-  window.__MR_EB_APPLIED = isMrEb;
+  window.__MR_EB_APPLIED = isAuxEb;
+
+  // 구원운전 비상 전환(스위치·모드 변경) 시 상용제동 노치의 BC 압력을 다시 맞춤
+  const rescueEmg = isRescueEmergencyDrive();
+  if (rescueEmg !== !!window.__RESCUE_EMG_LAST) {
+    window.__RESCUE_EMG_LAST = rescueEmg;
+    if (/^B[1-7]$/.test(leverNotch) && !isAuxEb && !isEmgActive && !isRmEbActive) updateGaugeUI(getNormalBrakePressure());
+  }
 
   // [HCR 비상제동] 운전모드 OFF(무인운전 아님) → 비상제동(EB) + 정차제동(HB), BC 4.0 bar
   //  OFF → RM 등 수동모드: EB 완해(VOBC RESET), HB는 유지(2.0 bar)
@@ -9909,7 +9929,7 @@ function updateTrainPhysics() {
   if (hcrEb) {
     if (currentGaugeBC !== BC_EMG_BAR) updateGaugeUI(BC_EMG_BAR);
   } else if (isManualMode && window.__HOLDING_BRAKE_ACTIVE) {
-    if ((revNotch === 'F' || revNotch === 'R') && notch.charAt(0) === 'P' && isKeyOn && !isEmgActive && !isRmEbActive && !isParkCut && !isMrEb) {
+    if ((revNotch === 'F' || revNotch === 'R') && notch.charAt(0) === 'P' && isKeyOn && !isEmgActive && !isRmEbActive && !isParkCut && !isAuxEb && !isOp5TractionCut()) {
       window.__HOLDING_BRAKE_ACTIVE = false;          // 정차제동 완해 → 역행
       try { sound.playAirExhaust(0.5, 1200, 0.4); } catch (e) { }
       updateGaugeUI(0.0);
@@ -9919,11 +9939,11 @@ function updateTrainPhysics() {
   }
 
   const canManualTraction = isManualMode && isKeyOn && (revNotch === 'F' || revNotch === 'R') &&
-                            isDoorInterlockCleared && !isParkCut && !isMrEb && !isEmgActive && !isRmEbActive && cvBC() < 0.5;
+                            isDoorInterlockCleared && !isParkCut && !isAuxEb && !isOp5TractionCut() && !isEmgActive && !isRmEbActive && cvBC() < 0.5;
 
   let target = 0.0, rate = 0.0;
 
-  if (isEmgActive || notch === 'EB' || isRmEbActive || hcrEb || isMrEb || (window.__MR_CRIT && window.__PARK_BRAKE_SET)) {
+  if (isEmgActive || notch === 'EB' || isRmEbActive || hcrEb || isAuxEb || (window.__MR_CRIT && window.__PARK_BRAKE_SET)) {
     target = 0.0; rate = -TRAIN_SPEC.ebDecel; // 비상제동 4.68 km/h/s
   } else if (isUnmannedActive && window.__POS_LOST) {
     // POSITION LOST: 무인운전 램프는 점등되나 열차 위치를 몰라 자동 주행 불가 → 정차제동 유지
@@ -9991,7 +10011,7 @@ function updateTrainPhysics() {
     // 가속 단계
     trainSpeed = Math.min(target, trainSpeed + (rate + gradeAcc) * dt);
   } else if (trainSpeed > target) {
-    if (isRmEbActive || isEmgActive || notch === 'EB' || isMrEb || (window.__MR_CRIT && window.__PARK_BRAKE_SET)) {
+    if (isRmEbActive || isEmgActive || notch === 'EB' || isAuxEb || (window.__MR_CRIT && window.__PARK_BRAKE_SET)) {
       // 비상제동 체결 상태: 안전 정차까지 감속
       trainSpeed = Math.max(0.0, trainSpeed + rate * dt);
       if (trainSpeed <= 0.05) trainSpeed = 0.0;
@@ -10059,17 +10079,20 @@ function updateTrainPhysics() {
   }
   cvUpdateRollNoise(trainSpeed);
 
-  updateCabOSD(notch, revNotch, isUnmannedActive, driveMode);
+  updateCabOSD(leverNotch, revNotch, isUnmannedActive, driveMode);
   // DU·ADU 화면은 초당 20회만 갱신 (매 프레임 갱신은 프레임당 수 ms를 써서 3D 화면이 느려짐)
-  if (now - lastDuAduUpdate >= 50) { lastDuAduUpdate = now; updateDuAduDisplay(driveMode, notch, now); }
+  if (now - lastDuAduUpdate >= 50) { lastDuAduUpdate = now; updateDuAduDisplay(driveMode, leverNotch, now); }
 
   // 원격 관제 실시간 텔레메트리 전송 (Supabase 트래픽 최적화: 적응형 브로드캐스트)
   if (typeof TrainRemote !== 'undefined' && TrainRemote.isConnected && TrainRemote.role === 'STUDENT') {
     const isMoving = trainSpeed > 0.1;
     const minInterval = isMoving ? 350 : 1500;
     const currentBCVal = cvBC();
-    const isEmgVal = isEmgActive || (notch === 'EB') || !!window.__FAULT_EB_STUCK;
+    // 실제 비상제동 상태 (안전루프·RM 과속·HCR·MR 저압·VOBC 전체 고장 포함)
+    const isEmgVal = isEmgActive || (notch === 'EB') || isRmEbActive || hcrEb || isAuxEb || !!(window.__MR_CRIT && window.__PARK_BRAKE_SET);
     const keyVal = isKeyOn ? 'ON' : 'OFF';
+    const parkVal = window.__PARK_BRAKE_SET === true;
+    const isPowering = notch.charAt(0) === 'P' && canManualTraction;
 
     const last = TrainRemote._lastTelemetry || {};
     const stateChanged = (
@@ -10079,7 +10102,8 @@ function updateTrainPhysics() {
       last.isEmg !== isEmgVal ||
       last.masterKey !== keyVal ||
       (last.isMoving !== undefined && last.isMoving !== isMoving) ||
-      (last.bc !== undefined && Math.abs(last.bc - currentBCVal) > 0.3)
+      (last.bc !== undefined && Math.abs(last.bc - currentBCVal) > 0.3) ||
+      last.doorOpen !== isDoorOpen || last.parkBrake !== parkVal || last.isPowering !== isPowering
     );
 
     if (stateChanged || !TrainRemote._lastPhysicsBroadcast || (now - TrainRemote._lastPhysicsBroadcast >= minInterval)) {
@@ -10091,7 +10115,10 @@ function updateTrainPhysics() {
         isEmg: isEmgVal,
         masterKey: keyVal,
         isMoving: isMoving,
-        bc: currentBCVal
+        bc: currentBCVal,
+        doorOpen: isDoorOpen,
+        parkBrake: parkVal,
+        isPowering: isPowering
       };
       TrainRemote.sendStudentAction({
         type: 'TELEMETRY',
@@ -10103,6 +10130,9 @@ function updateTrainPhysics() {
         masterKey: keyVal,
         isUnmanned: isUnmannedActive,
         isEmg: isEmgVal,
+        isPowering: isPowering,
+        doorOpen: isDoorOpen,
+        parkBrake: parkVal,
         bcPressure: currentBCVal,
         mrPressure: (typeof currentGaugeMR !== 'undefined') ? currentGaugeMR : 9.0
       });
@@ -10642,8 +10672,6 @@ const TrainRemote = {
   room: 'train-room-01',
   userName: '운전연습생 1',
   activeFaults: {
-    DOOR_LOCK_FAIL: false,
-    EB_STUCK: false,
     VOBC_FAIL: false,
     VOBC_COMM: false,
     TCMS_FAIL: false,
@@ -10971,6 +10999,20 @@ const TrainRemote = {
       const nameEl = document.getElementById('inst-mon-name');
       if (nameEl) nameEl.innerText = msg.studentName || '연결됨';
       this.addLog(`[학생 접속] ${msg.studentName} 학생이 훈련에 참가하였습니다.`, 'green');
+      // 학생이 나중에 접속(또는 새로고침)해도 이미 인가 중인 고장을 그대로 받도록 다시 전송
+      Object.keys(this.activeFaults).forEach(f => {
+        if (this.activeFaults[f]) this.sendInstructorCommand({ type: 'INJECT_FAULT', fault: f, active: true });
+      });
+      return;
+    }
+
+    if (msg.type === 'FAULT_CLEARED') {
+      // 학생이 차단기 리셋 등으로 고장을 복구함 → 관제 버튼도 정상으로 되돌림
+      if (this.activeFaults[msg.fault]) {
+        this.activeFaults[msg.fault] = false;
+        this.updateFaultButtonUI(msg.fault, false);
+        this.addLog(`[고장 복구] ${msg.studentName || '학생'} 조치로 ${this.faultLabel(msg.fault)} 복구`, 'green');
+      }
       return;
     }
 
@@ -11036,6 +11078,9 @@ const TrainRemote = {
       if (isEmg) {
         bcStatus.innerText = `🚨 비상제동 체결 (${bc} bar)`;
         bcStatus.style.color = '#ef4444';
+      } else if (data.parkBrake) {
+        bcStatus.innerText = `🅿️ 주차제동 체결 (${bc} bar)`;
+        bcStatus.style.color = '#f59e0b';
       } else if (isServiceBrake) {
         bcStatus.innerText = `🛑 상용제동 ${notch}단 (${bc} bar)`;
         bcStatus.style.color = '#f59e0b';
@@ -11071,9 +11116,16 @@ const TrainRemote = {
     const lampLead = document.getElementById('occ-lamp-lead');
     const lampAto = document.getElementById('occ-lamp-ato');
 
-    const isBraking = isServiceBrake || isEmg || parseFloat(bc) > 0.5;
+    const isBraking = isServiceBrake || isEmg || !!data.parkBrake || parseFloat(bc) > 0.5;
     if (lampBrake) lampBrake.classList.toggle('lit-red', isBraking);
-    if (lampPower) lampPower.classList.toggle('lit-green', notch.startsWith('P'));
+    // 역행 램프: 마스콘이 P여도 주차제동·OP5 스위치 등으로 역행회로가 차단되면 소등
+    const powering = (typeof data.isPowering === 'boolean') ? data.isPowering : notch.startsWith('P');
+    if (lampPower) lampPower.classList.toggle('lit-green', powering);
+    if (lampDoor && typeof data.doorOpen === 'boolean') {
+      lampDoor.classList.toggle('blink-amber', data.doorOpen);
+      lampDoor.classList.toggle('lit-green', !data.doorOpen);
+      lampDoor.innerText = data.doorOpen ? '🚪 출입문 열림 (점멸)' : '🚪 출입문 닫힘';
+    }
     if (lampEmg) lampEmg.classList.toggle('lit-red', isEmg);
     const isOccLead = (data.driveMode === 'RM' || data.driveMode === 'FM') &&
                       (data.masterKey === 'ON') &&
@@ -11090,74 +11142,8 @@ const TrainRemote = {
     this.activeFaults[faultType] = !this.activeFaults[faultType];
     const isAct = this.activeFaults[faultType];
 
-    const btnDoor = document.getElementById('btn-fault-door');
-    const btnEb = document.getElementById('btn-fault-eb');
-    const lblDoor = document.getElementById('fault-lbl-door');
-    const lblEb = document.getElementById('fault-lbl-eb');
-    const statusTag = document.getElementById('occ-fault-status-tag');
-
-    if (faultType === 'DOOR_LOCK_FAIL') {
-      if (btnDoor) btnDoor.classList.toggle('active', isAct);
-      if (lblDoor) lblDoor.innerText = isAct ? '🚨 고장 발생 중 (클릭 시 복구)' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] 출입문 닫힘 불량(고장) ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    } else if (faultType === 'EB_STUCK') {
-      if (btnEb) btnEb.classList.toggle('active', isAct);
-      if (lblEb) lblEb.innerText = isAct ? '🚨 비상제동 불완해 고착 중' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] 비상제동 불완해 고착 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    } else if (faultType === 'VOBC_FAIL') {
-      const btnV = document.getElementById('btn-fault-vobc');
-      const lblV = document.getElementById('fault-lbl-vobc');
-      if (btnV) btnV.classList.toggle('active', isAct);
-      if (lblV) lblV.innerText = isAct ? '🚨 VOBC 고장 인가 중' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] VOBC 장치 고장 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    } else if (faultType === 'VOBC_COMM') {
-      const btnVc = document.getElementById('btn-fault-vobc-comm');
-      const lblVc = document.getElementById('fault-lbl-vobc-comm');
-      if (btnVc) btnVc.classList.toggle('active', isAct);
-      if (lblVc) lblVc.innerText = isAct ? '⚠️ VOBC 통신 두절 중' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] VOBC 통신 두절 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'amber' : 'green');
-    } else if (faultType === 'TCMS_FAIL') {
-      const btnT = document.getElementById('btn-fault-tcms');
-      const lblT = document.getElementById('fault-lbl-tcms');
-      if (btnT) btnT.classList.toggle('active', isAct);
-      if (lblT) lblT.innerText = isAct ? '🚨 TCMS 통신이상 인가 중' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] TCMS 통신 이상 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    } else if (faultType === 'PARK_REL_FAIL') {
-      const btnP = document.getElementById('btn-fault-park');
-      const lblP = document.getElementById('fault-lbl-park');
-      if (btnP) btnP.classList.toggle('active', isAct);
-      if (lblP) lblP.innerText = isAct ? '🚨 주차제동 완해 불능 인가 중' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] 주차제동 완해 불능 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    } else if (faultType === 'VOBC1_FAIL') {
-      const btnV1 = document.getElementById('btn-fault-vobc1');
-      const lblV1 = document.getElementById('fault-lbl-vobc1');
-      if (btnV1) btnV1.classList.toggle('active', isAct);
-      if (lblV1) lblV1.innerText = isAct ? '🚨 VOBC1 고장 인가 중' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] VOBC1 고장 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    } else if (faultType === 'DU_FAIL' || faultType === 'ADU_FAIL') {
-      const k = faultType === 'DU_FAIL' ? 'du' : 'adu';
-      const btnS = document.getElementById('btn-fault-' + k);
-      const lblS = document.getElementById('fault-lbl-' + k);
-      if (btnS) btnS.classList.toggle('active', isAct);
-      if (lblS) lblS.innerText = isAct ? `🚨 ${k.toUpperCase()} 고장 인가 중` : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] ${k.toUpperCase()} 고장 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    } else if (faultType === 'MR_LEAK' || faultType === 'MR_LEAK_SEVERE') {
-      const sev = faultType === 'MR_LEAK_SEVERE';
-      const btnM = document.getElementById(sev ? 'btn-fault-mr-severe' : 'btn-fault-mr');
-      const lblM = document.getElementById(sev ? 'fault-lbl-mr-severe' : 'fault-lbl-mr');
-      if (btnM) btnM.classList.toggle('active', isAct);
-      if (lblM) lblM.innerText = isAct ? '🚨 MR 공기누설 인가 중' : '정상 (클릭 시 고장 인가)';
-      this.addLog(`[비상 고장 인가] MR 공기누설${sev ? ' 심화' : ''} ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
-    }
-
-    const anyActive = this.activeFaults.DOOR_LOCK_FAIL || this.activeFaults.EB_STUCK ||
-      this.activeFaults.VOBC_FAIL || this.activeFaults.VOBC_COMM || this.activeFaults.TCMS_FAIL || this.activeFaults.PARK_REL_FAIL ||
-      this.activeFaults.MR_LEAK || this.activeFaults.MR_LEAK_SEVERE ||
-      this.activeFaults.DU_FAIL || this.activeFaults.ADU_FAIL || this.activeFaults.VOBC1_FAIL;
-    if (statusTag) {
-      statusTag.innerText = anyActive ? '⚠️ 비상 고장 주입 운용 중' : '정상 운행 중';
-      statusTag.style.color = anyActive ? '#f87171' : '#94a3b8';
-    }
+    this.updateFaultButtonUI(faultType, isAct);
+    this.addLog(`[비상 고장 인가] ${this.faultLabel(faultType)} ${isAct ? '발생' : '해제'} 전송`, isAct ? (faultType === 'VOBC_COMM' ? 'amber' : 'red') : 'green');
 
     this.sendInstructorCommand({
       type: 'INJECT_FAULT',
@@ -11166,42 +11152,35 @@ const TrainRemote = {
     });
   },
 
+  faultLabel(faultType) {
+    return ({
+      VOBC_FAIL: 'VOBC 장치 고장', VOBC_COMM: 'VOBC 통신 두절', TCMS_FAIL: 'TCMS 통신 이상',
+      PARK_REL_FAIL: '주차제동 완해 불능', MR_LEAK: 'MR 공기누설', MR_LEAK_SEVERE: 'MR 공기누설 심화',
+      DU_FAIL: 'DU 고장', ADU_FAIL: 'ADU 고장', VOBC1_FAIL: 'VOBC1 고장'
+    })[faultType] || faultType;
+  },
+
+  updateFaultButtonUI(faultType, isAct) {
+    const key = ({
+      VOBC_FAIL: 'vobc', VOBC_COMM: 'vobc-comm', TCMS_FAIL: 'tcms', PARK_REL_FAIL: 'park',
+      MR_LEAK: 'mr', MR_LEAK_SEVERE: 'mr-severe', DU_FAIL: 'du', ADU_FAIL: 'adu', VOBC1_FAIL: 'vobc1'
+    })[faultType];
+    if (!key) return;
+    const btn = document.getElementById('btn-fault-' + key);
+    const lbl = document.getElementById('fault-lbl-' + key);
+    if (btn) btn.classList.toggle('active', isAct);
+    if (lbl) lbl.innerText = isAct ? `🚨 ${this.faultLabel(faultType)} 인가 중` : '정상 (클릭 시 고장 인가)';
+
+    const anyActive = Object.values(this.activeFaults).some(Boolean);
+    const statusTag = document.getElementById('occ-fault-status-tag');
+    if (statusTag) {
+      statusTag.innerText = anyActive ? '⚠️ 비상 고장 주입 운용 중' : '정상 운행 중';
+      statusTag.style.color = anyActive ? '#f87171' : '#94a3b8';
+    }
+  },
+
   applyFaultOnStudent(faultType, active) {
-    if (faultType === 'DOOR_LOCK_FAIL') {
-      window.__FAULT_DOOR_FAIL = active;
-      const lampD = document.getElementById('occ-lamp-door');
-      if (lampD) {
-        if (active) {
-          lampD.classList.remove('lit-green');
-          lampD.classList.add('blink-amber');
-          lampD.innerText = '⚠️ 출입문 고장 (점멸)';
-        } else {
-          lampD.classList.remove('blink-amber');
-          lampD.classList.add('lit-green');
-          lampD.innerText = '🚪 출입문 닫힘';
-        }
-      }
-      const lampDoor = document.getElementById('lamp-door');
-      if (lampDoor) {
-        if (active) {
-          lampDoor.classList.remove('lit');
-          lampDoor.classList.add('blinking');
-        } else if (!isDoorOpen) {
-          lampDoor.classList.remove('blinking');
-          lampDoor.classList.add('lit');
-        }
-      }
-      if (active) {
-        alert('🚨 [관제실 비상 통보] 출입문 닫힘 신호 루프 불량 발생!\n출입문 표시등이 점멸하며 역행(Traction) 출력이 차단됩니다.\nOP4 패널의 [출입문 바이패스] 스위치를 "바이패스" 위치로 절체하십시오.');
-      }
-    } else if (faultType === 'EB_STUCK') {
-      window.__FAULT_EB_STUCK = active;
-      if (active) {
-        currentGaugeBC = BC_EMG_BAR;
-        updateGaugeUI(BC_EMG_BAR, currentGaugeMR);
-        alert('🚨 [관제실 비상 통보] 비상제동 완해 불량(고착) 발생!\n비상제동 완해 절차를 수행하십시오.');
-      }
-    } else if (faultType === 'VOBC_FAIL') {
+    if (faultType === 'VOBC_FAIL') {
       window.__FAULT_VOBC_FAIL = active;
       if (active) {
         showTemporaryHudFeedback('🚨 [신호 고장] VOBC 고장 인가 (DU 적색 / ADU 앰버)', true);
@@ -11266,7 +11245,8 @@ const TrainRemote = {
       message: message
     });
 
-    this.addLog(`[지령 발송] ➔ 대상 부품: ${target}${message ? ` | "${message}"` : ''}`, 'blue');
+    const tName = (COMPONENT_REGISTRY[target] && COMPONENT_REGISTRY[target].name) || target;
+    this.addLog(`[지령 발송] ➔ 대상 부품: ${tName}${message ? ` | "${message}"` : ''}`, 'blue');
     if (msgInput) msgInput.value = '';
     triggerHaptic(20);
   },
@@ -11299,11 +11279,13 @@ const TrainRemote = {
   },
 
   showRemoteHint(target, message, instructorName) {
-    const compEl = document.getElementById(`comp-${target}`);
-    if (compEl) {
-      compEl.classList.add('hint-highlight');
-      setTimeout(() => compEl.classList.remove('hint-highlight'), 5000);
-      compEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const comp = COMPONENT_REGISTRY[target];
+    if (comp && comp.panel) switchPanelView(comp.panel);   // 대상 스위치가 있는 패널로 전환
+    const wrapEl = document.getElementById(`wrap-${target}`) || document.getElementById(`comp-${target}`);
+    if (wrapEl) {
+      wrapEl.classList.add('target-hint-pulse');
+      setTimeout(() => wrapEl.classList.remove('target-hint-pulse'), 5000);
+      wrapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     const toast = document.getElementById('vobc-result-toast');
@@ -11314,7 +11296,7 @@ const TrainRemote = {
     if (toast && title && desc) {
       if (icon) icon.innerText = '📡';
       title.innerText = `관제 지령 (${instructorName || '종합관제'})`;
-      desc.innerText = message || `지정 부품 [${target}]을(를) 확인 및 조작하십시오.`;
+      desc.innerText = message || `[${(comp && comp.name) || target}] 스위치를 확인 및 조작하십시오.`;
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 4000);
     }
@@ -12990,12 +12972,13 @@ function setMasconNotch(notch, silent = false) {
       lampApply.classList.remove('lit');
     }
 
-    // 3) 상용 제동 (B1 ~ B7): B4~B7은 4.0 bar 동일, B3은 3.0 bar, B1(2.3) / B2(2.7)
+    // 3) 상용 제동 (B1 ~ B7): B4~B7은 4.0 bar 동일, B3은 3.0 bar, B1(2.3) / B2(2.7) (구원운전 비상 시 모두 B7)
     if (notch.startsWith('B')) {
+      const bNotch = effectiveNotch(notch);
       let bcVal = 4.0;
-      if (notch === 'B1') bcVal = 2.3;
-      else if (notch === 'B2') bcVal = 2.7;
-      else if (notch === 'B3') bcVal = 3.0;
+      if (bNotch === 'B1') bcVal = 2.3;
+      else if (bNotch === 'B2') bcVal = 2.7;
+      else if (bNotch === 'B3') bcVal = 3.0;
       else if (notch === 'B4' || notch === 'B5' || notch === 'B6' || notch === 'B7') bcVal = 4.0;
 
       updateGaugeUI(bcVal);
@@ -13026,6 +13009,9 @@ function setMasconNotch(notch, silent = false) {
         isWarn = true;
       } else if (!isDoorInterlockCleared) {
         desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [출입문 인터록] 출입문 개방/고장으로 역행(Traction)이 차단되었습니다. 출입문을 닫거나 OP4 [출입문 바이패스] 스위치를 '바이패스' 위치로 절체하십시오)`;
+        isWarn = true;
+      } else if (isOp5TractionCut()) {
+        desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [OP5] 고속도차단기동작 또는 PWM차단이 취급되어 역행할 수 없습니다. 두 스위치를 모두 복귀하십시오)`;
         isWarn = true;
       } else if (isMrLowEbActive() || isMrTractionCut()) {
         desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [MR 압력 저하] MR ${currentGaugeMR.toFixed(1)} bar로 비상제동/역행회로 차단 중입니다. 관제 지시에 따라 OP3 [비상제동완해]와 OP5 [주공기BP]를 취급하십시오)`;
@@ -14014,6 +14000,7 @@ function applyScenario(sc) {
   window.__FAULT_VOBC1_FAIL = scFaults.includes('VOBC1_FAIL') || !!occFaults.VOBC1_FAIL;
   vobc1CbAllOff = false;
   window.__ACTIVE_VOBC = 1;
+  window.__VOBC_ALL_DOWN = false;
   if (window.__FAULT_VOBC1_FAIL) duEventMsg('MF', 'MC1 VOBC 고장');
   // 차단기 상태 초기화 (SPARE = 차단, 나머지 = 투입)
   registerBreakers();
@@ -14339,13 +14326,19 @@ function checkTcmsCuReset() {
   if (tcmsCuState.MC1 === 'DONE' && tcmsCuState.MC2 === 'DONE') {
     tcmsCuState = { MC1: '', MC2: '' };
     window.__FAULT_TCMS_FAIL = false;
-    if (window.__OCC_FAULTS) window.__OCC_FAULTS.TCMS_FAIL = false;
+    clearOccFault('TCMS_FAIL');
     window.__DU_EVT_MSG = null;
     showTemporaryHudFeedback('✅ [TCMS 복구] MC1·MC2 CU 스위치(CCUCB·CCUDOCB·CCUDICB) 재투입으로 TCMS 통신이 정상 복구되었습니다', false);
   }
 }
 
 /* DU / ADU 고장: 해당차(취급 운전실) DUCB / ADUCB를 차단했다가 다시 투입하면 화면 복구 */
+/* 학습자가 조치로 복구한 관제 인가 고장: 학습자 쪽 기록을 지우고 관제 화면 버튼도 정상으로 돌리도록 알림 */
+function clearOccFault(f) {
+  if (!window.__OCC_FAULTS || !window.__OCC_FAULTS[f]) return;
+  window.__OCC_FAULTS[f] = false;
+  if (typeof TrainRemote !== 'undefined') TrainRemote.sendStudentAction({ type: 'FAULT_CLEARED', fault: f });
+}
 const SCREEN_FAULTS = { DU_FAIL: { cb: 'CB_DUCB', name: 'DU' }, ADU_FAIL: { cb: 'CB_ADUCB', name: 'ADU' } };
 const cabCbId = base => base + (cabName() === 'MC2' ? '_MC2' : '');
 let screenFaultCbOff = {};
@@ -14357,18 +14350,57 @@ function checkScreenFaultReset(id, state) {
     else if (screenFaultCbOff[f]) {
       screenFaultCbOff[f] = false;
       window['__FAULT_' + f] = false;
-      if (window.__OCC_FAULTS) window.__OCC_FAULTS[f] = false;
+      clearOccFault(f);
       applyScreenFaults();
       showTemporaryHudFeedback(`✅ [${SCREEN_FAULTS[f].name} 복구] ${cabName()} ${SCREEN_FAULTS[f].cb.slice(3)} 재투입으로 화면이 복구되었습니다`, false);
     }
   });
 }
+/* 차단기가 차단(OFF) 상태인지 (차단기반을 아직 안 열어 등록 전이면 투입으로 봄) */
+const cbIsOff = id => (COMPONENT_REGISTRY[id] || {}).state === 'OFF';
+/* CACB 또는 EBLCB (MC1·MC2 어느 쪽이든) 차단 → 비상제동 루프가 끊겨 비상제동 체결. 재투입하면 해소 */
+const EB_LOOP_CBS = ['CB_CACB', 'CB_EBLCB', 'CB_CACB_MC2', 'CB_EBLCB_MC2'];
+function updateEbLoopCbEb() {
+  const off = EB_LOOP_CBS.filter(cbIsOff);
+  const on = off.length > 0;
+  if (on && !window.__CB_EB) {
+    const id = off[0];
+    duEventMsg('MF', `${id.endsWith('_MC2') ? 'MC2' : 'MC1'} ${id.replace(/^CB_|_MC2$/g, '')} 차단 비상제동`);
+    showTemporaryHudFeedback(`🚨 [비상제동] ${id.replace(/^CB_|_MC2$/g, '')} 차단으로 비상제동 루프 개방`, true);
+  }
+  if (!on && window.__CB_EB && /차단 비상제동$/.test(window.__DU_EVT_MSG || '')) window.__DU_EVT_MSG = null;
+  window.__CB_EB = on;
+  return on;
+}
+/* DU / ADU 화면 꺼짐: 고장 또는 해당차 DUCB / ADUCB 차단 */
 function applyScreenFaults() {
   const du = document.getElementById('sim-du-box');
   const adu = document.getElementById('sim-adu-box');
-  if (du) du.classList.toggle('screen-off', !!window.__FAULT_DU_FAIL);
-  if (adu) adu.classList.toggle('screen-off', !!window.__FAULT_ADU_FAIL);
+  if (du) du.classList.toggle('screen-off', !!window.__FAULT_DU_FAIL || cbIsOff(cabCbId('CB_DUCB')));
+  if (adu) adu.classList.toggle('screen-off', !!window.__FAULT_ADU_FAIL || cbIsOff(cabCbId('CB_ADUCB')));
 }
+/* CU 스위치(CCUCB·CCUDOCB·CCUDICB): 한쪽 차만 차단하면 반대편 CU로 절체되어 정상 현시.
+   MC1·MC2 모두 CU 스위치가 하나 이상 차단되어 있을 때만 TCMS 통신고장 표시 */
+const isCarCuDown = car => TCMS_CU_IDS[car].some(cbIsOff);
+const isTcmsCuCbOff = () => isCarCuDown('MC1') && isCarCuDown('MC2');
+/* VOBC 고장 여부 (n = 1 / 2): 고장 주입 또는 해당 차 VOBC 차단기 차단 */
+const isVobcFailed = n => !!window.__FAULT_VOBC_FAIL || !!window['__FAULT_VOBC' + n + '_FAIL'] || isVobcCbOff(n);
+/* VOBC1·VOBC2 모두 고장 → 비상제동. 모두 복귀하면 VOBC1 활성 + POSITION LOST (RM으로 태그 2개 통과 후 무인운전 가능) */
+function updateVobcAllDown() {
+  const down = isVobcFailed(1) && isVobcFailed(2);
+  if (down && !window.__VOBC_ALL_DOWN) {
+    window.__VOBC_ALL_DOWN = true;
+    duEventMsg('MF', 'VOBC1·VOBC2 고장 비상제동');
+  } else if (!down && window.__VOBC_ALL_DOWN && !isVobcFailed(1) && !isVobcFailed(2)) {
+    window.__VOBC_ALL_DOWN = false;
+    window.__ACTIVE_VOBC = 1;
+    setPositionLost();
+    showTemporaryHudFeedback('⚠️ [VOBC 복귀] VOBC1 활성, POSITION LOST (RM 모드로 위치 태그 2개 통과 필요)', true);
+  }
+  return !!window.__VOBC_ALL_DOWN;
+}
+/* VOBC 차단기(VOBCCB1·VOBCCB2·VOBCDICB) 중 하나라도 차단 → 그 차 VOBC 고장 (MC1 = VOBC1, MC2 = VOBC2) */
+const isVobcCbOff = car => ['CB_VOBCCB1', 'CB_VOBCCB2', 'CB_VOBCDICB'].some(id => cbIsOff(id + (car === 2 ? '_MC2' : '')));
 
 /* VOBC1 고장: MC1 VOBCCB1·VOBCCB2·VOBCDICB를 모두 차단했다가 다시 투입하면 VOBC1 정상 복귀 (활성은 절체된 VOBC2 유지) */
 const VOBC1_RESET_IDS = ['CB_VOBCCB1', 'CB_VOBCCB2', 'CB_VOBCDICB'];
@@ -14380,7 +14412,7 @@ function checkVobc1Reset() {
   else if (vobc1CbAllOff && st.every(x => x === 'ON')) {
     vobc1CbAllOff = false;
     window.__FAULT_VOBC1_FAIL = false;
-    if (window.__OCC_FAULTS) window.__OCC_FAULTS.VOBC1_FAIL = false;
+    clearOccFault('VOBC1_FAIL');
     showTemporaryHudFeedback('✅ [VOBC1 복구] MC1 VOBCCB1·VOBCCB2·VOBCDICB 리셋으로 VOBC1이 정상 복귀되었습니다', false);
   }
 }
@@ -14394,6 +14426,11 @@ function toggleBreaker(id) {
   showTemporaryHudFeedback(`🔌 [${comp.name}] ${comp.state === 'ON' ? '투입 (ON)' : '차단 (OFF)'}`, comp.state !== 'ON');
   checkTcmsCuReset();
   checkScreenFaultReset(id, comp.state);
+  applyScreenFaults();
+  if (/^CB_CCU(CB|DOCB|DICB)(_MC2)?$/.test(id)) {
+    if (isTcmsCuCbOff()) duEventMsg('MF', 'MC1 CU 통신고장');
+    else if (!window.__FAULT_TCMS_FAIL && /CU 통신고장$/.test(window.__DU_EVT_MSG || '')) window.__DU_EVT_MSG = null;
+  }
   checkVobc1Reset();
   if (currentMode === 'REC') promptRecordStep(id, comp.name, comp.state);
   else evaluateStepAction(id, comp.state);
