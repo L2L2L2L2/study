@@ -17,18 +17,19 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
     font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif; font-size: 13px; }
+  body { display: flex; flex-direction: column; }
   button, input, select, textarea { font: inherit; color: inherit; }
   button { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
   button:hover { border-color: #4b5563; background: #222a35; }
   button.primary { background: #1f6f43; border-color: #2ea043; }
   button.small { padding: 2px 7px; font-size: 12px; }
-  header { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  header { flex: none; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
   header h1 { font-size: 16px; margin: 0 8px 0 0; }
   header .grow { flex: 1; }
   #status { font-size: 12px; color: var(--muted); }
   #status.bad { color: var(--bad); }
-  .wrap { display: grid; grid-template-columns: minmax(380px, 46%) 1fr; height: calc(100% - 52px); }
-  @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; height: auto; } }
+  .wrap { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(440px, 47%) 1fr; }
+  @media (max-width: 900px) { body { display: block; height: auto; } .wrap { grid-template-columns: 1fr; } .pane { max-height: 70vh; } .right { grid-template-rows: auto 320px 220px 140px auto; } }
   .left { border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
   .tabs { display: flex; gap: 2px; padding: 8px 10px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
   .tabs button { border-radius: 6px 6px 0 0; border-bottom: none; background: transparent; color: var(--muted); }
@@ -37,25 +38,32 @@
   .bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
   .help { color: var(--muted); font-size: 12px; line-height: 1.6; margin: 0 0 8px; }
   .help code, p code { background: #0b0f14; padding: 0 4px; border-radius: 3px; color: #c9d1d9; }
-  table { border-collapse: collapse; width: 100%; }
-  th { position: sticky; top: -10px; background: var(--panel); color: var(--muted); font-weight: 600; font-size: 12px; text-align: left; padding: 4px; border-bottom: 1px solid var(--line); z-index: 1; }
+  table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+  th { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: sticky; top: -10px; background: var(--panel); color: var(--muted); font-weight: 600; font-size: 12px; text-align: left; padding: 4px; border-bottom: 1px solid var(--line); z-index: 1; }
   td { padding: 2px 3px; border-bottom: 1px solid #20262f; }
   tr.sel td { background: rgba(255, 211, 61, .10); }
+  td select { padding-left: 2px; padding-right: 0; }
   td input, td select { width: 100%; background: #0d1117; border: 1px solid #262d36; border-radius: 4px; padding: 3px 5px; min-width: 0; }
   td input:focus, td select:focus { outline: none; border-color: #58a6ff; }
   td input.bad { border-color: var(--bad); background: #2a1215; }
-  td.d { color: var(--muted); font-size: 12px; white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
-  td.x { width: 28px; text-align: center; }
-  .right { display: grid; grid-template-rows: auto minmax(220px, 1.25fr) minmax(160px, 1fr) 110px auto; gap: 8px; padding: 8px; min-height: 0; }
+  td.d { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; font-variant-numeric: tabular-nums; }
+  td.x { text-align: center; }
+  .right { display: grid; grid-template-rows: auto minmax(240px, 1.4fr) minmax(170px, 1fr) 130px auto; gap: 8px; padding: 8px; min-height: 0; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; display: flex; flex-direction: column; min-height: 0; }
   .card h2 { margin: 0 0 4px; font-size: 12px; color: var(--muted); font-weight: 600; display: flex; gap: 8px; align-items: center; }
-  .card h2 span { font-weight: 400; }
+  .card h2 > span { font-weight: 400; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card h2 button { font-size: 11px; padding: 1px 7px; font-weight: 400; color: var(--muted); }
+  .legend { display: flex; gap: 10px; font-size: 11px; color: var(--muted); font-weight: 400; }
+  .legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 4px; }
   canvas { display: block; width: 100%; flex: 1; min-height: 0; cursor: crosshair; }
   #cursorBox { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 12px; }
   #cursorBox b { font-variant-numeric: tabular-nums; }
   #warn { font-size: 12px; max-height: 120px; overflow: auto; }
   #warn div { padding: 2px 0; cursor: pointer; color: #e3b341; }
   #warn div.err { color: var(--bad); }
+  #warn div.info { color: var(--muted); }
+  #warn .sum { cursor: default; color: var(--text); padding-bottom: 4px; }
+  #warn .sum b.ok { color: var(--ok); }
   #warn div:hover { text-decoration: underline; }
   #tip { position: fixed; pointer-events: none; background: rgba(13,17,23,.95); border: 1px solid var(--line); border-radius: 6px;
     padding: 6px 8px; font-size: 12px; line-height: 1.5; display: none; z-index: 20; white-space: nowrap; }
@@ -92,9 +100,11 @@
   </div>
   <div class="right">
     <div class="card"><div id="cursorBox"><span>그래프를 클릭하면 그 위치가 여기 표시되고, 표의 <b>+ 추가</b>가 그 위치로 새 줄을 만듭니다.</span></div></div>
-    <div class="card"><h2>평면도 <span>휠: 확대 · 끌기: 이동 · 더블클릭: 전체 · 주황 = 우곡선, 하늘 = 좌곡선</span></h2><canvas id="plan"></canvas></div>
-    <div class="card"><h2>종단도 (레일면 높이, 지면 0 m) <span>휠: 확대 · 끌기: 이동 · 더블클릭: 전체</span></h2><canvas id="prof"></canvas></div>
-    <div class="card"><h2>제한속도 (km/h)</h2><canvas id="speed"></canvas></div>
+    <div class="card"><h2>평면도 <span class="legend"><span><i style="background:var(--right)"></i>우곡선</span><span><i style="background:var(--left)"></i>좌곡선</span><span>□ 건넘선</span></span>
+      <button data-z="plan" data-m="sel">선택 확대</button><button data-z="plan" data-m="all">전체</button></h2><canvas id="plan" title="휠: 확대 · 끌기: 이동 · 클릭: 위치 선택"></canvas></div>
+    <div class="card"><h2>종단도 <span class="legend"><span><i style="background:var(--elev)"></i>고가</span><span><i style="background:var(--cut)"></i>U형 개착</span><span><i style="background:var(--tun)"></i>터널</span><span title="고가 +2.6 m 초과 · 터널 −5.3 m 미만">점선: 고가·터널 경계</span></span>
+      <button data-z="prof" data-m="sel">선택 확대</button><button data-z="prof" data-m="all">전체</button></h2><canvas id="prof" title="휠: 확대 · 끌기: 이동 · 클릭: 위치 선택"></canvas></div>
+    <div class="card"><h2>제한속도 (km/h) <span></span></h2><canvas id="speed"></canvas></div>
     <div class="card"><h2>확인할 점</h2><div id="warn"></div></div>
   </div>
 </div>
@@ -171,27 +181,27 @@ function rebuild() {
 /* ---------- 표 ---------- */
 const TABS = {
   stations: { label: '역', rows: () => data.stations },
-  curves: { label: '곡선·제한속도', rows: () => data.curves },
-  grades: { label: '구배(높낮이)', rows: () => data.grades.rows },
+  curves: { label: '곡선·속도', rows: () => data.curves },
+  grades: { label: '구배', rows: () => data.grades.rows },
   xovers: { label: '건넘선', rows: () => data.xovers },
-  settings: { label: '설정·위치 표기' },
+  settings: { label: '위치 표기·설정' },
 };
 const COLS = {
   stations: [
-    { h: '번호', k: 0, w: 56 }, { h: '역명', k: 1, w: 110 }, { h: '앞역과 거리 m', k: 2, num: true, w: 90 },
-    { h: '형식', k: 3, sel: [['elev', '고가'], ['under', '지하']], w: 70 }, { h: '높이(참고)', k: 4, num: true, w: 70 },
-    { h: '중심 위치', d: r => km(stationS()[r[0]]) }],
+    { h: '번호', k: 0, w: 48 }, { h: '역명', k: 1 }, { h: '역간거리 m', k: 2, num: true, w: 70, t: '앞역 중심에서 이 역 중심까지 (첫 역은 0)' },
+    { h: '형식', k: 3, sel: [['elev', '고가'], ['under', '지하']], w: 72 }, { h: '높이 m', k: 4, num: true, w: 54, t: '참고값. 실제 높이는 구배 탭이 정함' },
+    { h: '중심', d: r => km(stationS()[r[0]]), w: 72 }],
   curves: [
-    { h: '중심 위치', k: 0, pos: true, w: 92 }, { h: '제한구간 m', k: 1, num: true, w: 74 }, { h: '반경 R', k: 2, num: true, w: 70 },
-    { h: '방향', k: 3, sel: [[1, '우'], [-1, '좌']], w: 54 }, { h: '속도 km/h', k: 4, num: true, w: 64 },
-    { h: '구간', d: r => { const c = posOf(r[0]); return isNaN(c) ? '?' : `${((c - r[1] / 2) / 1000).toFixed(3)} ~ ${km(c + r[1] / 2)}`; } }],
+    { h: '중심 위치', k: 0, pos: true, w: 84 }, { h: '구간 m', k: 1, num: true, w: 58, t: '제한구간 길이. 중심 앞뒤로 절반씩' }, { h: '반경 R', k: 2, num: true, w: 62 },
+    { h: '방향', k: 3, sel: [[1, '우'], [-1, '좌']], w: 50 }, { h: 'km/h', k: 4, num: true, w: 48, t: '설계속도(제한속도)' },
+    { h: '범위 km', d: r => { const c = posOf(r[0]); return isNaN(c) ? '?' : `${((c - r[1] / 2) / 1000).toFixed(2)}~${((c + r[1] / 2) / 1000).toFixed(2)}`; } }],
   grades: [
-    { h: '시작 위치', k: 0, pos: true, w: 92 }, { h: '구배 ‰', k: 1, num: true, w: 62 }, { h: '길이 m', k: 2, num: true, w: 74 },
-    { h: '메모', k: 3, w: 150 }, { h: '끝 높이', d: (r, i) => gradeEnds()[i] }],
+    { h: '시작 위치', k: 0, pos: true, w: 84 }, { h: '구배 ‰', k: 1, num: true, w: 56 }, { h: '길이 m', k: 2, num: true, w: 78 },
+    { h: '메모', k: 3 }, { h: '끝 높이', d: (r, i) => gradeEnds()[i], w: 68 }],
   xovers: [
-    { h: '시작 위치', k: 0, pos: true, w: 100 }, { h: '끝 위치', k: 1, pos: true, w: 100 },
-    { h: '방향', k: 2, sel: [['/', '/ 우측(본선)→좌측 선로'], ['\\', '\\ 좌측→우측(본선) 선로']], w: 190 },
-    { h: '길이', d: r => { const a = posOf(r[0]), b = posOf(r[1]); return isNaN(a + b) ? '?' : (b - a).toFixed(0) + ' m'; } }],
+    { h: '시작 위치', k: 0, pos: true, w: 90 }, { h: '끝 위치', k: 1, pos: true, w: 90 },
+    { h: '방향', k: 2, sel: [['/', '/ 본선→반대선'], ['\\', '\\ 반대선→본선']] },
+    { h: '길이', d: r => { const a = posOf(r[0]), b = posOf(r[1]); return isNaN(a + b) ? '?' : (b - a).toFixed(0) + ' m'; }, w: 56 }],
 };
 const HELP = {
   stations: '역 순서대로 <b>앞역과의 거리</b>(첫 역은 0)를 넣습니다. 거리를 바꾸면 그 뒤의 역과, 역 기준으로 적은 곡선·구배가 함께 밀립니다. <b>형식</b>은 승강장 모양(고가역·지하역)을 정하고, 실제 높이는 <b>구배</b> 탭에서 정해집니다. 3D 경관이 쓰는 역(' + PROTECTED.join(', ') + ')은 지울 수 없습니다.',
@@ -218,7 +228,7 @@ function renderPane() {
   if (tab === 'grades') h += `<div class="bar">시작 높이 (노선 시작점 레일면, m) <input id="y0" value="${esc(data.grades.y0)}" style="width:90px;background:#0d1117;border:1px solid #262d36;border-radius:4px;padding:3px 5px"></div>`;
   h += `<div class="bar"><button class="small" id="add">+ 추가${cursor !== null && tab !== 'stations' ? ' (선택 위치 ' + relOf(cursor) + ')' : ''}</button>`;
   if (tab !== 'stations') h += `<button class="small" id="sort">위치순 정렬</button>`;
-  h += `</div><table><thead><tr>${cols.map(c => `<th style="${c.w ? 'width:' + c.w + 'px' : ''}">${c.h}</th>`).join('')}<th></th></tr></thead><tbody>`;
+  h += `</div><table><thead><tr>${cols.map(c => `<th style="${c.w ? 'width:' + c.w + 'px' : ''}" title="${esc(c.t || c.h)}">${c.h}</th>`).join('')}<th style="width:30px"></th></tr></thead><tbody>`;
   rows.forEach((r, i) => {
     h += `<tr data-i="${i}" class="${sel === i ? 'sel' : ''}">`;
     cols.forEach((c, ci) => {
@@ -306,11 +316,28 @@ function selRange() {
   if (tab === 'grades') { const a = posOf(r[0]); return isNaN(a) ? null : [a, a + (+r[2] || 0)]; }
   if (tab === 'xovers') { const a = posOf(r[0]), b = posOf(r[1]); return isNaN(a + b) ? null : [a, b]; }
 }
+/* 줄을 고르면 확대 배율은 그대로 두고, 화면 밖에 있을 때만 그쪽으로 옮김. 확대는 '선택 확대' 버튼으로 */
 function focusSel() {
   const rg = selRange();
-  if (rg) { const m = (rg[0] + rg[1]) / 2, half = Math.max(500, (rg[1] - rg[0]) * 1.2); view.a = m - half; view.b = m + half; planFocus(m, half * 1.6); }
+  if (rg) {
+    const a = Math.min(...rg), b = Math.max(...rg), m = (a + b) / 2;
+    if (a < view.a || b > view.b) { const span = Math.max(view.b - view.a, (b - a) * 1.3); view.a = m - span / 2; view.b = m + span / 2; }
+    if (!plan.fit) planPanTo(m);
+  }
   drawAll();
 }
+function zoomSel(which) {
+  const rg = selRange() || (cursor !== null ? [cursor - 300, cursor + 300] : null);
+  if (!rg) { toast('표에서 줄을 고르거나 그래프에서 위치를 클릭하세요'); return; }
+  const a = Math.min(...rg), b = Math.max(...rg), m = (a + b) / 2, span = Math.max(1500, (b - a) * 3);
+  if (which === 'plan') planFocus(m, span); else { view.a = m - span / 2; view.b = m + span / 2; }
+  drawAll();
+}
+document.querySelectorAll('button[data-z]').forEach(bt => bt.onclick = () => {
+  if (bt.dataset.m === 'sel') zoomSel(bt.dataset.z);
+  else if (bt.dataset.z === 'plan') { plan.fit = true; drawAll(); }
+  else { view.a = R.START; view.b = R.END; drawAll(); }
+});
 
 /* ---------- 그래프 공통 ---------- */
 const view = { a: -400, b: 30000 };      // 종단·속도 공통 가로 범위 (s)
@@ -341,20 +368,55 @@ function clampView() {
 
 /* ---------- 평면도 ---------- */
 const plan = { sc: 0, ox: 0, oy: 0, fit: true };
-const PX_ = i => -R.PZ[i], PY_ = i => R.PX[i];
+/* 평면 좌표는 노선 주축이 가로가 되게 돌려서 그림 (시작이 왼쪽). 3D 좌표 자체가 실제 방위가 아니므로 회전해도 무방 */
+const rot = { c: 1, s: 0, key: null };
+function updateRot() {
+  const key = R.NS + ':' + R.PX[R.NS - 1] + ':' + R.PZ[R.NS - 1]; if (rot.key === key) return; rot.key = key;
+  let mx = 0, my = 0, n = 0; for (let i = 0; i < R.NS; i += 10) { mx += -R.PZ[i]; my += R.PX[i]; n++; } mx /= n; my /= n;
+  let sxx = 0, syy = 0, sxy = 0; for (let i = 0; i < R.NS; i += 10) { const x = -R.PZ[i] - mx, y = R.PX[i] - my; sxx += x * x; syy += y * y; sxy += x * y; }
+  let th = 0.5 * Math.atan2(2 * sxy, sxx - syy); rot.c = Math.cos(th); rot.s = Math.sin(th);
+  if (PX_(R.NS - 1) < PX_(0)) { rot.c = -rot.c; rot.s = -rot.s; }
+}
+const PX_ = i => -R.PZ[i] * rot.c + R.PX[i] * rot.s, PY_ = i => R.PZ[i] * rot.s + R.PX[i] * rot.c;
 function planFit(w, h) {
   let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
   for (let i = 0; i < R.NS; i += 10) { const X = PX_(i), Y = PY_(i); minX = Math.min(minX, X); maxX = Math.max(maxX, X); minY = Math.min(minY, Y); maxY = Math.max(maxY, Y); }
   const pad = 30; plan.sc = Math.min((w - pad * 2) / (maxX - minX), (h - pad * 2) / (maxY - minY));
   plan.ox = w / 2 - (minX + maxX) / 2 * plan.sc; plan.oy = h / 2 - (minY + maxY) / 2 * plan.sc;
 }
-function planFocus(s, span) {
+function planFocus(s, span) {           // s 를 가운데에 두고, 앞뒤 span 이 들어오게 확대
+  const cv = $('plan'), w = cv.clientWidth, h = cv.clientHeight;
+  const i0 = idxOf(s - span / 2), i1 = idxOf(s + span / 2);
+  let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+  for (let i = i0; i <= i1; i += 2) { const X = PX_(i), Y = PY_(i); minX = Math.min(minX, X); maxX = Math.max(maxX, X); minY = Math.min(minY, Y); maxY = Math.max(maxY, Y); }
+  const pad = 40; plan.fit = false;
+  plan.sc = Math.min((w - pad * 2) / Math.max(50, maxX - minX), (h - pad * 2) / Math.max(50, maxY - minY));
+  planPanTo(s, true);
+}
+function planPanTo(s, force) {          // 화면 밖이면(또는 force) s 를 가운데로
   const cv = $('plan'), w = cv.clientWidth, h = cv.clientHeight, i = idxOf(s);
-  plan.fit = false; plan.sc = Math.min(w, h) / span; plan.ox = w / 2 - PX_(i) * plan.sc; plan.oy = h / 2 - PY_(i) * plan.sc;
+  const x = plan.ox + PX_(i) * plan.sc, y = plan.oy + PY_(i) * plan.sc;
+  if (force || x < 30 || x > w - 30 || y < 20 || y > h - 20) { plan.ox = w / 2 - PX_(i) * plan.sc; plan.oy = h / 2 - PY_(i) * plan.sc; }
+}
+/* 이름표 겹침 방지: 이미 그린 상자와 겹치면 건너뜀 */
+function labeler(g) {
+  const boxes = [];
+  return (text, x, y, opts = {}) => {
+    const wd = g.measureText(text).width, hgt = 12;
+    const cand = (opts.sides || [[7, 'left'], [-7, 'right']]).map(([dx, align]) => {
+      const x0 = align === 'left' ? x + dx : align === 'right' ? x + dx - wd : x - wd / 2, y0 = y - hgt + 2;
+      const inside = !opts.w || (x0 >= 2 && x0 + wd <= opts.w - 2);
+      const free = !boxes.some(b => x0 < b[2] && x0 + wd > b[0] && y0 < b[3] && y0 + hgt > b[1]);
+      return { x0, y0, inside, free };
+    });
+    const c = cand.find(c => c.inside && c.free) || (opts.force && (cand.find(c => c.inside) || cand[0]));
+    if (!c) return false;
+    boxes.push([c.x0 - 2, c.y0 - 1, c.x0 + wd + 2, c.y0 + hgt + 1]); g.textAlign = 'left'; const fs = g.fillStyle; g.lineJoin = 'round'; g.lineWidth = 3; g.strokeStyle = 'rgba(14,17,22,.85)'; g.strokeText(text, c.x0, y); g.fillStyle = fs; g.fillText(text, c.x0, y); return true;
+  };
 }
 function drawPlan() {
   const cv = $('plan'), { g, w, h } = setup(cv);
-  if (plan.fit) planFit(w, h);
+  updateRot(); if (plan.fit) planFit(w, h);
   const pt = i => [plan.ox + PX_(i) * plan.sc, plan.oy + PY_(i) * plan.sc];
   const step = Math.max(1, Math.floor(2 / plan.sc));
   // 곡선 구간 (방향 색)
@@ -367,16 +429,19 @@ function drawPlan() {
   drawSelPlan(g, pt, step);
   // 건넘선
   for (const [a, b] of R.XOVERS) { const [x, y] = pt(idxOf((a + b) / 2)); g.strokeStyle = '#c792ea'; g.lineWidth = 2; g.strokeRect(x - 4, y - 4, 8, 8); }
-  // 역
+  // 역 (선택한 역 이름표를 먼저 그려 항상 보이게)
   g.font = 'bold 11px sans-serif';
-  const dense = plan.sc < 0.06;
-  R.STN.forEach((st, n) => {
-    const [x, y] = pt(idxOf(st.s));
-    g.fillStyle = css('--st'); g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill();
-    if (dense && n % 2) return;
-    g.fillStyle = css('--text'); g.fillText(`${st.id} ${st.name}`, x + 7, y - 6);
-  });
-  if (cursor !== null) { const [x, y] = pt(idxOf(cursor)); g.strokeStyle = css('--sel'); g.lineWidth = 2; g.beginPath(); g.arc(x, y, 8, 0, 7); g.stroke(); }
+  const label = labeler(g), selSt = tab === 'stations' && sel !== null ? String((data.stations[sel] || [])[0]) : null;
+  const order = R.STN.map((st, n) => n).sort((a, b) => (R.STN[b].id === selSt) - (R.STN[a].id === selSt));
+  for (const n of order) { const [x, y] = pt(idxOf(R.STN[n].s)); g.fillStyle = css('--st'); g.beginPath(); g.arc(x, y, 3.5, 0, 7); g.fill(); }
+  for (const n of order) {
+    const st = R.STN[n], [x, y] = pt(idxOf(st.s)); if (x < -80 || x > w + 80 || y < -20 || y > h + 20) continue;
+    g.fillStyle = st.id === selSt ? css('--sel') : css('--text');
+    label(`${st.id} ${st.name}`, x, y + 4, { sides: [[8, 'left'], [-8, 'right']], force: st.id === selSt, w });
+  }
+  // 선택 위치 표시: 전체 보기에서도 찾기 쉽게 고리를 그림
+  const rg = selRange(), mark = rg ? (rg[0] + rg[1]) / 2 : cursor;
+  if (mark !== null && mark !== undefined) { const [x, y] = pt(idxOf(mark)); g.strokeStyle = css('--sel'); g.lineWidth = 2; g.beginPath(); g.arc(x, y, 9, 0, 7); g.stroke(); }
   // 축척
   const bar = [100, 200, 500, 1000, 2000, 5000].find(m => m * plan.sc > 70) || 5000;
   g.strokeStyle = css('--muted'); g.fillStyle = css('--muted'); g.lineWidth = 2; g.font = '11px sans-serif';
@@ -387,7 +452,7 @@ function drawSelPlan(g, pt, step) {
   const i0 = idxOf(Math.min(rg[0], rg[1])), i1 = idxOf(Math.max(rg[0], rg[1]));
   g.beginPath(); for (let k = i0; k <= i1; k += step) { const [x, y] = pt(k); k === i0 ? g.moveTo(x, y) : g.lineTo(x, y); }
   const [xe, ye] = pt(i1); g.lineTo(xe, ye);
-  g.strokeStyle = css('--sel'); g.lineWidth = 5; g.stroke();
+  g.strokeStyle = css('--sel'); g.lineWidth = 6; g.lineCap = 'round'; g.stroke(); g.lineCap = 'butt';
 }
 
 /* ---------- 종단 / 속도 ---------- */
@@ -409,7 +474,7 @@ function shadeSel(g, sx, top, bot) {
 }
 function drawProfile() {
   const cv = $('prof'), { g, w, h } = setup(cv);
-  const padL = 44, padR = 10, padT = 18, padB = 16;
+  const padL = 44, padR = 10, padT = 30, padB = 16;
   const sx = hAxis(g, w, h, padL, padR, padB);
   const i0 = idxOf(view.a), i1 = idxOf(view.b);
   let lo = 1e9, hi = -1e9; for (let i = i0; i <= i1; i += 5) { lo = Math.min(lo, R.PY[i]); hi = Math.max(hi, R.PY[i]); }
@@ -421,7 +486,6 @@ function drawProfile() {
   g.setLineDash([3, 4]); g.lineWidth = 1;
   for (const [y, t, c] of [[2.6, '고가 경계', '--elev'], [-5.3, '터널 경계', '--tun']]) {
     g.strokeStyle = css(c); g.globalAlpha = .5; g.beginPath(); g.moveTo(padL, sy(y)); g.lineTo(w - padR, sy(y)); g.stroke(); g.globalAlpha = 1;
-    g.fillStyle = css(c); g.font = '10px sans-serif'; g.fillText(t, w - padR - 50, sy(y) - 3);
   }
   g.setLineDash([]);
   g.fillStyle = css('--muted'); g.font = '10px sans-serif';
@@ -435,13 +499,15 @@ function drawProfile() {
     const m = a + len / 2, x = sx(m); if (sx(a + len) - sx(a) < 26) continue;
     g.fillText((gr > 0 ? '+' : '') + gr + '‰', x - 12, sy(R.PY[idxOf(m)]) - 6);
   }
-  // 역
-  g.textAlign = 'center';
-  R.STN.forEach((st, n) => {
+  // 역: 위쪽 두 줄에 이름, 겹치면 생략
+  g.font = '10px sans-serif'; const label = labeler(g);
+  R.STN.forEach(st => {
     if (st.s < view.a - 50 || st.s > view.b + 50) return;
     const x = sx(st.s), y = sy(R.Y(st.s));
     g.fillStyle = css('--st'); g.fillRect(x - 3, y - 3, 6, 6);
-    g.fillStyle = css('--text'); g.font = '10px sans-serif'; g.fillText(st.name, x, n % 2 ? padT - 6 : padT + 5);
+    g.fillStyle = css('--text');
+    const lw = g.measureText(st.name).width, lx = Math.max(padL + lw / 2, Math.min(w - padR - lw / 2, x));
+    if (!label(st.name, lx, 11, { sides: [[0, 'center']] })) label(st.name, lx, 23, { sides: [[0, 'center']] });
   });
   g.textAlign = 'left';
   if (cursor !== null) { g.strokeStyle = css('--sel'); g.lineWidth = 1; g.beginPath(); g.moveTo(sx(cursor), padT); g.lineTo(sx(cursor), h - padB); g.stroke(); }
@@ -455,7 +521,7 @@ function drawSpeed() {
   const vMax = 85, sy = v => padT + (vMax - v) / vMax * (h - padT - padB);
   shadeSel(g, sx, padT, h - padB);
   g.fillStyle = css('--muted'); g.font = '10px sans-serif';
-  for (const v of [30, 50, 70, 80]) { g.fillText(v, 18, sy(v) + 3); g.strokeStyle = 'rgba(255,255,255,.06)'; g.beginPath(); g.moveTo(padL, sy(v)); g.lineTo(w - padR, sy(v)); g.stroke(); }
+  for (const v of [20, 40, 60, 80]) { g.fillText(v, 18, sy(v) + 3); g.strokeStyle = 'rgba(255,255,255,.06)'; g.beginPath(); g.moveTo(padL, sy(v)); g.lineTo(w - padR, sy(v)); g.stroke(); }
   g.save(); g.beginPath(); g.rect(padL, 0, w - padL - padR, h); g.clip();
   const st = Math.max(1, (view.b - view.a) / w);
   g.beginPath(); for (let s = view.a; s <= view.b; s += st) { const v = R.limitAt(s) * 3.6; s === view.a ? g.moveTo(sx(s), sy(v)) : g.lineTo(sx(s), sy(v)); }
@@ -546,7 +612,7 @@ function checkAll() {
   });
   const cs = data.curves.map((r, i) => ({ i, c: posOf(r[0], SS), w: +r[1], r })).filter(x => !isNaN(x.c)).sort((a, b) => a.c - b.c);
   for (let k = 1; k < cs.length; k++) if (cs[k].c - cs[k].w / 2 < cs[k - 1].c + cs[k - 1].w / 2 - 1)
-    out.push({ t: `곡선 ${cs[k - 1].r[0]} 과 ${cs[k].r[0]} 의 구간이 겹침 (겹친 곳은 곡률이 더해지고 낮은 속도 적용)`, tab: 'curves', i: cs[k].i });
+    out.push({ info: true, t: `곡선 ${cs[k - 1].r[0]} · ${cs[k].r[0]} 구간이 ${Math.round(cs[k - 1].c + cs[k - 1].w / 2 - (cs[k].c - cs[k].w / 2))} m 겹침 (S자·복합곡선이면 정상. 겹친 곳은 곡률이 더해지고 낮은 속도 적용)`, tab: 'curves', i: cs[k].i });
   data.grades.rows.forEach((r, i) => {
     if (isNaN(posOf(r[0], SS))) out.push({ err: true, t: `구배 ${i + 1}: 위치 "${r[0]}" 형식 오류`, tab: 'grades', i });
     if (Math.abs(+r[1]) > 60) out.push({ t: `구배 ${r[0]}: ${r[1]}‰는 매우 급함`, tab: 'grades', i });
@@ -555,7 +621,11 @@ function checkAll() {
   data.xovers.forEach((r, i) => { const a = posOf(r[0], SS), b = posOf(r[1], SS);
     if (isNaN(a + b)) out.push({ err: true, t: `건넘선 ${i + 1}: 위치 형식 오류`, tab: 'xovers', i });
     else if (b - a < 20) out.push({ t: `건넘선 ${r[0]}: 길이 ${(b - a).toFixed(0)} m (끝 위치가 시작보다 뒤여야 함)`, tab: 'xovers', i }); });
-  $('warn').innerHTML = out.length ? out.map((o, n) => `<div class="${o.err ? 'err' : ''}" data-n="${n}">${o.err ? '✕' : '△'} ${esc(o.t)}</div>`).join('') : '<span style="color:var(--ok)">문제 없음</span>';
+  out.sort((a, b) => (b.err ? 2 : b.info ? 0 : 1) - (a.err ? 2 : a.info ? 0 : 1));
+  const nE = out.filter(o => o.err).length, nW = out.filter(o => !o.err && !o.info).length, nI = out.length - nE - nW;
+  const sum = nE + nW ? `오류 <b style="color:var(--bad)">${nE}</b> · 주의 <b style="color:#e3b341">${nW}</b>` : '<b class="ok">✓ 문제 없음</b>';
+  $('warn').innerHTML = `<div class="sum">${sum}${nI ? ` · 참고 ${nI}` : ''}</div>` +
+    out.map((o, n) => `<div class="${o.err ? 'err' : o.info ? 'info' : ''}" data-n="${n}">${o.err ? '✕' : o.info ? 'ⓘ' : '△'} ${esc(o.t)}</div>`).join('');
   $('warn').onclick = e => { const d = e.target.closest('div[data-n]'); if (!d) return; const o = out[+d.dataset.n]; if (!o.tab) return;
     tab = o.tab; renderTabs(); renderPane(); if (o.i !== undefined) select(o.i, true); };
 }
