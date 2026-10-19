@@ -9822,6 +9822,10 @@ function isParkBrakeTractionCut() {
   if (window.__PARK_BRAKE_SET !== true) return false;
   return window.__MR_CRIT === true || cvCompState('SW_PARK_BP', 'NORMAL') !== 'BYPASS';
 }
+/* OP5 고속도차단기동작 / PWM차단 중 하나라도 취급(눌림) → 수동 운전 역행 불가 */
+function isOp5TractionCut() {
+  return cvCompState('SW_HB_ACTION', 'RELEASED') === 'LATCHED' || cvCompState('SW_PWM_CUT', 'RELEASED') === 'LATCHED';
+}
 /* MR 6.0 bar 미만: 역행회로 차단 → OP5 주공기BP(바이패스)로 역행회로 구성 */
 function isMrTractionCut() {
   return window.__MR_LOW === true && cvCompState('SW_MR_BP', 'NORMAL') !== 'BYPASS';
@@ -9911,7 +9915,7 @@ function updateTrainPhysics() {
   if (hcrEb) {
     if (currentGaugeBC !== BC_EMG_BAR) updateGaugeUI(BC_EMG_BAR);
   } else if (isManualMode && window.__HOLDING_BRAKE_ACTIVE) {
-    if ((revNotch === 'F' || revNotch === 'R') && notch.charAt(0) === 'P' && isKeyOn && !isEmgActive && !isRmEbActive && !isParkCut && !isMrEb) {
+    if ((revNotch === 'F' || revNotch === 'R') && notch.charAt(0) === 'P' && isKeyOn && !isEmgActive && !isRmEbActive && !isParkCut && !isMrEb && !isOp5TractionCut()) {
       window.__HOLDING_BRAKE_ACTIVE = false;          // 정차제동 완해 → 역행
       try { sound.playAirExhaust(0.5, 1200, 0.4); } catch (e) { }
       updateGaugeUI(0.0);
@@ -9921,7 +9925,7 @@ function updateTrainPhysics() {
   }
 
   const canManualTraction = isManualMode && isKeyOn && (revNotch === 'F' || revNotch === 'R') &&
-                            isDoorInterlockCleared && !isParkCut && !isMrEb && !isEmgActive && !isRmEbActive && cvBC() < 0.5;
+                            isDoorInterlockCleared && !isParkCut && !isMrEb && !isOp5TractionCut() && !isEmgActive && !isRmEbActive && cvBC() < 0.5;
 
   let target = 0.0, rate = 0.0;
 
@@ -13028,6 +13032,9 @@ function setMasconNotch(notch, silent = false) {
         isWarn = true;
       } else if (!isDoorInterlockCleared) {
         desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [출입문 인터록] 출입문 개방/고장으로 역행(Traction)이 차단되었습니다. 출입문을 닫거나 OP4 [출입문 바이패스] 스위치를 '바이패스' 위치로 절체하십시오)`;
+        isWarn = true;
+      } else if (isOp5TractionCut()) {
+        desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [OP5] 고속도차단기동작 또는 PWM차단이 취급되어 역행할 수 없습니다. 두 스위치를 모두 복귀하십시오)`;
         isWarn = true;
       } else if (isMrLowEbActive() || isMrTractionCut()) {
         desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [MR 압력 저하] MR ${currentGaugeMR.toFixed(1)} bar로 비상제동/역행회로 차단 중입니다. 관제 지시에 따라 OP3 [비상제동완해]와 OP5 [주공기BP]를 취급하십시오)`;
