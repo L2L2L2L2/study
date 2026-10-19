@@ -9274,7 +9274,7 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const isEmgReleaseLatched = (cvCompState('SW_EMG_RELEASE', 'RELEASED') === 'LATCHED');
     const isEmgActive = (isEmgStopLatched && !isEmgReleaseLatched);
     const isHcrEb = window.__HCR_EB === true;
-    const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB') || isHcrEb || isMrLowEbActive() || !!window.__VOBC_ALL_DOWN;
+    const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB') || isHcrEb || isMrLowEbActive() || !!window.__VOBC_ALL_DOWN || !!window.__CB_EB;
     const isUnmannedNow = driveMode === 'OFF' && cvCompState('SW_WIRELESS_MODE', 'OFF') === 'LIT';
 
     // 운전모드 칩 (FM / RM / ATPM / 무인운전 "Driver less": 청색, 그 외 빈칸)
@@ -9779,8 +9779,8 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const log2 = document.getElementById('adu2-log-2');
     const log3 = document.getElementById('adu2-log-3');
     const log4 = document.getElementById('adu2-log-4');
-    // 메시지는 요청된 것만 현시 (현재: POSITION LOST). 특이사항이 없으면 시간만 표시
-    if (log1) log1.innerText = `${hh}:${mm}:${ss}`;
+    // 메시지는 요청된 것만 현시 (현재: 1줄 RESET EB, 4줄 POSITION LOST). 특이사항이 없으면 시간만 표시
+    if (log1) log1.innerText = isEbActive ? `${hh}:${mm}:${ss} RESET EB` : `${hh}:${mm}:${ss}`;
     if (log2) log2.innerText = `${hh}:${mm}:${ss}`;
     if (log3) log3.innerText = `${hh}:${mm}:${ss}`;
     if (log4) {
