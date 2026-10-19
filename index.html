@@ -397,6 +397,18 @@
       text-overflow: ellipsis;
     }
 
+    .hud-report-btn {
+      margin-top: 4px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #f0f6fc;
+      background: #1f6feb;
+      border: 1px solid #58a6ff;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
     .hud-rec-bar {
       display: none;
       align-items: center;
@@ -5371,6 +5383,7 @@
       <div id="hud-instruction" class="hud-instruction-text">
         스위치와 레버를 자유롭게 조작하며 인터록, 계기 및 사운드 반응을 테스트해보세요. (시나리오 실습은 하단 '시나리오 선택' 클릭)
       </div>
+      <button type="button" id="hud-report-btn" class="hud-report-btn" style="display:none;" onclick="submitScenarioReport()">📡 관제 보고</button>
     </div>
 
     <!-- 녹화 전용 상태바 -->
@@ -6961,6 +6974,14 @@
               <span>🚨 주차제동 완해 불능</span>
               <span id="fault-lbl-park" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
             </button>
+            <button type="button" id="btn-fault-mr" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('MR_LEAK')">
+              <span>🚨 MR 공기누설 (4.0~6.0 bar)</span>
+              <span id="fault-lbl-mr" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
+            </button>
+            <button type="button" id="btn-fault-mr-severe" class="occ-fault-toggle-btn" onclick="TrainRemote.toggleFault('MR_LEAK_SEVERE')">
+              <span>🚨 MR 공기누설 심화 (4.0 bar 미만)</span>
+              <span id="fault-lbl-mr-severe" class="occ-fault-sub">정상 (클릭 시 고장 인가)</span>
+            </button>
             <button type="button" id="btn-occ-radio-test" class="occ-fault-toggle-btn occ-radio-test-btn" onclick="playOccRadioTest()" title="관제 음성 무전 테스트 방송 송출 (클릭 시 TTS 및 무전 효과음 재생)">
               <span>🎙️ 관제 음성무전 테스트</span>
               <span id="fault-lbl-radio-test" class="occ-fault-sub">선로 확인 지령 (TTS)</span>
@@ -7906,14 +7927,22 @@ const ROTARY3_BOUNCE = {
 
 /**
  * 기본 탑재 실무 교육 시나리오
- *  - faults: 시나리오 시작 시 주입할 고장 (PARK_REL_FAIL: 주차제동완해를 눌러도 역행회로가 복귀되지 않음)
+ *  - faults: 시나리오 시작 시 주입할 고장
+ *      PARK_REL_FAIL: 주차제동완해를 눌러도 역행회로가 복귀되지 않음 (MR 압력은 정상)
+ *      MR_LEAK: 다량의 공기누설로 MR 압력이 4.0~6.0 bar를 오감 (6.0 bar 미만 → 비상제동 + 역행 차단)
+ *      MR_LEAK_SEVERE: 누설 심화로 MR 4.0 bar 미만 (비상제동 + 주차제동 자동 체결 → 자력 운행 불가)
+ *  - setup: 시작 시 운전 상태 (driveMode, masterKey, reverser)
+ *  - allowDriving: 마스콘·전후진제어기·제어키·운전모드 조작은 오조작으로 치지 않음
+ *  - step.type: REPORT(HUD [관제 보고] 버튼, occReply는 관제 응답 무전), ARRIVE(최근역 정위치 정차 시 자동 완료)
+ *  - step.altTargets / step.expectedStates: 여러 부품·상태 중 하나면 정답
  */
 const DEFAULT_SCENARIOS = [
   {
     id: "SCN_PARK_BRAKE_BP",
     title: "1. 주차제동 완해 불능 시 주차제동BP 취급",
-    description: "주차제동을 체결하면 역행회로가 차단되어 F·R 모두 역행할 수 없습니다. 주차제동완해를 눌렀음에도 복귀되지 않는 경우 OP5 [주차제동BP]를 바이패스로 취급하여 역행회로를 구성하는 절차입니다.",
+    description: "MR 압력은 정상으로 유지되는 상태에서 어떠한 사유로 주차제동을 체결했다가 복귀되지 않는 상황입니다. 주차제동을 체결하면 역행회로가 차단되어 F·R 모두 역행할 수 없습니다. 주차제동완해를 눌렀음에도 복귀되지 않는 경우 OP5 [주차제동BP]를 바이패스로 취급하여 역행회로를 구성하는 절차입니다.",
     faults: ["PARK_REL_FAIL"],
+    allowDriving: true,
     steps: [
       {
         step: 1,
@@ -7935,6 +7964,110 @@ const DEFAULT_SCENARIOS = [
         targetName: "주차제동BP",
         expectedState: "BYPASS",
         instruction: "OP5 패널의 [주차제동BP] 스위치를 '바이패스' 위치로 절체하여 역행회로를 구성하십시오."
+      }
+    ]
+  },
+  {
+    id: "SCN_MR_LEAK_BP",
+    title: "2. MR 공기누설(4.0~6.0 bar) 시 주공기BP 취급 및 회송",
+    description: "다량의 공기누설로 MR 압력이 4.0~6.0 bar를 오가며 6.0 bar 미만에서 비상제동이 체결된 상황입니다. 관제에 보고하고 지시에 따라 OP3 [비상제동완해]와 OP5 [주공기BP]를 취급한 뒤 최근역까지 운행하여 승객을 하차시키고 회송합니다.",
+    faults: ["MR_LEAK"],
+    setup: { driveMode: "FM", masterKey: "ON", reverser: "F" },
+    allowDriving: true,
+    steps: [
+      {
+        step: 1,
+        type: "REPORT",
+        target: "OCC_REPORT",
+        targetName: "관제 보고",
+        instruction: "MR 압력계가 4.0~6.0 bar를 오가며 비상제동이 체결된 것을 확인하고 [📡 관제 보고]를 누르십시오.",
+        report: "관제, 현재 MR 압력이 4~6 bar를 오가면서 비상제동이 체결된 상황입니다.",
+        occReply: "알았다. 비상제동완해 버튼과 주공기BP를 취급하고 최근역까지 운행하여 승객 하차 조치 바란다."
+      },
+      {
+        step: 2,
+        target: "SW_EMG_COVER",
+        targetName: "비상완해 보호커버",
+        expectedState: "OPEN",
+        instruction: "관제 지시에 따라 OP3 [비상완해 보호커버]를 여십시오."
+      },
+      {
+        step: 3,
+        target: "SW_EMG_RELEASE",
+        targetName: "비상제동완해",
+        expectedState: "LATCHED",
+        instruction: "보호커버 내부의 [비상제동완해] 버튼을 눌러 비상제동을 완해하십시오."
+      },
+      {
+        step: 4,
+        target: "SW_MR_BP",
+        targetName: "주공기BP",
+        expectedState: "BYPASS",
+        instruction: "OP5 패널의 [주공기BP] 스위치를 '바이패스' 위치로 절체하여 역행회로를 구성하십시오."
+      },
+      {
+        step: 5,
+        type: "ARRIVE",
+        target: "STATION_ARRIVE",
+        targetName: "최근역 정차",
+        instruction: "최근역까지 운행하여 정위치에 정차하십시오."
+      },
+      {
+        step: 6,
+        target: "SW_DOOR_OPEN_R",
+        altTargets: ["SW_DOOR_OPEN_L"],
+        targetName: "출입문 열림",
+        expectedState: "PRESSED",
+        instruction: "승강장 방향의 출입문을 열어 승객을 하차시키십시오."
+      },
+      {
+        step: 7,
+        type: "REPORT",
+        target: "OCC_REPORT",
+        targetName: "관제 보고",
+        instruction: "승객 하차가 끝나면 [📡 관제 보고]로 하차 완료를 보고하십시오.",
+        report: "관제, 승객 하차 완료하였습니다.",
+        occReply: "알았다. 출입문 닫고 회송 조치 바란다."
+      },
+      {
+        step: 8,
+        target: "SW_DOOR_CLOSE",
+        targetName: "출입문 닫힘",
+        expectedState: "PRESSED",
+        instruction: "[출입문 닫힘]을 눌러 출입문을 닫으십시오."
+      },
+      {
+        step: 9,
+        target: "SW_MASCON",
+        expectedStates: ["P1", "P2", "P3", "P4"],
+        targetName: "마스콘 역행",
+        instruction: "관제 지시에 따라 마스콘을 역행으로 넣어 회송 출발하십시오."
+      }
+    ]
+  },
+  {
+    id: "SCN_MR_LEAK_RESCUE",
+    title: "3. MR 4.0 bar 미만(비상·주차제동 체결) 시 구원연결 요청",
+    description: "MR 공기누설이 심해져 4.0 bar 미만이 되어 비상제동과 주차제동까지 체결되어 자력으로 운행할 수 없는 상황입니다. 관제에 구원연결을 요청하고 구원연결을 시행합니다.",
+    faults: ["MR_LEAK_SEVERE"],
+    setup: { driveMode: "FM", masterKey: "ON", reverser: "F" },
+    allowDriving: true,
+    steps: [
+      {
+        step: 1,
+        type: "REPORT",
+        target: "OCC_REPORT",
+        targetName: "관제 보고",
+        instruction: "MR 압력이 4.0 bar 미만으로 떨어져 비상제동과 주차제동(DU PB)이 체결된 것을 확인하고 [📡 관제 보고]를 누르십시오.",
+        report: "관제, 현재 MR 압력이 4.0 bar 미만으로 비상제동 및 주차제동 체결된 상태로 구원연결을 요청합니다.",
+        occReply: "알았다. 구원열차 수배하겠다. 구원연결 시행 바란다."
+      },
+      {
+        step: 2,
+        target: "SW_RESCUE_DRIVE",
+        targetName: "구원운전",
+        expectedState: "RESCUE",
+        instruction: "구원연결을 시행합니다. OP3 [구원운전] 스위치를 '구원' 위치로 절체하십시오."
       }
     ]
   }
@@ -8700,7 +8833,56 @@ const CM_RATE = 0.06;        // 공기압축기 충기 속도 (bar/s) → 8→10
 const MR_CM_ON = 8.0, MR_CM_OFF = 10.0;
 let lastBcForMr = null;
 window.__CM_RUNNING = false;
+/* MR 공기누설 고장 (window.__FAULT_MR_LEAK)
+   MODERATE: 누설과 공기압축기 충기가 맞서 4.0~6.0 bar를 오감 / SEVERE: 압축기가 못 따라가 4.0 bar 미만(약 3 bar)으로 저하
+   MR 6.0 bar 미만 → __MR_LOW (비상제동 + 역행 차단, 6.5 bar 이상 회복 시 해소)
+   MR 4.0 bar 미만 → __MR_CRIT (주차제동 자동 체결, 4.5 bar 이상 회복 시 해소) */
+const MR_LOW_EB = 6.0, MR_LOW_RESET = 6.5, MR_PARK_APPLY = 4.0, MR_PARK_RESET = 4.5;
+let mrLeakRising = false;
+function updateMrLeak(dt) {
+  const leak = window.__FAULT_MR_LEAK;
+  let mr = currentGaugeMR;
+  if (!window.__CM_RUNNING) {
+    window.__CM_RUNNING = true;   // 누설 중에는 압축기가 계속 기동
+    try { sound.startCompressor(); } catch (e) { }
+  }
+  if (leak === 'SEVERE') {
+    if (mr > 3.6) mr -= 0.35 * dt;                       // 급격한 누설
+    else mr = 3.2 + 0.25 * Math.sin(performance.now() / 1500);   // 압축기가 못 따라가 3 bar 근처에서 출렁임
+  } else if (mr > 6.0 && !mrLeakRising) {
+    mr -= 0.35 * dt;                                     // 정상 압력에서 6 bar까지 빠르게 저하
+  } else {
+    if (mr <= 4.1) mrLeakRising = true;
+    if (mr >= 5.9) mrLeakRising = false;
+    mr += (mrLeakRising ? 0.12 : -0.15) * dt;            // 4.0~6.0 bar 왕복
+    mr = Math.max(4.05, Math.min(5.95, mr));
+  }
+  if (Math.abs(mr - currentGaugeMR) > 1e-4) updateGaugeUI(undefined, mr);
+}
+
+function updateMrInterlocks() {
+  const mr = currentGaugeMR;
+  if (!window.__MR_LOW && mr < MR_LOW_EB) {
+    window.__MR_LOW = true;
+    duEventMsg('MF', `MR 압력 저하 비상제동 (${mr.toFixed(1)} bar)`);
+  } else if (window.__MR_LOW && mr >= MR_LOW_RESET) {
+    window.__MR_LOW = false;
+  }
+  if (!window.__MR_CRIT && mr < MR_PARK_APPLY) {
+    window.__MR_CRIT = true;
+    if (!window.__PARK_BRAKE_SET) {
+      window.__PARK_BRAKE_SET = true;   // 스프링 주차제동: 공기가 빠지면 자동 체결
+      try { sound.playAirExhaust(1.0, 950, 0.75); } catch (e) { }
+    }
+    duEventMsg('MF', `MR 4.0bar 미만 주차제동 체결`);
+  } else if (window.__MR_CRIT && mr >= MR_PARK_RESET) {
+    window.__MR_CRIT = false;
+  }
+}
+
 function updateMainReservoir(dt) {
+  if (window.__FAULT_MR_LEAK) { updateMrLeak(dt); updateMrInterlocks(); return; }
+  mrLeakRising = false;
   // 제동통은 공기가 차는 데 시간이 걸림 → BC를 1초 지연으로 따라가는 값 기준 (지령의 순간적 출렁임은 소모로 치지 않음)
   if (lastBcForMr === null) lastBcForMr = currentGaugeBC;
   const bcLag = lastBcForMr + (currentGaugeBC - lastBcForMr) * Math.min(1, dt / 1.0);
@@ -8721,6 +8903,7 @@ function updateMainReservoir(dt) {
   }
   mr = Math.max(0, Math.min(MR_CM_OFF, mr));
   if (Math.abs(mr - currentGaugeMR) > 1e-4) updateGaugeUI(undefined, mr);
+  updateMrInterlocks();
 }
 
 /* VOBC 위치 상실: 전·후부 VOBC 리셋 시 발생. RM 모드로 선로 위치 태그(25m 간격) 2개를 지나면 해소 */
@@ -8931,7 +9114,7 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const isEmgReleaseLatched = (cvCompState('SW_EMG_RELEASE', 'RELEASED') === 'LATCHED');
     const isEmgActive = (isEmgStopLatched && !isEmgReleaseLatched);
     const isHcrEb = window.__HCR_EB === true;
-    const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB') || isHcrEb;
+    const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB') || isHcrEb || isMrLowEbActive();
     const isUnmannedNow = driveMode === 'OFF' && cvCompState('SW_WIRELESS_MODE', 'OFF') === 'LIT';
 
     // 운전모드 칩 (FM / RM / ATPM / 무인운전 "Driver less": 청색, 그 외 빈칸)
@@ -9436,6 +9619,9 @@ function updateDuAduDisplay(driveMode, notch, now) {
     } else if (!isDoorInterlockCleared) {
       if (log1) log1.innerText = `${hh}:${mm}:${ss} TRAIN DOOR OPEN`;
       if (log2) log2.innerText = `${hh}:${mm}:${ss} TRACTION INHIBITED`;
+    } else if (window.__MR_LOW) {
+      if (log1) log1.innerText = `${hh}:${mm}:${ss} MR PRESSURE LOW`;
+      if (log2) log2.innerText = `${hh}:${mm}:${ss} ${isMrLowEbActive() ? 'EMERGENCY BRAKE' : (isMrTractionCut() ? 'TRACTION INHIBITED' : 'MR BYPASS')}`;
     } else if (isParkBrakeTractionCut()) {
       if (log1) log1.innerText = `${hh}:${mm}:${ss} PARKING BRAKE APPLIED`;
       if (log2) log2.innerText = `${hh}:${mm}:${ss} TRACTION INHIBITED`;
@@ -9473,9 +9659,19 @@ function updateDuAduDisplay(driveMode, notch, now) {
   }
 }
 
-/* 주차제동체결 시 역행회로 차단 (F·R 공통). 주차제동완해로 복귀하거나, 완해 불능 시 OP5 주차제동BP(바이패스)로 역행회로 구성 */
+/* 주차제동체결 시 역행회로 차단 (F·R 공통). 주차제동완해로 복귀하거나, 완해 불능 시 OP5 주차제동BP(바이패스)로 역행회로 구성
+   단, MR 4.0 bar 미만으로 체결된 주차제동은 실제로 차륜을 잡고 있어 바이패스해도 운행 불가 (구원연결 필요) */
 function isParkBrakeTractionCut() {
-  return window.__PARK_BRAKE_SET === true && cvCompState('SW_PARK_BP', 'NORMAL') !== 'BYPASS';
+  if (window.__PARK_BRAKE_SET !== true) return false;
+  return window.__MR_CRIT === true || cvCompState('SW_PARK_BP', 'NORMAL') !== 'BYPASS';
+}
+/* MR 6.0 bar 미만: 역행회로 차단 → OP5 주공기BP(바이패스)로 역행회로 구성 */
+function isMrTractionCut() {
+  return window.__MR_LOW === true && cvCompState('SW_MR_BP', 'NORMAL') !== 'BYPASS';
+}
+/* MR 6.0 bar 미만 비상제동 → OP3 비상제동완해로 완해 */
+function isMrLowEbActive() {
+  return window.__MR_LOW === true && cvCompState('SW_EMG_RELEASE', 'RELEASED') !== 'LATCHED';
 }
 
 function updateTrainPhysics() {
@@ -9495,7 +9691,8 @@ function updateTrainPhysics() {
   const isDoorClosed = !isDoorOpen && (!window.__FAULT_DOOR_FAIL) && (lampDoor ? lampDoor.classList.contains('lit') : true);
   const isDoorBypassed = (cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
   const isDoorInterlockCleared = isDoorClosed || isDoorBypassed;
-  const isParkCut = isParkBrakeTractionCut();
+  const isParkCut = isParkBrakeTractionCut() || isMrTractionCut();
+  const isMrEb = isMrLowEbActive();
 
   // [RM 모드 과속 감시 및 비상제동(EB) 인터록]
   // FM: 제한 없음 (최대 80km/h까지 주행 가능)
@@ -9523,6 +9720,15 @@ function updateTrainPhysics() {
   updatePositionTags(driveMode);
   updateMainReservoir(dt);
   exhibitTick(dt);
+  if (currentScenario) checkScenarioArrival();
+
+  // [MR 저하 비상제동] 6.0 bar 미만: BC 4.0 bar 유지, 비상제동완해 시 상용 제동압으로 복귀
+  if (isMrEb) {
+    if (currentGaugeBC !== BC_EMG_BAR) updateGaugeUI(BC_EMG_BAR);
+  } else if (window.__MR_EB_APPLIED) {
+    updateGaugeUI(getNormalBrakePressure());
+  }
+  window.__MR_EB_APPLIED = isMrEb;
 
   // [HCR 비상제동] 운전모드 OFF(무인운전 아님) → 비상제동(EB) + 정차제동(HB), BC 4.0 bar
   //  OFF → RM 등 수동모드: EB 완해(VOBC RESET), HB는 유지(2.0 bar)
@@ -9548,7 +9754,7 @@ function updateTrainPhysics() {
   if (hcrEb) {
     if (currentGaugeBC !== BC_EMG_BAR) updateGaugeUI(BC_EMG_BAR);
   } else if (isManualMode && window.__HOLDING_BRAKE_ACTIVE) {
-    if ((revNotch === 'F' || revNotch === 'R') && notch.charAt(0) === 'P' && isKeyOn && !isEmgActive && !isRmEbActive && !isParkCut) {
+    if ((revNotch === 'F' || revNotch === 'R') && notch.charAt(0) === 'P' && isKeyOn && !isEmgActive && !isRmEbActive && !isParkCut && !isMrEb) {
       window.__HOLDING_BRAKE_ACTIVE = false;          // 정차제동 완해 → 역행
       try { sound.playAirExhaust(0.5, 1200, 0.4); } catch (e) { }
       updateGaugeUI(0.0);
@@ -9558,11 +9764,11 @@ function updateTrainPhysics() {
   }
 
   const canManualTraction = isManualMode && isKeyOn && (revNotch === 'F' || revNotch === 'R') &&
-                            isDoorInterlockCleared && !isParkCut && !isEmgActive && !isRmEbActive && cvBC() < 0.5;
+                            isDoorInterlockCleared && !isParkCut && !isMrEb && !isEmgActive && !isRmEbActive && cvBC() < 0.5;
 
   let target = 0.0, rate = 0.0;
 
-  if (isEmgActive || notch === 'EB' || isRmEbActive || hcrEb) {
+  if (isEmgActive || notch === 'EB' || isRmEbActive || hcrEb || isMrEb || (window.__MR_CRIT && window.__PARK_BRAKE_SET)) {
     target = 0.0; rate = -TRAIN_SPEC.ebDecel; // 비상제동 4.68 km/h/s
   } else if (isUnmannedActive && window.__POS_LOST) {
     // POSITION LOST: 무인운전 램프는 점등되나 열차 위치를 몰라 자동 주행 불가 → 정차제동 유지
@@ -9630,7 +9836,7 @@ function updateTrainPhysics() {
     // 가속 단계
     trainSpeed = Math.min(target, trainSpeed + (rate + gradeAcc) * dt);
   } else if (trainSpeed > target) {
-    if (isRmEbActive || isEmgActive || notch === 'EB') {
+    if (isRmEbActive || isEmgActive || notch === 'EB' || isMrEb || (window.__MR_CRIT && window.__PARK_BRAKE_SET)) {
       // 비상제동 체결 상태: 안전 정차까지 감속
       trainSpeed = Math.max(0.0, trainSpeed + rate * dt);
       if (trainSpeed <= 0.05) trainSpeed = 0.0;
@@ -10286,7 +10492,9 @@ const TrainRemote = {
     VOBC_FAIL: false,
     VOBC_COMM: false,
     TCMS_FAIL: false,
-    PARK_REL_FAIL: false
+    PARK_REL_FAIL: false,
+    MR_LEAK: false,
+    MR_LEAK_SEVERE: false
   },
   _lastPhysicsBroadcast: 0,
   logCount: 0,
@@ -10762,10 +10970,18 @@ const TrainRemote = {
       if (btnP) btnP.classList.toggle('active', isAct);
       if (lblP) lblP.innerText = isAct ? '🚨 주차제동 완해 불능 인가 중' : '정상 (클릭 시 고장 인가)';
       this.addLog(`[비상 고장 인가] 주차제동 완해 불능 ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
+    } else if (faultType === 'MR_LEAK' || faultType === 'MR_LEAK_SEVERE') {
+      const sev = faultType === 'MR_LEAK_SEVERE';
+      const btnM = document.getElementById(sev ? 'btn-fault-mr-severe' : 'btn-fault-mr');
+      const lblM = document.getElementById(sev ? 'fault-lbl-mr-severe' : 'fault-lbl-mr');
+      if (btnM) btnM.classList.toggle('active', isAct);
+      if (lblM) lblM.innerText = isAct ? '🚨 MR 공기누설 인가 중' : '정상 (클릭 시 고장 인가)';
+      this.addLog(`[비상 고장 인가] MR 공기누설${sev ? ' 심화' : ''} ${isAct ? '발생' : '해제'} 전송`, isAct ? 'red' : 'green');
     }
 
     const anyActive = this.activeFaults.DOOR_LOCK_FAIL || this.activeFaults.EB_STUCK ||
-      this.activeFaults.VOBC_FAIL || this.activeFaults.VOBC_COMM || this.activeFaults.TCMS_FAIL || this.activeFaults.PARK_REL_FAIL;
+      this.activeFaults.VOBC_FAIL || this.activeFaults.VOBC_COMM || this.activeFaults.TCMS_FAIL || this.activeFaults.PARK_REL_FAIL ||
+      this.activeFaults.MR_LEAK || this.activeFaults.MR_LEAK_SEVERE;
     if (statusTag) {
       statusTag.innerText = anyActive ? '⚠️ 비상 고장 주입 운용 중' : '정상 운행 중';
       statusTag.style.color = anyActive ? '#f87171' : '#94a3b8';
@@ -10828,7 +11044,17 @@ const TrainRemote = {
       if (active) {
         showTemporaryHudFeedback('🚨 [차량 통신] TCMS 통신 이상 발생 (ADU 적색)', true);
       }
+    } else if (faultType === 'MR_LEAK' || faultType === 'MR_LEAK_SEVERE') {
+      const f = (window.__OCC_FAULTS = window.__OCC_FAULTS || {});
+      f[faultType] = active;
+      window.__FAULT_MR_LEAK = f.MR_LEAK_SEVERE ? 'SEVERE' : (f.MR_LEAK ? 'MODERATE' : null);
+      if (active) {
+        showTemporaryHudFeedback(faultType === 'MR_LEAK_SEVERE'
+          ? '🚨 [차량 고장] MR 공기누설 심화 (4.0 bar 미만 → 비상제동 + 주차제동 체결)'
+          : '🚨 [차량 고장] MR 공기누설 (4.0~6.0 bar 왕복 → 6.0 bar 미만 비상제동)', true);
+      }
     } else if (faultType === 'PARK_REL_FAIL') {
+      (window.__OCC_FAULTS = window.__OCC_FAULTS || {}).PARK_REL_FAIL = active;
       window.__FAULT_PARK_REL_FAIL = active;
       if (active) {
         showTemporaryHudFeedback('🚨 [차량 고장] 주차제동 완해 불능 (완해 후에도 역행회로 차단 → OP5 주차제동BP 취급)', true);
@@ -11780,7 +12006,10 @@ function handleComponentTouch(compId) {
     // 공압 배기음은 오직 주차제동체결 / 주차제동완해에만 들림 (1.0초)
     if (compId === 'SW_PARK_SET') { window.__PARK_BRAKE_SET = true; duEventMsg('MF', `${cabName()} 주차제동 체결`); }   // 취급 운전실 기준
     if (compId === 'SW_PARK_REL') {
-      if (window.__FAULT_PARK_REL_FAIL) {
+      if (window.__MR_CRIT) {
+        // MR 4.0 bar 미만: 스프링 주차제동을 풀 공기가 없음
+        duEventMsg('MF', `${cabName()} 주차제동 완해 불가 (MR 부족)`);
+      } else if (window.__FAULT_PARK_REL_FAIL) {
         // 완해 불능 고장: 완해 버튼을 눌러도 주차제동이 복귀되지 않아 역행회로 차단 유지 → OP5 주차제동BP 취급 필요
         duEventMsg('MF', `${cabName()} 주차제동 완해 불능`);
       } else {
@@ -11795,7 +12024,9 @@ function handleComponentTouch(compId) {
       // 주차제동완해: 1초간 시원하게 뿜어져 나오는 에어 릴리즈 (치이이익-슉)
       sound.playAirExhaust(1.0, 1400, 0.7);
       triggerHaptic([30, 40]);
-      if (window.__FAULT_PARK_REL_FAIL) {
+      if (window.__MR_CRIT) {
+        showTemporaryHudFeedback(`⚠️ [주차제동 완해 불가] MR ${currentGaugeMR.toFixed(1)} bar (4.0 bar 미만)로 주차제동을 완해할 수 없습니다. 관제에 구원연결을 요청하십시오`, true);
+      } else if (window.__FAULT_PARK_REL_FAIL) {
         showTemporaryHudFeedback("⚠️ [주차제동 완해 불능] 완해가 복귀되지 않아 역행회로가 차단된 상태입니다. OP5 [주차제동BP]를 '바이패스'로 절체하십시오", true);
       }
     } else if (compId === 'SW_VOBC_RESET') {
@@ -11840,6 +12071,12 @@ function handleComponentTouch(compId) {
           showTemporaryHudFeedback("⚡ [OP4 출입문 바이패스] 바이패스(BYPASS) 투입 - 출입문 개방/고장 시에도 역행(Traction) 가능", false);
         } else {
           showTemporaryHudFeedback("🔒 [OP4 출입문 바이패스] 정상(NORMAL) 복귀 - 출입문 완폐 인터록 복귀", false);
+        }
+      } else if (compId === 'SW_MR_BP') {
+        if (newState === 'BYPASS') {
+          showTemporaryHudFeedback("⚡ [OP5 주공기BP] 바이패스(BYPASS) 투입 - MR 6.0 bar 미만에서도 역행회로 구성", false);
+        } else {
+          showTemporaryHudFeedback("🔒 [OP5 주공기BP] 정상(NORMAL) 복귀 - MR 저하 역행 차단 인터록 복귀", false);
         }
       } else if (compId === 'SW_PARK_BP') {
         if (newState === 'BYPASS') {
@@ -12602,6 +12839,9 @@ function setMasconNotch(notch, silent = false) {
       } else if (!isDoorInterlockCleared) {
         desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [출입문 인터록] 출입문 개방/고장으로 역행(Traction)이 차단되었습니다. 출입문을 닫거나 OP4 [출입문 바이패스] 스위치를 '바이패스' 위치로 절체하십시오)`;
         isWarn = true;
+      } else if (isMrLowEbActive() || isMrTractionCut()) {
+        desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [MR 압력 저하] MR ${currentGaugeMR.toFixed(1)} bar로 비상제동/역행회로 차단 중입니다. 관제 지시에 따라 OP3 [비상제동완해]와 OP5 [주공기BP]를 취급하십시오)`;
+        isWarn = true;
       } else if (isParkBrakeTractionCut()) {
         desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [주차제동] 주차제동 체결로 역행회로가 차단되었습니다. [주차제동완해]를 누르고, 완해가 복귀되지 않으면 OP5 [주차제동BP]를 '바이패스'로 절체하십시오)`;
         isWarn = true;
@@ -12995,31 +13235,71 @@ function rotateCobVolume(volId) {
 /**
  * 실습 & 평가 모드 판정 엔진
  */
+const DRIVING_CONTROLS = ['SW_MASCON', 'SW_REVERSER', 'SW_MASTER_KEY', 'SW_DRIVE_MODE'];
+
+function completeScenarioStep() {
+  const targetStep = currentScenario.steps[currentStepIndex];
+  sound.playSuccess();
+  triggerHaptic(40);
+  clearHints();
+
+  // 부가 게이지 효과 반영
+  if (targetStep.gaugeEffect && targetStep.gaugeEffect.bc !== undefined) {
+    updateGaugeUI(targetStep.gaugeEffect.bc);
+  }
+
+  currentStepIndex++;
+  scenarioStepStartDist = trainDistance;
+  if (currentStepIndex >= currentScenario.steps.length) {
+    finishScenarioSuccess();
+  } else {
+    renderStepHUD();
+  }
+}
+
+/* [관제 보고] 버튼: REPORT 단계에서 보고 문구 표시 → 관제 응답 무전(TTS) 후 다음 단계 */
+function submitScenarioReport() {
+  const targetStep = currentScenario && currentScenario.steps[currentStepIndex];
+  if (!targetStep || targetStep.type !== 'REPORT') return;
+  if (targetStep.report) {
+    if (typeof TrainRemote !== 'undefined' && typeof TrainRemote.addLog === 'function') TrainRemote.addLog(`[기관사 보고] ${targetStep.report}`, 'blue');
+  }
+  completeScenarioStep();
+  if (targetStep.occReply) {
+    setTimeout(() => { try { playOccRadioTest(targetStep.occReply); } catch (e) { } }, 600);
+  }
+  if (targetStep.report) showTemporaryHudFeedback(`📡 [기관사 보고] "${targetStep.report}"`, false);
+}
+
+/* ARRIVE 단계: 단계 시작 위치에서 50m 이상 운행 후 역 정차점 ±5m에 정차하면 완료 */
+let scenarioStepStartDist = 0;
+function checkScenarioArrival() {
+  const targetStep = currentScenario && currentScenario.steps[currentStepIndex];
+  if (!targetStep || targetStep.type !== 'ARRIVE' || trainSpeed > 0.1) return;
+  if (Math.abs(trainDistance - scenarioStepStartDist) < 50) return;
+  const st = IC2.P.STN.find(x => Math.abs(trainDistance - x.stop) <= 5.0);
+  if (!st) return;
+  showTemporaryHudFeedback(`📍 ${st.name}역 정차 완료`, false);
+  completeScenarioStep();
+}
+
+let scenarioSetupInProgress = false;
 function evaluateStepAction(compId, state) {
+  if (scenarioSetupInProgress) return;
   if (!currentScenario || !currentScenario.steps[currentStepIndex]) return;
   const targetStep = currentScenario.steps[currentStepIndex];
 
   // 정답 조작 판정
-  const isMatch = (targetStep.target === compId) &&
-    (targetStep.expectedState === state ||
+  const targets = [targetStep.target].concat(targetStep.altTargets || []);
+  const states = targetStep.expectedStates || [targetStep.expectedState];
+  const isMatch = targets.includes(compId) &&
+    (states.includes(state) ||
      (targetStep.target === 'SW_EMG_RELEASE' && (targetStep.expectedState === 'PRESSED' && state === 'LATCHED')));
 
   if (isMatch) {
-    sound.playSuccess();
-    triggerHaptic(40);
-    clearHints();
-
-    // 부가 게이지 효과 반영
-    if (targetStep.gaugeEffect && targetStep.gaugeEffect.bc !== undefined) {
-      updateGaugeUI(targetStep.gaugeEffect.bc);
-    }
-
-    currentStepIndex++;
-    if (currentStepIndex >= currentScenario.steps.length) {
-      finishScenarioSuccess();
-    } else {
-      renderStepHUD();
-    }
+    completeScenarioStep();
+  } else if (currentScenario.allowDriving && DRIVING_CONTROLS.includes(compId)) {
+    // 운전 취급(마스콘·전후진·제어키·운전모드)은 오조작으로 보지 않음
   } else {
     // 오조작 판정
     mistakeCount++;
@@ -13039,6 +13319,8 @@ function renderStepHUD() {
   // 시나리오가 선택되지 않은 자유 조작 & 시스템 테스트 모드
   if (!currentScenario || !currentScenario.steps || currentScenario.steps.length === 0) {
     if (titleEl) titleEl.innerText = "자유 탐색 및 시스템 테스트 모드";
+    const rb0 = document.getElementById('hud-report-btn');
+    if (rb0) rb0.style.display = 'none';
     if (badgeEl) {
       badgeEl.innerText = "FREE";
       badgeEl.style.background = "#238636";
@@ -13055,6 +13337,8 @@ function renderStepHUD() {
   if (titleEl) titleEl.innerText = `${currentScenario.title}`;
   if (badgeEl) badgeEl.innerText = `STEP ${currentStepIndex + 1} / ${currentScenario.steps.length}`;
   if (instEl) instEl.innerText = targetStep.instruction;
+  const reportBtn = document.getElementById('hud-report-btn');
+  if (reportBtn) reportBtn.style.display = (targetStep.type === 'REPORT') ? 'inline-block' : 'none';
 
   // 필요 시 타겟 부품이 있는 패널로 자동 시야 유도
   const targetComp = COMPONENT_REGISTRY[targetStep.target];
@@ -13521,9 +13805,23 @@ function applyScenario(sc) {
   resetCurrentScenario();
   // 시나리오 고장 주입 (관제 고장 인가 중인 항목은 유지)
   const scFaults = (sc && Array.isArray(sc.faults)) ? sc.faults : [];
-  const occFaults = (typeof TrainRemote !== 'undefined' && TrainRemote.activeFaults) || {};
+  const occFaults = window.__OCC_FAULTS || {};   // 관제에서 인가되어 학습자 쪽에 적용된 고장
   window.__PARK_BRAKE_SET = false;
   window.__FAULT_PARK_REL_FAIL = scFaults.includes('PARK_REL_FAIL') || !!occFaults.PARK_REL_FAIL;
+  window.__FAULT_MR_LEAK = (scFaults.includes('MR_LEAK_SEVERE') || occFaults.MR_LEAK_SEVERE) ? 'SEVERE'
+    : (scFaults.includes('MR_LEAK') || occFaults.MR_LEAK) ? 'MODERATE' : null;
+  window.__MR_LOW = false; window.__MR_CRIT = false;
+  updateGaugeUI(undefined, 9.0);
+  // 시작 운전 상태 (이 조작은 시나리오 판정에서 제외)
+  if (sc && sc.setup) {
+    scenarioSetupInProgress = true;
+    try {
+      if (sc.setup.driveMode) setDriveModePosition(sc.setup.driveMode);
+      if (sc.setup.masterKey) setMasterKeyPosition(sc.setup.masterKey);
+      if (sc.setup.reverser) setReverserPosition(sc.setup.reverser, true);
+    } finally { scenarioSetupInProgress = false; }
+    renderStepHUD();
+  }
   // 시나리오 시작 역: 모달에서 고른 역 > 시나리오에 저장된 역 > 현재 위치 유지
   const selSt = document.getElementById('scenario-start-station');
   const selDir = document.getElementById('scenario-direction');
@@ -13531,6 +13829,7 @@ function applyScenario(sc) {
   const startId = (selSt && selSt.value) || (sc && sc.startStation) || '';
   if (dir !== IC2.P.dir) setRunDirection(dir, startId || null);
   else if (startId) placeTrainAtStation(startId);
+  scenarioStepStartDist = trainDistance;
 }
 
 /* 시작 역 선택 목록 채우기 */
