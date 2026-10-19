@@ -8096,18 +8096,34 @@ const DEFAULT_SCENARIOS = [
       {
         step: 1,
         target: "CB_CCUCB",
-        allOf: ["CB_CCUCB", "CB_CCUDOCB", "CB_CCUDICB", "CB_CCUCB_MC2", "CB_CCUDOCB_MC2", "CB_CCUDICB_MC2"],
-        targetName: "MC1·MC2 CU 스위치",
+        allOf: ["CB_CCUCB", "CB_CCUDOCB", "CB_CCUDICB"],
+        targetName: "MC1 CU 스위치",
         expectedState: "OFF",
-        instruction: "차단기반 [MC1 차단기]·[MC2 차단기] 탭에서 CCUCB, CCUDOCB, CCUDICB를 모두 차단(OFF)하십시오."
+        instruction: "차단기반 [MC1 차단기] 탭에서 CCUCB, CCUDOCB, CCUDICB를 모두 차단(OFF)하십시오."
       },
       {
         step: 2,
         target: "CB_CCUCB",
-        allOf: ["CB_CCUCB", "CB_CCUDOCB", "CB_CCUDICB", "CB_CCUCB_MC2", "CB_CCUDOCB_MC2", "CB_CCUDICB_MC2"],
-        targetName: "MC1·MC2 CU 스위치",
+        allOf: ["CB_CCUCB", "CB_CCUDOCB", "CB_CCUDICB"],
+        targetName: "MC1 CU 스위치",
         expectedState: "ON",
-        instruction: "MC1·MC2의 CCUCB, CCUDOCB, CCUDICB를 모두 다시 투입(ON)하여 TCMS 복구를 확인하십시오."
+        instruction: "MC1의 CCUCB, CCUDOCB, CCUDICB를 모두 다시 투입(ON)하십시오."
+      },
+      {
+        step: 3,
+        target: "CB_CCUCB_MC2",
+        allOf: ["CB_CCUCB_MC2", "CB_CCUDOCB_MC2", "CB_CCUDICB_MC2"],
+        targetName: "MC2 CU 스위치",
+        expectedState: "OFF",
+        instruction: "[MC2 차단기] 탭에서 CCUCB, CCUDOCB, CCUDICB를 모두 차단(OFF)하십시오."
+      },
+      {
+        step: 4,
+        target: "CB_CCUCB_MC2",
+        allOf: ["CB_CCUCB_MC2", "CB_CCUDOCB_MC2", "CB_CCUDICB_MC2"],
+        targetName: "MC2 CU 스위치",
+        expectedState: "ON",
+        instruction: "MC2의 CCUCB, CCUDOCB, CCUDICB를 모두 다시 투입(ON)하여 TCMS 복구를 확인하십시오."
       }
     ]
   }
@@ -11085,7 +11101,7 @@ const TrainRemote = {
     } else if (faultType === 'TCMS_FAIL') {
       window.__FAULT_TCMS_FAIL = active;
       (window.__OCC_FAULTS = window.__OCC_FAULTS || {}).TCMS_FAIL = active;
-      tcmsCuAllOffSeen = false;
+      tcmsCuState = { MC1: '', MC2: '' };
       if (active) duEventMsg('MF', 'MC1 CU 통신고장');
       if (active) {
         showTemporaryHudFeedback('🚨 [차량 통신] TCMS 통신 이상 발생 (ADU 적색)', true);
@@ -13861,7 +13877,7 @@ function applyScenario(sc) {
     : (scFaults.includes('MR_LEAK') || occFaults.MR_LEAK) ? 'MODERATE' : null;
   window.__MR_LOW = false; window.__MR_CRIT = false;
   window.__FAULT_TCMS_FAIL = scFaults.includes('TCMS_FAIL') || !!occFaults.TCMS_FAIL;
-  tcmsCuAllOffSeen = false;
+  tcmsCuState = { MC1: '', MC2: '' };
   window.__DU_EVT_MSG = null;
   if (window.__FAULT_TCMS_FAIL) duEventMsg('MF', 'MC1 CU 통신고장');
   // 차단기 상태 초기화 (SPARE = 차단, 나머지 = 투입)
@@ -14171,15 +14187,22 @@ function renderAbbPanel(elId, rows, pk, model, car = 'MC1') {
     return `<div class="cb-row"><div class="cb-plate${short}">${plate}</div><div class="cb-rail${short}">${rail}</div></div>`;
   }).join('');
 }
-/* TCMS 고장(MC1 CU 통신고장): MC1·MC2 배전반 CU 스위치(CCUCB·CCUDOCB·CCUDICB)를 모두 차단했다가 다시 투입하면 복구 */
-const TCMS_CU_IDS = ['CB_CCUCB', 'CB_CCUDOCB', 'CB_CCUDICB', 'CB_CCUCB_MC2', 'CB_CCUDOCB_MC2', 'CB_CCUDICB_MC2'];
-let tcmsCuAllOffSeen = false;
+/* TCMS 고장(MC1 CU 통신고장): 배전반마다 CU 스위치(CCUCB·CCUDOCB·CCUDICB)를 모두 차단했다가 다시 투입 (MC1 → MC2 순)
+   두 배전반 모두 재투입을 마치면 복구 */
+const TCMS_CU_IDS = {
+  MC1: ['CB_CCUCB', 'CB_CCUDOCB', 'CB_CCUDICB'],
+  MC2: ['CB_CCUCB_MC2', 'CB_CCUDOCB_MC2', 'CB_CCUDICB_MC2']
+};
+let tcmsCuState = { MC1: '', MC2: '' };   // '' → 'OFF'(모두 차단됨) → 'DONE'(모두 재투입)
 function checkTcmsCuReset() {
-  if (!window.__FAULT_TCMS_FAIL) { tcmsCuAllOffSeen = false; return; }
-  const st = TCMS_CU_IDS.map(id => (COMPONENT_REGISTRY[id] || {}).state);
-  if (st.every(x => x === 'OFF')) tcmsCuAllOffSeen = true;
-  else if (tcmsCuAllOffSeen && st.every(x => x === 'ON')) {
-    tcmsCuAllOffSeen = false;
+  if (!window.__FAULT_TCMS_FAIL) { tcmsCuState = { MC1: '', MC2: '' }; return; }
+  Object.keys(TCMS_CU_IDS).forEach(car => {
+    const st = TCMS_CU_IDS[car].map(id => (COMPONENT_REGISTRY[id] || {}).state);
+    if (st.every(x => x === 'OFF')) tcmsCuState[car] = 'OFF';
+    else if (tcmsCuState[car] === 'OFF' && st.every(x => x === 'ON')) tcmsCuState[car] = 'DONE';
+  });
+  if (tcmsCuState.MC1 === 'DONE' && tcmsCuState.MC2 === 'DONE') {
+    tcmsCuState = { MC1: '', MC2: '' };
     window.__FAULT_TCMS_FAIL = false;
     if (window.__OCC_FAULTS) window.__OCC_FAULTS.TCMS_FAIL = false;
     window.__DU_EVT_MSG = null;
