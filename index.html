@@ -8090,36 +8090,24 @@ const DEFAULT_SCENARIOS = [
   {
     id: "SCN_TCMS_CU_RESET",
     title: "4. TCMS 통신고장(MC1 CU 통신고장) 시 CU 스위치 재투입",
-    description: "ADU 우측 하단 TCMS가 적색, DU 출입문과 기기 정보가 노란 바탕으로 바뀌고 'MF 시간 MC1 CU 통신고장' 메시지가 현시된 상황입니다. MC1·MC2 배전반의 CU 스위치(CCUCB)를 모두 차단했다가 복귀하여 TCMS를 복구합니다.",
+    description: "ADU 우측 하단 TCMS가 적색, DU 출입문과 기기 정보가 노란 바탕으로 바뀌고 'MF 시간 MC1 CU 통신고장' 메시지가 현시된 상황입니다. MC1·MC2 배전반의 CU 스위치(CCUCB·CCUDOCB·CCUDICB)를 모두 차단했다가 복귀하여 TCMS를 복구합니다.",
     faults: ["TCMS_FAIL"],
     steps: [
       {
         step: 1,
         target: "CB_CCUCB",
-        targetName: "MC1 CU 스위치",
+        allOf: ["CB_CCUCB", "CB_CCUDOCB", "CB_CCUDICB", "CB_CCUCB_MC2", "CB_CCUDOCB_MC2", "CB_CCUDICB_MC2"],
+        targetName: "MC1·MC2 CU 스위치",
         expectedState: "OFF",
-        instruction: "차단기반 [MC1 차단기] 탭에서 CU 스위치(CCUCB)를 차단(OFF)하십시오."
+        instruction: "차단기반 [MC1 차단기]·[MC2 차단기] 탭에서 CCUCB, CCUDOCB, CCUDICB를 모두 차단(OFF)하십시오."
       },
       {
         step: 2,
-        target: "CB_CCUCB_MC2",
-        targetName: "MC2 CU 스위치",
-        expectedState: "OFF",
-        instruction: "[MC2 차단기] 탭에서 CU 스위치(CCUCB)를 차단(OFF)하십시오."
-      },
-      {
-        step: 3,
         target: "CB_CCUCB",
-        targetName: "MC1 CU 스위치",
+        allOf: ["CB_CCUCB", "CB_CCUDOCB", "CB_CCUDICB", "CB_CCUCB_MC2", "CB_CCUDOCB_MC2", "CB_CCUDICB_MC2"],
+        targetName: "MC1·MC2 CU 스위치",
         expectedState: "ON",
-        instruction: "[MC1 차단기] 탭에서 CU 스위치(CCUCB)를 다시 투입(ON)하십시오."
-      },
-      {
-        step: 4,
-        target: "CB_CCUCB_MC2",
-        targetName: "MC2 CU 스위치",
-        expectedState: "ON",
-        instruction: "[MC2 차단기] 탭에서 CU 스위치(CCUCB)를 다시 투입(ON)하여 TCMS 복구를 확인하십시오."
+        instruction: "MC1·MC2의 CCUCB, CCUDOCB, CCUDICB를 모두 다시 투입(ON)하여 TCMS 복구를 확인하십시오."
       }
     ]
   }
@@ -13354,7 +13342,10 @@ function evaluateStepAction(compId, state) {
     (states.includes(state) ||
      (targetStep.target === 'SW_EMG_RELEASE' && (targetStep.expectedState === 'PRESSED' && state === 'LATCHED')));
 
-  if (isMatch) {
+  if (targetStep.allOf && targetStep.allOf.includes(compId) && state === targetStep.expectedState) {
+    // 여러 부품을 모두 같은 상태로: 순서 무관, 전부 맞으면 단계 완료
+    if (targetStep.allOf.every(id => (COMPONENT_REGISTRY[id] || {}).state === targetStep.expectedState)) completeScenarioStep();
+  } else if (isMatch && !targetStep.allOf) {
     completeScenarioStep();
   } else if (currentScenario.allowDriving && DRIVING_CONTROLS.includes(compId)) {
     // 운전 취급(마스콘·전후진·제어키·운전모드)은 오조작으로 보지 않음
@@ -14180,8 +14171,8 @@ function renderAbbPanel(elId, rows, pk, model, car = 'MC1') {
     return `<div class="cb-row"><div class="cb-plate${short}">${plate}</div><div class="cb-rail${short}">${rail}</div></div>`;
   }).join('');
 }
-/* TCMS 고장(MC1 CU 통신고장): MC1·MC2 배전반 CU 스위치(CCUCB)를 모두 차단했다가 다시 투입하면 복구 */
-const TCMS_CU_IDS = ['CB_CCUCB', 'CB_CCUCB_MC2'];
+/* TCMS 고장(MC1 CU 통신고장): MC1·MC2 배전반 CU 스위치(CCUCB·CCUDOCB·CCUDICB)를 모두 차단했다가 다시 투입하면 복구 */
+const TCMS_CU_IDS = ['CB_CCUCB', 'CB_CCUDOCB', 'CB_CCUDICB', 'CB_CCUCB_MC2', 'CB_CCUDOCB_MC2', 'CB_CCUDICB_MC2'];
 let tcmsCuAllOffSeen = false;
 function checkTcmsCuReset() {
   if (!window.__FAULT_TCMS_FAIL) { tcmsCuAllOffSeen = false; return; }
@@ -14192,7 +14183,7 @@ function checkTcmsCuReset() {
     window.__FAULT_TCMS_FAIL = false;
     if (window.__OCC_FAULTS) window.__OCC_FAULTS.TCMS_FAIL = false;
     window.__DU_EVT_MSG = null;
-    showTemporaryHudFeedback('✅ [TCMS 복구] MC1·MC2 CU 스위치 재투입으로 TCMS 통신이 정상 복구되었습니다', false);
+    showTemporaryHudFeedback('✅ [TCMS 복구] MC1·MC2 CU 스위치(CCUCB·CCUDOCB·CCUDICB) 재투입으로 TCMS 통신이 정상 복구되었습니다', false);
   }
 }
 
