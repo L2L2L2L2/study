@@ -9262,7 +9262,7 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const isEmgReleaseLatched = (cvCompState('SW_EMG_RELEASE', 'RELEASED') === 'LATCHED');
     const isEmgActive = (isEmgStopLatched && !isEmgReleaseLatched);
     const isHcrEb = window.__HCR_EB === true;
-    const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB') || isHcrEb || isMrLowEbActive();
+    const isEbActive = isRmEbActive || isEmgActive || (notch === 'EB') || isHcrEb || isMrLowEbActive() || !!window.__VOBC_ALL_DOWN;
     const isUnmannedNow = driveMode === 'OFF' && cvCompState('SW_WIRELESS_MODE', 'OFF') === 'LIT';
 
     // 운전모드 칩 (FM / RM / ATPM / 무인운전 "Driver less": 청색, 그 외 빈칸)
@@ -9853,7 +9853,9 @@ function updateTrainPhysics() {
   const isDoorBypassed = (cvCompState('SW_DOOR_BYPASS', 'NORMAL') === 'BYPASS');
   const isDoorInterlockCleared = isDoorClosed || isDoorBypassed;
   const isParkCut = isParkBrakeTractionCut() || isMrTractionCut();
-  const isMrEb = isMrLowEbActive();
+  // 보조 비상제동: MR 6.0 bar 미만(비상제동완해 전) 또는 VOBC1·VOBC2 모두 고장
+  const isVobcAllDownEb = updateVobcAllDown();   // 매 프레임 판정 (복귀 시 POSITION LOST 처리 포함)
+  const isAuxEb = isMrLowEbActive() || isVobcAllDownEb;
 
   // [RM 모드 과속 감시 및 비상제동(EB) 인터록]
   // FM: 제한 없음 (최대 80km/h까지 주행 가능)
@@ -9883,13 +9885,13 @@ function updateTrainPhysics() {
   exhibitTick(dt);
   if (currentScenario) checkScenarioArrival();
 
-  // [MR 저하 비상제동] 6.0 bar 미만: BC 4.0 bar 유지, 비상제동완해 시 상용 제동압으로 복귀
-  if (isMrEb) {
+  // [MR 저하 / VOBC 양계 고장 비상제동] BC 4.0 bar 유지, 해소 시 상용 제동압으로 복귀
+  if (isAuxEb) {
     if (currentGaugeBC !== BC_EMG_BAR) updateGaugeUI(BC_EMG_BAR);
   } else if (window.__MR_EB_APPLIED) {
     updateGaugeUI(getNormalBrakePressure());
   }
-  window.__MR_EB_APPLIED = isMrEb;
+  window.__MR_EB_APPLIED = isAuxEb;
 
   // [HCR 비상제동] 운전모드 OFF(무인운전 아님) → 비상제동(EB) + 정차제동(HB), BC 4.0 bar
   //  OFF → RM 등 수동모드: EB 완해(VOBC RESET), HB는 유지(2.0 bar)
@@ -9915,7 +9917,7 @@ function updateTrainPhysics() {
   if (hcrEb) {
     if (currentGaugeBC !== BC_EMG_BAR) updateGaugeUI(BC_EMG_BAR);
   } else if (isManualMode && window.__HOLDING_BRAKE_ACTIVE) {
-    if ((revNotch === 'F' || revNotch === 'R') && notch.charAt(0) === 'P' && isKeyOn && !isEmgActive && !isRmEbActive && !isParkCut && !isMrEb && !isOp5TractionCut()) {
+    if ((revNotch === 'F' || revNotch === 'R') && notch.charAt(0) === 'P' && isKeyOn && !isEmgActive && !isRmEbActive && !isParkCut && !isAuxEb && !isOp5TractionCut()) {
       window.__HOLDING_BRAKE_ACTIVE = false;          // 정차제동 완해 → 역행
       try { sound.playAirExhaust(0.5, 1200, 0.4); } catch (e) { }
       updateGaugeUI(0.0);
@@ -9925,11 +9927,11 @@ function updateTrainPhysics() {
   }
 
   const canManualTraction = isManualMode && isKeyOn && (revNotch === 'F' || revNotch === 'R') &&
-                            isDoorInterlockCleared && !isParkCut && !isMrEb && !isOp5TractionCut() && !isEmgActive && !isRmEbActive && cvBC() < 0.5;
+                            isDoorInterlockCleared && !isParkCut && !isAuxEb && !isOp5TractionCut() && !isEmgActive && !isRmEbActive && cvBC() < 0.5;
 
   let target = 0.0, rate = 0.0;
 
-  if (isEmgActive || notch === 'EB' || isRmEbActive || hcrEb || isMrEb || (window.__MR_CRIT && window.__PARK_BRAKE_SET)) {
+  if (isEmgActive || notch === 'EB' || isRmEbActive || hcrEb || isAuxEb || (window.__MR_CRIT && window.__PARK_BRAKE_SET)) {
     target = 0.0; rate = -TRAIN_SPEC.ebDecel; // 비상제동 4.68 km/h/s
   } else if (isUnmannedActive && window.__POS_LOST) {
     // POSITION LOST: 무인운전 램프는 점등되나 열차 위치를 몰라 자동 주행 불가 → 정차제동 유지
@@ -9997,7 +9999,7 @@ function updateTrainPhysics() {
     // 가속 단계
     trainSpeed = Math.min(target, trainSpeed + (rate + gradeAcc) * dt);
   } else if (trainSpeed > target) {
-    if (isRmEbActive || isEmgActive || notch === 'EB' || isMrEb || (window.__MR_CRIT && window.__PARK_BRAKE_SET)) {
+    if (isRmEbActive || isEmgActive || notch === 'EB' || isAuxEb || (window.__MR_CRIT && window.__PARK_BRAKE_SET)) {
       // 비상제동 체결 상태: 안전 정차까지 감속
       trainSpeed = Math.max(0.0, trainSpeed + rate * dt);
       if (trainSpeed <= 0.05) trainSpeed = 0.0;
@@ -14023,6 +14025,7 @@ function applyScenario(sc) {
   window.__FAULT_VOBC1_FAIL = scFaults.includes('VOBC1_FAIL') || !!occFaults.VOBC1_FAIL;
   vobc1CbAllOff = false;
   window.__ACTIVE_VOBC = 1;
+  window.__VOBC_ALL_DOWN = false;
   if (window.__FAULT_VOBC1_FAIL) duEventMsg('MF', 'MC1 VOBC 고장');
   // 차단기 상태 초기화 (SPARE = 차단, 나머지 = 투입)
   registerBreakers();
@@ -14385,6 +14388,22 @@ function applyScreenFaults() {
    MC1·MC2 모두 CU 스위치가 하나 이상 차단되어 있을 때만 TCMS 통신고장 표시 */
 const isCarCuDown = car => TCMS_CU_IDS[car].some(cbIsOff);
 const isTcmsCuCbOff = () => isCarCuDown('MC1') && isCarCuDown('MC2');
+/* VOBC 고장 여부 (n = 1 / 2): 고장 주입 또는 해당 차 VOBC 차단기 차단 */
+const isVobcFailed = n => !!window.__FAULT_VOBC_FAIL || !!window['__FAULT_VOBC' + n + '_FAIL'] || isVobcCbOff(n);
+/* VOBC1·VOBC2 모두 고장 → 비상제동. 모두 복귀하면 VOBC1 활성 + POSITION LOST (RM으로 태그 2개 통과 후 무인운전 가능) */
+function updateVobcAllDown() {
+  const down = isVobcFailed(1) && isVobcFailed(2);
+  if (down && !window.__VOBC_ALL_DOWN) {
+    window.__VOBC_ALL_DOWN = true;
+    duEventMsg('MF', 'VOBC1·VOBC2 고장 비상제동');
+  } else if (!down && window.__VOBC_ALL_DOWN && !isVobcFailed(1) && !isVobcFailed(2)) {
+    window.__VOBC_ALL_DOWN = false;
+    window.__ACTIVE_VOBC = 1;
+    setPositionLost();
+    showTemporaryHudFeedback('⚠️ [VOBC 복귀] VOBC1 활성, POSITION LOST (RM 모드로 위치 태그 2개 통과 필요)', true);
+  }
+  return !!window.__VOBC_ALL_DOWN;
+}
 /* VOBC 차단기(VOBCCB1·VOBCCB2·VOBCDICB) 중 하나라도 차단 → 그 차 VOBC 고장 (MC1 = VOBC1, MC2 = VOBC2) */
 const isVobcCbOff = car => ['CB_VOBCCB1', 'CB_VOBCCB2', 'CB_VOBCDICB'].some(id => cbIsOff(id + (car === 2 ? '_MC2' : '')));
 
