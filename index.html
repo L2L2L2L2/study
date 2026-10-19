@@ -5912,10 +5912,10 @@
                     <span class="adu2-clock-time" id="adu2-clock-time">11:37:14</span>
                   </div>
                   <div class="adu2-bottom-logs" id="adu2-bottom-logs">
-                    <div id="adu2-log-1">11:34:54 HOLD</div>
-                    <div id="adu2-log-2">11:34:08 SKIP</div>
-                    <div id="adu2-log-3">11:34:40 FSB FAIL</div>
-                    <div id="adu2-log-4">11:34:24 TCMS LINK OK</div>
+                    <div id="adu2-log-1">00:00:00</div>
+                    <div id="adu2-log-2">00:00:00</div>
+                    <div id="adu2-log-3">00:00:00</div>
+                    <div id="adu2-log-4">00:00:00</div>
                   </div>
                   <div class="adu2-bottom-btn-wrap">
                     <button type="button" class="adu2-setup-btn" onclick="showTemporaryHudFeedback('ℹ️ [ADU Setup] SelTrac MMI 환경설정 메뉴', false)">Setup</button>
@@ -9795,9 +9795,11 @@ function updateDuAduDisplay(driveMode, notch, now) {
       if (log1) log1.innerText = `${hh}:${mm}:${ss} PARKING BRAKE APPLIED`;
       if (log2) log2.innerText = `${hh}:${mm}:${ss} TRACTION INHIBITED`;
     } else {
-      if (log1) log1.innerText = `${hh}:34:54 HOLD`;
-      if (log2) log2.innerText = `${hh}:34:08 SKIP`;
+      // 특이사항 없음: 시간만 표시
+      if (log1) log1.innerText = `${hh}:${mm}:${ss}`;
+      if (log2) log2.innerText = `${hh}:${mm}:${ss}`;
     }
+    if (log3) log3.innerText = `${hh}:${mm}:${ss}`;
 
     if (log4) {
       if (isTcmsFail) {
@@ -9816,7 +9818,7 @@ function updateDuAduDisplay(driveMode, notch, now) {
         log4.innerText = `${hh}:${mm}:${ss} VOBC PWR CUT`;
         log4.style.color = '#ff8888';
       } else {
-        log4.innerText = `${hh}:34:24 TCMS LINK OK`;
+        log4.innerText = `${hh}:${mm}:${ss}`;
         log4.style.color = '#ffffff';
       }
     }
