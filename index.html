@@ -4869,6 +4869,11 @@
     .cb-tab { padding: 5px 14px; border-radius: 6px; border: 1px solid #4b5563; background: #1f2937; color: #cbd5e1; font-weight: 700; cursor: pointer; font-size: 13px; }
     .cb-tab.active { background: #b45309; border-color: #f59e0b; color: #fff; }
     .cb-hint { color: #94a3b8; font-size: 11.5px; margin-left: 12px; }
+    /* 차단기반을 연 채로도 현재 단계 세부 조치 진행 확인 */
+    .cb-scn-progress { padding: 6px 16px; font-size: 12px; font-weight: 700; color: #c9d1d9; background: #0d1117; border-bottom: 1px solid #30363d; }
+    .cb-scn-progress:empty { display: none; }
+    .cb-scn-progress .ok { color: #7ee787; }
+    .cb-scn-progress .now { color: #58a6ff; }
     .cb-type-toggle { display: flex; margin-left: 10px; padding: 2px; border-radius: 999px; border: 1px solid #4b5563; background: #111827; cursor: pointer; }
     .cb-type-opt { padding: 3px 11px; border-radius: 999px; color: #94a3b8; font-weight: 700; font-size: 12px; }
     .cb-type-opt.active { background: #2563eb; color: #fff; }
@@ -4998,6 +5003,68 @@
     }
 
     /* 종착역 회차 배지 (기본은 완전히 숨김, 종착역 도착 시에만 노출) */
+    /* 시나리오 조치 순서 패널 (3D 뷰 좌측 상단) */
+    .scn-panel {
+      position: absolute;
+      top: 56px;
+      left: 10px;
+      z-index: 14;
+      width: 380px;
+      max-width: calc(100% - 20px);
+      max-height: calc(100% - 120px);
+      display: flex;
+      flex-direction: column;
+      background: rgba(13, 17, 23, 0.88);
+      border: 1px solid #30363d;
+      border-left: 4px solid #1f6feb;
+      border-radius: 8px;
+      color: #e6edf3;
+      font-size: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      pointer-events: auto;
+      overflow: hidden;
+    }
+    .scn-panel-head {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      background: rgba(31, 111, 235, 0.18);
+      cursor: pointer;
+      user-select: none;
+    }
+    .scn-panel-title { flex: 1; font-weight: 800; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .scn-panel-cab { font-size: 10.5px; font-weight: 800; padding: 1px 6px; border-radius: 9px; background: #30363d; color: #c9d1d9; white-space: nowrap; }
+    .scn-panel-cab.rear { background: #9e6a03; color: #fff; }
+    .scn-panel-badge { font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 9px; background: #1f6feb; color: #fff; white-space: nowrap; }
+    .scn-panel.collapsed .scn-panel-body,
+    .scn-panel.collapsed .scn-feedback { display: none; }
+    .scn-panel-body { overflow-y: auto; padding: 6px 10px 8px; }
+    .scn-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+    .scn-step { border-radius: 6px; padding: 5px 7px; border: 1px solid transparent; }
+    .scn-step-title { display: flex; gap: 6px; align-items: baseline; font-weight: 700; }
+    .scn-step-no { flex: none; width: 18px; height: 18px; line-height: 18px; text-align: center; border-radius: 50%; font-size: 11px; background: #30363d; color: #8b949e; }
+    .scn-step.todo { opacity: 0.5; }
+    .scn-step.done .scn-step-no { background: #238636; color: #fff; }
+    .scn-step.current { background: rgba(31, 111, 235, 0.14); border-color: #1f6feb; }
+    .scn-step.current .scn-step-no { background: #1f6feb; color: #fff; }
+    .scn-step-inst { margin: 4px 0 2px 24px; color: #c9d1d9; font-size: 11.5px; line-height: 1.4; }
+    .scn-checks { list-style: none; margin: 3px 0 0 24px; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+    .scn-check { display: flex; gap: 5px; align-items: baseline; font-size: 11.5px; color: #8b949e; }
+    .scn-check-mark { flex: none; width: 14px; text-align: center; font-weight: 800; }
+    .scn-check.done { color: #7ee787; }
+    .scn-check.now { color: #f0f6fc; font-weight: 700; }
+    .scn-check.now .scn-check-mark { color: #58a6ff; }
+    .scn-check-note { color: #e3b341; font-weight: 600; }
+    .scn-check.done .scn-check-note { margin-left: 2px; }
+    .scn-step-btns { display: flex; gap: 6px; margin: 6px 0 2px 24px; flex-wrap: wrap; }
+    .scn-btn { padding: 4px 10px; font-size: 11.5px; font-weight: 700; color: #f0f6fc; background: #1f6feb; border: 1px solid #58a6ff; border-radius: 6px; cursor: pointer; }
+    .scn-btn.cb { background: #6e4a0f; border-color: #d29922; }
+    .scn-feedback { flex: none; padding: 6px 10px; border-top: 1px solid #30363d; font-size: 11.5px; font-weight: 600; line-height: 1.35; }
+    .scn-feedback:empty { display: none; }
+    .scn-feedback.ok { color: #7ee787; }
+    .scn-feedback.err { color: #ff7b72; }
+
     .cab-return-badge {
       display: none !important;
       position: absolute !important;
@@ -5431,7 +5498,7 @@
             <button type="button" class="quick-menu-item" onclick="returnToFirstStation(); toggleQuickMenu();">🔄 기점역(<span class="dir-first-name">검단오류</span>역)으로 회차</button>
             <button type="button" class="quick-menu-item" onclick="jumpToStation(IC2.P.STN.length - 1); toggleQuickMenu();">📍 종착역(<span class="dir-last-name">운연</span>역)으로 바로 이동</button>
             <button type="button" class="quick-menu-item" onclick="setRunDirection(-IC2.P.dir); toggleQuickMenu();">🔁 운행 방향 전환 (현재: <span class="dir-label">하선 201→227</span>)</button>
-            <button type="button" class="quick-menu-item" onclick="resetCurrentScenario(); toggleQuickMenu();">↺ 처음부터 재시작</button>
+            <button type="button" class="quick-menu-item" onclick="restartScenario(); toggleQuickMenu();">↺ 처음부터 재시작</button>
             <button type="button" class="quick-menu-item" onclick="toggleMuteSound(); toggleQuickMenu();">🔊 소리 켜기 / 끄기</button>
             <button type="button" class="quick-menu-item" onclick="openRemoteModal(); toggleQuickMenu();">📡 원격 교육 연동</button>
             <button type="button" class="quick-menu-item" id="menu-btn-occ" style="color:#a78bfa; font-weight:bold;" onclick="switchRightOp('OCC'); toggleQuickMenu();">📡 종합관제실(OCC) 화면 열기</button>
@@ -5446,6 +5513,19 @@
               <span class="exhibit-badge">🎬 전시 중 · 무한 왕복</span>
               <button type="button" class="exhibit-stop-btn" onclick="toggleExhibitMode(false)">⏹ 전시 모드 종료</button>
             </div>
+            <!-- 시나리오 조치 순서 패널: 단계별 세부 조치와 완료 여부 (시나리오 진행 중에만) -->
+            <div class="scn-panel" id="scn-panel" style="display:none;">
+              <div class="scn-panel-head" onclick="toggleScenarioPanel()" title="눌러서 접기 / 펼치기">
+                <span class="scn-panel-title" id="scn-panel-title"></span>
+                <span class="scn-panel-cab" id="scn-panel-cab"></span>
+                <span class="scn-panel-badge" id="scn-panel-badge"></span>
+              </div>
+              <div class="scn-panel-body">
+                <ol class="scn-steps" id="scn-steps"></ol>
+              </div>
+              <div class="scn-feedback" id="scn-feedback"></div>
+            </div>
+
             <!-- 시뮬레이터 화면 상단 우측: 회차 버튼 (종착역 도착 시 표시) -->
             <button type="button" class="cab-return-badge" id="btn-cab-return-first" onclick="returnToFirstStation()">🔄 처음(<span class="dir-first-name">검단오류</span>역)으로 회차</button>
 
@@ -7243,6 +7323,7 @@
         </div>
         <span style="cursor:pointer; color:#94a3b8; font-size:18px; font-weight:bold;" onclick="closeModal('modal-breaker')">✕</span>
       </div>
+      <div class="cb-scn-progress" id="cb-scn-progress"></div>
       <div class="modal-body">
         <div id="cb-view-mc1" class="cb-cabinet"></div>
         <div id="cb-view-mc2" class="cb-cabinet" style="display:none;"></div>
@@ -7956,39 +8037,69 @@ const ROTARY3_BOUNCE = {
  *      PARK_REL_FAIL: 주차제동완해를 눌러도 역행회로가 복귀되지 않음 (MR 압력은 정상)
  *      MR_LEAK: 다량의 공기누설로 MR 압력이 4.0~6.0 bar를 오감 (6.0 bar 미만 → 비상제동 + 역행 차단)
  *      MR_LEAK_SEVERE: 누설 심화로 MR 4.0 bar 미만 (비상제동 + 주차제동 자동 체결 → 자력 운행 불가)
- *  - setup: 시작 시 운전 상태 (driveMode, masterKey, reverser)
+ *  - setup: 시작 시 운전 상태 (driveMode, masterKey, reverser, parkBrake: 주차제동 체결 상태로 시작)
  *  - allowDriving: 마스콘·전후진제어기·제어키·운전모드 조작은 오조작으로 치지 않음
  *  - step.type: REPORT(HUD [관제 보고] 버튼, occReply는 관제 응답 무전), ARRIVE(최근역 정위치 정차 시 자동 완료)
  *  - step.altTargets / step.expectedStates: 여러 부품·상태 중 하나면 정답
+ *  - step.checks: 단계 안의 세부 조치를 순서대로 확인 [{ target, state, label, result? }] → 모두 끝나면 다음 단계
+ *      target 'CAB_MOVE' + state 'REAR' = 후부 운전실로 이동 (시나리오 시작 운전실의 반대편)
+ *  - target 'XXX@CAB' = 해당차(취급 운전실) 차단기: MC1이면 그대로, MC2면 '_MC2'
  */
 const DEFAULT_SCENARIOS = [
   {
     id: "SCN_PARK_BRAKE_BP",
     title: "1. 주차제동 완해 불능 시 주차제동BP 취급",
-    description: "MR 압력은 정상으로 유지되는 상태에서 어떠한 사유로 주차제동을 체결했다가 복귀되지 않는 상황입니다. 주차제동을 체결하면 역행회로가 차단되어 F·R 모두 역행할 수 없습니다. 주차제동완해를 눌렀음에도 복귀되지 않는 경우 OP5 [주차제동BP]를 바이패스로 취급하여 역행회로를 구성하는 절차입니다.",
+    description: "MR 압력은 정상이지만 주차제동이 체결된 채 완해되지 않는 상황입니다. 주차제동이 걸려 있으면 역행회로가 차단되어 F·R 모두 역행할 수 없습니다. ① 주차제동완해 취급 → ② 해당차 PBCB 차단·재투입 후 완해 취급 → ③ 후부 운전실에서 ①·② 반복 → ④ 후부 운전실 [주차제동BP] 바이패스 순으로 조치하여 역행회로를 구성합니다.",
     faults: ["PARK_REL_FAIL"],
+    setup: { parkBrake: true },
     allowDriving: true,
     steps: [
       {
         step: 1,
-        target: "SW_PARK_SET",
-        targetName: "주차제동체결",
-        expectedState: "PRESSED",
-        instruction: "녹색 [주차제동체결] 버튼을 눌러 주차제동을 거십시오. (역행회로 차단)"
+        title: "주차제동 완해 취급",
+        target: "SW_PARK_REL",
+        targetName: "주차제동완해",
+        instruction: "주차제동이 체결되어 있습니다. OP3 적색 [주차제동완해] 버튼을 눌러 완해되는지 확인하십시오.",
+        checks: [
+          { target: "SW_PARK_REL", state: "PRESSED", label: "주차제동완해 버튼 취급" }
+        ]
       },
       {
         step: 2,
-        target: "SW_PARK_REL",
-        targetName: "주차제동완해",
-        expectedState: "PRESSED",
-        instruction: "출발 전 적색 [주차제동완해] 버튼을 누르십시오. 완해가 복귀되지 않아 역행할 수 없는지 확인하십시오."
+        title: "해당차 PBCB 차단·재투입 후 완해 취급",
+        target: "CB_PBCB@CAB",
+        targetName: "PBCB (해당차)",
+        instruction: "완해되지 않으면 차단기반에서 해당차 [PBCB]를 차단(OFF)했다가 다시 투입(ON)한 뒤 [주차제동완해]를 누르십시오.",
+        checks: [
+          { target: "CB_PBCB@CAB", state: "OFF", label: "해당차 PBCB 차단 (OFF)" },
+          { target: "CB_PBCB@CAB", state: "ON", label: "해당차 PBCB 투입 (ON)" },
+          { target: "SW_PARK_REL", state: "PRESSED", label: "주차제동완해 버튼 취급" }
+        ]
       },
       {
         step: 3,
+        title: "후부 운전실에서 1·2번 조치",
+        target: "CAB_MOVE",
+        targetName: "후부 운전실",
+        instruction: "그래도 완해되지 않으면 후부 운전실로 이동하여 [주차제동완해] 취급, 해당차 PBCB 차단·재투입 후 [주차제동완해]를 다시 취급하십시오.",
+        checks: [
+          { target: "CAB_MOVE", state: "REAR", label: "후부 운전실로 이동" },
+          { target: "SW_PARK_REL", state: "PRESSED", label: "주차제동완해 버튼 취급" },
+          { target: "CB_PBCB@CAB", state: "OFF", label: "해당차 PBCB 차단 (OFF)" },
+          { target: "CB_PBCB@CAB", state: "ON", label: "해당차 PBCB 투입 (ON)" },
+          { target: "SW_PARK_REL", state: "PRESSED", label: "주차제동완해 버튼 취급" }
+        ]
+      },
+      {
+        step: 4,
+        title: "후부 운전실 주차제동BP 바이패스",
         target: "SW_PARK_BP",
         targetName: "주차제동BP",
         expectedState: "BYPASS",
-        instruction: "OP5 패널의 [주차제동BP] 스위치를 '바이패스' 위치로 절체하여 역행회로를 구성하십시오."
+        instruction: "그래도 완해되지 않으면 후부 운전실 OP5 [주차제동BP] 스위치를 '바이패스' 위치로 절체하여 역행회로를 구성하십시오.",
+        checks: [
+          { target: "SW_PARK_BP", state: "BYPASS", label: "주차제동BP 바이패스 절체", result: "역행회로 구성 (주차제동 역행 차단 해제)" }
+        ]
       }
     ]
   },
@@ -11489,6 +11600,7 @@ function switchMode(mode) {
     hudRecBar.style.display = 'flex';
     recordedSteps = [];
     document.getElementById('rec-step-count').innerText = '0';
+    renderScenarioPanel();
   } else {
     hudStatus.style.display = 'flex';
     hudRecBar.style.display = 'none';
@@ -12173,7 +12285,7 @@ function handleComponentTouch(compId) {
       if (window.__MR_CRIT) {
         showTemporaryHudFeedback(`⚠️ [주차제동 완해 불가] MR ${currentGaugeMR.toFixed(1)} bar (4.0 bar 미만)로 주차제동을 완해할 수 없습니다. 관제에 구원연결을 요청하십시오`, true);
       } else if (window.__FAULT_PARK_REL_FAIL) {
-        showTemporaryHudFeedback("⚠️ [주차제동 완해 불능] 완해가 복귀되지 않아 역행회로가 차단된 상태입니다. OP5 [주차제동BP]를 '바이패스'로 절체하십시오", true);
+        showTemporaryHudFeedback("⚠️ [주차제동 완해 불능] 주차제동이 완해되지 않아 역행회로가 차단된 상태입니다 (DU PB 유지)", true);
       }
     } else if (compId === 'SW_VOBC_RESET') {
       const cardEl = document.getElementById('vobc-overlay-card');
@@ -13399,8 +13511,10 @@ function completeScenarioStep() {
   }
 
   currentStepIndex++;
+  currentCheckIndex = 0;
   scenarioStepStartDist = trainDistance;
   if (currentStepIndex >= currentScenario.steps.length) {
+    renderScenarioPanel();
     finishScenarioSuccess();
   } else {
     renderStepHUD();
@@ -13434,13 +13548,63 @@ function checkScenarioArrival() {
 }
 
 let scenarioSetupInProgress = false;
+// '...@CAB' = 해당차(취급 운전실) 차단기: MC1이면 그대로, MC2면 '_MC2'
+const resolveStepTarget = t => (typeof t === 'string' && t.endsWith('@CAB')) ? cabCbId(t.slice(0, -4)) : t;
+
+/* 단계 세부 조치(step.checks) 진행: 현재 세부 조치 번호와 단계별 완료 기록 { car, note } */
+let currentCheckIndex = 0;
+let scenarioCheckLog = {};
+let scenarioStartCab = 'MC1';
+function checkResultNote(chk, compId) {
+  if (compId === 'SW_PARK_REL') return window.__PARK_BRAKE_SET ? '완해 불능 (DU PB 유지)' : '주차제동 완해됨';
+  return chk.result || '';
+}
+function evaluateCheckAction(targetStep, compId, state) {
+  const chk = targetStep.checks[currentCheckIndex];
+  if (chk && resolveStepTarget(chk.target) === compId && chk.state === state) {
+    const log = scenarioCheckLog[currentStepIndex] || (scenarioCheckLog[currentStepIndex] = []);
+    log[currentCheckIndex] = { car: cabName(), note: checkResultNote(chk, compId) };
+    currentCheckIndex++;
+    if (currentCheckIndex >= targetStep.checks.length) completeScenarioStep();
+    else { sound.playClick(); renderStepHUD(); }
+    return true;
+  }
+  return false;
+}
+/* 운전실 이동 (운행 방향 전환): 후부 운전실 이동 조치 판정 */
+function notifyCabMove() {
+  if (scenarioSetupInProgress || !currentScenario) return;
+  evaluateStepAction('CAB_MOVE', cabName() === scenarioStartCab ? 'FRONT' : 'REAR');
+  renderScenarioPanel();
+}
+/* 정차 위치 그대로 반대편 운전실로 이동 */
+function moveToOtherCab() {
+  const st = IC2.P.STN.reduce((a, b) => Math.abs(b.stop - trainDistance) < Math.abs(a.stop - trainDistance) ? b : a);
+  setRunDirection(-IC2.P.dir, st.id);
+}
+function registerMistake(compId) {
+  mistakeCount++;
+  sound.playError();
+  triggerHaptic([100, 50, 100]);
+  triggerShakeScreen();
+  showTemporaryHudFeedback(`⚠️ 잘못된 조작입니다! (${COMPONENT_REGISTRY[compId].name})`, true);
+}
+
 function evaluateStepAction(compId, state) {
   if (scenarioSetupInProgress) return;
   if (!currentScenario || !currentScenario.steps[currentStepIndex]) return;
   const targetStep = currentScenario.steps[currentStepIndex];
 
-  // 정답 조작 판정 ('...@CAB' = 해당차(취급 운전실) 차단기: MC1이면 그대로, MC2면 '_MC2')
-  const resolve = t => (typeof t === 'string' && t.endsWith('@CAB')) ? cabCbId(t.slice(0, -4)) : t;
+  if (targetStep.checks) {
+    if (evaluateCheckAction(targetStep, compId, state)) return;
+    if (!COMPONENT_REGISTRY[compId]) return;   // 운전실 이동 등 부품이 아닌 동작은 감점하지 않음
+    if (currentScenario.allowDriving && DRIVING_CONTROLS.includes(compId)) return;
+    registerMistake(compId);
+    return;
+  }
+
+  // 정답 조작 판정
+  const resolve = resolveStepTarget;
   const targets = [targetStep.target].concat(targetStep.altTargets || []).map(resolve);
   const states = targetStep.expectedStates || [targetStep.expectedState];
   const isMatch = targets.includes(compId) &&
@@ -13454,13 +13618,9 @@ function evaluateStepAction(compId, state) {
     completeScenarioStep();
   } else if (currentScenario.allowDriving && DRIVING_CONTROLS.includes(compId)) {
     // 운전 취급(마스콘·전후진·제어키·운전모드)은 오조작으로 보지 않음
-  } else {
+  } else if (COMPONENT_REGISTRY[compId]) {
     // 오조작 판정
-    mistakeCount++;
-    sound.playError();
-    triggerHaptic([100, 50, 100]);
-    triggerShakeScreen();
-    showTemporaryHudFeedback(`⚠️ 잘못된 조작입니다! (${COMPONENT_REGISTRY[compId].name})`, true);
+    registerMistake(compId);
   }
 }
 
@@ -13481,6 +13641,7 @@ function renderStepHUD() {
     }
     if (instEl) instEl.innerText = "스위치와 레버를 자유롭게 조작하며 인터록, 계기 및 사운드 반응을 테스트해보세요. (시나리오 실습은 하단 '시나리오 선택' 클릭)";
     clearHints();
+    renderScenarioPanel();
     return;
   }
 
@@ -13488,6 +13649,7 @@ function renderStepHUD() {
   const targetStep = currentScenario.steps[currentStepIndex];
   if (!targetStep) return;
 
+  renderScenarioPanel();
   if (titleEl) titleEl.innerText = `${currentScenario.title}`;
   if (badgeEl) badgeEl.innerText = `STEP ${currentStepIndex + 1} / ${currentScenario.steps.length}`;
   if (instEl) instEl.innerText = targetStep.instruction;
@@ -13504,6 +13666,89 @@ function renderStepHUD() {
   }
 }
 
+/* 시나리오 조치 순서 패널: 지난 단계(✓ + 결과), 현재 단계(세부 조치 ✓/▶/○), 남은 단계 */
+let scnFeedbackTimer = null;
+function escHtml(t) { return String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); }
+function toggleScenarioPanel() {
+  const el = document.getElementById('scn-panel');
+  if (el) el.classList.toggle('collapsed');
+}
+function showScenarioPanelFeedback(text, isError) {
+  const fb = document.getElementById('scn-feedback');
+  if (!fb || !currentScenario) return;
+  fb.textContent = text;
+  fb.className = 'scn-feedback ' + (isError ? 'err' : 'ok');
+  clearTimeout(scnFeedbackTimer);
+  scnFeedbackTimer = setTimeout(() => { fb.textContent = ''; }, 3000);
+}
+function renderScenarioPanel() {
+  const panel = document.getElementById('scn-panel');
+  if (!panel) return;
+  if (!currentScenario || !currentScenario.steps || currentScenario.steps.length === 0 || currentMode === 'REC') {
+    panel.style.display = 'none';
+    const cbProg = document.getElementById('cb-scn-progress');
+    if (cbProg) cbProg.innerHTML = '';
+    return;
+  }
+  panel.style.display = 'flex';
+  const steps = currentScenario.steps;
+  const isExam = currentMode === 'EXAM';
+  const finished = currentStepIndex >= steps.length;
+  const cab = cabName();
+  document.getElementById('scn-panel-title').textContent = currentScenario.title;
+  const cabEl = document.getElementById('scn-panel-cab');
+  const isRear = cab !== scenarioStartCab;
+  cabEl.textContent = `${cab} ${isRear ? '후부' : '전부'} 운전실`;
+  cabEl.classList.toggle('rear', isRear);
+  document.getElementById('scn-panel-badge').textContent = finished ? '완료' : `STEP ${currentStepIndex + 1} / ${steps.length}`;
+
+  // 세부 조치 이름: '해당차' 차단기는 실제 차(MC1·MC2)를 붙여 표시
+  const checkLabel = (chk, car) => escHtml(chk.label) + (typeof chk.target === 'string' && chk.target.endsWith('@CAB') ? ` · ${car}` : '');
+  const stepName = st => escHtml(st.title || st.targetName || st.instruction || '');
+
+  document.getElementById('scn-steps').innerHTML = steps.map((st, i) => {
+    const state = i < currentStepIndex ? 'done' : (i === currentStepIndex ? 'current' : 'todo');
+    if (isExam && state !== 'done') {
+      // 평가 모드: 남은 절차는 보여주지 않음
+      if (state !== 'current') return '';
+      const rb = st.type === 'REPORT' ? `<div class="scn-step-btns"><button type="button" class="scn-btn" onclick="submitScenarioReport()">📡 관제 보고</button></div>` : '';
+      return `<li class="scn-step current"><div class="scn-step-title"><span class="scn-step-no">${i + 1}</span><span>다음 조치를 판단하여 취급하십시오</span></div>${rb}</li>`;
+    }
+    let html = `<li class="scn-step ${state}"><div class="scn-step-title"><span class="scn-step-no">${state === 'done' ? '✓' : i + 1}</span><span>${stepName(st)}</span></div>`;
+    if (state === 'current' && st.instruction) html += `<div class="scn-step-inst">${escHtml(st.instruction)}</div>`;
+    if (st.checks && state !== 'todo') {
+      const log = scenarioCheckLog[i] || [];
+      html += '<ul class="scn-checks">' + st.checks.map((chk, j) => {
+        const rec = log[j];
+        if (rec) return `<li class="scn-check done"><span class="scn-check-mark">✓</span><span>${checkLabel(chk, rec.car)}${rec.note ? ` <span class="scn-check-note">→ ${escHtml(rec.note)}</span>` : ''}</span></li>`;
+        const now = state === 'current' && j === currentCheckIndex;
+        return `<li class="scn-check ${now ? 'now' : ''}"><span class="scn-check-mark">${now ? '▶' : '○'}</span><span>${checkLabel(chk, cab)}</span></li>`;
+      }).join('') + '</ul>';
+    }
+    if (state === 'current' && !isExam) {
+      const chk = st.checks ? st.checks[currentCheckIndex] : null;
+      const tgt = chk ? chk.target : st.target;
+      const btns = [];
+      if (st.type === 'REPORT') btns.push(`<button type="button" class="scn-btn" onclick="submitScenarioReport()">📡 관제 보고</button>`);
+      if (tgt === 'CAB_MOVE') btns.push(`<button type="button" class="scn-btn" onclick="moveToOtherCab()">🔁 후부 운전실로 이동</button>`);
+      if (typeof tgt === 'string' && tgt.startsWith('CB_')) btns.push(`<button type="button" class="scn-btn cb" onclick="openBreakerPanel()">차단기반 열기</button>`);
+      if (btns.length) html += `<div class="scn-step-btns">${btns.join('')}</div>`;
+    }
+    return html + '</li>';
+  }).join('');
+  const cur = panel.querySelector('.scn-step.current');
+  if (cur) cur.scrollIntoView({ block: 'nearest' });
+
+  // 차단기반 상단: 현재 단계 세부 조치 한 줄 요약
+  const cbProg = document.getElementById('cb-scn-progress');
+  if (cbProg) {
+    const st = steps[currentStepIndex];
+    cbProg.innerHTML = (!st || !st.checks || isExam) ? '' : `STEP ${currentStepIndex + 1}: ` + st.checks.map((chk, j) =>
+      j < currentCheckIndex ? `<span class="ok">✓ ${checkLabel(chk, (scenarioCheckLog[currentStepIndex] || [])[j].car)}</span>`
+        : j === currentCheckIndex ? `<span class="now">▶ ${checkLabel(chk, cab)}</span>` : `○ ${checkLabel(chk, cab)}`).join(' · ');
+  }
+}
+
 // 오조작 및 피드백 시 임시 안내
 function showTemporaryHudFeedback(text, isError) {
   const hudText = document.getElementById('hud-instruction');
@@ -13517,6 +13762,7 @@ function showTemporaryHudFeedback(text, isError) {
 
   if (hudText) hudText.innerText = text;
   if (hudStatus) hudStatus.style.borderLeftColor = isError ? 'var(--accent-red)' : 'var(--accent-green)';
+  showScenarioPanelFeedback(text, isError);
 
   setTimeout(() => {
     if (hudText) hudText.innerText = original;
@@ -13639,6 +13885,8 @@ function finishScenarioSuccess() {
 // 시나리오 리셋
 function resetCurrentScenario() {
   currentStepIndex = 0;
+  currentCheckIndex = 0;
+  scenarioCheckLog = {};
   mistakeCount = 0;
   examStartTime = Date.now();
   clearHints();
@@ -14001,9 +14249,25 @@ function applyScenario(sc) {
   const selDir = document.getElementById('scenario-direction');
   const dir = selDir ? +selDir.value : (sc && sc.direction) || IC2.P.dir;
   const startId = (selSt && selSt.value) || (sc && sc.startStation) || '';
-  if (dir !== IC2.P.dir) setRunDirection(dir, startId || null);
-  else if (startId) placeTrainAtStation(startId);
+  scenarioSetupInProgress = true;
+  try {
+    if (dir !== IC2.P.dir) setRunDirection(dir, startId || null);
+    else if (startId) placeTrainAtStation(startId);
+  } finally { scenarioSetupInProgress = false; }
+  scenarioStartCab = cabName();
+  // 주차제동 체결 상태로 시작 (체결 버튼 취급 없이)
+  if (sc && sc.setup && sc.setup.parkBrake) {
+    window.__PARK_BRAKE_SET = true;
+    duEventMsg('MF', `${cabName()} 주차제동 체결`);
+  }
   scenarioStepStartDist = trainDistance;
+  renderStepHUD();
+}
+
+/* 시나리오 처음부터 재시작: 고장·시작 상태까지 다시 적용 */
+function restartScenario() {
+  if (currentScenario) applyScenario(currentScenario);
+  else resetCurrentScenario();
 }
 
 /* 시작 역 선택 목록 채우기 */
@@ -14038,8 +14302,9 @@ function setRunDirection(dir, startId) {
   const startSt = IC2.P.STN.find(st => st.id === startId) || first;
   placeTrainAtStation(startSt.id);
   if (typeof showTemporaryHudFeedback === 'function') {
-    showTemporaryHudFeedback(`🔁 [운행 방향] ${dir > 0 ? '하선' : '상선'} (${first.name} → ${last.name}) - ${startSt.name}역 정차 위치`, false);
+    showTemporaryHudFeedback(`🔁 [운행 방향] ${dir > 0 ? '하선' : '상선'} (${first.name} → ${last.name}) - ${startSt.name}역 정차 위치 · ${cabName()} 운전실`, false);
   }
+  notifyCabMove();
 }
 window.setRunDirection = setRunDirection;
 
