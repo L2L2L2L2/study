@@ -8465,7 +8465,7 @@ const DEFAULT_SCENARIOS = [
   {
     id: "SCN_VOBC1_FAIL",
     title: "7. VOBC1 고장(VOBC2 자동 절체) 시 MC1 VOBC 차단기 리셋",
-    description: "VOBC1이 고장 나 VOBC2로 자동 절체된 상황입니다. ADU의 VOBC1이 빨간 글씨, VOBC2에 Ⓐ가 붙고 DU의 MC1 VOBC 칸이 빨간 바탕이 됩니다. 관제 지시에 따라 해당차(MC1) VOBCCB1·VOBCCB2·VOBCDICB를 리셋하여 VOBC1을 정상으로 복귀시킵니다.",
+    description: "VOBC1이 고장 나 VOBC2로 자동 절체된 상황입니다. ADU의 VOBC1이 빨간 글씨, VOBC2에 Ⓐ가 붙고 DU의 MC1 VOBC 칸이 빨간 바탕이 됩니다. 관제 지시에 따라 해당차(MC1) VOBCCB1·VOBCCB2·VOBCDICB를 각각 차단 후 복귀하여(순서 무관) VOBC1을 정상으로 복귀시키고 관제에 보고합니다.",
     faults: ["VOBC1_FAIL"],
     steps: [
       {
@@ -8483,28 +8483,29 @@ const DEFAULT_SCENARIOS = [
       },
       {
         step: 2,
-        title: "MC1 VOBC 차단기 모두 차단",
+        title: "MC1 VOBC 차단기 차단 후 복귀",
         target: "CB_VOBCCB1",
         targetName: "MC1 VOBC 차단기",
         anyOrder: true,
-        instruction: "차단기반 [MC1 차단기] 탭에서 VOBCCB1, VOBCCB2, VOBCDICB를 모두 차단(OFF)하십시오. (순서 무관)",
+        instruction: "차단기반 [MC1 차단기] 탭에서 VOBCCB1, VOBCCB2, VOBCDICB를 모두 차단 후 복귀하십시오. (순서 무관)",
         checks: [
-          { target: "CB_VOBCCB1", state: "OFF", label: "VOBCCB1 차단 (OFF)" },
-          { target: "CB_VOBCCB2", state: "OFF", label: "VOBCCB2 차단 (OFF)" },
-          { target: "CB_VOBCDICB", state: "OFF", label: "VOBCDICB 차단 (OFF)" }
+          { target: "CB_VOBCCB1", cycle: true, label: "VOBCCB1 차단 후 복귀" },
+          { target: "CB_VOBCCB2", cycle: true, label: "VOBCCB2 차단 후 복귀" },
+          { target: "CB_VOBCDICB", cycle: true, label: "VOBCDICB 차단 후 복귀" }
         ]
       },
       {
         step: 3,
-        title: "MC1 VOBC 차단기 모두 투입",
-        target: "CB_VOBCCB1",
-        targetName: "MC1 VOBC 차단기",
-        anyOrder: true,
-        instruction: "VOBCCB1, VOBCCB2, VOBCDICB를 모두 다시 투입(ON)하여 VOBC1 정상 복귀를 확인하십시오. (순서 무관)",
-        checks: [
-          { target: "CB_VOBCCB1", state: "ON", label: "VOBCCB1 투입 (ON)" },
-          { target: "CB_VOBCCB2", state: "ON", label: "VOBCCB2 투입 (ON)" },
-          { target: "CB_VOBCDICB", state: "ON", label: "VOBCDICB 투입 (ON)" }
+        type: "REPORT",
+        title: "VOBC1 복귀 보고",
+        target: "OCC_REPORT",
+        targetName: "VOBC1 복귀 보고",
+        reportLabel: "VOBC1 복귀 보고",
+        instruction: "DU에서 VOBC1 정상 복귀를 확인하고 [📡 VOBC1 복귀 보고]로 관제에 보고하십시오.",
+        report: "관제, VOBC1이 복귀되었습니다.",
+        dialog: [
+          { who: "기관사", text: "관제, VOBC1이 복귀되었습니다." },
+          { who: "관제", text: "네, VOBC1 복귀 확인했습니다. 수고하셨습니다." }
         ]
       }
     ]
@@ -11474,7 +11475,7 @@ const TrainRemote = {
     } else if (faultType === 'VOBC1_FAIL') {
       (window.__OCC_FAULTS = window.__OCC_FAULTS || {}).VOBC1_FAIL = active;
       window.__FAULT_VOBC1_FAIL = active;
-      vobc1CbAllOff = false;
+      vobc1CbState = {};
       if (active) {
         duEventMsg('MF', 'MC1 VOBC 고장');
         showTemporaryHudFeedback('🚨 [신호 고장] VOBC1 고장 → VOBC2 자동 절체', true);
@@ -13711,6 +13712,7 @@ function completeScenarioStep() {
   }
 }
 
+let reportPending = false;
 /* [관제 보고] 버튼: REPORT 단계에서 보고 문구 표시 → 관제 응답 무전(TTS) 후 다음 단계 */
 function submitScenarioReport() {
   const targetStep = currentScenario && currentScenario.steps[currentStepIndex];
@@ -13726,7 +13728,13 @@ function submitScenarioReport() {
       if (scenarioCheckLog[i]) { scenarioCheckLog[i].dialogShown = k + 2; renderScenarioPanel(); }
       if (k === 0 && targetStep.effect) applyPowerEffect(targetStep.effect);   // 관제 응답과 함께 단전/급전
     }, 1400 * (k + 1)));
-    completeScenarioStep();
+    // 마지막 단계면 관제 답변까지 보여준 뒤 종료
+    if (i === currentScenario.steps.length - 1) {
+      if (reportPending) return;
+      reportPending = true;
+      renderScenarioPanel();
+      setTimeout(() => { reportPending = false; if (currentStepIndex === i) completeScenarioStep(); }, 1400 * (targetStep.dialog.length - 1) + 800);
+    } else completeScenarioStep();
     return;
   }
   completeScenarioStep();
@@ -13944,7 +13952,7 @@ function renderScenarioPanel() {
       return `<li class="scn-step current"><div class="scn-step-title"><span class="scn-step-no">${i + 1}</span><span>다음 조치를 판단하여 취급하십시오</span></div>${rb}</li>`;
     }
     let html = `<li class="scn-step ${state}"><div class="scn-step-title"><span class="scn-step-no">${state === 'done' ? '✓' : i + 1}</span><span>${stepName(st)}</span></div>`;
-    if (st.dialog && state === 'done') {
+    if (st.dialog && (state === 'done' || (scenarioCheckLog[i] || {}).dialogShown)) {   // 마지막 보고는 대화가 끝날 때까지 현재 단계에 표시
       const shown = (scenarioCheckLog[i] || {}).dialogShown || st.dialog.length;
       html += '<ul class="scn-dialog">' + st.dialog.slice(0, shown).map(d =>
         `<li class="${d.who === '관제' ? 'occ' : 'drv'}"><b>${escHtml(d.who)}</b> ${escHtml(d.text)}</li>`).join('') + '</ul>';
@@ -13964,7 +13972,7 @@ function renderScenarioPanel() {
       const chk = st.checks ? st.checks[currentCheckIndex] : null;
       const tgt = chk ? chk.target : st.target;
       const btns = [];
-      if (st.type === 'REPORT') btns.push(`<button type="button" class="scn-btn" onclick="submitScenarioReport()">📡 ${escHtml(st.reportLabel || '관제 보고')}</button>`);
+      if (st.type === 'REPORT' && !reportPending) btns.push(`<button type="button" class="scn-btn" onclick="submitScenarioReport()">📡 ${escHtml(st.reportLabel || '관제 보고')}</button>`);
       if (tgt === 'CAB_MOVE') btns.push(`<button type="button" class="scn-btn" onclick="moveToOtherCab()">🔁 ${chk && chk.state === 'FRONT' ? '전부' : '후부'} 운전실로 이동</button>`);
       if (typeof tgt === 'string' && tgt.startsWith('EXT_PB_COCK')) btns.push(`<button type="button" class="scn-btn cb" onclick="openCabUnder()">운전석 하부 (PB 코크) 열기</button>`);
       if (typeof tgt === 'string' && tgt.startsWith('EXT_PB_HOOK')) btns.push(`<button type="button" class="scn-btn cb" onclick="openExtPb()">수동완해고리 열기</button>`);
@@ -14467,7 +14475,7 @@ function applyScenario(sc) {
   screenFaultCbOff = {};
   applyScreenFaults();
   window.__FAULT_VOBC1_FAIL = scFaults.includes('VOBC1_FAIL') || !!occFaults.VOBC1_FAIL;
-  vobc1CbAllOff = false;
+  vobc1CbState = {};
   window.__ACTIVE_VOBC = 1;
   window.__VOBC_ALL_DOWN = false;
   if (window.__FAULT_VOBC1_FAIL) duEventMsg('MF', 'MC1 VOBC 고장');
@@ -14905,13 +14913,17 @@ const isVobcCbOff = car => ['CB_VOBCCB1', 'CB_VOBCCB2', 'CB_VOBCDICB'].some(id =
 
 /* VOBC1 고장: MC1 VOBCCB1·VOBCCB2·VOBCDICB를 모두 차단했다가 다시 투입하면 VOBC1 정상 복귀 (활성은 절체된 VOBC2 유지) */
 const VOBC1_RESET_IDS = ['CB_VOBCCB1', 'CB_VOBCCB2', 'CB_VOBCDICB'];
-let vobc1CbAllOff = false;
+// 차단기마다 차단(OFF) 후 복귀(ON)하면 'DONE', 세 개 모두 DONE이면 VOBC1 복구 (순서 무관)
+let vobc1CbState = {};
 function checkVobc1Reset() {
-  if (!window.__FAULT_VOBC1_FAIL) { vobc1CbAllOff = false; return; }
-  const st = VOBC1_RESET_IDS.map(id => (COMPONENT_REGISTRY[id] || {}).state);
-  if (st.every(x => x === 'OFF')) vobc1CbAllOff = true;
-  else if (vobc1CbAllOff && st.every(x => x === 'ON')) {
-    vobc1CbAllOff = false;
+  if (!window.__FAULT_VOBC1_FAIL) { vobc1CbState = {}; return; }
+  VOBC1_RESET_IDS.forEach(id => {
+    const st = (COMPONENT_REGISTRY[id] || {}).state;
+    if (st === 'OFF' && vobc1CbState[id] !== 'DONE') vobc1CbState[id] = 'OFF';
+    else if (st === 'ON' && vobc1CbState[id] === 'OFF') vobc1CbState[id] = 'DONE';
+  });
+  if (VOBC1_RESET_IDS.every(id => vobc1CbState[id] === 'DONE')) {
+    vobc1CbState = {};
     window.__FAULT_VOBC1_FAIL = false;
     clearOccFault('VOBC1_FAIL');
     showTemporaryHudFeedback('✅ [VOBC1 복구] MC1 VOBCCB1·VOBCCB2·VOBCDICB 리셋으로 VOBC1이 정상 복귀되었습니다', false);
