@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D 모델 정리</title>
+<!--
+  GLB/GLTF 모델 정리 도구 (브라우저에서만 처리, 파일은 어디에도 올라가지 않음)
+  - 폴리곤 줄이기(meshoptimizer) · 텍스처 축소(WebP) · 불필요한 속성/맵 제거 · 실제 크기(m)로 맞춤 · 바닥 중심 원점
+  - 결과: GLB 내려받기 / "승강장에서 보기" → view-demo.html?people=local (IndexedDB에 저장한 모델 사용)
+  - js/vendor/gltf-tools.js: glTF-Transform 4.5 + meshoptimizer 묶음 (MIT)
+-->
+<style>
+  :root { --bg: #0b0d10; --panel: #141a22; --line: rgba(255,255,255,.12); --fg: #e8eef3; --dim: #93a1ae; --acc: #46c27a; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg);
+    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif; font-size: 14px; }
+  .wrap { display: grid; grid-template-columns: 340px 1fr; height: 100%; }
+  aside { padding: 16px; border-right: 1px solid var(--line); overflow-y: auto; background: var(--panel); }
+  h1 { font-size: 17px; margin: 0 0 4px; } .sub { color: var(--dim); font-size: 12px; margin: 0 0 14px; line-height: 1.5; }
+  #drop { border: 2px dashed var(--line); border-radius: 10px; padding: 18px 12px; text-align: center; color: var(--dim); cursor: pointer; }
+  #drop.over { border-color: var(--acc); color: var(--fg); }
+  label { display: block; margin: 12px 0 4px; font-size: 12px; color: var(--dim); }
+  select, input[type=number] { width: 100%; box-sizing: border-box; background: #0f141a; color: var(--fg); border: 1px solid var(--line);
+    border-radius: 6px; padding: 7px 8px; font: inherit; }
+  .row { display: flex; gap: 8px; } .row > * { flex: 1; }
+  .chk { display: flex; gap: 6px; align-items: center; margin-top: 10px; font-size: 13px; color: var(--fg); }
+  button { margin-top: 12px; width: 100%; padding: 9px; border-radius: 6px; border: 1px solid var(--line); background: #1d2631; color: var(--fg); font: inherit; cursor: pointer; }
+  button.main { background: #1f6f43; border-color: var(--acc); }
+  button:disabled { opacity: .45; cursor: default; }
+  table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 12px; font-variant-numeric: tabular-nums; }
+  td, th { padding: 4px 2px; border-bottom: 1px solid var(--line); text-align: right; } td:first-child, th:first-child { text-align: left; color: var(--dim); }
+  #log { margin-top: 12px; font-size: 12px; color: var(--dim); white-space: pre-wrap; line-height: 1.5; }
+  main { position: relative; min-height: 300px; } #view { position: absolute; inset: 0; }
+  #hint { position: absolute; left: 12px; bottom: 12px; font-size: 12px; color: var(--dim); background: rgba(10,14,20,.7); padding: 6px 10px; border-radius: 6px; }
+  @media (max-width: 760px) { .wrap { grid-template-columns: 1fr; grid-template-rows: auto 60vh; } aside { border-right: 0; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div class="wrap">
+<aside>
+  <h1>3D 모델 정리</h1>
+  <p class="sub">GLB(또는 GLTF + bin + 텍스처)를 넣으면 용량을 줄이고 실제 크기로 맞춰 줍니다. 파일은 이 브라우저 안에서만 처리돼요.</p>
+  <div id="drop">여기에 파일을 끌어다 놓거나 눌러서 선택<br><small>.glb / .gltf (+ .bin, 이미지)</small></div>
+  <input type="file" id="file" multiple accept=".glb,.gltf,.bin,.png,.jpg,.jpeg,.webp" hidden>
+
+  <label>용도</label>
+  <select id="preset">
+    <option value="person">사람 (키 1.7 m)</option>
+    <option value="tree">나무 (높이 6 m)</option>
+    <option value="low">저층 건물 (폭 14 m)</option>
+    <option value="custom">직접 입력</option>
+  </select>
+  <div class="row">
+    <div><label>맞출 기준</label><select id="axis"><option value="h">높이</option><option value="w">폭(가장 긴 변)</option></select></div>
+    <div><label>크기 (m)</label><input type="number" id="size" value="1.7" step="0.1" min="0.1"></div>
+  </div>
+  <div class="row">
+    <div><label>목표 삼각형 수</label><input type="number" id="tris" value="20000" step="1000" min="200"></div>
+    <div><label>텍스처 최대 크기</label><select id="tex"><option>512</option><option selected>1024</option><option>2048</option></select></div>
+  </div>
+  <div class="chk"><input type="checkbox" id="simpleMat" checked><span>노멀·금속 맵 빼기 (용량 크게 줄어듦)</span></div>
+  <button class="main" id="run" disabled>정리하기</button>
+  <div class="row">
+    <button id="dl" disabled>GLB 내려받기</button>
+    <button id="try" disabled title="사람 용도: view-demo 승강장에 배치">승강장에서 보기</button>
+  </div>
+  <table id="stats"><tr><th></th><th>원본</th><th>정리 후</th></tr>
+    <tr><td>파일 크기</td><td id="s0">-</td><td id="s1">-</td></tr>
+    <tr><td>삼각형</td><td id="t0">-</td><td id="t1">-</td></tr>
+    <tr><td>텍스처</td><td id="x0">-</td><td id="x1">-</td></tr>
+    <tr><td>크기 (가로×높이×깊이)</td><td id="d0">-</td><td id="d1">-</td></tr>
+  </table>
+  <div id="log"></div>
+</aside>
+<main><div id="view"></div><div id="hint">회색 기둥 = 사람 키 1.7 m · 격자 1 m · 드래그로 회전</div></main>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { WebIO, ALL_EXTENSIONS, flatten, join, weld, simplify, prune, dedup, quantize, getBounds, MeshoptSimplifier } from './js/vendor/gltf-tools.js';
+
+const $ = id => document.getElementById(id);
+const PRESETS = { person: ['h', 1.7, 20000], tree: ['h', 6, 3000], low: ['w', 14, 5000] };
+const io = new WebIO().registerExtensions(ALL_EXTENSIONS);
+const log = t => { $('log').textContent += t + '\n'; };
+const mb = n => n > 1e6 ? (n / 1e6).toFixed(1) + ' MB' : (n / 1e3).toFixed(0) + ' KB';
+let src = null, out = null, outH = 1.7, baseName = 'model';
+
+/* ---------- 미리보기 ---------- */
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.outputColorSpace = THREE.SRGBColorSpace; $('view').appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x1a2029);
+const cam = new THREE.PerspectiveCamera(40, 1, 0.05, 2000); cam.position.set(3, 2, 4);
+const ctl = new OrbitControls(cam, renderer.domElement); ctl.target.set(0, 0.9, 0);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x445566, 1.6)); const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(3, 6, 4); scene.add(sun);
+const grid = new THREE.GridHelper(40, 40, 0x557766, 0x2c3540); scene.add(grid);
+const ref = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 1.7, 16).translate(0, 0.85, 0), new THREE.MeshLambertMaterial({ color: 0x888888, transparent: true, opacity: 0.5 }));
+ref.position.x = -1; scene.add(ref);
+let shown = null;
+const resize = () => { const r = $('view').getBoundingClientRect(); renderer.setSize(r.width, r.height); cam.aspect = r.width / r.height; cam.updateProjectionMatrix(); };
+addEventListener('resize', resize); resize();
+renderer.setAnimationLoop(() => { ctl.update(); renderer.render(scene, cam); });
+async function show(buf) {
+  const g = await new GLTFLoader().parseAsync(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength), '');
+  if (shown) scene.remove(shown);
+  shown = g.scene; scene.add(shown);
+  const b = new THREE.Box3().setFromObject(shown), s = b.getSize(new THREE.Vector3()), r = Math.max(s.x, s.y, s.z, 1.7);
+  ctl.target.set(0, s.y / 2, 0); cam.position.set(r * 1.2, r * 0.8, r * 1.6); cam.near = r / 500; cam.far = r * 50; cam.updateProjectionMatrix();
+  ref.position.x = -(s.x / 2 + 0.6);
+}
+
+/* ---------- 입력 ---------- */
+$('preset').onchange = () => { const p = PRESETS[$('preset').value]; if (!p) return; [$('axis').value, $('size').value, $('tris').value] = p; };
+$('drop').onclick = () => $('file').click();
+$('file').onchange = e => load([...e.target.files]);
+for (const ev of ['dragover', 'dragenter']) $('drop').addEventListener(ev, e => { e.preventDefault(); $('drop').classList.add('over'); });
+for (const ev of ['dragleave', 'drop']) $('drop').addEventListener(ev, () => $('drop').classList.remove('over'));
+$('drop').addEventListener('drop', e => { e.preventDefault(); load([...e.dataTransfer.files]); });
+
+const triCount = doc => { let n = 0; for (const m of doc.getRoot().listMeshes()) for (const p of m.listPrimitives()) n += (p.getIndices() ?? p.getAttribute('POSITION')).getCount() / 3; return Math.round(n); };
+const texInfo = doc => doc.getRoot().listTextures().map(t => { const s = t.getSize(); return s ? s[0] + '²' : '?'; }).join(', ') || '없음';
+const dims = doc => { const b = getBounds(doc.getRoot().listScenes()[0]); return [0, 1, 2].map(i => (b.max[i] - b.min[i]).toFixed(2)).join(' × '); };
+
+async function load(files) {
+  $('log').textContent = ''; out = null; $('dl').disabled = $('try').disabled = true;
+  const main = files.find(f => /\.(glb|gltf)$/i.test(f.name));
+  if (!main) return log('GLB 또는 GLTF 파일이 없어요.');
+  baseName = main.name.replace(/\.(glb|gltf)$/i, '');
+  try {
+    let doc, size = 0;
+    if (/\.glb$/i.test(main.name)) { const b = new Uint8Array(await main.arrayBuffer()); size = b.byteLength; doc = await io.readBinary(b); src = b; }
+    else {
+      const json = JSON.parse(await main.text()), resources = {};
+      for (const f of files) if (f !== main) { resources[f.name] = new Uint8Array(await f.arrayBuffer()); size += f.size; }
+      size += main.size;
+      const missing = [...(json.buffers || []), ...(json.images || [])].map(x => x.uri).filter(u => u && !u.startsWith('data:') && !resources[decodeURIComponent(u)] && !resources[u.split('/').pop()]);
+      if (missing.length) return log('같이 넣어야 할 파일이 빠졌어요: ' + missing.join(', '));
+      // 하위 폴더 경로(Textures/a.png)도 파일 이름만으로 찾게
+      for (const x of [...(json.buffers || []), ...(json.images || [])]) if (x.uri && !x.uri.startsWith('data:') && !resources[x.uri]) resources[x.uri] = resources[decodeURIComponent(x.uri).split('/').pop()];
+      doc = await io.readJSON({ json, resources });
+      src = await io.writeBinary(doc);
+    }
+    $('s0').textContent = mb(size); $('t0').textContent = triCount(doc).toLocaleString(); $('x0').textContent = texInfo(doc); $('d0').textContent = dims(doc);
+    for (const id of ['s1', 't1', 'x1', 'd1']) $(id).textContent = '-';
+    log(`불러옴: ${main.name}`); await show(src); $('run').disabled = false;
+  } catch (e) { log('불러오기 실패: ' + e.message); console.error(e); }
+}
+
+/* ---------- 정리 ---------- */
+async function shrinkTextures(doc, max) {
+  for (const t of doc.getRoot().listTextures()) {
+    const img = t.getImage(); if (!img) continue;
+    const bmp = await createImageBitmap(new Blob([img], { type: t.getMimeType() }));
+    const k = Math.min(1, max / Math.max(bmp.width, bmp.height)), w = Math.max(1, Math.round(bmp.width * k)), h = Math.max(1, Math.round(bmp.height * k));
+    const c = new OffscreenCanvas(w, h); c.getContext('2d').drawImage(bmp, 0, 0, w, h);
+    const blob = await c.convertToBlob({ type: 'image/webp', quality: 0.82 });
+    if (blob.type !== 'image/webp') { t.setImage(new Uint8Array(await (await c.convertToBlob({ type: 'image/png' })).arrayBuffer())).setMimeType('image/png'); continue; }
+    t.setImage(new Uint8Array(await blob.arrayBuffer())).setMimeType('image/webp');
+    doc.createExtension(ALL_EXTENSIONS.find(E => E.EXTENSION_NAME === 'EXT_texture_webp'));
+  }
+}
+$('run').onclick = async () => {
+  $('run').disabled = true; $('log').textContent = '';
+  try {
+    const doc = await io.readBinary(src), root = doc.getRoot();
+    log('1/5 필요 없는 데이터 정리');
+    for (const a of root.listAnimations()) a.dispose();
+    for (const m of root.listMaterials()) {
+      if ($('simpleMat').checked) { m.setNormalTexture(null); m.setMetallicRoughnessTexture(null); m.setOcclusionTexture(null); m.setMetallicFactor(0); m.setRoughnessFactor(0.9); }
+    }
+    for (const m of root.listMeshes()) for (const p of m.listPrimitives()) {
+      for (const s of p.listSemantics()) if (!['POSITION', 'NORMAL', 'TEXCOORD_0', 'COLOR_0'].includes(s)) p.setAttribute(s, null);
+      for (const t of p.listTargets()) p.removeTarget(t);
+    }
+    for (const n of root.listNodes()) if (n.getSkin()) n.setSkin(null);
+    await doc.transform(prune(), dedup(), flatten(), join(), weld());
+    const before = triCount(doc), target = +$('tris').value;
+    log(`2/5 삼각형 줄이기 ${before.toLocaleString()} → 목표 ${target.toLocaleString()}`);
+    await MeshoptSimplifier.ready;
+    if (before > target) await doc.transform(simplify({ simplifier: MeshoptSimplifier, ratio: target / before, error: 0.01 }));
+    log('3/5 텍스처 줄이기');
+    await shrinkTextures(doc, +$('tex').value);
+    log('4/5 실제 크기로 맞추기 (바닥 중심이 원점)');
+    const sc = root.listScenes()[0], b = getBounds(sc), sz = [0, 1, 2].map(i => b.max[i] - b.min[i]);
+    const k = $('axis').value === 'h' ? +$('size').value / sz[1] : +$('size').value / Math.max(sz[0], sz[2]);
+    const wrap = doc.createNode('root').setScale([k, k, k]).setTranslation([-(b.min[0] + b.max[0]) / 2 * k, -b.min[1] * k, -(b.min[2] + b.max[2]) / 2 * k]);
+    for (const c of sc.listChildren()) { sc.removeChild(c); wrap.addChild(c); }
+    sc.addChild(wrap); outH = sz[1] * k;
+    log('5/5 압축');
+    await doc.transform(prune(), quantize());
+    out = await io.writeBinary(doc);
+    $('s1').textContent = mb(out.byteLength); $('t1').textContent = triCount(doc).toLocaleString(); $('x1').textContent = texInfo(doc); $('d1').textContent = dims(doc);
+    log(`완료: ${mb(src.byteLength)} → ${mb(out.byteLength)}`);
+    await show(out); $('dl').disabled = $('try').disabled = false;
+  } catch (e) { log('실패: ' + e.message); console.error(e); }
+  $('run').disabled = false;
+};
+$('dl').onclick = () => {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([out], { type: 'model/gltf-binary' }));
+  a.download = baseName + '-lite.glb'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+};
+$('try').onclick = () => {
+  const rq = indexedDB.open('cab3d-models', 1);
+  rq.onupgradeneeded = () => rq.result.createObjectStore('models');
+  rq.onerror = () => log('브라우저 저장소를 열 수 없어요: ' + rq.error);
+  rq.onsuccess = () => {
+    const tx = rq.result.transaction('models', 'readwrite');
+    tx.objectStore('models').put({ buf: out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength), height: outH }, 'person');
+    tx.oncomplete = () => open('view-demo.html?people=local', '_blank');
+  };
+};
+</script>
+</body>
+</html>

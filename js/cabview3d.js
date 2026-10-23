@@ -897,21 +897,32 @@ const G = {
   const steps = []; for (let i = 0; i < 6; i++) steps.push(boxGeo(0.8, 0.06, 0.28, 0).translate(0, -0.3 + (i + 1) * 0.225, i * 0.3));
   G.steps = shared(mergeGeometries(steps));
 }
+const QS = new URLSearchParams(location.search);
 /* 시험용: ?scenery=asset 이면 수목·저층 건물을 외부 로우폴리 모델(CC0, assets/scenery/)로 교체.
    배치(개수·위치·난수열)는 그대로 두고 지오메트리·재질만 바꿔서 기존 화면과 1:1 비교 */
-if (new URLSearchParams(location.search).get('scenery') === 'asset') {
+if (QS.get('scenery') === 'asset' || QS.has('people')) {
   try {
     const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
     const L = new GLTFLoader(), base = new URL('../assets/scenery/', import.meta.url);
     // 모델 안의 메시를 하나로 합치고, 바닥 중심을 원점에 둔 뒤 크기 맞춤. cut: 이 높이 이하 삼각형(바닥 타일) 제거
     const bake = async (file, { h, w, cut }) => {
-      const gl = await L.loadAsync(new URL(file, base).href); gl.scene.updateMatrixWorld(true);
+      const gl = typeof file === 'string' ? await L.loadAsync(new URL(file, base).href) : await L.parseAsync(file, '');
+      gl.scene.updateMatrixWorld(true);
       const parts = []; let map = null;
       gl.scene.traverse(o => {
         if (!o.isMesh) return;
         map ||= o.material.map;
-        let g = o.geometry.clone().applyMatrix4(o.matrixWorld).toNonIndexed();
-        for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
+        let g = o.geometry.clone();
+        for (const k of Object.keys(g.attributes)) {
+          if (!['position', 'normal', 'uv'].includes(k)) { g.deleteAttribute(k); continue; }
+          const a = g.attributes[k], GET = ['getX', 'getY', 'getZ', 'getW'];   // 양자화(정수) 속성은 실수로 풀어서 변환
+          if (!(a.array instanceof Float32Array) || a.isInterleavedBufferAttribute) {
+            const f = new Float32Array(a.count * a.itemSize);
+            for (let i = 0; i < a.count; i++) for (let q = 0; q < a.itemSize; q++) f[i * a.itemSize + q] = a[GET[q]](i);
+            g.setAttribute(k, new THREE.BufferAttribute(f, a.itemSize));
+          }
+        }
+        g = g.applyMatrix4(o.matrixWorld).toNonIndexed();
         if (cut !== undefined) {
           const p = g.attributes.position, keep = [];
           for (let t = 0; t < p.count; t += 3) if (Math.max(p.getY(t), p.getY(t + 1), p.getY(t + 2)) > cut) keep.push(t);
@@ -931,6 +942,18 @@ if (new URLSearchParams(location.search).get('scenery') === 'asset') {
       geo.translate(-c.x, -bb.min.y, -c.z).scale(k, k, k); geo.computeBoundingSphere();
       return { geo: shared(geo), map };
     };
+    if (QS.has('people')) {   // ?people=1 : 승강장 인물 모델 (assets/people/person.glb), ?people=local : model-prep.html에서 정리한 모델
+      const local = QS.get('people') === 'local' ? await new Promise((ok, no) => {
+        const rq = indexedDB.open('cab3d-models', 1);
+        rq.onupgradeneeded = () => rq.result.createObjectStore('models');
+        rq.onerror = () => no(rq.error);
+        rq.onsuccess = () => { const g = rq.result.transaction('models').objectStore('models').get('person'); g.onsuccess = () => ok(g.result); g.onerror = () => no(g.error); };
+      }) : null;
+      const p = local ? await bake(local.buf, { h: local.height }) : await bake('../people/person.glb', { h: 1.68 });
+      G.person = p.geo; MAT.person = withHeadlight(new THREE.MeshLambertMaterial({ map: p.map }));
+      console.log('[asset] person model loaded');
+    }
+    if (QS.get('scenery') === 'asset') {
     const [tree, b0, b1, b2] = await Promise.all([
       bake('kenney/grass-trees-tall.glb', { h: 4.7, cut: 0.051 }),
       bake('kaykit/building_B_withoutBase.gltf', { w: 14 }),
@@ -939,6 +962,7 @@ if (new URLSearchParams(location.search).get('scenery') === 'asset') {
     G.tree = tree.geo; MAT.tree = withHeadlight(new THREE.MeshLambertMaterial({ map: tree.map }));
     G.lows = [b0.geo, b1.geo, b2.geo]; MAT.low = withHeadlight(new THREE.MeshLambertMaterial({ map: b0.map }));
     console.log('[asset] scenery models loaded');
+    }
   } catch (e) { console.warn('[asset] 외부 모델 로드 실패, 기본 풍경 사용', e); }
 }
 
@@ -1066,6 +1090,15 @@ function stationFeatures(st, a, b, under) {
   // 상선 (반대편 선로, s 감소 방향 진행)
   if (st.oppStop + SIDE_BACK >= a && st.oppStop + SIDE_BACK < b) inst(G.stopR, under ? MAT.stopU : MAT.stopA, [{ s: st.oppStop + SIDE_BACK, u: -3.69, v: PLAT_V + 1.55, yaw: Math.PI }]);
   if (st.oppStop >= a && st.oppStop < b) inst(G.stopFront, MAT.stopFront, [{ s: st.oppStop, u: -TRK, v: -0.30, yaw: Math.PI }]);
+  // 시험용 인물 (?people=1): 양쪽 승강장에 선로를 바라보고 대기
+  if (G.person) {
+    const ppl = [];
+    for (const [ds, du, side] of [[-6, 4.7, 1], [-19, 5.4, 1], [-33, 4.8, 1], [8, 4.9, -1], [-14, 5.6, -1]]) {
+      const s = st.s + ds;
+      if (s >= a && s < b) ppl.push({ s, u: side * du, v: PLAT_V, yaw: -side * Math.PI / 2 });
+    }
+    inst(G.person, MAT.person, ppl);
+  }
 }
 
 /* ---------- 승강장 에스컬레이터·계단 ----------
