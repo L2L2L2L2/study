@@ -897,6 +897,50 @@ const G = {
   const steps = []; for (let i = 0; i < 6; i++) steps.push(boxGeo(0.8, 0.06, 0.28, 0).translate(0, -0.3 + (i + 1) * 0.225, i * 0.3));
   G.steps = shared(mergeGeometries(steps));
 }
+/* 시험용: ?scenery=asset 이면 수목·저층 건물을 외부 로우폴리 모델(CC0, assets/scenery/)로 교체.
+   배치(개수·위치·난수열)는 그대로 두고 지오메트리·재질만 바꿔서 기존 화면과 1:1 비교 */
+if (new URLSearchParams(location.search).get('scenery') === 'asset') {
+  try {
+    const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+    const L = new GLTFLoader(), base = new URL('../assets/scenery/', import.meta.url);
+    // 모델 안의 메시를 하나로 합치고, 바닥 중심을 원점에 둔 뒤 크기 맞춤. cut: 이 높이 이하 삼각형(바닥 타일) 제거
+    const bake = async (file, { h, w, cut }) => {
+      const gl = await L.loadAsync(new URL(file, base).href); gl.scene.updateMatrixWorld(true);
+      const parts = []; let map = null;
+      gl.scene.traverse(o => {
+        if (!o.isMesh) return;
+        map ||= o.material.map;
+        let g = o.geometry.clone().applyMatrix4(o.matrixWorld).toNonIndexed();
+        for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
+        if (cut !== undefined) {
+          const p = g.attributes.position, keep = [];
+          for (let t = 0; t < p.count; t += 3) if (Math.max(p.getY(t), p.getY(t + 1), p.getY(t + 2)) > cut) keep.push(t);
+          const ng = new THREE.BufferGeometry();
+          for (const [k, a] of Object.entries(g.attributes)) {
+            const arr = new Float32Array(keep.length * 3 * a.itemSize);
+            keep.forEach((t, j) => { for (let q = 0; q < 3 * a.itemSize; q++) arr[j * 3 * a.itemSize + q] = a.array[t * a.itemSize + q]; });
+            ng.setAttribute(k, new THREE.BufferAttribute(arr, a.itemSize));
+          }
+          g = ng;
+        }
+        parts.push(g);
+      });
+      const geo = mergeGeometries(parts); geo.computeBoundingBox();
+      const bb = geo.boundingBox, c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3());
+      const k = h ? h / sz.y : w / Math.max(sz.x, sz.z);
+      geo.translate(-c.x, -bb.min.y, -c.z).scale(k, k, k); geo.computeBoundingSphere();
+      return { geo: shared(geo), map };
+    };
+    const [tree, b0, b1, b2] = await Promise.all([
+      bake('kenney/grass-trees-tall.glb', { h: 4.7, cut: 0.051 }),
+      bake('kaykit/building_B_withoutBase.gltf', { w: 14 }),
+      bake('kaykit/building_D_withoutBase.gltf', { w: 20 }),
+      bake('kaykit/building_A_withoutBase.gltf', { w: 10 })]);
+    G.tree = tree.geo; MAT.tree = withHeadlight(new THREE.MeshLambertMaterial({ map: tree.map }));
+    G.lows = [b0.geo, b1.geo, b2.geo]; MAT.low = withHeadlight(new THREE.MeshLambertMaterial({ map: b0.map }));
+    console.log('[asset] scenery models loaded');
+  } catch (e) { console.warn('[asset] 외부 모델 로드 실패, 기본 풍경 사용', e); }
+}
 
 /* =====================================================================
    7. 청크 빌더
