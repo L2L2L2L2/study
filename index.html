@@ -854,8 +854,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-end;   /* ▲ PULL 글씨는 커버 하단 (위쪽 스위치 이름표와 겹치지 않게) */
-      gap: 2px;
-      padding: 4px 0;
+      padding: 4px 0 5px;
     }
 
     .acrylic-cover::before {
@@ -866,13 +865,7 @@
       letter-spacing: 0.5px;
     }
 
-    .cover-hinge {
-      width: 28px;
-      height: 6px;
-      background: #7a828e;
-      border-radius: 2px;
-      border: 1px solid #4a515c;
-    }
+    .cover-hinge { display: none; }   /* 회색 바 대신 그 자리에 ▲ PULL 글씨 */
 
     /* 커버 열림 상태 */
     .acrylic-cover.open {
