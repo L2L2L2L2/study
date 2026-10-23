@@ -15054,13 +15054,13 @@ function renderParkMagnetValve() {
   const stEl = document.getElementById('pbmv-status');
   if (stEl) stEl.innerHTML = `주차제동: ${window.__PARK_BRAKE_SET ? '<b class="on">체결</b>' : '<b class="off">완해</b>'} · 운전실 ${cabName()}<div class="pbmv-note">전자변 제동/완해 취급은 기계적 취급으로서 역행회로의 구성 조건을 만족하지 못합니다</div>`;
 }
-/* 운전석 하부: 위 PB 코크(취급), 아래 MR 코크(위치 확인용). 손잡이가 왼쪽으로 배관과 나란하면 정상(개방), 몸쪽으로 꺾으면 차단 */
+/* 운전석 하부: 위 PB 코크(취급), 아래 MR 코크(위치 확인용). 왼쪽 끝 관은 ㄴ자로 위로 꺾여 장비 안으로 들어감. 손잡이가 왼쪽으로 배관과 나란하면 정상(개방), 몸쪽으로 꺾으면 차단 */
 function renderCabUnder(view) {
   const car = pbmvCar;
   const pbClosed = COMPONENT_REGISTRY[extPbId('COCK', car)].state === 'CLOSED';
   const titleEl = document.getElementById('pbmv-title');
   if (titleEl) titleEl.textContent = `${car} 운전석 하부`;
-  const cock = (y, letters, closed, lever, onclick) => {
+  const cock = (y, letters, closed, lever, onclick, boxY) => {
     const handle = closed
       ? `<polygon points="351,${y - 40} 369,${y - 40} 392,${y + 22} 328,${y + 22}" fill="${lever}" stroke="#000" stroke-opacity="0.5"/>
          <rect x="326" y="${y + 18}" width="68" height="12" rx="5" fill="${lever}" stroke="#000" stroke-opacity="0.5"/>`
@@ -15068,7 +15068,10 @@ function renderCabUnder(view) {
     return `<g class="${onclick ? 'extpb-btn' : ''}" ${onclick ? `onclick="${onclick}"` : ''}>
       <rect x="20" y="${y - 62}" width="660" height="128" fill="transparent"/>
       <rect x="470" y="${y - 18}" width="220" height="36" fill="url(#cuPipe)" stroke="#2b2f34"/>
-      <polygon points="38,${y} 92,${y - 26} 92,${y + 26}" fill="url(#cuMetal)" stroke="#2b2f34"/>
+      <rect x="14" y="${boxY}" width="140" height="22" rx="3" fill="#1b1e22" stroke="#000"/>
+      <rect x="44" y="${boxY + 22}" width="32" height="${y - boxY - 22}" fill="url(#cuPipeV)" stroke="#2b2f34"/>
+      <path d="M44 ${y - 6} Q44 ${y + 16} 66 ${y + 16} H92 V${y - 16} H76 V${y - 6} Z" fill="url(#cuPipe)" stroke="#2b2f34"/>
+      <rect x="38" y="${boxY + 26}" width="44" height="14" rx="2" fill="url(#cuMetal)" stroke="#2b2f34"/>
       <rect x="92" y="${y - 30}" width="70" height="60" rx="4" fill="url(#cuMetal)" stroke="#2b2f34"/>
       <line x1="114" y1="${y - 30}" x2="114" y2="${y + 30}" stroke="#3d4248"/><line x1="140" y1="${y - 30}" x2="140" y2="${y + 30}" stroke="#3d4248"/>
       <rect x="162" y="${y - 24}" width="50" height="48" fill="url(#cuMetal)" stroke="#2b2f34"/>
@@ -15085,12 +15088,13 @@ function renderCabUnder(view) {
   };
   view.innerHTML = `<svg viewBox="0 0 700 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="운전석 하부 PB 코크와 MR 코크">
     <defs>
+      <linearGradient id="cuPipeV" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6b7077"/><stop offset="0.5" stop-color="#9aa0a6"/><stop offset="1" stop-color="#43474c"/></linearGradient>
       <linearGradient id="cuMetal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b7b0a2"/><stop offset="0.5" stop-color="#8f897d"/><stop offset="1" stop-color="#5f5a52"/></linearGradient>
       <linearGradient id="cuPipe" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6b7077"/><stop offset="0.5" stop-color="#9aa0a6"/><stop offset="1" stop-color="#43474c"/></linearGradient>
     </defs>
     <rect x="0" y="0" width="700" height="330" fill="#2a2e33"/>
-    ${cock(88, ['P', 'B'], pbClosed, '#c0392b', `operateExtPb('COCK', '${car}')`)}
-    ${cock(238, ['M', 'R'], false, '#b9a27a', '')}
+    ${cock(88, ['P', 'B'], pbClosed, '#c0392b', `operateExtPb('COCK', '${car}')`, 0)}
+    ${cock(238, ['M', 'R'], false, '#b9a27a', '', 152)}
     <text x="600" y="40" text-anchor="middle" font-size="14" font-weight="800" fill="${pbClosed ? '#ff7b72' : '#7ee787'}">PB 코크: ${pbClosed ? '차단' : '정상 (개방)'}</text>
     <text x="600" y="190" text-anchor="middle" font-size="14" font-weight="800" fill="#8b949e">MR 코크: 정상 (취급하지 않음)</text>
   </svg>`;
