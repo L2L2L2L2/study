@@ -4870,6 +4870,8 @@
     .cb-tab.active { background: #b45309; border-color: #f59e0b; color: #fff; }
     .cb-hint { color: #94a3b8; font-size: 11.5px; margin-left: 12px; }
     /* 주차제동 전자변 */
+    .pbmv-open-btn { padding: 8px 14px; font-size: 13px; font-weight: 800; color: #f0f6fc; background: rgba(120, 80, 20, 0.75); border: 1px solid #d29922; border-radius: 8px; cursor: pointer; }
+    .pbmv-open-btn:hover { background: rgba(160, 110, 30, 0.9); }
     .pbmv-window { width: min(760px, 96vw) !important; max-width: 96vw !important; }
     .pbmv-body { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 16px 20px; background: #3a3f45; }
     .pbmv-title { color: #e6edf3; font-weight: 800; font-size: 14px; }
@@ -5558,7 +5560,6 @@
               <button type="button" class="cab-op-btn active" id="btn-op4" onclick="switchRightOp('OP4')">OP4</button>
               <button type="button" class="cab-op-btn" id="btn-op5" onclick="switchRightOp('OP5')">OP5</button>
               <button type="button" class="cab-op-btn cb-open-btn" id="btn-cb" onclick="openBreakerPanel()" title="차단기반 열기">차단기</button>
-              <button type="button" class="cab-op-btn cb-open-btn" id="btn-pbmv" onclick="openParkMagnetValve()" title="주차제동 전자변 (차체 하부)">전자변</button>
               <button type="button" class="cab-op-btn occ-tab-btn" id="btn-occ" onclick="switchRightOp('OCC')" title="종합관제실(OCC) 교관 관제 패널">📡 OCC</button>
             </div>
           </div>
@@ -6784,6 +6785,12 @@
             </div>
           </div>
           <div class="component-label">구원운전</div>
+        </div>
+
+        <!-- 6행 좌: 주차제동 전자변 (차체 하부 장치 바로가기) -->
+        <div class="component-cell" id="wrap-PB_MV">
+          <button type="button" class="pbmv-open-btn" onclick="openParkMagnetValve()" title="주차제동 전자변 (차체 하부)">전자변</button>
+          <div class="component-label">주차제동 전자변</div>
         </div>
 
       </div>
