@@ -14877,7 +14877,7 @@ function renderParkMagnetValve() {
     <text x="590" y="310" text-anchor="middle" font-size="12" font-weight="700" fill="${!applyIn ? '#a5f3b5' : '#c9d1d9'}">완해측${!applyIn ? ' (눌림)' : ''}</text>
   </svg>`;
   const stEl = document.getElementById('pbmv-status');
-  if (stEl) stEl.innerHTML = `주차제동: ${window.__PARK_BRAKE_SET ? '<b class="on">체결 (DU PB)</b>' : '<b class="off">완해</b>'} · 운전실 ${cabName()}`;
+  if (stEl) stEl.innerHTML = `주차제동: ${window.__PARK_BRAKE_SET ? '<b class="on">체결</b>' : '<b class="off">완해</b>'} · 운전실 ${cabName()}`;
 }
 window.openParkMagnetValve = openParkMagnetValve;
 window.pressParkMagnetValve = pressParkMagnetValve;
