@@ -7422,7 +7422,11 @@
       </div>
       <div class="cb-scn-progress scn-progress-line"></div>
       <div class="modal-body pbmv-body">
-        <div class="pbmv-title">1호차 우측 1-2 출입문</div>
+        <div class="cb-tabs" id="emgdoor-tabs">
+          <button type="button" class="cb-tab active" data-car="MC1" onclick="openEmgDoor('MC1')">MC1 1-2 출입문</button>
+          <button type="button" class="cb-tab" data-car="MC2" onclick="openEmgDoor('MC2')">MC2 2-2 출입문</button>
+        </div>
+        <div class="pbmv-title" id="emgdoor-title">1호차(MC1) 우측 1-2 출입문</div>
         <div class="emgdoor-row">
           <div id="emgdoor-view"></div>
           <div id="emgdoor-zoom"></div>
@@ -8134,7 +8138,10 @@ const COMPONENT_REGISTRY = {
   // [객실] 1-2 출입문 비상핸들 커버 (CLOSED / OPEN), 비상핸들 (NORMAL 정상(안전) / EMERGENCY 비상), 출입문 손 개폐 (CLOSED / OPEN, 잠긴 문을 누르면 LOCKED 판정)
   EMG_DOOR_COVER: { name: '1-2 출입문 비상핸들 커버', type: 'EMG_DOOR', state: 'CLOSED', panel: 'EXT' },
   EMG_DOOR_HANDLE: { name: '1-2 출입문 비상핸들', type: 'EMG_DOOR', state: 'NORMAL', panel: 'EXT' },
-  EMG_DOOR_LEAF: { name: '1-2 출입문', type: 'EMG_DOOR', state: 'CLOSED', panel: 'EXT' }
+  EMG_DOOR_LEAF: { name: '1-2 출입문', type: 'EMG_DOOR', state: 'CLOSED', panel: 'EXT' },
+  EMG_DOOR_COVER_MC2: { name: '2-2 출입문 비상핸들 커버', type: 'EMG_DOOR', state: 'CLOSED', panel: 'EXT' },
+  EMG_DOOR_HANDLE_MC2: { name: '2-2 출입문 비상핸들', type: 'EMG_DOOR', state: 'NORMAL', panel: 'EXT' },
+  EMG_DOOR_LEAF_MC2: { name: '2-2 출입문', type: 'EMG_DOOR', state: 'CLOSED', panel: 'EXT' }
 };
 
 /**
@@ -8587,6 +8594,92 @@ const DEFAULT_SCENARIOS = [
         ]
       }
     ]
+  },
+  {
+    id: "SCN_DOOR_NO_OPEN",
+    title: "9. 전체 출입문이 열리지 않을 때",
+    description: "역에 정위치 정차했으나 출입문이 열리지 않는 상황입니다. DU에는 출입문이 모두 닫힘으로 표시되고 OP2 출입문등도 점등되어 있습니다. RM 모드에서 우측 출입문 열림, OP3 저속도 바이패스 후 다시 열림을 취급해 보고, 그래도 열리지 않으면 MC1·MC2 출입문을 1개씩 비상핸들로 수동 개방하여 승객을 승하차시킨 뒤 무인모드로 전환하고 회송 조치합니다.",
+    faults: ["DOOR_NO_OPEN"],
+    allowDriving: true,
+    steps: [
+      {
+        step: 1,
+        title: "RM 전환 후 우측 출입문 열림",
+        target: "SW_DRIVE_MODE",
+        targetName: "운전모드 RM · 우측열림",
+        instruction: "운전모드를 OFF에서 RM으로 전환하고 OP1 우측 출입문 열림 버튼을 누르십시오.",
+        checks: [
+          { target: "SW_DRIVE_MODE", state: "RM", label: "운전모드 OFF → RM" },
+          { target: "SW_DOOR_OPEN_R", state: "PRESSED", label: "우측 출입문 열림 취급", result: "열리지 않음" }
+        ]
+      },
+      {
+        step: 2,
+        title: "저속도 바이패스 후 우측 출입문 열림",
+        target: "SW_LOW_SPEED",
+        targetName: "OP3 저속도 · 우측열림",
+        instruction: "OP3 저속도 스위치를 바이패스로 절체하고 우측 출입문 열림 버튼을 다시 누르십시오.",
+        checks: [
+          { target: "SW_LOW_SPEED", state: "BYPASS", label: "OP3 저속도 바이패스" },
+          { target: "SW_DOOR_OPEN_R", state: "PRESSED", label: "우측 출입문 열림 재취급", result: "열리지 않음" }
+        ]
+      },
+      {
+        step: 3,
+        title: "MC1 1-2 출입문 수동 개방 · 승하차",
+        target: "EMG_DOOR_COVER",
+        targetName: "MC1 1-2 출입문",
+        instruction: "1-2 출입문의 비상핸들을 비상위치로 취급했다가 정상위치로 복귀하고, 출입문을 손으로 열어 승객을 승하차시킨 뒤 닫으십시오.",
+        checks: [
+          { target: "EMG_DOOR_COVER", state: "OPEN", label: "비상핸들 커버 열기" },
+          { target: "EMG_DOOR_HANDLE", state: "EMERGENCY", label: "비상핸들 비상위치 취급" },
+          { target: "EMG_DOOR_HANDLE", state: "NORMAL", label: "비상핸들 정상위치 복귀" },
+          { target: "EMG_DOOR_LEAF", state: "OPEN", label: "출입문 손으로 열기" },
+          { target: "EMG_DOOR_LEAF", state: "BOARDED", label: "승객 승하차", result: "승하차 완료" },
+          { target: "EMG_DOOR_LEAF", state: "CLOSED", label: "출입문 손으로 닫기", result: "잠김" }
+        ]
+      },
+      {
+        step: 4,
+        title: "MC2 2-2 출입문 수동 개방 · 승하차",
+        target: "EMG_DOOR_COVER_MC2",
+        targetName: "MC2 2-2 출입문",
+        instruction: "2-2 출입문도 같은 방법으로 비상핸들 취급·복귀 후 손으로 열어 승객을 승하차시키고 닫으십시오.",
+        checks: [
+          { target: "EMG_DOOR_COVER_MC2", state: "OPEN", label: "비상핸들 커버 열기" },
+          { target: "EMG_DOOR_HANDLE_MC2", state: "EMERGENCY", label: "비상핸들 비상위치 취급" },
+          { target: "EMG_DOOR_HANDLE_MC2", state: "NORMAL", label: "비상핸들 정상위치 복귀" },
+          { target: "EMG_DOOR_LEAF_MC2", state: "OPEN", label: "출입문 손으로 열기" },
+          { target: "EMG_DOOR_LEAF_MC2", state: "BOARDED", label: "승객 승하차", result: "승하차 완료" },
+          { target: "EMG_DOOR_LEAF_MC2", state: "CLOSED", label: "출입문 손으로 닫기", result: "잠김" }
+        ]
+      },
+      {
+        step: 5,
+        title: "무인모드 전환",
+        target: "SW_WIRELESS_MODE",
+        targetName: "무인모드",
+        instruction: "운전모드 OFF, 제어키 OFF, 전후진 N으로 한 뒤 OP3 무인모드 커버를 열고 무인모드 버튼을 3초간 누르십시오.",
+        checks: [
+          { target: "SW_WIRELESS_COVER", state: "OPEN", label: "무인모드 커버 열기" },
+          { target: "SW_WIRELESS_MODE", state: "LIT", label: "무인모드 3초 인가", result: "무인모드 전환" }
+        ]
+      },
+      {
+        step: 6,
+        type: "REPORT",
+        title: "관제 보고 · 회송 조치",
+        target: "OCC_REPORT",
+        targetName: "회송 조치 보고",
+        reportLabel: "회송 조치 보고",
+        instruction: "[📡 회송 조치 보고]로 관제에 조치 결과를 보고하십시오.",
+        report: "관제, 전체 출입문 열림 불능으로 MC1, MC2 출입문 1개씩 수동 개방하여 승객 승하차 완료하였습니다. 무인모드 전환하였으며 회송 조치하겠습니다.",
+        dialog: [
+          { who: "기관사", text: "관제, 전체 출입문 열림 불능으로 MC1, MC2 출입문 1개씩 수동 개방하여 승객 승하차 완료하였습니다. 무인모드 전환하였으며 회송 조치하겠습니다." },
+          { who: "관제", text: "네, 알겠습니다. 회송 조치하십시오." }
+        ]
+      }
+    ]
   }
 ];
 
@@ -8997,6 +9090,13 @@ let rmOverspeedTimer = 0.0;
 
 // 전역 출입문 및 PSD 제어 헬퍼 함수
 function openTrainDoors(side = 'R', isAuto = false) {
+  if (window.__FAULT_DOOR_NO_OPEN) {
+    // 전체 출입문 열림 불능: 열림 지령에도 출입문이 열리지 않음 (DU 폐 · 출입문등 점등 유지)
+    sound.playError();
+    triggerHaptic([50, 50]);
+    showTemporaryHudFeedback(`🚫 [출입문 열림 불능] ${side === 'L' ? '좌측' : '우측'} 출입문 열림을 취급했으나 출입문이 열리지 않습니다 (DU 전체 폐 표시)`, true);
+    return;
+  }
   isDoorOpen = true;
   doorOpenSide = side;
   window.doorOpenSide = side;
@@ -9812,8 +9912,10 @@ function updateDuAduDisplay(driveMode, notch, now) {
     });
 
     // 1-2 출입문 비상핸들 취급: 다시 잠길 때까지 자홍색 (우측 = 전진 시 상단, 후진 시 하단)
-    const emgDoorEl = document.getElementById(revNotch === 'R' ? 'du2-d1-b2' : 'du2-d1-t2');
-    if (emgDoorEl && window.__EMG_DOOR_UNLOCKED) emgDoorEl.className = 'du2-door-block emg';
+    ['MC1', 'MC2'].forEach(c => {
+      const el = document.getElementById(`du2-d${c === 'MC2' ? 2 : 1}-${revNotch === 'R' ? 'b' : 't'}2`);
+      if (el && emgDoorUnlocked[c]) el.className = 'du2-door-block emg';
+    });
 
     // 전면/후면 출입문 (닫힘 파란색 / 개방 흰색)
     const cabDoor1 = document.getElementById('du2-cab-mark-1');
@@ -9838,7 +9940,7 @@ function updateDuAduDisplay(driveMode, notch, now) {
         alarmEl.innerText = `⚠️ [과속주의] RM 허용속도(15km/h) 초과 - ${(5.0 - rmOverspeedTimer).toFixed(1)}초 후 비상제동`;
       } else if (window.__EMG_DOOR_UNLOCKED) {
         alarmEl.style.color = '#ffbb00';
-        alarmEl.innerText = '⚠️ [출입문] 1-2 출입문 비상핸들 취급 (출발 방지 인터록)';
+        alarmEl.innerText = `⚠️ [출입문] ${['MC1', 'MC2'].filter(c => emgDoorUnlocked[c]).map(c => EMG_DOOR_NO[c]).join('·')} 출입문 비상핸들 취급 (출발 방지 인터록)`;
       } else if (window.__FAULT_DOOR_FAIL || isDoorOpen) {
         alarmEl.style.color = '#ffbb00';
         alarmEl.innerText = '⚠️ [출입문] 출입문 열림 감지 (출발 방지 인터록)';
@@ -10037,7 +10139,7 @@ function updateDuAduDisplay(driveMode, notch, now) {
       } else if (window.__DU_EVT_MSG && !isUnmannedNow) {
         msgEl.innerText = window.__DU_EVT_MSG;
       } else if (window.__EMG_DOOR_UNLOCKED) {
-        msgEl.innerText = '[출입문] 1-2 출입문 비상핸들 취급 - 역행 차단 중';
+        msgEl.innerText = `[출입문] ${['MC1', 'MC2'].filter(c => emgDoorUnlocked[c]).map(c => EMG_DOOR_NO[c]).join('·')} 출입문 비상핸들 취급 - 역행 차단 중`;
       } else if (isDoorOpen || window.__FAULT_DOOR_FAIL) {
         msgEl.innerText = '[출입문] 출입문 개방 상태 - 역행 차단 중';
       } else {
@@ -14046,7 +14148,7 @@ function renderScenarioPanel() {
         `<li class="${d.who === '관제' ? 'occ' : 'drv'}"><b>${escHtml(d.who)}</b> ${escHtml(d.text)}</li>`).join('') + '</ul>';
     }
     const isEmgDoorStep = (st.checks || []).some(c => String(c.target).startsWith('EMG_DOOR'));
-    const instHtml = s => isEmgDoorStep ? escHtml(s).replace(/1-2 출입문/g, '<a class="scn-link" onclick="openEmgDoor()">1-2 출입문</a>') : escHtml(s);
+    const instHtml = s => isEmgDoorStep ? escHtml(s).replace(/([12])-2 출입문/g, (m, n) => `<a class="scn-link" onclick="openEmgDoor('MC${n}')">${m}</a>`) : escHtml(s);
     if (state === 'current' && st.instruction) html += `<div class="scn-step-inst">${instHtml(st.instruction)}</div>`;
     if (st.checks && state !== 'todo') {
       const log = scenarioCheckLog[i] || [];
@@ -14066,7 +14168,7 @@ function renderScenarioPanel() {
       if (tgt === 'CAB_MOVE') btns.push(`<button type="button" class="scn-btn" onclick="moveToOtherCab()">🔁 ${chk && chk.state === 'FRONT' ? '전부' : '후부'} 운전실로 이동</button>`);
       if (typeof tgt === 'string' && tgt.startsWith('EXT_PB_COCK')) btns.push(`<button type="button" class="scn-btn cb" onclick="openCabUnder()">운전석 하부 (PB 코크) 열기</button>`);
       if (typeof tgt === 'string' && tgt.startsWith('EXT_PB_HOOK')) btns.push(`<button type="button" class="scn-btn cb" onclick="openExtPb()">수동완해고리 열기</button>`);
-      if (typeof tgt === 'string' && tgt.startsWith('EMG_DOOR')) btns.push(`<button type="button" class="scn-btn cb" onclick="openEmgDoor()">1-2 출입문 보기</button>`);
+      if (typeof tgt === 'string' && tgt.startsWith('EMG_DOOR')) { const c = tgt.endsWith('_MC2') ? 'MC2' : 'MC1'; btns.push(`<button type="button" class="scn-btn cb" onclick="openEmgDoor('${c}')">${EMG_DOOR_NO[c]} 출입문 보기</button>`); }
       if (typeof tgt === 'string' && tgt.startsWith('CB_')) btns.push(`<button type="button" class="scn-btn cb" onclick="openBreakerPanel()">차단기반 열기</button>`);
       if (typeof tgt === 'string' && tgt.startsWith('SW_PB_MV')) btns.push(`<button type="button" class="scn-btn cb" onclick="openParkMagnetValve()">주차제동 전자변 열기</button>`);
       if (btns.length) html += `<div class="scn-step-btns">${btns.join('')}</div>`;
@@ -14234,7 +14336,7 @@ function resetCurrentScenario() {
   ['EXT_PB_COCK', 'EXT_PB_COCK_MC2'].forEach(id => { COMPONENT_REGISTRY[id].state = 'OPEN'; });
   COMPONENT_REGISTRY.EXT_PB_HOOK.state = 'IDLE';
   renderExtPb();
-  setEmgDoorFault(false);
+  setEmgDoorFault(null);
 
   // 모든 부품 상태 기본 초기화
   Object.keys(COMPONENT_REGISTRY).forEach(id => {
@@ -14571,7 +14673,8 @@ function applyScenario(sc) {
   window.__ACTIVE_VOBC = 1;
   window.__VOBC_ALL_DOWN = false;
   if (window.__FAULT_VOBC1_FAIL) duEventMsg('MF', 'MC1 VOBC 고장');
-  setEmgDoorFault(scFaults.includes('EMG_DOOR_HANDLE'));
+  setEmgDoorFault(scFaults.includes('EMG_DOOR_HANDLE') ? 'MC1' : null);
+  window.__FAULT_DOOR_NO_OPEN = scFaults.includes('DOOR_NO_OPEN');
   // 차단기 상태 초기화 (SPARE = 차단, 나머지 = 투입)
   registerBreakers();
   Object.keys(COMPONENT_REGISTRY).forEach(id => {
@@ -15272,15 +15375,27 @@ function renderExtPb() {
 window.openExtPb = openExtPb;
 window.operateExtPb = operateExtPb;
 
-/* 객실 1-2 출입문 비상핸들 (1호차 우측 2번째 출입문)
+/* 객실 출입문 비상핸들: MC1 1-2 출입문 / MC2 2-2 출입문 (각 차 우측 2번째 출입문)
    비상위치(시계방향 90°) = 출입문 잠금 해제: DU 해당 출입문 자홍, ADC 빨간 점멸, OP2 출입문등 소등, 역행 차단
    정상위치(안전)로 복귀해도 출입문을 손으로 닫아야 다시 잠김 → 잠긴 문은 눌러도 열리지 않음 */
-function setEmgDoorFault(on) {
-  const R = COMPONENT_REGISTRY;
-  R.EMG_DOOR_COVER.state = 'CLOSED';
-  R.EMG_DOOR_HANDLE.state = on ? 'EMERGENCY' : 'NORMAL';
-  R.EMG_DOOR_LEAF.state = 'CLOSED';
-  window.__EMG_DOOR_UNLOCKED = !!on;
+const EMG_DOOR_NO = { MC1: '1-2', MC2: '2-2' };
+const emgDoorId = (part, car) => `EMG_DOOR_${part}${car === 'MC2' ? '_MC2' : ''}`;
+let emgDoorCar = 'MC1';
+let emgDoorUnlocked = {};
+let emgBoardTimer = null;
+function updateEmgDoorUnlocked() {
+  window.__EMG_DOOR_UNLOCKED = !!(emgDoorUnlocked.MC1 || emgDoorUnlocked.MC2);
+}
+function setEmgDoorFault(car) {   // car: 비상핸들이 비상위치로 취급된 차 (없으면 모두 정상)
+  ['MC1', 'MC2'].forEach(c => {
+    COMPONENT_REGISTRY[emgDoorId('COVER', c)].state = 'CLOSED';
+    COMPONENT_REGISTRY[emgDoorId('HANDLE', c)].state = c === car ? 'EMERGENCY' : 'NORMAL';
+    COMPONENT_REGISTRY[emgDoorId('LEAF', c)].state = 'CLOSED';
+  });
+  emgDoorUnlocked = car ? { [car]: true } : {};
+  emgDoorCar = car || 'MC1';
+  clearTimeout(emgBoardTimer);
+  updateEmgDoorUnlocked();
   syncEmgDoorLamp();
   renderEmgDoor();
 }
@@ -15290,47 +15405,63 @@ function syncEmgDoorLamp() {
   if (window.__EMG_DOOR_UNLOCKED) lamp.classList.remove('lit', 'blinking');
   else if (!isDoorOpen && !window.__FAULT_DOOR_FAIL) { lamp.classList.remove('blinking'); lamp.classList.add('lit'); }
 }
-function openEmgDoor() {
+function openEmgDoor(car) {
+  if (car) emgDoorCar = car;
   renderEmgDoor();
   openModal('modal-emgdoor');
 }
 function operateEmgDoor(part) {
-  const R = COMPONENT_REGISTRY, cover = R.EMG_DOOR_COVER, handle = R.EMG_DOOR_HANDLE, leaf = R.EMG_DOOR_LEAF;
+  const car = emgDoorCar, no = EMG_DOOR_NO[car], R = COMPONENT_REGISTRY;
+  const cover = R[emgDoorId('COVER', car)], handle = R[emgDoorId('HANDLE', car)], leaf = R[emgDoorId('LEAF', car)];
   let id, next;
   if (part === 'COVER') {
     sound.playClick();
     if (cover.state === 'OPEN') { cover.state = 'CLOSED'; renderEmgDoor(); return; }   // 커버 닫기는 판정하지 않음
-    id = 'EMG_DOOR_COVER'; next = 'OPEN';
-    showTemporaryHudFeedback(`🔓 [비상핸들 커버] 열림 - 비상핸들 ${handle.state === 'EMERGENCY' ? '비상위치' : '정상위치(안전)'}`, handle.state === 'EMERGENCY');
+    id = emgDoorId('COVER', car); next = 'OPEN';
+    showTemporaryHudFeedback(`🔓 [${no} 비상핸들 커버] 열림 - 비상핸들 ${handle.state === 'EMERGENCY' ? '비상위치' : '정상위치(안전)'}`, false);
   } else if (part === 'HANDLE') {
     if (cover.state !== 'OPEN') return operateEmgDoor('COVER');
-    id = 'EMG_DOOR_HANDLE'; next = handle.state === 'EMERGENCY' ? 'NORMAL' : 'EMERGENCY';
-    if (next === 'EMERGENCY') window.__EMG_DOOR_UNLOCKED = true;
+    id = emgDoorId('HANDLE', car); next = handle.state === 'EMERGENCY' ? 'NORMAL' : 'EMERGENCY';
+    if (next === 'EMERGENCY') emgDoorUnlocked[car] = true;
     sound.playRotarySnap();
     triggerHaptic(35);
-    showTemporaryHudFeedback(next === 'NORMAL' ? '🔧 [비상핸들] 정상위치(안전) 복귀 - 출입문을 손으로 닫아야 잠깁니다' : '🚨 [비상핸들] 비상위치 - 출입문 잠금 해제', next === 'EMERGENCY');
+    showTemporaryHudFeedback(next === 'NORMAL' ? `🔧 [${no} 비상핸들] 정상위치(안전) 복귀 - 출입문을 손으로 닫아야 잠깁니다` : `🚨 [${no} 비상핸들] 비상위치 - 출입문 잠금 해제`, false);
   } else {
-    id = 'EMG_DOOR_LEAF';
+    id = emgDoorId('LEAF', car);
     if (leaf.state === 'OPEN') {
       next = 'CLOSED';
-      if (handle.state === 'NORMAL') window.__EMG_DOOR_UNLOCKED = false;
-      showTemporaryHudFeedback(window.__EMG_DOOR_UNLOCKED ? '🚪 [1-2 출입문] 손으로 닫음 - 비상핸들이 비상위치라 잠기지 않습니다' : '🔒 [1-2 출입문] 손으로 닫음 - 잠김 (DU 폐 · ADC 정상)', !!window.__EMG_DOOR_UNLOCKED);
-    } else if (window.__EMG_DOOR_UNLOCKED) {
+      clearTimeout(emgBoardTimer);
+      if (handle.state === 'NORMAL') emgDoorUnlocked[car] = false;
+      showTemporaryHudFeedback(emgDoorUnlocked[car] ? `🚪 [${no} 출입문] 손으로 닫음 - 비상핸들이 비상위치라 잠기지 않습니다` : `🔒 [${no} 출입문] 손으로 닫음 - 잠김 (DU 폐 · ADC 정상)`, !!emgDoorUnlocked[car]);
+    } else if (emgDoorUnlocked[car]) {
       next = 'OPEN';
-      showTemporaryHudFeedback('🚪 [1-2 출입문] 손으로 열림', false);
+      showTemporaryHudFeedback(`🚪 [${no} 출입문] 손으로 열림`, false);
+      // 출입문 열림 불능 상황: 손으로 연 출입문으로 승객 승하차 (3초)
+      if (window.__FAULT_DOOR_NO_OPEN) {
+        clearTimeout(emgBoardTimer);
+        emgBoardTimer = setTimeout(() => {
+          if (leaf.state !== 'OPEN') return;
+          leaf.boarded = true;
+          renderEmgDoor();
+          showTemporaryHudFeedback(`🚶 [${no} 출입문] 승객 승하차 완료`, false);
+          if (currentMode !== 'REC') evaluateStepAction(id, 'BOARDED');
+        }, 3000);
+      }
     } else {
       // 잠긴 출입문: 열리지 않음 (상태 변화 없이 확인 판정)
       const g = document.getElementById('emg-leaves');
       if (g) { g.classList.remove('emg-shake'); void g.getBBox(); g.classList.add('emg-shake'); }
       sound.playClick();
-      showTemporaryHudFeedback('🔒 [1-2 출입문] 잠겨 있어 열리지 않습니다', false);
-      if (currentMode !== 'REC') evaluateStepAction('EMG_DOOR_LEAF', 'LOCKED');
+      showTemporaryHudFeedback(`🔒 [${no} 출입문] 잠겨 있어 열리지 않습니다`, false);
+      if (currentMode !== 'REC') evaluateStepAction(id, 'LOCKED');
       return;
     }
+    leaf.boarded = false;
     sound.playAirExhaust(0.35, 900, 0.35);
     triggerHaptic([20, 30]);
   }
   R[id].state = next;
+  updateEmgDoorUnlocked();
   syncEmgDoorLamp();
   renderEmgDoor();
   if (currentMode === 'REC') promptRecordStep(id, R[id].name, next);
@@ -15359,7 +15490,7 @@ function buildEmgDoorSvg() {
     <path d="M320 44 L380 24 L450 40 L520 22 L600 42 L680 26" fill="none" stroke="#e3a23a" stroke-width="3"/>
     <path d="M330 26 L400 46 L470 28 L560 50 L660 34" fill="none" stroke="#4b7bd1" stroke-width="3"/>
     <rect x="460" y="70" width="80" height="16" rx="2" fill="#f7f3c4" stroke="#999"/>
-    <text x="500" y="82" text-anchor="middle" font-size="10" font-weight="700" fill="#333">1-2</text>
+    <text class="emg-no" x="500" y="82" text-anchor="middle" font-size="10" font-weight="700" fill="#333">1-2</text>
     <rect x="250" y="88" width="500" height="512" fill="#2b2f33"/>
     <g clip-path="url(#emgDoorway)">
       <rect x="262" y="96" width="476" height="300" fill="#4a5459"/>
@@ -15371,6 +15502,7 @@ function buildEmgDoorSvg() {
       <rect x="262" y="520" width="476" height="24" fill="#e0b22a"/>
       <rect x="262" y="566" width="476" height="34" fill="#5a5e61"/>
       <rect x="262" y="582" width="476" height="4" fill="#ff2b2b"/>
+      <text id="emg-board" x="500" y="470" text-anchor="middle" font-size="26" font-weight="800" fill="#fff" stroke="#000" stroke-width="0.8" style="display:none">승객 승하차 중…</text>
       <g id="emg-leaves" class="emgdoor-hit" onclick="operateEmgDoor('LEAF')">
         <g id="emg-leaf-l" class="emg-leaf">${leaf(262, 300, 470)}<rect x="493" y="96" width="7" height="504" fill="#111"/></g>
         <g id="emg-leaf-r" class="emg-leaf">${leaf(500, 556, 516)}<rect x="500" y="96" width="5" height="504" fill="#111"/></g>
@@ -15382,7 +15514,7 @@ function buildEmgDoorSvg() {
     <rect x="750" y="96" width="14" height="504" fill="#e3e5e6"/>
     <g transform="translate(874 340) scale(1.3) translate(-874 -340)">
     <rect x="828" y="262" width="72" height="18" rx="2" fill="#f7f3c4" stroke="#999"/>
-    <text x="864" y="275" text-anchor="middle" font-size="11" font-weight="700" fill="#333">1-2</text>
+    <text class="emg-no" x="864" y="275" text-anchor="middle" font-size="11" font-weight="700" fill="#333">1-2</text>
     ${sign(784, 296, 42, 104)}
     ${sign(904, 290, 62, 112)}
     <g class="emgdoor-hit" onclick="operateEmgDoor('HANDLE')">
@@ -15447,11 +15579,18 @@ function buildEmgZoomSvg() {
 }
 function renderEmgDoor() {
   const view = document.getElementById('emgdoor-view'), zoom = document.getElementById('emgdoor-zoom');
-  if (!view || !zoom || !COMPONENT_REGISTRY.EMG_DOOR_LEAF) return;
+  if (!view || !zoom || !COMPONENT_REGISTRY.EMG_DOOR_LEAF_MC2) return;
   if (!view.firstChild) view.innerHTML = buildEmgDoorSvg();
   if (!zoom.firstChild) zoom.innerHTML = '<div class="emgdoor-cap">비상핸들 (확대)</div>' + buildEmgZoomSvg();
-  const R = COMPONENT_REGISTRY;
-  const coverOpen = R.EMG_DOOR_COVER.state === 'OPEN', emg = R.EMG_DOOR_HANDLE.state === 'EMERGENCY', open = R.EMG_DOOR_LEAF.state === 'OPEN';
+  const R = COMPONENT_REGISTRY, car = emgDoorCar, no = EMG_DOOR_NO[car];
+  const coverOpen = R[emgDoorId('COVER', car)].state === 'OPEN', emg = R[emgDoorId('HANDLE', car)].state === 'EMERGENCY';
+  const leaf = R[emgDoorId('LEAF', car)], open = leaf.state === 'OPEN';
+  document.getElementById('emgdoor-title').textContent = `${car === 'MC2' ? '2호차(MC2)' : '1호차(MC1)'} 우측 ${no} 출입문`;
+  document.querySelectorAll('.emg-no').forEach(t => { t.textContent = no; });
+  document.querySelectorAll('#emgdoor-tabs .cb-tab').forEach(t => t.classList.toggle('active', t.dataset.car === car));
+  const board = document.getElementById('emg-board');
+  board.style.display = open && window.__FAULT_DOOR_NO_OPEN ? '' : 'none';
+  board.textContent = leaf.boarded ? '승객 승하차 완료' : '승객 승하차 중…';
   document.getElementById('emg-leaf-l').style.transform = open ? 'translateX(-212px)' : '';
   document.getElementById('emg-leaf-r').style.transform = open ? 'translateX(212px)' : '';
   document.getElementById('emgz-open').style.display = coverOpen ? '' : 'none';
@@ -15459,14 +15598,14 @@ function renderEmgDoor() {
   document.getElementById('emgz-handle').style.transform = emg ? 'rotate(90deg)' : '';   // 비상 = 시계방향 90°
   document.getElementById('emg-box-pulse').style.display = (!coverOpen && emg) ? '' : 'none';
   document.getElementById('emgz-hint').textContent = coverOpen ? (emg ? '손잡이를 눌러 정상위치(안전)로 돌립니다' : '위쪽 커버를 누르면 닫힙니다') : '커버를 누르면 열립니다';
-  const unlocked = !!window.__EMG_DOOR_UNLOCKED;
+  const unlocked = !!emgDoorUnlocked[car];
   const st = document.getElementById('emgdoor-status');
   if (st) st.innerHTML = `비상핸들: ${emg ? '<b class="on">비상위치</b>' : '<b class="off">정상위치(안전)</b>'} · 출입문: ${open ? '<b class="on">열림</b>' : unlocked ? '<b class="on">닫힘 (잠금 해제)</b>' : '<b class="off">닫힘 · 잠김</b>'}<div class="pbmv-note">비상핸들을 정상위치로 돌린 뒤 출입문을 손으로 닫아야 다시 잠깁니다</div>`;
 }
 window.openEmgDoor = openEmgDoor;
 window.operateEmgDoor = operateEmgDoor;
 document.addEventListener('click', e => {
-  if (e.target && e.target.classList && e.target.classList.contains('du2-door-block') && e.target.classList.contains('emg')) { e.stopPropagation(); openEmgDoor(); }
+  if (e.target && e.target.classList && e.target.classList.contains('du2-door-block') && e.target.classList.contains('emg')) { e.stopPropagation(); openEmgDoor(e.target.id.startsWith('du2-d2') ? 'MC2' : 'MC1'); }
 }, true);
 
 function toggleBreakerTrainType() {
