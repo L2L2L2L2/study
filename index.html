@@ -14926,6 +14926,7 @@ function checkVobc1Reset() {
     vobc1CbState = {};
     window.__FAULT_VOBC1_FAIL = false;
     clearOccFault('VOBC1_FAIL');
+    window.__DU_EVT_MSG = null;   // DU 'MC1 VOBC 고장' 메시지 지움
     showTemporaryHudFeedback('✅ [VOBC1 복구] MC1 VOBCCB1·VOBCCB2·VOBCDICB 리셋으로 VOBC1이 정상 복귀되었습니다', false);
   }
 }
