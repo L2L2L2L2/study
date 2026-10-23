@@ -5309,6 +5309,23 @@
       }
       .console-op1 { border-left: none; border-top: 1px solid #21262d; }
     }
+    /* ===== 좁은 화면 (가로세로비 5:4 이하, 창을 세로로 길게 줄인 경우) =====
+       ┌ OP2~5 ┬──── 3D 전면 ────┐
+       ├─── DU ───┬──── ADU ─────┤
+       ├ 방송·출입문 ┬ 마스콘·역전기 ┤
+       └────────────┴──────────────┘ */
+    @media (max-aspect-ratio: 5/4) {
+      .sim-workstation-layout {
+        grid-template-columns: 18% 32% 50% !important;
+        grid-template-rows: 46% 24% 30% !important;
+        grid-template-areas: "side cab cab" "du du adu" "op1 op1 op1" !important;
+      }
+      .sim-mmi-box.sim-du-box { border-left: none !important; }
+      .console-op1 { border-left: none; border-top: 1px solid #21262d; }
+      .console-op1 .op1-bottom-row { flex-direction: row !important; align-items: stretch !important; }
+      .console-op1 .op1-bottom-left-col { width: 50% !important; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
+      .console-op1 .op1-bottom-right-col { width: 50% !important; }
+    }
     @media (min-aspect-ratio: 3/1) {   /* 32:9 */
       .sim-workstation-layout {
         grid-template-columns: 11% 1fr 14% 14% !important;
@@ -15004,11 +15021,14 @@ function fitConsoleOp1() {
   const sw = slot.clientWidth, sh = slot.clientHeight;
   if (!sw || !sh) return;
   // 내용 폭을 칸의 가로세로 비율에 맞춰 몇 번 조정 → 확대 후 좌우/상하 여백이 최소가 되도록
-  let width = 440;
+  // 좁은 화면(5:4 이하)은 방송·출입문 | 마스콘을 가로로 나란히 놓으므로 폭 범위를 넓게
+  const narrow = window.matchMedia('(max-aspect-ratio: 5/4)').matches;
+  const minW = narrow ? 760 : 380, maxW = narrow ? 1100 : 640;
+  let width = narrow ? 880 : 440;
   for (let i = 0; i < 4; i++) {
     el.style.width = width + 'px';
     if (typeof updateMasconScalers === 'function') updateMasconScalers();
-    const next = Math.round(Math.max(380, Math.min(640, sw * el.offsetHeight / sh)));
+    const next = Math.round(Math.max(minW, Math.min(maxW, sw * el.offsetHeight / sh)));
     if (Math.abs(next - width) < 4) break;
     width = next;
   }
@@ -15054,7 +15074,7 @@ function fitCabOverlays() {
 }
 window.fitCabOverlays = fitCabOverlays;
 
-/* 와이드 모니터(2.2:1 이상): 좌측 OP2~OP5 패널을 일반 모니터와 같은 배치(폭 335px 기준)로 두고
+/* 와이드 모니터(2.2:1 이상)·좁은 화면(5:4 이하): 좌측 OP2~OP5 패널을 일반 모니터와 같은 배치(폭 335px 기준)로 두고
    칸 크기에 맞춰 통째로 확대 → 버튼이 위쪽에 몰리고 아래가 비는 현상 방지. 일반 화면에서는 원래대로 */
 const SIDE_BASE_W = 335;
 function fitSidePanel() {
@@ -15062,7 +15082,7 @@ function fitSidePanel() {
   if (!col) return;
   const panel = [...col.children].find(e => e.classList.contains('train-metal-panel') && e.style.display !== 'none' && e.offsetParent !== null);
   if (!panel) return;
-  if (!window.matchMedia('(min-aspect-ratio: 11/5)').matches) {
+  if (!window.matchMedia('(min-aspect-ratio: 11/5), (max-aspect-ratio: 5/4)').matches) {
     panel.style.zoom = ''; panel.style.width = ''; panel.style.margin = ''; panel.style.removeProperty('min-height');
     return;
   }
