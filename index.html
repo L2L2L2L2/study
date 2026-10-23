@@ -15119,7 +15119,7 @@ function renderExtPb() {
   const view = document.getElementById('extpb-view');
   if (!view) return;
   const pulled = COMPONENT_REGISTRY.EXT_PB_HOOK.state === 'PULLED';
-  // 주차제동 실린더에서 내려온 봉 끝의 빨간 ㅗ자 손잡이: 당기면 아래로 내려옴
+  // 주차제동통에서 내려온 봉 끝의 빨간 ㅗ자 손잡이: 당기면 아래로 내려옴
   const hy = pulled ? 46 : 0;
   view.innerHTML = `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="주차제동 수동완해고리">
     <defs>
@@ -15130,7 +15130,7 @@ function renderExtPb() {
     <g class="extpb-btn" onclick="operateExtPb('HOOK')">
       <rect x="200" y="20" width="300" height="260" fill="transparent"/>
       <rect x="230" y="40" width="240" height="70" rx="12" fill="url(#extBody)" stroke="#000"/>
-      <text x="350" y="82" text-anchor="middle" font-size="13" font-weight="700" fill="#8b949e">주차제동 실린더</text>
+      <text x="350" y="82" text-anchor="middle" font-size="13" font-weight="700" fill="#8b949e">주차제동통</text>
       <rect x="345" y="110" width="10" height="${34 + hy}" fill="url(#extPipe)" stroke="#555"/>
       <rect x="341" y="${142 + hy}" width="18" height="34" rx="3" fill="url(#extRed)" stroke="#7f1d1d"/>
       <rect x="296" y="${174 + hy}" width="108" height="20" rx="8" fill="url(#extRed)" stroke="#7f1d1d"/>
