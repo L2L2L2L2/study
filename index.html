@@ -4883,6 +4883,7 @@
     .pbmv-status { color: #c9d1d9; font-size: 12.5px; font-weight: 700; text-align: center; }
     .pbmv-status b.on { color: #ff7b72; }
     .pbmv-status b.off { color: #7ee787; }
+    .pbmv-status .pbmv-note { margin-top: 4px; color: #8b949e; font-size: 11.5px; font-weight: 500; }
 
     /* 차단기반을 연 채로도 현재 단계 세부 조치 진행 확인 */
     .cb-scn-progress { padding: 6px 16px; font-size: 12px; font-weight: 700; color: #c9d1d9; background: #0d1117; border-bottom: 1px solid #30363d; }
@@ -14877,7 +14878,7 @@ function renderParkMagnetValve() {
     <text x="590" y="310" text-anchor="middle" font-size="12" font-weight="700" fill="${!applyIn ? '#a5f3b5' : '#c9d1d9'}">완해측${!applyIn ? ' (눌림)' : ''}</text>
   </svg>`;
   const stEl = document.getElementById('pbmv-status');
-  if (stEl) stEl.innerHTML = `주차제동: ${window.__PARK_BRAKE_SET ? '<b class="on">체결</b>' : '<b class="off">완해</b>'} · 운전실 ${cabName()}`;
+  if (stEl) stEl.innerHTML = `주차제동: ${window.__PARK_BRAKE_SET ? '<b class="on">체결</b>' : '<b class="off">완해</b>'} · 운전실 ${cabName()}<div class="pbmv-note">전자변 제동/완해 취급은 기계적 취급으로서 역행회로의 구성 조건을 만족하지 못합니다</div>`;
 }
 window.openParkMagnetValve = openParkMagnetValve;
 window.pressParkMagnetValve = pressParkMagnetValve;
