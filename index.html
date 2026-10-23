@@ -5072,6 +5072,11 @@
     .scn-check.now .scn-check-mark { color: #58a6ff; }
     .scn-check-note { color: #e3b341; font-weight: 600; }
     .scn-check.done .scn-check-note { margin-left: 2px; }
+    .scn-dialog { list-style: none; margin: 4px 0 0 24px; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+    .scn-dialog li { font-size: 11.5px; line-height: 1.4; padding: 3px 7px; border-radius: 6px; background: rgba(48, 54, 61, 0.7); color: #e6edf3; }
+    .scn-dialog li b { margin-right: 4px; color: #79c0ff; }
+    .scn-dialog li.occ { background: rgba(158, 106, 3, 0.25); }
+    .scn-dialog li.occ b { color: #e3b341; }
     .scn-step-btns { display: flex; gap: 6px; margin: 6px 0 2px 24px; flex-wrap: wrap; }
     .scn-btn { padding: 4px 10px; font-size: 11.5px; font-weight: 700; color: #f0f6fc; background: #1f6feb; border: 1px solid #58a6ff; border-radius: 6px; cursor: pointer; }
     .scn-btn.cb { background: #6e4a0f; border-color: #d29922; }
@@ -8166,63 +8171,64 @@ const DEFAULT_SCENARIOS = [
         target: "OCC_REPORT",
         targetName: "관제 보고",
         instruction: "MR 압력계가 4.0~6.0 bar를 오가며 비상제동이 체결된 것을 확인하고 [📡 관제 보고]를 누르십시오.",
-        report: "관제, 현재 MR 압력이 4~6 bar를 오가면서 비상제동이 체결된 상황입니다.",
-        occReply: "알았다. 비상제동완해 버튼과 주공기BP를 취급하고 최근역까지 운행하여 승객 하차 조치 바란다."
+        report: "관제, 현재 MR 압력이 4.0~6.0 bar로 비상제동 체결되었습니다.",
+        dialog: [
+          { who: "기관사", text: "관제, 현재 MR 압력이 4.0~6.0 bar로 비상제동 체결되었습니다." },
+          { who: "관제", text: "네, 알겠습니다. 비상제동 완해버튼 취급하십시오." },
+          { who: "기관사", text: "네, 비상제동 완해버튼 취급하겠습니다." }
+        ]
       },
       {
         step: 2,
-        target: "SW_EMG_COVER",
-        targetName: "비상완해 보호커버",
-        expectedState: "OPEN",
-        instruction: "관제 지시에 따라 OP3 [비상완해 보호커버]를 여십시오."
+        title: "비상제동 완해버튼 취급",
+        target: "SW_EMG_RELEASE",
+        targetName: "비상제동완해",
+        instruction: "관제 지시에 따라 OP3 [비상완해 보호커버]를 열고 [비상제동완해] 버튼을 눌러 비상제동을 완해하십시오.",
+        checks: [
+          { target: "SW_EMG_COVER", state: "OPEN", label: "비상완해 보호커버 열기" },
+          { target: "SW_EMG_RELEASE", state: "LATCHED", label: "비상제동완해 버튼 취급", result: "비상제동 완해" }
+        ]
       },
       {
         step: 3,
-        target: "SW_EMG_RELEASE",
-        targetName: "비상제동완해",
-        expectedState: "LATCHED",
-        instruction: "보호커버 내부의 [비상제동완해] 버튼을 눌러 비상제동을 완해하십시오."
-      },
-      {
-        step: 4,
         target: "SW_MR_BP",
         targetName: "주공기BP",
         expectedState: "BYPASS",
         instruction: "OP5 패널의 [주공기BP] 스위치를 '바이패스' 위치로 절체하여 역행회로를 구성하십시오."
       },
       {
-        step: 5,
+        step: 4,
         type: "ARRIVE",
         target: "STATION_ARRIVE",
         targetName: "최근역 정차",
         instruction: "최근역까지 운행하여 정위치에 정차하십시오."
       },
       {
-        step: 6,
+        step: 5,
+        title: "출입문 취급",
         target: "SW_DOOR_OPEN_R",
-        altTargets: ["SW_DOOR_OPEN_L"],
-        targetName: "출입문 열림",
-        expectedState: "PRESSED",
-        instruction: "승강장 방향의 출입문을 열어 승객을 하차시키십시오."
+        targetName: "출입문 취급",
+        instruction: "승강장 방향의 출입문을 열어 승객을 하차시킨 뒤 [출입문 닫힘]으로 출입문을 닫으십시오.",
+        checks: [
+          { target: "SW_DOOR_OPEN_R", altTargets: ["SW_DOOR_OPEN_L"], state: "PRESSED", label: "출입문 열림 (승강장 방향)" },
+          { target: "SW_DOOR_CLOSE", state: "PRESSED", label: "출입문 닫힘" }
+        ]
       },
       {
-        step: 7,
+        step: 6,
         type: "REPORT",
         target: "OCC_REPORT",
         targetName: "관제 보고",
-        instruction: "승객 하차가 끝나면 [📡 관제 보고]로 하차 완료를 보고하십시오.",
-        report: "관제, 승객 하차 완료하였습니다.",
-        occReply: "알았다. 출입문 닫고 회송 조치 바란다."
+        instruction: "승객 하차와 출입문 취급이 끝나면 [📡 관제 보고]로 보고하십시오.",
+        report: "관제, 1편성 승객 승하차 완료 후 출입문 취급 완료했습니다.",
+        dialog: [
+          { who: "기관사", text: "관제, 1편성 승객 승하차 완료 후 출입문 취급 완료했습니다." },
+          { who: "관제", text: "네, 알겠습니다. 이 열차 기지까지 회송하겠습니다." },
+          { who: "기관사", text: "기지까지 회송 확인했습니다." }
+        ]
       },
       {
-        step: 8,
-        target: "SW_DOOR_CLOSE",
-        targetName: "출입문 닫힘",
-        expectedState: "PRESSED",
-        instruction: "[출입문 닫힘]을 눌러 출입문을 닫으십시오."
-      },
-      {
-        step: 9,
+        step: 7,
         target: "SW_MASCON",
         expectedStates: ["P1", "P2", "P3", "P4"],
         targetName: "마스콘 역행",
@@ -9164,13 +9170,13 @@ function updateMrLeak(dt) {
   if (leak === 'SEVERE') {
     if (mr > 3.6) mr -= 0.35 * dt;                       // 급격한 누설
     else mr = 3.2 + 0.25 * Math.sin(performance.now() / 1500);   // 압축기가 못 따라가 3 bar 근처에서 출렁임
-  } else if (mr > 6.0 && !mrLeakRising) {
-    mr -= 0.35 * dt;                                     // 정상 압력에서 6 bar까지 빠르게 저하
+  } else if (mr > 5.0 && !mrLeakRising) {
+    mr -= 0.35 * dt;                                     // 정상 압력에서 5 bar까지 빠르게 저하
   } else {
-    if (mr <= 4.1) mrLeakRising = true;
-    if (mr >= 5.9) mrLeakRising = false;
-    mr += (mrLeakRising ? 0.12 : -0.15) * dt;            // 4.0~6.0 bar 왕복
-    mr = Math.max(4.05, Math.min(5.95, mr));
+    if (mr <= 4.52) mrLeakRising = true;
+    if (mr >= 4.98) mrLeakRising = false;
+    mr += (mrLeakRising ? 0.05 : -0.06) * dt;            // 바늘은 4.5~5.0 bar 왕복 (6.0 bar 미만 → 비상제동 유지)
+    mr = Math.max(4.5, Math.min(5.0, mr));
   }
   if (Math.abs(mr - currentGaugeMR) > 1e-4) updateGaugeUI(undefined, mr);
 }
@@ -13579,6 +13585,16 @@ function submitScenarioReport() {
   if (targetStep.report) {
     if (typeof TrainRemote !== 'undefined' && typeof TrainRemote.addLog === 'function') TrainRemote.addLog(`[기관사 보고] ${targetStep.report}`, 'blue');
   }
+  if (targetStep.dialog) {
+    // 무전 대화: 음성 없이 패널에 한 줄씩 표시
+    const i = currentStepIndex;
+    scenarioCheckLog[i] = { dialogShown: 1 };
+    targetStep.dialog.slice(1).forEach((_, k) => setTimeout(() => {
+      if (scenarioCheckLog[i]) { scenarioCheckLog[i].dialogShown = k + 2; renderScenarioPanel(); }
+    }, 1400 * (k + 1)));
+    completeScenarioStep();
+    return;
+  }
   completeScenarioStep();
   if (targetStep.occReply) {
     setTimeout(() => { try { playOccRadioTest(targetStep.occReply); } catch (e) { } }, 600);
@@ -13612,7 +13628,7 @@ function checkResultNote(chk, compId) {
 }
 function evaluateCheckAction(targetStep, compId, state) {
   const chk = targetStep.checks[currentCheckIndex];
-  if (chk && resolveStepTarget(chk.target) === compId && chk.state === state) {
+  if (chk && [chk.target].concat(chk.altTargets || []).map(resolveStepTarget).includes(compId) && chk.state === state) {
     const log = scenarioCheckLog[currentStepIndex] || (scenarioCheckLog[currentStepIndex] = []);
     log[currentCheckIndex] = { car: cabName(), note: checkResultNote(chk, compId) };
     currentCheckIndex++;
@@ -13765,6 +13781,11 @@ function renderScenarioPanel() {
       return `<li class="scn-step current"><div class="scn-step-title"><span class="scn-step-no">${i + 1}</span><span>다음 조치를 판단하여 취급하십시오</span></div>${rb}</li>`;
     }
     let html = `<li class="scn-step ${state}"><div class="scn-step-title"><span class="scn-step-no">${state === 'done' ? '✓' : i + 1}</span><span>${stepName(st)}</span></div>`;
+    if (st.dialog && state === 'done') {
+      const shown = (scenarioCheckLog[i] || {}).dialogShown || st.dialog.length;
+      html += '<ul class="scn-dialog">' + st.dialog.slice(0, shown).map(d =>
+        `<li class="${d.who === '관제' ? 'occ' : 'drv'}"><b>${escHtml(d.who)}</b> ${escHtml(d.text)}</li>`).join('') + '</ul>';
+    }
     if (state === 'current' && st.instruction) html += `<div class="scn-step-inst">${escHtml(st.instruction)}</div>`;
     if (st.checks && state !== 'todo') {
       const log = scenarioCheckLog[i] || [];
