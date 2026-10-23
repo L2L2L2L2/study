@@ -333,6 +333,8 @@ const pid = n => 'p' + [...n].map(c => c.codePointAt(0).toString(36)).join('_');
 let B = null; // 공유 백엔드
 let sharedMemos = null, sharedPhotos = null, remoteHistory = {};
 
+let _fbAuth = null;
+
 async function firebaseBackend() {
   if (!Object.keys(firebaseConfig).length) return null;
   const U = f => `https://www.gstatic.com/firebasejs/11.6.1/firebase-${f}.js`;
@@ -340,18 +342,33 @@ async function firebaseBackend() {
   const app = A.initializeApp(firebaseConfig);
   const fdb = F.getFirestore(app);
   const auth = Au.getAuth(app);
-  const base = ['artifacts', appId, 'public', 'data'];
-  const D = (...p) => F.doc(fdb, ...base, ...p);
-  const C = n => F.collection(fdb, ...base, n);
+  _fbAuth = { auth, Au };
+
+  // 단순한 최상위 경로 사용 (Claude 플랫폼 전용 artifacts 경로 제거)
+  const D = (...p) => F.doc(fdb, 'songwol', ...p);
+  const C = n => F.collection(fdb, 'songwol', 'data', n);
+
+  const ensureAuth = async () => {
+    if (!auth.currentUser) await Au.signInAnonymously(auth);
+  };
+
+  // Firestore 경로 헬퍼 (컬렉션/문서 세그먼트 수 규칙 준수)
+  // 컬렉션: 홀수 세그먼트  문서: 짝수 세그먼트
+  const attCol  = () => F.collection(fdb, 'songwolAttendance');
+  const attDoc  = key => F.doc(fdb, 'songwolAttendance', key);
+  const metaDoc = () => F.doc(fdb, 'songwolMeta', 'memos');
+  const photoCol= () => F.collection(fdb, 'songwolPhotos');
+  const photoDoc= name => F.doc(fdb, 'songwolPhotos', pid(name));
+
   return {
-    watchDay:    (key, cb) => F.onSnapshot(D('attendance', key), s => cb(s.exists() ? s.data() : null), console.error),
-    watchAll:    cb => F.onSnapshot(C('attendance'), s => { const m = {}; s.forEach(d => m[d.id] = d.data()); cb(m); }, console.error),
-    patchDay:    (key, patch) => F.setDoc(D('attendance', key), patch, { merge: true }),
-    watchMemos:  cb => F.onSnapshot(D('meta','memos'), s => cb(s.exists() ? s.data() : {}), console.error),
-    setMemo:     (name, text) => F.setDoc(D('meta','memos'), { [name]: text }, { merge: true }),
-    watchPhotos: cb => F.onSnapshot(C('photos'), s => { const m = {}; s.forEach(d => { const v = d.data(); if (v.name && v.img) m[v.name] = v.img; }); cb(m); }, console.error),
-    setPhoto:    (name, img) => F.setDoc(D('photos', pid(name)), { name, img }),
-    delPhoto:    name => F.deleteDoc(D('photos', pid(name)))
+    watchDay:    (key, cb) => F.onSnapshot(attDoc(key), s => cb(s.exists() ? s.data() : null), console.error),
+    watchAll:    cb => F.onSnapshot(attCol(), s => { const m = {}; s.forEach(d => m[d.id] = d.data()); cb(m); }, console.error),
+    patchDay:    async (key, patch) => { await ensureAuth(); return F.setDoc(attDoc(key), patch, { merge: true }); },
+    watchMemos:  cb => F.onSnapshot(metaDoc(), s => cb(s.exists() ? s.data() : {}), console.error),
+    setMemo:     async (name, text) => { await ensureAuth(); return F.setDoc(metaDoc(), { [name]: text }, { merge: true }); },
+    watchPhotos: cb => F.onSnapshot(photoCol(), s => { const m = {}; s.forEach(d => { const v = d.data(); if (v.name && v.img) m[v.name] = v.img; }); cb(m); }, console.error),
+    setPhoto:    async (name, img) => { await ensureAuth(); return F.setDoc(photoDoc(name), { name, img }); },
+    delPhoto:    async name => { await ensureAuth(); return F.deleteDoc(photoDoc(name)); }
   };
 }
 
@@ -508,7 +525,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     B.watchAll(h => { remoteHistory = h; if (activeTab === 'stats') renderStats(); });
     setupRealtimeListener();
   }
-  updateSyncBadge();
+  updateSyncBadge(); // B 초기화 완료 후 배지 업데이트
 });
 
 // ═══════════════════════════════════════════════════
@@ -1034,11 +1051,13 @@ function updateAuthUI() {
 function updateSyncBadge() {
   const badge = document.getElementById('syncBadge');
   if (!B) {
-    badge.textContent = '💾 로컬 저장';
-    badge.className = 'text-[11px] font-medium px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200 whitespace-nowrap';
+    badge.textContent = '💾 로컬 저장 (Firebase 미연결)';
+    badge.className = 'text-[11px] font-medium px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap';
+    badge.title = 'Firebase 설정이 없어 이 기기에만 저장됩니다. setup.html에서 설정하세요.';
   } else {
-    badge.textContent = '☁️ 실시간 연동';
+    badge.textContent = '☁️ 실시간 연동 중';
     badge.className = 'text-[11px] font-medium px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap';
+    badge.title = 'Firebase 실시간 동기화 중입니다.';
   }
 }
 
