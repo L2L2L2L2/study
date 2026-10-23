@@ -14786,7 +14786,8 @@ function renderParkMagnetValve() {
     <rect x="${x + 22}" y="128" width="96" height="26" fill="url(#pbmvBrass)" stroke="#7a5a1f"/>
     <rect x="${x + 6}" y="150" width="128" height="16" rx="2" fill="url(#pbmvBrass)" stroke="#7a5a1f"/>
     <rect x="${flip ? x + 118 : x - 46}" y="44" width="68" height="70" rx="6" fill="#1b1d20" stroke="#000"/>
-    <rect x="${flip ? x + 146 : x - 22}" y="22" width="34" height="26" rx="6" fill="url(#pbmvCap)" stroke="#333"/>
+    <rect x="${flip ? x + 146 : x - 22}" y="22" width="34" height="26" rx="6" fill="url(#pbmvCap)" stroke="#000"/>
+    ${[6, 12, 18, 24].map(d => `<line x1="${(flip ? x + 146 : x - 22) + d + 2}" y1="25" x2="${(flip ? x + 146 : x - 22) + d + 2}" y2="45" stroke="#000" stroke-opacity="0.6"/>`).join('')}
     <rect x="${x}" y="38" width="140" height="92" rx="6" fill="#16181b" stroke="#000"/>
     <rect x="${x + 30}" y="54" width="80" height="60" fill="#e6e8ea" stroke="#111"/>
     <rect x="${x + 34}" y="58" width="72" height="52" fill="none" stroke="#111" stroke-width="1"/>
@@ -14798,7 +14799,7 @@ function renderParkMagnetValve() {
       <linearGradient id="pbmvBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e4e7ea"/><stop offset="1" stop-color="#b9bec4"/></linearGradient>
       <linearGradient id="pbmvPin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f6f8"/><stop offset="0.5" stop-color="#b7bcc2"/><stop offset="1" stop-color="#7d838a"/></linearGradient>
       <linearGradient id="pbmvBrass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9b77d"/><stop offset="1" stop-color="#8a6630"/></linearGradient>
-      <linearGradient id="pbmvCap" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#555"/><stop offset="0.5" stop-color="#ddd"/><stop offset="1" stop-color="#555"/></linearGradient>
+      <linearGradient id="pbmvCap" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0d0e10"/><stop offset="0.5" stop-color="#3a3d42"/><stop offset="1" stop-color="#0d0e10"/></linearGradient>
     </defs>
     ${pin('L', applyIn)}${pin('R', !applyIn)}
     <rect x="110" y="166" width="480" height="120" fill="url(#pbmvBody)" stroke="#8b949e"/>
