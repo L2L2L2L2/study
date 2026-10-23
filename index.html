@@ -8141,14 +8141,14 @@ const ROTARY3_BOUNCE = {
  *  - step.altTargets / step.expectedStates: 여러 부품·상태 중 하나면 정답
  *  - step.checks: 단계 안의 세부 조치를 순서대로 확인 [{ target, state, label, result? }] → 모두 끝나면 다음 단계
  *      target 'CAB_MOVE' + state 'REAR' = 후부 운전실로 이동 (시나리오 시작 운전실의 반대편), 'FRONT' = 시작 운전실로 복귀
- *  - REPORT step.effect: POWER_OFF(단전) / POWER_ON(급전) — 관제 응답 후 가선전압·역행에 반영
+ *  - REPORT step.effect: POWER_OFF(단전) / POWER_ON(급전) — 관제 응답 후 가선전압·역행에 반영, step.reportLabel = 보고 버튼 이름
  *  - target 'XXX@CAB' = 해당차(취급 운전실) 차단기: MC1이면 그대로, MC2면 '_MC2'
  */
 const DEFAULT_SCENARIOS = [
   {
     id: "SCN_PARK_BRAKE_BP",
     title: "1. 주차제동 완해 불능 시 주차제동BP 취급",
-    description: "MR 압력은 정상이지만 주차제동이 체결된 채 완해되지 않는 상황입니다. 주차제동이 걸려 있으면 역행회로가 차단되어 F·R 모두 역행할 수 없습니다. ① 주차제동완해 취급 → ② 해당차 PBCB 차단·재투입 후 완해 취급, 주차제동 전자변 완해측 취급 → ③ 후부 운전실에서 ①·② 반복 → ④ 후부 운전실 [주차제동BP] 바이패스 → ⑤ 단전 요청 → ⑥ 열차 외부 MC1·MC2 PB 코크 차단 → ⑦ 주차제동 수동완해고리 취급(4개 차축) → ⑧ 전부 운전실로 이동하여 [주차제동BP] 바이패스 → ⑨ 급전 요청 → ⑩ 역행시험 후 운행합니다. 전자변 취급은 기계적 취급이라 DU의 PB 현시와 역행회로 차단은 남아 있으므로 운전하는 운전실마다 주차제동BP를 바이패스합니다.",
+    description: "MR 압력은 정상이지만 주차제동이 체결된 채 완해되지 않는 상황입니다. 주차제동이 걸려 있으면 역행회로가 차단되어 F·R 모두 역행할 수 없습니다. ① 주차제동완해 취급 → ② 해당차 PBCB 차단·재투입 후 완해 취급, 주차제동 전자변 완해측 취급 → ③ 후부 운전실에서 ①·② 반복 → ④ 후부 운전실 [주차제동BP] 바이패스 → ⑤ [단전요청] → ⑥ 열차 외부 MC1·MC2 PB 코크 차단 → ⑦ 주차제동 수동완해고리 취급(4개 차축) → ⑧ 전부 운전실로 이동하여 [주차제동BP] 바이패스 → ⑨ [조치완료 급전요청] → ⑩ 역행시험 후 운행합니다. 전자변 취급은 기계적 취급이라 DU의 PB 현시와 역행회로 차단은 남아 있으므로 운전하는 운전실마다 주차제동BP를 바이패스합니다.",
     faults: ["PARK_REL_FAIL"],
     setup: { parkBrake: true },
     allowDriving: true,
@@ -8209,7 +8209,8 @@ const DEFAULT_SCENARIOS = [
         target: "OCC_REPORT",
         targetName: "단전 요청",
         effect: "POWER_OFF",
-        instruction: "주차제동BP를 바이패스했지만 주차제동이 완전히 완해된 것은 아닙니다. 열차 외부 조치를 위해 [📡 관제 보고]로 단전을 요청하십시오.",
+        reportLabel: "단전요청",
+        instruction: "주차제동BP를 바이패스했지만 주차제동이 완전히 완해된 것은 아닙니다. 선로로 내려가 열차 외부 조치를 하기 전에 [📡 단전요청]으로 관제에 단전을 요청하십시오.",
         report: "관제, 주차제동 완해 불능으로 PB 코크 차단 및 수동완해 시행하겠습니다. 단전 요청합니다.",
         dialog: [
           { who: "기관사", text: "관제, 주차제동 완해 불능으로 PB 코크 차단 및 수동완해 시행하겠습니다. 단전 요청합니다." },
@@ -8253,11 +8254,12 @@ const DEFAULT_SCENARIOS = [
       {
         step: 9,
         type: "REPORT",
-        title: "급전 요청",
+        title: "조치완료 급전 요청",
         target: "OCC_REPORT",
-        targetName: "급전 요청",
+        targetName: "조치완료 급전요청",
         effect: "POWER_ON",
-        instruction: "외부 조치와 전부 운전실 주차제동BP 바이패스가 끝나면 [📡 관제 보고]로 급전을 요청하십시오.",
+        reportLabel: "조치완료 급전요청",
+        instruction: "외부 조치와 전부 운전실 주차제동BP 바이패스가 끝나면 [📡 조치완료 급전요청]으로 관제에 조치 완료를 보고하고 급전을 요청하십시오.",
         report: "관제, MC1·MC2 PB 코크 차단 및 수동완해, 전부 운전실 주차제동BP 바이패스 완료했습니다. 급전 요청합니다.",
         dialog: [
           { who: "기관사", text: "관제, MC1·MC2 PB 코크 차단 및 수동완해, 전부 운전실 주차제동BP 바이패스 완료했습니다. 급전 요청합니다." },
@@ -13861,7 +13863,10 @@ function renderStepHUD() {
   if (badgeEl) badgeEl.innerText = `STEP ${currentStepIndex + 1} / ${currentScenario.steps.length}`;
   if (instEl) instEl.innerText = targetStep.instruction;
   const reportBtn = document.getElementById('hud-report-btn');
-  if (reportBtn) reportBtn.style.display = (targetStep.type === 'REPORT') ? 'inline-block' : 'none';
+  if (reportBtn) {
+    reportBtn.style.display = (targetStep.type === 'REPORT') ? 'inline-block' : 'none';
+    reportBtn.textContent = `📡 ${targetStep.reportLabel || '관제 보고'}`;
+  }
 
   // 필요 시 타겟 부품이 있는 패널로 자동 시야 유도
   const targetComp = COMPONENT_REGISTRY[targetStep.target];
@@ -13941,7 +13946,7 @@ function renderScenarioPanel() {
       const chk = st.checks ? st.checks[currentCheckIndex] : null;
       const tgt = chk ? chk.target : st.target;
       const btns = [];
-      if (st.type === 'REPORT') btns.push(`<button type="button" class="scn-btn" onclick="submitScenarioReport()">📡 관제 보고</button>`);
+      if (st.type === 'REPORT') btns.push(`<button type="button" class="scn-btn" onclick="submitScenarioReport()">📡 ${escHtml(st.reportLabel || '관제 보고')}</button>`);
       if (tgt === 'CAB_MOVE') btns.push(`<button type="button" class="scn-btn" onclick="moveToOtherCab()">🔁 ${chk && chk.state === 'FRONT' ? '전부' : '후부'} 운전실로 이동</button>`);
       if (typeof tgt === 'string' && tgt.startsWith('EXT_PB_COCK')) btns.push(`<button type="button" class="scn-btn cb" onclick="openCabUnder()">운전석 하부 (PB 코크) 열기</button>`);
       if (typeof tgt === 'string' && tgt.startsWith('EXT_PB_HOOK')) btns.push(`<button type="button" class="scn-btn cb" onclick="openExtPb()">수동완해고리 열기</button>`);
@@ -15072,7 +15077,7 @@ function renderCabUnder(view) {
     <text x="600" y="190" text-anchor="middle" font-size="14" font-weight="800" fill="#8b949e">MR 코크: 정상 (취급하지 않음)</text>
   </svg>`;
   const stEl = document.getElementById('pbmv-status');
-  if (stEl) stEl.innerHTML = `가선: ${window.__POWER_CUT ? '<b class="off">단전</b>' : '<b class="on">급전 중</b> (단전 후 취급하십시오)'} · ${car} PB 코크: ${pbClosed ? '<b class="on">차단</b>' : '<b class="off">정상</b>'}`;
+  if (stEl) stEl.innerHTML = `${car} PB 코크: ${pbClosed ? '<b class="on">차단</b>' : '<b class="off">정상</b>'}<div class="pbmv-note">관제에 단전을 요청하여 단전된 뒤 선로로 내려와 취급하는 코크입니다</div>`;
 }
 window.openParkMagnetValve = openParkMagnetValve;
 window.pressParkMagnetValve = pressParkMagnetValve;
