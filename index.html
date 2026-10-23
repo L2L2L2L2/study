@@ -5309,12 +5309,12 @@
       }
       .console-op1 { border-left: none; border-top: 1px solid #21262d; }
     }
-    /* ===== 좁은 화면 (가로세로비 5:4 이하, 창을 세로로 길게 줄인 경우) =====
+    /* ===== 좁은 화면 (가로세로비 4:3 이하, 4:3 모니터나 창을 세로로 길게 줄인 경우) =====
        ┌ OP2~5 ┬──── 3D 전면 ────┐
        ├─── DU ───┬──── ADU ─────┤
        ├ 방송·출입문 ┬ 마스콘·역전기 ┤
        └────────────┴──────────────┘ */
-    @media (max-aspect-ratio: 5/4) {
+    @media (max-aspect-ratio: 4/3) {
       .sim-workstation-layout {
         grid-template-columns: 18% 32% 50% !important;
         grid-template-rows: 46% 24% 30% !important;
@@ -15022,7 +15022,7 @@ function fitConsoleOp1() {
   if (!sw || !sh) return;
   // 내용 폭을 칸의 가로세로 비율에 맞춰 몇 번 조정 → 확대 후 좌우/상하 여백이 최소가 되도록
   // 좁은 화면(5:4 이하)은 방송·출입문 | 마스콘을 가로로 나란히 놓으므로 폭 범위를 넓게
-  const narrow = window.matchMedia('(max-aspect-ratio: 5/4)').matches;
+  const narrow = window.matchMedia('(max-aspect-ratio: 4/3)').matches;
   const minW = narrow ? 760 : 380, maxW = narrow ? 1100 : 640;
   let width = narrow ? 880 : 440;
   for (let i = 0; i < 4; i++) {
@@ -15074,7 +15074,7 @@ function fitCabOverlays() {
 }
 window.fitCabOverlays = fitCabOverlays;
 
-/* 와이드 모니터(2.2:1 이상)·좁은 화면(5:4 이하): 좌측 OP2~OP5 패널을 일반 모니터와 같은 배치(폭 335px 기준)로 두고
+/* 와이드 모니터(2.2:1 이상)·좁은 화면(4:3 이하)·버튼이 잘리는 일반 화면: 좌측 OP2~OP5 패널을 일반 모니터와 같은 배치(폭 335px 기준)로 두고
    칸 크기에 맞춰 통째로 확대 → 버튼이 위쪽에 몰리고 아래가 비는 현상 방지. 일반 화면에서는 원래대로 */
 const SIDE_BASE_W = 335;
 function fitSidePanel() {
@@ -15082,17 +15082,16 @@ function fitSidePanel() {
   if (!col) return;
   const panel = [...col.children].find(e => e.classList.contains('train-metal-panel') && e.style.display !== 'none' && e.offsetParent !== null);
   if (!panel) return;
-  if (!window.matchMedia('(min-aspect-ratio: 11/5), (max-aspect-ratio: 5/4)').matches) {
-    panel.style.zoom = ''; panel.style.width = ''; panel.style.margin = ''; panel.style.removeProperty('min-height');
-    return;
-  }
+  // 일반 화면(16:9 등)은 확대하지 않고, 노트북(1366x768 등)처럼 칸이 좁을 때만 축소
+  const shrinkOnly = !window.matchMedia('(min-aspect-ratio: 11/5), (max-aspect-ratio: 4/3)').matches;
   const cs = getComputedStyle(col);
   const cw = col.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
   const ch = col.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
   panel.style.zoom = '1'; panel.style.width = SIDE_BASE_W + 'px';
   panel.style.setProperty('min-height', '0', 'important');   // CSS의 min-height:100% !important 무시하고 실제 내용 높이 측정
   const nh = panel.scrollHeight;
-  const z = Math.max(0.4, Math.min(cw / SIDE_BASE_W, ch / nh));
+  const z = Math.max(0.4, Math.min(cw / SIDE_BASE_W, ch / nh, shrinkOnly ? 1 : Infinity));
+  if (shrinkOnly && z >= 1) { panel.style.zoom = ''; panel.style.width = ''; panel.style.margin = ''; panel.style.removeProperty('min-height'); return; }
   panel.style.zoom = String(z);
   panel.style.setProperty('min-height', (ch / z) + 'px', 'important');   // 확대 후에도 칸 높이를 채움
   panel.style.margin = `0 auto`;
