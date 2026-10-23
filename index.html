@@ -4869,6 +4869,19 @@
     .cb-tab { padding: 5px 14px; border-radius: 6px; border: 1px solid #4b5563; background: #1f2937; color: #cbd5e1; font-weight: 700; cursor: pointer; font-size: 13px; }
     .cb-tab.active { background: #b45309; border-color: #f59e0b; color: #fff; }
     .cb-hint { color: #94a3b8; font-size: 11.5px; margin-left: 12px; }
+    /* 주차제동 전자변 */
+    .pbmv-window { width: min(760px, 96vw) !important; max-width: 96vw !important; }
+    .pbmv-body { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 16px 20px; background: #3a3f45; }
+    .pbmv-title { color: #e6edf3; font-weight: 800; font-size: 14px; }
+    #pbmv-view { width: 100%; max-width: 680px; }
+    #pbmv-view svg { width: 100%; height: auto; display: block; }
+    .pbmv-btn { cursor: pointer; }
+    .pbmv-btn rect.pin { transition: x 0.12s ease-out, width 0.12s ease-out; }
+    .pbmv-btn:hover rect.pin { filter: brightness(1.12); }
+    .pbmv-status { color: #c9d1d9; font-size: 12.5px; font-weight: 700; text-align: center; }
+    .pbmv-status b.on { color: #ff7b72; }
+    .pbmv-status b.off { color: #7ee787; }
+
     /* 차단기반을 연 채로도 현재 단계 세부 조치 진행 확인 */
     .cb-scn-progress { padding: 6px 16px; font-size: 12px; font-weight: 700; color: #c9d1d9; background: #0d1117; border-bottom: 1px solid #30363d; }
     .cb-scn-progress:empty { display: none; }
@@ -5545,6 +5558,7 @@
               <button type="button" class="cab-op-btn active" id="btn-op4" onclick="switchRightOp('OP4')">OP4</button>
               <button type="button" class="cab-op-btn" id="btn-op5" onclick="switchRightOp('OP5')">OP5</button>
               <button type="button" class="cab-op-btn cb-open-btn" id="btn-cb" onclick="openBreakerPanel()" title="차단기반 열기">차단기</button>
+              <button type="button" class="cab-op-btn cb-open-btn" id="btn-pbmv" onclick="openParkMagnetValve()" title="주차제동 전자변 (차체 하부)">전자변</button>
               <button type="button" class="cab-op-btn occ-tab-btn" id="btn-occ" onclick="switchRightOp('OCC')" title="종합관제실(OCC) 교관 관제 패널">📡 OCC</button>
             </div>
           </div>
@@ -7306,6 +7320,28 @@
   </div>
 
   <!-- [E] 차단기반 팝업: 주 차단기반(ABB 12×5) / 냉난방 차단기(Schneider) -->
+  <!-- 주차제동 전자변 (Impulse Magnet Valve, 차체 하부): 좌우 수동 버튼을 누르면 안쪽으로 들어가고 반대편이 튀어나옴 -->
+  <div id="modal-pbmv" class="modal-backdrop" onclick="if (event.target === this) closeModal('modal-pbmv')">
+    <div class="modal-window pbmv-window">
+      <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center;">
+          <div class="cb-tabs">
+            <button type="button" class="cb-tab active" id="pbmv-tab-MC1" onclick="showParkMagnetValve('MC1')">MC1 전자변</button>
+            <button type="button" class="cb-tab" id="pbmv-tab-MC2" onclick="showParkMagnetValve('MC2')">MC2 전자변</button>
+          </div>
+          <span class="cb-hint">은색 수동 버튼을 누르면 안쪽으로 들어가고 반대편이 튀어나옵니다</span>
+        </div>
+        <span style="cursor:pointer; color:#94a3b8; font-size:18px; font-weight:bold;" onclick="closeModal('modal-pbmv')">✕</span>
+      </div>
+      <div class="cb-scn-progress scn-progress-line"></div>
+      <div class="modal-body pbmv-body">
+        <div class="pbmv-title">주차제동 전자변 <span id="pbmv-car">MC1</span></div>
+        <div id="pbmv-view"></div>
+        <div class="pbmv-status" id="pbmv-status"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="modal-breaker" class="modal-backdrop" onclick="if (event.target === this) closeModal('modal-breaker')">
     <div class="modal-window">
       <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between;">
@@ -7323,7 +7359,7 @@
         </div>
         <span style="cursor:pointer; color:#94a3b8; font-size:18px; font-weight:bold;" onclick="closeModal('modal-breaker')">✕</span>
       </div>
-      <div class="cb-scn-progress" id="cb-scn-progress"></div>
+      <div class="cb-scn-progress scn-progress-line"></div>
       <div class="modal-body">
         <div id="cb-view-mc1" class="cb-cabinet"></div>
         <div id="cb-view-mc2" class="cb-cabinet" style="display:none;"></div>
@@ -7995,7 +8031,11 @@ const COMPONENT_REGISTRY = {
   SW_PWM_CUT: { name: 'PWM차단', type: 'LATCH_LIT', state: 'RELEASED', panel: 'OP5' },
   SW_SAND_TEST: { name: '살사시험', type: 'MOMENTARY', state: 'IDLE', panel: 'OP5' },
   SW_INSUL_SECT: { name: '절연구간', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP5' },
-  SW_PARK_BP: { name: '주차제동BP', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP5' }
+  SW_PARK_BP: { name: '주차제동BP', type: 'ROTARY_2', state: 'NORMAL', panel: 'OP5' },
+
+  // [차체 하부] 주차제동 전자변: APPLY = 체결(제동)측 눌림 / RELEASE = 완해측 눌림
+  SW_PB_MV: { name: 'MC1 주차제동 전자변', type: 'MAGNET_VALVE', state: 'RELEASE', panel: 'MV' },
+  SW_PB_MV_MC2: { name: 'MC2 주차제동 전자변', type: 'MAGNET_VALVE', state: 'RELEASE', panel: 'MV' }
 };
 
 /**
@@ -8049,7 +8089,7 @@ const DEFAULT_SCENARIOS = [
   {
     id: "SCN_PARK_BRAKE_BP",
     title: "1. 주차제동 완해 불능 시 주차제동BP 취급",
-    description: "MR 압력은 정상이지만 주차제동이 체결된 채 완해되지 않는 상황입니다. 주차제동이 걸려 있으면 역행회로가 차단되어 F·R 모두 역행할 수 없습니다. ① 주차제동완해 취급 → ② 해당차 PBCB 차단·재투입 후 완해 취급 → ③ 후부 운전실에서 ①·② 반복 → ④ 후부 운전실 [주차제동BP] 바이패스 순으로 조치하여 역행회로를 구성합니다.",
+    description: "MR 압력은 정상이지만 주차제동이 체결된 채 완해되지 않는 상황입니다. 주차제동이 걸려 있으면 역행회로가 차단되어 F·R 모두 역행할 수 없습니다. ① 주차제동완해 취급 → ② 해당차 PBCB 차단·재투입 후 완해 취급, 주차제동 전자변 완해측 취급 → ③ 후부 운전실에서 ①·② 반복 → ④ 후부 운전실 [주차제동BP] 바이패스 순으로 조치하여 역행회로를 구성합니다.",
     faults: ["PARK_REL_FAIL"],
     setup: { parkBrake: true },
     allowDriving: true,
@@ -8066,14 +8106,15 @@ const DEFAULT_SCENARIOS = [
       },
       {
         step: 2,
-        title: "해당차 PBCB 차단·재투입 후 완해 취급",
+        title: "해당차 PBCB 차단·재투입 후 완해 취급, 전자변 완해측 취급",
         target: "CB_PBCB@CAB",
         targetName: "PBCB (해당차)",
-        instruction: "완해되지 않으면 차단기반에서 해당차 [PBCB]를 차단(OFF)했다가 다시 투입(ON)한 뒤 [주차제동완해]를 누르십시오.",
+        instruction: "완해되지 않으면 차단기반에서 해당차 [PBCB]를 차단(OFF)했다가 다시 투입(ON)한 뒤 [주차제동완해]를 누르십시오. 그래도 완해되지 않으면 해당차 [주차제동 전자변]의 완해측 버튼을 강하게 누르십시오.",
         checks: [
           { target: "CB_PBCB@CAB", state: "OFF", label: "해당차 PBCB 차단 (OFF)" },
           { target: "CB_PBCB@CAB", state: "ON", label: "해당차 PBCB 투입 (ON)" },
-          { target: "SW_PARK_REL", state: "PRESSED", label: "주차제동완해 버튼 취급" }
+          { target: "SW_PARK_REL", state: "PRESSED", label: "주차제동완해 버튼 취급" },
+          { target: "SW_PB_MV@CAB", state: "RELEASE", label: "해당차 주차제동 전자변 완해측 취급" }
         ]
       },
       {
@@ -8081,13 +8122,14 @@ const DEFAULT_SCENARIOS = [
         title: "후부 운전실에서 1·2번 조치",
         target: "CAB_MOVE",
         targetName: "후부 운전실",
-        instruction: "그래도 완해되지 않으면 후부 운전실로 이동하여 [주차제동완해] 취급, 해당차 PBCB 차단·재투입 후 [주차제동완해]를 다시 취급하십시오.",
+        instruction: "그래도 완해되지 않으면 후부 운전실로 이동하여 [주차제동완해] 취급, 해당차 PBCB 차단·재투입 후 [주차제동완해] 취급, 해당차 [주차제동 전자변] 완해측 취급을 다시 시행하십시오.",
         checks: [
           { target: "CAB_MOVE", state: "REAR", label: "후부 운전실로 이동" },
           { target: "SW_PARK_REL", state: "PRESSED", label: "주차제동완해 버튼 취급" },
           { target: "CB_PBCB@CAB", state: "OFF", label: "해당차 PBCB 차단 (OFF)" },
           { target: "CB_PBCB@CAB", state: "ON", label: "해당차 PBCB 투입 (ON)" },
-          { target: "SW_PARK_REL", state: "PRESSED", label: "주차제동완해 버튼 취급" }
+          { target: "SW_PARK_REL", state: "PRESSED", label: "주차제동완해 버튼 취급" },
+          { target: "SW_PB_MV@CAB", state: "RELEASE", label: "해당차 주차제동 전자변 완해측 취급" }
         ]
       },
       {
@@ -9138,6 +9180,7 @@ function updateMrInterlocks() {
     window.__MR_CRIT = true;
     if (!window.__PARK_BRAKE_SET) {
       window.__PARK_BRAKE_SET = true;   // 스프링 주차제동: 공기가 빠지면 자동 체결
+      syncParkMagnetValves();
       try { sound.playAirExhaust(1.0, 950, 0.75); } catch (e) { }
     }
     duEventMsg('MF', `MR 4.0bar 미만 주차제동 체결`);
@@ -12262,7 +12305,7 @@ function handleComponentTouch(compId) {
     }
 
     // 공압 배기음은 오직 주차제동체결 / 주차제동완해에만 들림 (1.0초)
-    if (compId === 'SW_PARK_SET') { window.__PARK_BRAKE_SET = true; duEventMsg('MF', `${cabName()} 주차제동 체결`); }   // 취급 운전실 기준
+    if (compId === 'SW_PARK_SET') { window.__PARK_BRAKE_SET = true; duEventMsg('MF', `${cabName()} 주차제동 체결`); syncParkMagnetValves(); }   // 취급 운전실 기준
     if (compId === 'SW_PARK_REL') {
       if (window.__MR_CRIT) {
         // MR 4.0 bar 미만: 스프링 주차제동을 풀 공기가 없음
@@ -12272,6 +12315,7 @@ function handleComponentTouch(compId) {
         duEventMsg('MF', `${cabName()} 주차제동 완해 불능`);
       } else {
         window.__PARK_BRAKE_SET = false;
+        syncParkMagnetValves();
       }
     }
     if (compId === 'SW_PARK_SET') {
@@ -13556,7 +13600,7 @@ let currentCheckIndex = 0;
 let scenarioCheckLog = {};
 let scenarioStartCab = 'MC1';
 function checkResultNote(chk, compId) {
-  if (compId === 'SW_PARK_REL') return window.__PARK_BRAKE_SET ? '완해 불능 (DU PB 유지)' : '주차제동 완해됨';
+  if (compId === 'SW_PARK_REL' || compId.startsWith('SW_PB_MV')) return window.__PARK_BRAKE_SET ? '완해 불능 (DU PB 유지)' : '주차제동 완해됨';
   return chk.result || '';
 }
 function evaluateCheckAction(targetStep, compId, state) {
@@ -13686,8 +13730,7 @@ function renderScenarioPanel() {
   if (!panel) return;
   if (!currentScenario || !currentScenario.steps || currentScenario.steps.length === 0 || currentMode === 'REC') {
     panel.style.display = 'none';
-    const cbProg = document.getElementById('cb-scn-progress');
-    if (cbProg) cbProg.innerHTML = '';
+    document.querySelectorAll('.scn-progress-line').forEach(el => { el.innerHTML = ''; });
     return;
   }
   panel.style.display = 'flex';
@@ -13732,6 +13775,7 @@ function renderScenarioPanel() {
       if (st.type === 'REPORT') btns.push(`<button type="button" class="scn-btn" onclick="submitScenarioReport()">📡 관제 보고</button>`);
       if (tgt === 'CAB_MOVE') btns.push(`<button type="button" class="scn-btn" onclick="moveToOtherCab()">🔁 후부 운전실로 이동</button>`);
       if (typeof tgt === 'string' && tgt.startsWith('CB_')) btns.push(`<button type="button" class="scn-btn cb" onclick="openBreakerPanel()">차단기반 열기</button>`);
+      if (typeof tgt === 'string' && tgt.startsWith('SW_PB_MV')) btns.push(`<button type="button" class="scn-btn cb" onclick="openParkMagnetValve()">주차제동 전자변 열기</button>`);
       if (btns.length) html += `<div class="scn-step-btns">${btns.join('')}</div>`;
     }
     return html + '</li>';
@@ -13740,13 +13784,11 @@ function renderScenarioPanel() {
   if (cur) cur.scrollIntoView({ block: 'nearest' });
 
   // 차단기반 상단: 현재 단계 세부 조치 한 줄 요약
-  const cbProg = document.getElementById('cb-scn-progress');
-  if (cbProg) {
-    const st = steps[currentStepIndex];
-    cbProg.innerHTML = (!st || !st.checks || isExam) ? '' : `STEP ${currentStepIndex + 1}: ` + st.checks.map((chk, j) =>
-      j < currentCheckIndex ? `<span class="ok">✓ ${checkLabel(chk, (scenarioCheckLog[currentStepIndex] || [])[j].car)}</span>`
-        : j === currentCheckIndex ? `<span class="now">▶ ${checkLabel(chk, cab)}</span>` : `○ ${checkLabel(chk, cab)}`).join(' · ');
-  }
+  const st = steps[currentStepIndex];
+  const line = (!st || !st.checks || isExam) ? '' : `STEP ${currentStepIndex + 1}: ` + st.checks.map((chk, j) =>
+    j < currentCheckIndex ? `<span class="ok">✓ ${checkLabel(chk, (scenarioCheckLog[currentStepIndex] || [])[j].car)}</span>`
+      : j === currentCheckIndex ? `<span class="now">▶ ${checkLabel(chk, cab)}</span>` : `○ ${checkLabel(chk, cab)}`).join(' · ');
+  document.querySelectorAll('.scn-progress-line').forEach(el => { el.innerHTML = line; });
 }
 
 // 오조작 및 피드백 시 임시 안내
@@ -14260,6 +14302,7 @@ function applyScenario(sc) {
     window.__PARK_BRAKE_SET = true;
     duEventMsg('MF', `${cabName()} 주차제동 체결`);
   }
+  syncParkMagnetValves();
   scenarioStepStartDist = trainDistance;
   renderStepHUD();
 }
@@ -14677,6 +14720,104 @@ function toggleBreaker(id) {
   else evaluateStepAction(id, comp.state);
   broadcastStudentState(id, comp.state);
 }
+/* 주차제동 전자변 (차체 하부, 차마다 1개): 체결(제동)측 / 완해측 수동 버튼
+   - 누른 쪽이 안쪽으로 들어가고 반대편이 튀어나옴 (APPLY = 체결측 눌림, RELEASE = 완해측 눌림)
+   - 완해측을 누르면 공기가 짧게 빠지며 주차제동 완해 (완해 불능 고장·MR 부족 시 완해되지 않음) */
+const pbmvId = car => car === 'MC2' ? 'SW_PB_MV_MC2' : 'SW_PB_MV';
+let pbmvCar = 'MC1';
+function syncParkMagnetValves() {
+  ['SW_PB_MV', 'SW_PB_MV_MC2'].forEach(id => { COMPONENT_REGISTRY[id].state = window.__PARK_BRAKE_SET ? 'APPLY' : 'RELEASE'; });
+  renderParkMagnetValve();
+}
+function openParkMagnetValve(car) {
+  showParkMagnetValve(car || cabName());
+  openModal('modal-pbmv');
+}
+function showParkMagnetValve(car) {
+  pbmvCar = car;
+  ['MC1', 'MC2'].forEach(c => { const t = document.getElementById('pbmv-tab-' + c); if (t) t.classList.toggle('active', c === car); });
+  renderParkMagnetValve();
+}
+function pressParkMagnetValve(side) {
+  const id = pbmvId(pbmvCar), comp = COMPONENT_REGISTRY[id];
+  const target = side === 'APPLY' ? 'APPLY' : 'RELEASE';
+  if (comp.state === target) { sound.playClick(); triggerHaptic(15); return; }   // 이미 들어가 있는 쪽: 더 들어가지 않음
+  comp.state = target;
+  renderParkMagnetValve();
+  triggerHaptic([30, 40]);
+  if (target === 'APPLY') {
+    sound.playAirExhaust(0.5, 950, 0.6);
+    window.__PARK_BRAKE_SET = true;
+    duEventMsg('MF', `${pbmvCar} 주차제동 체결`);
+    showTemporaryHudFeedback(`🅿️ [${comp.name}] 체결측 수동 취급 - 주차제동 체결`, false);
+  } else {
+    sound.playAirExhaust(0.3, 1500, 0.55);   // 짧게 '칙'
+    if (window.__MR_CRIT) {
+      showTemporaryHudFeedback(`⚠️ [${comp.name}] 완해측 수동 취급 - MR 부족으로 완해 불능`, true);
+    } else if (window.__FAULT_PARK_REL_FAIL) {
+      showTemporaryHudFeedback(`⚠️ [${comp.name}] 완해측 수동 취급 - 주차제동 완해 불능 (DU PB 유지)`, true);
+    } else {
+      window.__PARK_BRAKE_SET = false;
+      showTemporaryHudFeedback(`💨 [${comp.name}] 완해측 수동 취급 - 주차제동 완해`, false);
+    }
+  }
+  renderParkMagnetValve();
+  if (currentMode === 'REC') promptRecordStep(id, comp.name, target);
+  else evaluateStepAction(id, target);
+  broadcastStudentState(id, target);
+}
+function renderParkMagnetValve() {
+  const view = document.getElementById('pbmv-view');
+  if (!view) return;
+  const comp = COMPONENT_REGISTRY[pbmvId(pbmvCar)];
+  const applyIn = comp.state === 'APPLY';
+  const carEl = document.getElementById('pbmv-car');
+  if (carEl) carEl.textContent = pbmvCar;
+  // 수동 버튼: 튀어나옴 44px / 들어감 14px
+  const pin = (side, pressed) => {
+    const len = pressed ? 14 : 44, x = side === 'L' ? 110 - len : 590;
+    return `<g class="pbmv-btn" onclick="pressParkMagnetValve('${side === 'L' ? 'APPLY' : 'RELEASE'}')">
+      <rect x="${side === 'L' ? 40 : 590}" y="188" width="70" height="44" fill="transparent"/>
+      <rect class="pin" x="${x}" y="192" width="${len}" height="36" rx="7" fill="url(#pbmvPin)" stroke="#6e7681"/>
+      <circle cx="${side === 'L' ? x + 12 : x + len - 12}" cy="214" r="2.6" fill="#30363d"/>
+    </g>`;
+  };
+  const coil = (x, label, flip) => `
+    <rect x="${x + 22}" y="128" width="96" height="26" fill="url(#pbmvBrass)" stroke="#7a5a1f"/>
+    <rect x="${x + 6}" y="150" width="128" height="16" rx="2" fill="url(#pbmvBrass)" stroke="#7a5a1f"/>
+    <rect x="${flip ? x + 118 : x - 46}" y="44" width="68" height="70" rx="6" fill="#1b1d20" stroke="#000"/>
+    <rect x="${flip ? x + 146 : x - 22}" y="22" width="34" height="26" rx="6" fill="url(#pbmvCap)" stroke="#333"/>
+    <rect x="${x}" y="38" width="140" height="92" rx="6" fill="#16181b" stroke="#000"/>
+    <rect x="${x + 30}" y="54" width="80" height="60" fill="#e6e8ea" stroke="#111"/>
+    <rect x="${x + 34}" y="58" width="72" height="52" fill="none" stroke="#111" stroke-width="1"/>
+    <text x="${x + 70}" y="95" text-anchor="middle" font-size="26" font-weight="700" fill="#111">${label}</text>`;
+  const muffler = x => `<rect x="${x}" y="98" width="24" height="68" rx="4" fill="#111" stroke="#000"/>` +
+    [0, 1, 2, 3, 4, 5].map(i => `<rect x="${x + 5}" y="${106 + i * 9}" width="14" height="4" fill="#f5b800"/>`).join('');
+  view.innerHTML = `<svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="주차제동 전자변">
+    <defs>
+      <linearGradient id="pbmvBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e4e7ea"/><stop offset="1" stop-color="#b9bec4"/></linearGradient>
+      <linearGradient id="pbmvPin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f6f8"/><stop offset="0.5" stop-color="#b7bcc2"/><stop offset="1" stop-color="#7d838a"/></linearGradient>
+      <linearGradient id="pbmvBrass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9b77d"/><stop offset="1" stop-color="#8a6630"/></linearGradient>
+      <linearGradient id="pbmvCap" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#555"/><stop offset="0.5" stop-color="#ddd"/><stop offset="1" stop-color="#555"/></linearGradient>
+    </defs>
+    ${pin('L', applyIn)}${pin('R', !applyIn)}
+    <rect x="110" y="166" width="480" height="120" fill="url(#pbmvBody)" stroke="#8b949e"/>
+    <line x1="210" y1="166" x2="210" y2="286" stroke="#9aa1a8"/><line x1="490" y1="166" x2="490" y2="286" stroke="#9aa1a8"/>
+    <rect x="296" y="196" width="108" height="56" rx="4" fill="#c9ccd0" stroke="#7d838a"/>
+    <text x="350" y="214" text-anchor="middle" font-size="8.5" font-weight="700" fill="#333">IMPULSE MAGNET VALVE</text>
+    <text x="350" y="232" text-anchor="middle" font-size="9" fill="#333">TYPE YK</text>
+    <circle cx="282" cy="262" r="6" fill="#8b9096"/><circle cx="418" cy="262" r="6" fill="#8b9096"/>
+    ${coil(150, '제동', false)}${coil(410, '완해', true)}
+    ${muffler(300)}${muffler(376)}
+    <text x="110" y="310" text-anchor="middle" font-size="12" font-weight="700" fill="${applyIn ? '#ffb4ab' : '#c9d1d9'}">체결측${applyIn ? ' (눌림)' : ''}</text>
+    <text x="590" y="310" text-anchor="middle" font-size="12" font-weight="700" fill="${!applyIn ? '#a5f3b5' : '#c9d1d9'}">완해측${!applyIn ? ' (눌림)' : ''}</text>
+  </svg>`;
+  const stEl = document.getElementById('pbmv-status');
+  if (stEl) stEl.innerHTML = `주차제동: ${window.__PARK_BRAKE_SET ? '<b class="on">체결 (DU PB)</b>' : '<b class="off">완해</b>'} · 운전실 ${cabName()}`;
+}
+window.openParkMagnetValve = openParkMagnetValve;
+window.pressParkMagnetValve = pressParkMagnetValve;
+
 function toggleBreakerTrainType() {
   cbTrainType = cbTrainType === 'O' ? 'N' : 'O';
   document.querySelectorAll('#cb-type-toggle .cb-type-opt').forEach(el => el.classList.toggle('active', el.dataset.type === cbTrainType));
