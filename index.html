@@ -853,8 +853,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      padding: 4px 0;
+      justify-content: flex-end;   /* ▲ PULL 글씨는 커버 하단 (위쪽 스위치 이름표와 겹치지 않게) */
+      padding: 4px 0 5px;
     }
 
     .acrylic-cover::before {
@@ -865,13 +865,7 @@
       letter-spacing: 0.5px;
     }
 
-    .cover-hinge {
-      width: 28px;
-      height: 6px;
-      background: #7a828e;
-      border-radius: 2px;
-      border: 1px solid #4a515c;
-    }
+    .cover-hinge { display: none; }   /* 회색 바 대신 그 자리에 ▲ PULL 글씨 */
 
     /* 커버 열림 상태 */
     .acrylic-cover.open {
@@ -8375,7 +8369,11 @@ const DEFAULT_SCENARIOS = [
         targetName: "관제 보고",
         instruction: "MR 압력이 4.0 bar 미만으로 떨어져 비상제동과 주차제동(DU PB)이 체결된 것을 확인하고 [📡 관제 보고]를 누르십시오.",
         report: "관제, 현재 MR 압력이 4.0 bar 미만으로 비상제동 및 주차제동 체결된 상태로 구원연결을 요청합니다.",
-        occReply: "알았다. 구원열차 수배하겠다. 구원연결 시행 바란다."
+        dialog: [
+          { who: "기관사", text: "관제, 현재 MR 압력이 4.0 bar 미만으로 비상제동 및 주차제동 체결된 상태로 구원연결을 요청합니다." },
+          { who: "관제", text: "네, 알겠습니다. 구원열차 수배하겠습니다. 구원연결 시행하십시오." },
+          { who: "기관사", text: "네, 구원연결 시행하겠습니다." }
+        ]
       },
       {
         step: 2,
@@ -8477,23 +8475,37 @@ const DEFAULT_SCENARIOS = [
         targetName: "관제 보고",
         instruction: "ADU VOBC1 빨간 글씨, VOBC2 Ⓐ, DU MC1 VOBC 빨간 바탕을 확인하고 [📡 관제 보고]를 누르십시오.",
         report: "관제, VOBC1 고장으로 VOBC2로 절체되었습니다.",
-        occReply: "알았다. 해당차 VOBC 리셋 조치 바란다."
+        dialog: [
+          { who: "기관사", text: "관제, VOBC1 고장으로 VOBC2로 절체되었습니다." },
+          { who: "관제", text: "네, 알겠습니다. 해당차 VOBC 리셋 조치하십시오." },
+          { who: "기관사", text: "네, 해당차 VOBC 리셋 조치하겠습니다." }
+        ]
       },
       {
         step: 2,
+        title: "MC1 VOBC 차단기 모두 차단",
         target: "CB_VOBCCB1",
-        allOf: ["CB_VOBCCB1", "CB_VOBCCB2", "CB_VOBCDICB"],
         targetName: "MC1 VOBC 차단기",
-        expectedState: "OFF",
-        instruction: "차단기반 [MC1 차단기] 탭에서 VOBCCB1, VOBCCB2, VOBCDICB를 모두 차단(OFF)하십시오."
+        anyOrder: true,
+        instruction: "차단기반 [MC1 차단기] 탭에서 VOBCCB1, VOBCCB2, VOBCDICB를 모두 차단(OFF)하십시오. (순서 무관)",
+        checks: [
+          { target: "CB_VOBCCB1", state: "OFF", label: "VOBCCB1 차단 (OFF)" },
+          { target: "CB_VOBCCB2", state: "OFF", label: "VOBCCB2 차단 (OFF)" },
+          { target: "CB_VOBCDICB", state: "OFF", label: "VOBCDICB 차단 (OFF)" }
+        ]
       },
       {
         step: 3,
+        title: "MC1 VOBC 차단기 모두 투입",
         target: "CB_VOBCCB1",
-        allOf: ["CB_VOBCCB1", "CB_VOBCCB2", "CB_VOBCDICB"],
         targetName: "MC1 VOBC 차단기",
-        expectedState: "ON",
-        instruction: "VOBCCB1, VOBCCB2, VOBCDICB를 모두 다시 투입(ON)하여 VOBC1 정상 복귀를 확인하십시오."
+        anyOrder: true,
+        instruction: "VOBCCB1, VOBCCB2, VOBCDICB를 모두 다시 투입(ON)하여 VOBC1 정상 복귀를 확인하십시오. (순서 무관)",
+        checks: [
+          { target: "CB_VOBCCB1", state: "ON", label: "VOBCCB1 투입 (ON)" },
+          { target: "CB_VOBCCB2", state: "ON", label: "VOBCCB2 투입 (ON)" },
+          { target: "CB_VOBCDICB", state: "ON", label: "VOBCDICB 투입 (ON)" }
+        ]
       }
     ]
   }
@@ -15042,7 +15054,7 @@ function renderParkMagnetValve() {
   const stEl = document.getElementById('pbmv-status');
   if (stEl) stEl.innerHTML = `주차제동: ${window.__PARK_BRAKE_SET ? '<b class="on">체결</b>' : '<b class="off">완해</b>'} · 운전실 ${cabName()}<div class="pbmv-note">전자변 제동/완해 취급은 기계적 취급으로서 역행회로의 구성 조건을 만족하지 못합니다</div>`;
 }
-/* 운전석 하부: 위 PB 코크(취급), 아래 MR 코크(위치 확인용). 손잡이가 왼쪽으로 배관과 나란하면 정상(개방), 몸쪽으로 꺾으면 차단 */
+/* 운전석 하부: 위 PB 코크(취급), 아래 MR 코크(위치 확인용). 왼쪽 끝 관은 엘보로 꺾여 화면 안쪽(뒤쪽 장비)으로 들어감. 손잡이가 왼쪽으로 배관과 나란하면 정상(개방), 몸쪽으로 꺾으면 차단 */
 function renderCabUnder(view) {
   const car = pbmvCar;
   const pbClosed = COMPONENT_REGISTRY[extPbId('COCK', car)].state === 'CLOSED';
@@ -15056,7 +15068,10 @@ function renderCabUnder(view) {
     return `<g class="${onclick ? 'extpb-btn' : ''}" ${onclick ? `onclick="${onclick}"` : ''}>
       <rect x="20" y="${y - 62}" width="660" height="128" fill="transparent"/>
       <rect x="470" y="${y - 18}" width="220" height="36" fill="url(#cuPipe)" stroke="#2b2f34"/>
-      <polygon points="38,${y} 92,${y - 26} 92,${y + 26}" fill="url(#cuMetal)" stroke="#2b2f34"/>
+      <circle cx="62" cy="${y}" r="30" fill="#15171a" stroke="#000"/>
+      <circle cx="62" cy="${y}" r="21" fill="url(#cuInto)"/>
+      <path d="M62 ${y - 18} H92 V${y + 18} H62 A18 18 0 0 1 62 ${y - 18} Z" fill="url(#cuPipe)" stroke="#2b2f34"/>
+      <ellipse cx="62" cy="${y}" rx="10" ry="16" fill="url(#cuInto)" stroke="#2b2f34"/>
       <rect x="92" y="${y - 30}" width="70" height="60" rx="4" fill="url(#cuMetal)" stroke="#2b2f34"/>
       <line x1="114" y1="${y - 30}" x2="114" y2="${y + 30}" stroke="#3d4248"/><line x1="140" y1="${y - 30}" x2="140" y2="${y + 30}" stroke="#3d4248"/>
       <rect x="162" y="${y - 24}" width="50" height="48" fill="url(#cuMetal)" stroke="#2b2f34"/>
@@ -15073,6 +15088,7 @@ function renderCabUnder(view) {
   };
   view.innerHTML = `<svg viewBox="0 0 700 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="운전석 하부 PB 코크와 MR 코크">
     <defs>
+      <radialGradient id="cuInto" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#0b0c0e"/><stop offset="0.7" stop-color="#3a3e43"/><stop offset="1" stop-color="#6b7077"/></radialGradient>
       <linearGradient id="cuMetal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b7b0a2"/><stop offset="0.5" stop-color="#8f897d"/><stop offset="1" stop-color="#5f5a52"/></linearGradient>
       <linearGradient id="cuPipe" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6b7077"/><stop offset="0.5" stop-color="#9aa0a6"/><stop offset="1" stop-color="#43474c"/></linearGradient>
     </defs>
