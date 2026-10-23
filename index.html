@@ -4875,8 +4875,10 @@
     .pbmv-window { width: min(760px, 96vw) !important; max-width: 96vw !important; }
     .pbmv-body { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 16px 20px; background: #3a3f45; }
     .pbmv-title { color: #e6edf3; font-weight: 800; font-size: 14px; }
-    #pbmv-view { width: 100%; max-width: 680px; }
-    #pbmv-view svg { width: 100%; height: auto; display: block; }
+    #pbmv-view, #extpb-view { width: 100%; max-width: 680px; }
+    #pbmv-view svg, #extpb-view svg { width: 100%; height: auto; display: block; }
+    .extpb-btn { cursor: pointer; }
+    .extpb-btn:hover { filter: brightness(1.12); }
     .pbmv-btn { cursor: pointer; }
     .pbmv-btn rect.pin { transition: x 0.12s ease-out, width 0.12s ease-out; }
     .pbmv-btn:hover rect.pin { filter: brightness(1.12); }
@@ -7372,6 +7374,28 @@
     </div>
   </div>
 
+  <!-- 열차 외부: 차마다 PB 코크, 주차제동 수동완해고리 -->
+  <div id="modal-extpb" class="modal-backdrop" onclick="if (event.target === this) closeModal('modal-extpb')">
+    <div class="modal-window pbmv-window">
+      <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center;">
+          <div class="cb-tabs">
+            <button type="button" class="cb-tab active" id="extpb-tab-MC1" onclick="showExtPb('MC1')">MC1 외부</button>
+            <button type="button" class="cb-tab" id="extpb-tab-MC2" onclick="showExtPb('MC2')">MC2 외부</button>
+          </div>
+          <span class="cb-hint">PB 코크 손잡이를 눌러 차단하고, 수동완해고리를 눌러 당깁니다</span>
+        </div>
+        <span style="cursor:pointer; color:#94a3b8; font-size:18px; font-weight:bold;" onclick="closeModal('modal-extpb')">✕</span>
+      </div>
+      <div class="cb-scn-progress scn-progress-line"></div>
+      <div class="modal-body pbmv-body">
+        <div class="pbmv-title">열차 외부 <span id="extpb-car">MC1</span></div>
+        <div id="extpb-view"></div>
+        <div class="pbmv-status" id="extpb-status"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="modal-breaker" class="modal-backdrop" onclick="if (event.target === this) closeModal('modal-breaker')">
     <div class="modal-window">
       <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between;">
@@ -8065,7 +8089,13 @@ const COMPONENT_REGISTRY = {
 
   // [차체 하부] 주차제동 전자변: APPLY = 체결(제동)측 눌림 / RELEASE = 완해측 눌림
   SW_PB_MV: { name: 'MC1 주차제동 전자변', type: 'MAGNET_VALVE', state: 'RELEASE', panel: 'MV' },
-  SW_PB_MV_MC2: { name: 'MC2 주차제동 전자변', type: 'MAGNET_VALVE', state: 'RELEASE', panel: 'MV' }
+  SW_PB_MV_MC2: { name: 'MC2 주차제동 전자변', type: 'MAGNET_VALVE', state: 'RELEASE', panel: 'MV' },
+
+  // [열차 외부] PB 코크 (OPEN 개방 / CLOSED 차단), 주차제동 수동완해고리 (IDLE / PULLED 취급)
+  EXT_PB_COCK: { name: 'MC1 PB 코크', type: 'EXT_COCK', state: 'OPEN', panel: 'EXT' },
+  EXT_PB_COCK_MC2: { name: 'MC2 PB 코크', type: 'EXT_COCK', state: 'OPEN', panel: 'EXT' },
+  EXT_PB_HOOK: { name: 'MC1 주차제동 수동완해고리', type: 'EXT_HOOK', state: 'IDLE', panel: 'EXT' },
+  EXT_PB_HOOK_MC2: { name: 'MC2 주차제동 수동완해고리', type: 'EXT_HOOK', state: 'IDLE', panel: 'EXT' }
 };
 
 /**
@@ -8112,14 +8142,15 @@ const ROTARY3_BOUNCE = {
  *  - step.type: REPORT(HUD [관제 보고] 버튼, occReply는 관제 응답 무전), ARRIVE(최근역 정위치 정차 시 자동 완료)
  *  - step.altTargets / step.expectedStates: 여러 부품·상태 중 하나면 정답
  *  - step.checks: 단계 안의 세부 조치를 순서대로 확인 [{ target, state, label, result? }] → 모두 끝나면 다음 단계
- *      target 'CAB_MOVE' + state 'REAR' = 후부 운전실로 이동 (시나리오 시작 운전실의 반대편)
+ *      target 'CAB_MOVE' + state 'REAR' = 후부 운전실로 이동 (시나리오 시작 운전실의 반대편), 'FRONT' = 시작 운전실로 복귀
+ *  - REPORT step.effect: POWER_OFF(단전) / POWER_ON(급전) — 관제 응답 후 가선전압·역행에 반영
  *  - target 'XXX@CAB' = 해당차(취급 운전실) 차단기: MC1이면 그대로, MC2면 '_MC2'
  */
 const DEFAULT_SCENARIOS = [
   {
     id: "SCN_PARK_BRAKE_BP",
     title: "1. 주차제동 완해 불능 시 주차제동BP 취급",
-    description: "MR 압력은 정상이지만 주차제동이 체결된 채 완해되지 않는 상황입니다. 주차제동이 걸려 있으면 역행회로가 차단되어 F·R 모두 역행할 수 없습니다. ① 주차제동완해 취급 → ② 해당차 PBCB 차단·재투입 후 완해 취급, 주차제동 전자변 완해측 취급 → ③ 후부 운전실에서 ①·② 반복 → ④ 후부 운전실 [주차제동BP] 바이패스 순으로 조치하여 역행회로를 구성합니다.",
+    description: "MR 압력은 정상이지만 주차제동이 체결된 채 완해되지 않는 상황입니다. 주차제동이 걸려 있으면 역행회로가 차단되어 F·R 모두 역행할 수 없습니다. ① 주차제동완해 취급 → ② 해당차 PBCB 차단·재투입 후 완해 취급, 주차제동 전자변 완해측 취급 → ③ 후부 운전실에서 ①·② 반복 → ④ 후부 운전실 [주차제동BP] 바이패스 → ⑤ 단전 요청 → ⑥ 열차 외부 MC1·MC2 PB 코크 차단 → ⑦ MC1·MC2 주차제동 수동완해고리 취급 → ⑧ 전부 운전실로 이동하여 [주차제동BP] 바이패스 → ⑨ 급전 요청 → ⑩ 역행시험 후 운행합니다. 전자변 취급은 기계적 취급이라 DU의 PB 현시와 역행회로 차단은 남아 있으므로 운전하는 운전실마다 주차제동BP를 바이패스합니다.",
     faults: ["PARK_REL_FAIL"],
     setup: { parkBrake: true },
     allowDriving: true,
@@ -8172,6 +8203,79 @@ const DEFAULT_SCENARIOS = [
         checks: [
           { target: "SW_PARK_BP", state: "BYPASS", label: "주차제동BP 바이패스 절체", result: "역행회로 구성 (주차제동 역행 차단 해제)" }
         ]
+      },
+      {
+        step: 5,
+        type: "REPORT",
+        title: "단전 요청",
+        target: "OCC_REPORT",
+        targetName: "단전 요청",
+        effect: "POWER_OFF",
+        instruction: "주차제동BP를 바이패스했지만 주차제동이 완전히 완해된 것은 아닙니다. 열차 외부 조치를 위해 [📡 관제 보고]로 단전을 요청하십시오.",
+        report: "관제, 주차제동 완해 불능으로 PB 코크 차단 및 수동완해 시행하겠습니다. 단전 요청합니다.",
+        dialog: [
+          { who: "기관사", text: "관제, 주차제동 완해 불능으로 PB 코크 차단 및 수동완해 시행하겠습니다. 단전 요청합니다." },
+          { who: "관제", text: "네, 알겠습니다. 단전하겠습니다. 단전 완료되었습니다." },
+          { who: "기관사", text: "단전 확인했습니다. 열차 외부 조치 시행하겠습니다." }
+        ]
+      },
+      {
+        step: 6,
+        title: "열차 외부 MC1·MC2 PB 코크 차단",
+        target: "EXT_PB_COCK",
+        targetName: "PB 코크",
+        anyOrder: true,
+        instruction: "열차 외부로 나가 MC1, MC2의 [PB 코크]를 차단하십시오. (순서 무관)",
+        checks: [
+          { target: "EXT_PB_COCK", state: "CLOSED", label: "MC1 PB 코크 차단" },
+          { target: "EXT_PB_COCK_MC2", state: "CLOSED", label: "MC2 PB 코크 차단" }
+        ]
+      },
+      {
+        step: 7,
+        title: "MC1·MC2 주차제동 수동완해고리 취급",
+        target: "EXT_PB_HOOK",
+        targetName: "수동완해고리",
+        anyOrder: true,
+        instruction: "MC1, MC2의 [주차제동 수동완해고리]를 당겨 주차제동을 기계적으로 완해하십시오. (순서 무관)",
+        checks: [
+          { target: "EXT_PB_HOOK", state: "PULLED", label: "MC1 주차제동 수동완해고리 취급", result: "주차제동 완해" },
+          { target: "EXT_PB_HOOK_MC2", state: "PULLED", label: "MC2 주차제동 수동완해고리 취급", result: "주차제동 완해" }
+        ]
+      },
+      {
+        step: 8,
+        title: "전부 운전실 주차제동BP 바이패스",
+        target: "CAB_MOVE",
+        targetName: "전부 운전실",
+        instruction: "전부 운전실로 이동하여 OP5 [주차제동BP] 스위치를 '바이패스' 위치로 절체하십시오. (DU의 PB 현시는 전자적으로 유지되므로 운전하는 운전실에서도 바이패스가 필요합니다)",
+        checks: [
+          { target: "CAB_MOVE", state: "FRONT", label: "전부 운전실로 이동" },
+          { target: "SW_PARK_BP", state: "BYPASS", label: "주차제동BP 바이패스 절체", result: "역행회로 구성" }
+        ]
+      },
+      {
+        step: 9,
+        type: "REPORT",
+        title: "급전 요청",
+        target: "OCC_REPORT",
+        targetName: "급전 요청",
+        effect: "POWER_ON",
+        instruction: "외부 조치와 전부 운전실 주차제동BP 바이패스가 끝나면 [📡 관제 보고]로 급전을 요청하십시오.",
+        report: "관제, MC1·MC2 PB 코크 차단 및 수동완해, 전부 운전실 주차제동BP 바이패스 완료했습니다. 급전 요청합니다.",
+        dialog: [
+          { who: "기관사", text: "관제, MC1·MC2 PB 코크 차단 및 수동완해, 전부 운전실 주차제동BP 바이패스 완료했습니다. 급전 요청합니다." },
+          { who: "관제", text: "네, 알겠습니다. 급전하겠습니다. 급전 완료되었습니다. 역행시험 후 운행하십시오." },
+          { who: "기관사", text: "급전 확인했습니다. 역행시험 후 운행하겠습니다." }
+        ]
+      },
+      {
+        step: 10,
+        title: "역행시험 후 운행",
+        target: "SW_MASCON",
+        expectedStates: ["P1", "P2", "P3", "P4"],
+        targetName: "역행시험",
+        instruction: "제어키·운전모드·전후진제어기를 취급하고 마스콘을 역행으로 넣어 역행시험 후 운행하십시오."
       }
     ]
   },
@@ -9521,7 +9625,7 @@ function updateDuAduDisplay(driveMode, notch, now) {
 
     const isPantoUp = (cvCompState('SW_PANTO_UP', 'NORMAL') === 'LATCHED') || (cvCompState('SW_PANTO_DOWN', 'NORMAL') !== 'LATCHED');
     const voltEl = document.getElementById('du2-volt-val');
-    if (voltEl) voltEl.innerText = isPantoUp ? (750 + Math.round((Math.sin(now * 0.003) * 4))).toString() : '0';
+    if (voltEl) voltEl.innerText = isPantoUp && !window.__POWER_CUT ? (750 + Math.round((Math.sin(now * 0.003) * 4))).toString() : '0';
 
     const ampEl = document.getElementById('du2-amp-val');
     let currentAmp = 0;
@@ -10084,7 +10188,7 @@ function updateTrainPhysics() {
   if (hcrEb) {
     if (currentGaugeBC !== BC_EMG_BAR) updateGaugeUI(BC_EMG_BAR);
   } else if (isManualMode && window.__HOLDING_BRAKE_ACTIVE) {
-    if ((revNotch === 'F' || revNotch === 'R') && notch.charAt(0) === 'P' && isKeyOn && !isEmgActive && !isRmEbActive && !isParkCut && !isAuxEb && !isOp5TractionCut()) {
+    if ((revNotch === 'F' || revNotch === 'R') && notch.charAt(0) === 'P' && isKeyOn && !isEmgActive && !isRmEbActive && !isParkCut && !isAuxEb && !isOp5TractionCut() && !window.__POWER_CUT) {
       window.__HOLDING_BRAKE_ACTIVE = false;          // 정차제동 완해 → 역행
       try { sound.playAirExhaust(0.5, 1200, 0.4); } catch (e) { }
       updateGaugeUI(0.0);
@@ -10094,7 +10198,7 @@ function updateTrainPhysics() {
   }
 
   const canManualTraction = isManualMode && isKeyOn && (revNotch === 'F' || revNotch === 'R') &&
-                            isDoorInterlockCleared && !isParkCut && !isAuxEb && !isOp5TractionCut() && !isEmgActive && !isRmEbActive && cvBC() < 0.5;
+                            isDoorInterlockCleared && !isParkCut && !isAuxEb && !isOp5TractionCut() && !window.__POWER_CUT && !isEmgActive && !isRmEbActive && cvBC() < 0.5;
 
   let target = 0.0, rate = 0.0;
 
@@ -13173,6 +13277,9 @@ function setMasconNotch(notch, silent = false) {
       } else if (isMrLowEbActive() || isMrTractionCut()) {
         desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [MR 압력 저하] MR ${currentGaugeMR.toFixed(1)} bar로 비상제동/역행회로 차단 중입니다. 관제 지시에 따라 OP3 [비상제동완해]와 OP5 [주공기BP]를 취급하십시오)`;
         isWarn = true;
+      } else if (window.__POWER_CUT) {
+        desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [단전] 가선이 단전되어 역행할 수 없습니다. 조치 후 관제에 급전을 요청하십시오)`;
+        isWarn = true;
       } else if (isParkBrakeTractionCut()) {
         desc = `⚡ [마스콘 역행] ${notch}단 (⚠️ [주차제동] 주차제동 체결로 역행회로가 차단되었습니다. [주차제동완해]를 누르고, 완해가 복귀되지 않으면 OP5 [주차제동BP]를 '바이패스'로 절체하십시오)`;
         isWarn = true;
@@ -13603,6 +13710,7 @@ function submitScenarioReport() {
     scenarioCheckLog[i] = { dialogShown: 1 };
     targetStep.dialog.slice(1).forEach((_, k) => setTimeout(() => {
       if (scenarioCheckLog[i]) { scenarioCheckLog[i].dialogShown = k + 2; renderScenarioPanel(); }
+      if (k === 0 && targetStep.effect) applyPowerEffect(targetStep.effect);   // 관제 응답과 함께 단전/급전
     }, 1400 * (k + 1)));
     completeScenarioStep();
     return;
@@ -13612,6 +13720,12 @@ function submitScenarioReport() {
     setTimeout(() => { try { playOccRadioTest(targetStep.occReply); } catch (e) { } }, 600);
   }
   if (targetStep.report) showTemporaryHudFeedback(`📡 [기관사 보고] "${targetStep.report}"`, false);
+}
+
+/* 단전/급전: 단전 중에는 가선전압 0 V, 역행 불가 */
+function applyPowerEffect(effect) {
+  window.__POWER_CUT = effect === 'POWER_OFF';
+  showTemporaryHudFeedback(window.__POWER_CUT ? '🔌 [단전] 가선 단전 - 가선전압 0 V' : '⚡ [급전] 가선 급전 - 가선전압 복귀', false);
 }
 
 /* ARRIVE 단계: 단계 시작 위치에서 50m 이상 운행 후 역 정차점 ±5m에 정차하면 완료 */
@@ -13832,7 +13946,8 @@ function renderScenarioPanel() {
       const tgt = chk ? chk.target : st.target;
       const btns = [];
       if (st.type === 'REPORT') btns.push(`<button type="button" class="scn-btn" onclick="submitScenarioReport()">📡 관제 보고</button>`);
-      if (tgt === 'CAB_MOVE') btns.push(`<button type="button" class="scn-btn" onclick="moveToOtherCab()">🔁 후부 운전실로 이동</button>`);
+      if (tgt === 'CAB_MOVE') btns.push(`<button type="button" class="scn-btn" onclick="moveToOtherCab()">🔁 ${chk && chk.state === 'FRONT' ? '전부' : '후부'} 운전실로 이동</button>`);
+      if (typeof tgt === 'string' && tgt.startsWith('EXT_')) btns.push(`<button type="button" class="scn-btn cb" onclick="openExtPb()">열차 외부 기기 열기</button>`);
       if (typeof tgt === 'string' && tgt.startsWith('CB_')) btns.push(`<button type="button" class="scn-btn cb" onclick="openBreakerPanel()">차단기반 열기</button>`);
       if (typeof tgt === 'string' && tgt.startsWith('SW_PB_MV')) btns.push(`<button type="button" class="scn-btn cb" onclick="openParkMagnetValve()">주차제동 전자변 열기</button>`);
       if (btns.length) html += `<div class="scn-step-btns">${btns.join('')}</div>`;
@@ -13995,6 +14110,11 @@ function resetCurrentScenario() {
   mistakeCount = 0;
   examStartTime = Date.now();
   clearHints();
+  parkBpByCab = {};
+  window.__POWER_CUT = false;
+  ['EXT_PB_COCK', 'EXT_PB_COCK_MC2'].forEach(id => { COMPONENT_REGISTRY[id].state = 'OPEN'; });
+  ['EXT_PB_HOOK', 'EXT_PB_HOOK_MC2'].forEach(id => { COMPONENT_REGISTRY[id].state = 'IDLE'; });
+  renderExtPb();
 
   // 모든 부품 상태 기본 초기화
   Object.keys(COMPONENT_REGISTRY).forEach(id => {
@@ -14394,7 +14514,9 @@ function fillStartStationSelect(selectedId, dir) {
 /* 운행 방향 설정 (+1 하선 201→227 / -1 상선 227→201). 반대편 선로로 옮겨 지정 역(없으면 기점역)에 정차 배치 */
 function setRunDirection(dir, startId) {
   dir = dir < 0 ? -1 : 1;
+  const prevCab = cabName();
   IC2.P.setDir(dir);
+  swapCabParkBp(prevCab, cabName());
   // 역 목록을 진행 순서로 재정렬 (AtoDriverless.stationIdx와 IC2.P.STN 인덱스 일치)
   const order = IC2.P.STN.map(st => st.id);
   INCHEON2_STATIONS.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
@@ -14413,6 +14535,17 @@ function setRunDirection(dir, startId) {
   notifyCabMove();
 }
 window.setRunDirection = setRunDirection;
+
+/* 주차제동BP는 운전실마다 따로 있음: 운전실을 바꾸면 그 운전실 스위치 위치로 */
+let parkBpByCab = {};
+function swapCabParkBp(from, to) {
+  if (from === to) return;
+  const comp = COMPONENT_REGISTRY.SW_PARK_BP;
+  parkBpByCab[from] = comp.state;
+  comp.state = parkBpByCab[to] || 'NORMAL';
+  const el = document.getElementById('comp-SW_PARK_BP');
+  if (el) el.style.transform = comp.state === 'BYPASS' ? 'rotate(45deg)' : 'rotate(-45deg)';
+}
 
 /* 3D 화질 선택 (메뉴): 자동 → 선명(100%) → 보통(75%) → 가볍게(55%). 선택은 이 PC 브라우저에 기억 */
 const VIEW_QUALITY = [['auto', '자동'], ['1', '선명'], ['0.75', '보통'], ['0.55', '가볍게']];
@@ -14882,6 +15015,83 @@ function renderParkMagnetValve() {
 }
 window.openParkMagnetValve = openParkMagnetValve;
 window.pressParkMagnetValve = pressParkMagnetValve;
+
+/* 열차 외부 (차마다): PB 코크 차단 → 주차제동 수동완해고리 당김 = 주차제동 기계적 완해
+   전자적으로는 체결 상태가 남아 DU PB 현시·역행회로 차단은 유지 (운전실 주차제동BP 바이패스 필요) */
+const extPbId = (kind, car) => `EXT_PB_${kind}${car === 'MC2' ? '_MC2' : ''}`;
+let extPbCar = 'MC1';
+function openExtPb(car) {
+  showExtPb(car || extPbCar);
+  openModal('modal-extpb');
+}
+function showExtPb(car) {
+  extPbCar = car;
+  ['MC1', 'MC2'].forEach(c => { const t = document.getElementById('extpb-tab-' + c); if (t) t.classList.toggle('active', c === car); });
+  renderExtPb();
+}
+function operateExtPb(kind) {
+  const id = extPbId(kind, extPbCar), comp = COMPONENT_REGISTRY[id];
+  let next;
+  if (kind === 'COCK') {
+    next = comp.state === 'OPEN' ? 'CLOSED' : 'OPEN';
+    sound.playRotarySnap();
+    triggerHaptic(35);
+    showTemporaryHudFeedback(`🔧 [${comp.name}] ${next === 'CLOSED' ? '차단' : '개방'}`, false);
+  } else {
+    if (comp.state === 'PULLED') { sound.playClick(); return; }
+    next = 'PULLED';
+    sound.playAirExhaust(0.6, 1200, 0.5);
+    triggerHaptic([30, 40, 60]);
+    showTemporaryHudFeedback(`🪝 [${comp.name}] 취급 - ${extPbCar} 주차제동 기계적 완해 (DU PB 현시 유지)`, false);
+  }
+  comp.state = next;
+  renderExtPb();
+  if (currentMode === 'REC') promptRecordStep(id, comp.name, next);
+  else evaluateStepAction(id, next);
+  broadcastStudentState(id, next);
+}
+function renderExtPb() {
+  const view = document.getElementById('extpb-view');
+  if (!view) return;
+  const car = extPbCar;
+  const closed = COMPONENT_REGISTRY[extPbId('COCK', car)].state === 'CLOSED';
+  const pulled = COMPONENT_REGISTRY[extPbId('HOOK', car)].state === 'PULLED';
+  document.getElementById('extpb-car').textContent = car;
+  // 왼쪽: PB 코크 (손잡이가 배관과 나란하면 개방, 직각이면 차단) / 오른쪽: 수동완해고리 (당기면 아래로 내려옴)
+  const hy = pulled ? 46 : 0;
+  view.innerHTML = `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PB 코크와 주차제동 수동완해고리">
+    <defs>
+      <linearGradient id="extPipe" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9aa1a8"/><stop offset="0.5" stop-color="#d7dbdf"/><stop offset="1" stop-color="#6e757c"/></linearGradient>
+      <linearGradient id="extBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3f45"/><stop offset="1" stop-color="#1c1f23"/></linearGradient>
+    </defs>
+    <g class="extpb-btn" onclick="operateExtPb('COCK')">
+      <rect x="20" y="40" width="300" height="220" fill="transparent"/>
+      <rect x="30" y="140" width="280" height="26" fill="url(#extPipe)" stroke="#555"/>
+      <rect x="125" y="118" width="90" height="70" rx="10" fill="#c49a45" stroke="#7a5a1f"/>
+      <circle cx="170" cy="153" r="13" fill="#7a5a1f"/>
+      <g style="transform-origin:170px 153px; transform: rotate(${closed ? -90 : 0}deg); transition: transform 0.18s ease-out">
+        <rect x="160" y="146" width="120" height="14" rx="6" fill="#d1242f" stroke="#7d1018"/>
+      </g>
+      <circle cx="170" cy="153" r="7" fill="#e6e8ea" stroke="#555"/>
+      <text x="170" y="228" text-anchor="middle" font-size="15" font-weight="800" fill="#e6edf3">PB 코크</text>
+      <text x="170" y="250" text-anchor="middle" font-size="13" font-weight="700" fill="${closed ? '#ff7b72' : '#7ee787'}">${closed ? '차단' : '개방'}</text>
+    </g>
+    <g class="extpb-btn" onclick="operateExtPb('HOOK')">
+      <rect x="380" y="20" width="300" height="260" fill="transparent"/>
+      <rect x="410" y="40" width="240" height="70" rx="12" fill="url(#extBody)" stroke="#000"/>
+      <text x="530" y="82" text-anchor="middle" font-size="13" font-weight="700" fill="#8b949e">주차제동 실린더</text>
+      <rect x="524" y="110" width="12" height="${30 + hy}" fill="url(#extPipe)" stroke="#555"/>
+      <circle cx="530" cy="${168 + hy}" r="26" fill="none" stroke="#e3b341" stroke-width="9"/>
+      <text x="530" y="${pulled ? 264 : 228}" text-anchor="middle" font-size="15" font-weight="800" fill="#e6edf3">수동완해고리</text>
+      <text x="530" y="${pulled ? 284 : 250}" text-anchor="middle" font-size="13" font-weight="700" fill="${pulled ? '#7ee787' : '#c9d1d9'}">${pulled ? '취급 (당김)' : '당기려면 누르십시오'}</text>
+    </g>
+  </svg>`;
+  const stEl = document.getElementById('extpb-status');
+  if (stEl) stEl.innerHTML = `가선: ${window.__POWER_CUT ? '<b class="off">단전</b>' : '<b class="on">급전 중</b> (단전 후 취급하십시오)'} · ${car} 주차제동: ${pulled ? '<b class="off">기계적 완해</b>' : '<b class="on">체결</b>'}`;
+}
+window.openExtPb = openExtPb;
+window.showExtPb = showExtPb;
+window.operateExtPb = operateExtPb;
 
 function toggleBreakerTrainType() {
   cbTrainType = cbTrainType === 'O' ? 'N' : 'O';
