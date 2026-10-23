@@ -8140,6 +8140,7 @@ const ROTARY3_BOUNCE = {
  *  - step.type: REPORT(HUD [관제 보고] 버튼, occReply는 관제 응답 무전), ARRIVE(최근역 정위치 정차 시 자동 완료)
  *  - step.altTargets / step.expectedStates: 여러 부품·상태 중 하나면 정답
  *  - step.checks: 단계 안의 세부 조치를 순서대로 확인 [{ target, state, label, result? }] → 모두 끝나면 다음 단계
+ *      check.states = 여러 상태 중 하나, check.require = { 부품: 상태 } 조건이 맞을 때만 인정
  *      target 'CAB_MOVE' + state 'REAR' = 후부 운전실로 이동 (시나리오 시작 운전실의 반대편), 'FRONT' = 시작 운전실로 복귀
  *  - REPORT step.effect: POWER_OFF(단전) / POWER_ON(급전) — 관제 응답 후 가선전압·역행에 반영, step.reportLabel = 보고 버튼 이름
  *  - target 'XXX@CAB' = 해당차(취급 운전실) 차단기: MC1이면 그대로, MC2면 '_MC2'
@@ -8148,7 +8149,7 @@ const DEFAULT_SCENARIOS = [
   {
     id: "SCN_PARK_BRAKE_BP",
     title: "1. 주차제동 완해 불능 시 주차제동BP 취급",
-    description: "MR 압력은 정상이지만 주차제동이 체결된 채 완해되지 않는 상황입니다. 주차제동이 걸려 있으면 역행회로가 차단되어 F·R 모두 역행할 수 없습니다. ① 주차제동완해 취급 → ② 해당차 PBCB 차단·재투입 후 완해 취급, 주차제동 전자변 완해측 취급 → ③ 후부 운전실에서 ①·② 반복 → ④ 후부 운전실 [주차제동BP] 바이패스 → ⑤ [단전요청] → ⑥ 열차 외부 MC1·MC2 PB 코크 차단 → ⑦ 주차제동 수동완해고리 취급(4개 차축) → ⑧ 전부 운전실로 이동하여 [주차제동BP] 바이패스 → ⑨ [조치완료 급전요청] → ⑩ 역행시험 후 운행합니다. 전자변 취급은 기계적 취급이라 DU의 PB 현시와 역행회로 차단은 남아 있으므로 운전하는 운전실마다 주차제동BP를 바이패스합니다.",
+    description: "MR 압력은 정상이지만 주차제동이 체결된 채 완해되지 않는 상황입니다. 주차제동이 걸려 있으면 역행회로가 차단되어 F·R 모두 역행할 수 없습니다. ① 주차제동완해 취급 → ② 해당차 PBCB 차단·재투입 후 완해 취급, 주차제동 전자변 완해측 취급 → ③ 후부 운전실에서 ①·② 반복 → ④ 후부 운전실 [주차제동BP] 바이패스 → ⑤ [단전요청] → ⑥ 열차 외부 MC1·MC2 PB 코크 차단 → ⑦ 주차제동 수동완해고리 취급(4개 차축) → ⑧ [조치완료 급전요청] → ⑨ 전부 운전실로 이동하여 [주차제동BP] 바이패스 → ⑩ 운전모드 RM 전환 후 역행시험하고 운행합니다. 전자변 취급은 기계적 취급이라 DU의 PB 현시와 역행회로 차단은 남아 있으므로 운전하는 운전실마다 주차제동BP를 바이패스합니다.",
     faults: ["PARK_REL_FAIL"],
     setup: { parkBrake: true },
     allowDriving: true,
@@ -8242,38 +8243,41 @@ const DEFAULT_SCENARIOS = [
       },
       {
         step: 8,
-        title: "전부 운전실 주차제동BP 바이패스",
-        target: "CAB_MOVE",
-        targetName: "전부 운전실",
-        instruction: "전부 운전실로 이동하여 OP5 [주차제동BP] 스위치를 '바이패스' 위치로 절체하십시오. (DU의 PB 현시는 전자적으로 유지되므로 운전하는 운전실에서도 바이패스가 필요합니다)",
-        checks: [
-          { target: "CAB_MOVE", state: "FRONT", label: "전부 운전실로 이동" },
-          { target: "SW_PARK_BP", state: "BYPASS", label: "주차제동BP 바이패스 절체", result: "역행회로 구성" }
-        ]
-      },
-      {
-        step: 9,
         type: "REPORT",
         title: "조치완료 급전 요청",
         target: "OCC_REPORT",
         targetName: "조치완료 급전요청",
         effect: "POWER_ON",
         reportLabel: "조치완료 급전요청",
-        instruction: "외부 조치와 전부 운전실 주차제동BP 바이패스가 끝나면 [📡 조치완료 급전요청]으로 관제에 조치 완료를 보고하고 급전을 요청하십시오.",
-        report: "관제, MC1·MC2 PB 코크 차단 및 수동완해, 전부 운전실 주차제동BP 바이패스 완료했습니다. 급전 요청합니다.",
+        instruction: "열차 외부 조치(PB 코크 차단, 수동완해고리 취급)가 끝나면 열차에 탑승하여 [📡 조치완료 급전요청]으로 관제에 조치 완료를 보고하고 급전을 요청하십시오.",
+        report: "관제, MC1·MC2 PB 코크 차단 및 주차제동 수동완해 완료했습니다. 급전 요청합니다.",
         dialog: [
-          { who: "기관사", text: "관제, MC1·MC2 PB 코크 차단 및 수동완해, 전부 운전실 주차제동BP 바이패스 완료했습니다. 급전 요청합니다." },
-          { who: "관제", text: "네, 알겠습니다. 급전하겠습니다. 급전 완료되었습니다. 역행시험 후 운행하십시오." },
-          { who: "기관사", text: "급전 확인했습니다. 역행시험 후 운행하겠습니다." }
+          { who: "기관사", text: "관제, MC1·MC2 PB 코크 차단 및 주차제동 수동완해 완료했습니다. 급전 요청합니다." },
+          { who: "관제", text: "네, 알겠습니다. 급전하겠습니다. 급전 완료되었습니다. 전부 운전실 주차제동BP 바이패스 후 역행시험하고 운행하십시오." },
+          { who: "기관사", text: "급전 확인했습니다. 주차제동BP 바이패스 후 역행시험하고 운행하겠습니다." }
+        ]
+      },
+      {
+        step: 9,
+        title: "전부 운전실 주차제동BP 바이패스",
+        target: "CAB_MOVE",
+        targetName: "전부 운전실",
+        instruction: "급전 후 전부 운전실로 이동하여 OP5 [주차제동BP] 스위치를 '바이패스' 위치로 절체하십시오. (DU의 PB 현시는 전자적으로 유지되므로 운전하는 운전실에서도 바이패스가 필요합니다)",
+        checks: [
+          { target: "CAB_MOVE", state: "FRONT", label: "전부 운전실로 이동" },
+          { target: "SW_PARK_BP", state: "BYPASS", label: "주차제동BP 바이패스 절체", result: "역행회로 구성" }
         ]
       },
       {
         step: 10,
         title: "역행시험 후 운행",
-        target: "SW_MASCON",
-        expectedStates: ["P1", "P2", "P3", "P4"],
+        target: "SW_DRIVE_MODE",
         targetName: "역행시험",
-        instruction: "제어키·운전모드·전후진제어기를 취급하고 마스콘을 역행으로 넣어 역행시험 후 운행하십시오."
+        instruction: "운전모드를 RM으로 전환한 뒤 마스콘을 역행으로 넣어 역행시험 후 운행하십시오. (제어키 ON, 전후진제어기 F)",
+        checks: [
+          { target: "SW_DRIVE_MODE", state: "RM", label: "운전모드 RM 전환" },
+          { target: "SW_MASCON", states: ["P1", "P2", "P3", "P4"], require: { SW_DRIVE_MODE: "RM" }, label: "마스콘 역행 (RM 모드)", result: "역행시험 완료" }
+        ]
       }
     ]
   },
@@ -13770,7 +13774,9 @@ function evaluateAnyOrderCheck(targetStep, compId, state) {
 function evaluateCheckAction(targetStep, compId, state) {
   if (targetStep.anyOrder) return evaluateAnyOrderCheck(targetStep, compId, state);
   const chk = targetStep.checks[currentCheckIndex];
-  if (chk && [chk.target].concat(chk.altTargets || []).map(resolveStepTarget).includes(compId) && chk.state === state) {
+  const stateOk = chk && (chk.states ? chk.states.includes(state) : chk.state === state) &&
+    Object.entries(chk.require || {}).every(([id, st]) => cvCompState(id, '') === st);   // 예: 운전모드 RM에서 역행
+  if (chk && [chk.target].concat(chk.altTargets || []).map(resolveStepTarget).includes(compId) && stateOk) {
     const log = scenarioCheckLog[currentStepIndex] || (scenarioCheckLog[currentStepIndex] = []);
     log[currentCheckIndex] = { car: cabName(), note: checkResultNote(chk, compId) };
     currentCheckIndex++;
