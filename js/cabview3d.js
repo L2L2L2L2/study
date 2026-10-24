@@ -898,6 +898,9 @@ const G = {
   G.steps = shared(mergeGeometries(steps));
 }
 const QS = new URLSearchParams(location.search);
+// 승강장 인물 모델 (restore50, CC-BY 4.0, 출처는 assets/people/README.md). model-prep.html로 삼각형 2만·텍스처 1024로 줄인 것
+const PEOPLE = ['quiet-confidence-burgundy-navy', 'denim-casual-look-2', 'green-striped-shirt-portrait', 'casual-chic-black-denim', 'casual-portrait-4'];
+let PEOPLE_H = [1.6, 1.8];
 /* 시험용: ?scenery=asset 이면 수목·저층 건물을 외부 로우폴리 모델(CC0, assets/scenery/)로 교체.
    배치(개수·위치·난수열)는 그대로 두고 지오메트리·재질만 바꿔서 기존 화면과 1:1 비교 */
 if (QS.get('scenery') === 'asset' || QS.has('people')) {
@@ -942,16 +945,19 @@ if (QS.get('scenery') === 'asset' || QS.has('people')) {
       geo.translate(-c.x, -bb.min.y, -c.z).scale(k, k, k); geo.computeBoundingSphere();
       return { geo: shared(geo), map };
     };
-    if (QS.has('people')) {   // ?people=1 : 승강장 인물 모델 (assets/people/person.glb), ?people=local : model-prep.html에서 정리한 모델
+    if (QS.has('people')) {   // ?people=1 : 승강장 인물 (assets/people/restore50/, CC-BY), ?people=local : model-prep.html에서 정리한 모델
       const local = QS.get('people') === 'local' ? await new Promise((ok, no) => {
         const rq = indexedDB.open('cab3d-models', 1);
         rq.onupgradeneeded = () => rq.result.createObjectStore('models');
         rq.onerror = () => no(rq.error);
         rq.onsuccess = () => { const g = rq.result.transaction('models').objectStore('models').get('person'); g.onsuccess = () => ok(g.result); g.onerror = () => no(g.error); };
       }) : null;
-      const p = local ? await bake(local.buf, { h: local.height }) : await bake('../people/person.glb', { h: 1.68 });
-      G.person = p.geo; MAT.person = withHeadlight(new THREE.MeshLambertMaterial({ map: p.map }));
-      console.log('[asset] person model loaded');
+      // 키 1m로 구워 두고 배치할 때 키(sx=sy=sz)를 곱함
+      const ps = local ? [await bake(local.buf, { h: 1 })]
+        : await Promise.all(PEOPLE.map(f => bake(`../people/restore50/${f}.glb`, { h: 1 })));
+      G.people = ps.map(p => ({ geo: p.geo, mat: withHeadlight(new THREE.MeshLambertMaterial({ map: p.map })) }));
+      PEOPLE_H = local ? [local.height, local.height] : [1.6, 1.8];
+      console.log(`[asset] ${ps.length} person model(s) loaded`);
     }
     if (QS.get('scenery') === 'asset') {
     const [tree, b0, b1, b2] = await Promise.all([
@@ -1090,14 +1096,19 @@ function stationFeatures(st, a, b, under) {
   // 상선 (반대편 선로, s 감소 방향 진행)
   if (st.oppStop + SIDE_BACK >= a && st.oppStop + SIDE_BACK < b) inst(G.stopR, under ? MAT.stopU : MAT.stopA, [{ s: st.oppStop + SIDE_BACK, u: -3.69, v: PLAT_V + 1.55, yaw: Math.PI }]);
   if (st.oppStop >= a && st.oppStop < b) inst(G.stopFront, MAT.stopFront, [{ s: st.oppStop, u: -TRK, v: -0.30, yaw: Math.PI }]);
-  // 시험용 인물 (?people=1): 양쪽 승강장에 선로를 바라보고 대기
-  if (G.person) {
-    const ppl = [];
-    for (const [ds, du, side] of [[-6, 4.7, 1], [-19, 5.4, 1], [-33, 4.8, 1], [8, 4.9, -1], [-14, 5.6, -1]]) {
-      const s = st.s + ds;
-      if (s >= a && s < b) ppl.push({ s, u: side * du, v: PLAT_V, yaw: -side * Math.PI / 2 });
+  // 인물 (?people=1): 양쪽 승강장 PSD 앞에 선로를 바라보고 대기. 모델·키·방향은 역 위치로 정한 난수 (매번 같은 배치)
+  if (G.people) {
+    const ppl = G.people.map(() => []);
+    for (const side of [1, -1]) {
+      reseed(st.s * 3 + side);
+      for (let ds = -36; ds <= 12; ds += 4) {
+        if (rnd() < 0.45) continue;
+        const s = st.s + side * (ds + rnd() * 2.5), h = PEOPLE_H[0] + rnd() * (PEOPLE_H[1] - PEOPLE_H[0]);
+        const k = Math.floor(rnd() * ppl.length), u = side * (4.5 + rnd() * 0.9), yaw = -side * Math.PI / 2 + (rnd() - 0.5) * 0.8;
+        if (s >= a && s < b) ppl[k].push({ s, u, v: PLAT_V, yaw, sx: h, sy: h, sz: h });
+      }
     }
-    inst(G.person, MAT.person, ppl);
+    G.people.forEach((p, i) => inst(p.geo, p.mat, ppl[i]));
   }
 }
 
