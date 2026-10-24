@@ -10296,15 +10296,18 @@ function updateDuAduDisplay(driveMode, notch, now) {
     const tdoorR1 = document.getElementById('adu2-tdoor-r1');
     const tdoorR2 = document.getElementById('adu2-tdoor-r2');
 
-    const doorSquareClass = isDoorClosed ? 'green' : 'yellow';
-    if (psdL1) psdL1.className = `adu2-sq-box ${doorSquareClass}`;
-    if (psdL2) psdL2.className = `adu2-sq-box ${doorSquareClass}`;
-    if (psdR1) psdR1.className = `adu2-sq-box ${doorSquareClass}`;
-    if (psdR2) psdR2.className = `adu2-sq-box ${doorSquareClass}`;
-    if (tdoorL1) tdoorL1.className = `adu2-sq-box ${doorSquareClass}`;
-    if (tdoorL2) tdoorL2.className = `adu2-sq-box ${doorSquareClass}`;
-    if (tdoorR1) tdoorR1.className = `adu2-sq-box ${doorSquareClass}`;
-    if (tdoorR2) tdoorR2.className = `adu2-sq-box ${doorSquareClass}`;
+    // 열린 쪽(좌측열림 L / 우측열림 R)만 노란색. 열림 측을 알 수 없는 열림(비상핸들 등)은 양쪽 모두 노란색
+    const openSide = isDoorClosed ? null : ((isDoorOpen && (typeof doorOpenSide !== 'undefined' ? doorOpenSide : window.doorOpenSide)) || 'LR');
+    const lClass = openSide && openSide.includes('L') ? 'yellow' : 'green';
+    const rClass = openSide && openSide.includes('R') ? 'yellow' : 'green';
+    if (psdL1) psdL1.className = `adu2-sq-box ${lClass}`;
+    if (psdL2) psdL2.className = `adu2-sq-box ${lClass}`;
+    if (psdR1) psdR1.className = `adu2-sq-box ${rClass}`;
+    if (psdR2) psdR2.className = `adu2-sq-box ${rClass}`;
+    if (tdoorL1) tdoorL1.className = `adu2-sq-box ${lClass}`;
+    if (tdoorL2) tdoorL2.className = `adu2-sq-box ${lClass}`;
+    if (tdoorR1) tdoorR1.className = `adu2-sq-box ${rClass}`;
+    if (tdoorR2) tdoorR2.className = `adu2-sq-box ${rClass}`;
 
     // Bezel LEDs
     const aduLedWarn = document.getElementById('adu-led-warn');
