@@ -1236,6 +1236,9 @@ function buildStationA(a, b) {
         const tiles = h ? [[[3.76, PLAT_V + T0], [LK.oA, PLAT_V + T0]], [[LK.oB, PLAT_V + T0], [9.0, PLAT_V + T0]], [[LK.oA, pitV + T0], [LK.oB, pitV + T0]]] : [[[3.76, PLAT_V + T0], [9.0, PLAT_V + T0]]];
         extrude({ s0: p0, s1: p1, step: 2, lines: tiles.map(fl), mat: MAT.tileA, uvU: 2.4, uvS: 2.4, color: () => 0.85 });
       }
+      // 역 구간 양 끝: 승강장 구조체 단면을 막음 (열차 진입 시 속이 빈 단면이 보이지 않게)
+      const cap = [[4.9, -0.45], [3.76, -0.45], [3.76, PLAT_V], [9.0, PLAT_V], [9.0, -1.2], [2.6, -2.7]].map(([u, v]) => [u * side, v]);
+      for (const [x, out] of [[s0, -1], [s1, 1]]) if (zc(x + out * 0.5) !== 1) plate(x, cap, null, MAT.concI, { uvK: 4, shared: true });
     }
     // 개구부 난간 (유리, 출입구 쪽은 열림) + 피트 끝벽
     const rail = [], pitEnds = [];
