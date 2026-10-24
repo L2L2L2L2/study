@@ -51,6 +51,7 @@
   <button data-k="down" title="↓ / S">▼ 제동</button>
   <button data-k="eb" class="eb" title="Space">비상</button>
   <button data-k="ato" id="btnAto" title="A">자동운전</button>
+  <button data-k="rev" id="btnRev" title="B (정차 중에만 전환)">후진</button>
   <button data-k="rain" id="btnRain" title="R">비 내림</button>
   <button data-k="wiper" id="btnWiper" title="F">와이퍼: 자동</button>
   <select id="jump" title="역/구간 이동"><option value="">역·구간 이동…</option></select>
@@ -64,7 +65,7 @@
 <div id="loading">3D 노선 생성 중…</div>
 
 <script src="js/route.js?v=2026101904"></script>
-<script type="module" src="js/cabview3d.js?v=2026101904"></script>
+<script type="module" src="js/cabview3d.js?v=2026102402"></script>
 <script type="module">
 const { clamp, STN, SID, S, START, END, TRAIN_LEN, VMAX, PORTALS, CANAL, grade, zc, limitAt, curLimit, nextStation, atStation } = window.IC2;
 const rr = (a, b) => a + (b - a) * Math.random();
@@ -76,7 +77,8 @@ const glass = { rainOn: false, wiperMode: 'AUTO' };
 /* =====================================================================
    9. 주행 (간이 동역학 + 자동운전, 선로개요도 설계속도 적용)
    ===================================================================== */
-const train = { s: SID['201'].stop, v: 0, a: 0, notch: -7, eb: false, ato: false, dwell: 0, target: null, external: false };
+const train = { s: SID['201'].stop, v: 0, a: 0, notch: -7, eb: false, ato: false, dwell: 0, target: null, external: false, rev: false };
+const REV_MAX = 15 / 3.6;   // 후진 최고속도 (m/s)
 function atoTarget(s, tgt) {
   let vt = curLimit(s) - 0.5;
   for (let d = 5; d <= 600; d += 10) { const vl = limitAt(s + d) - 0.5; vt = Math.min(vt, Math.sqrt(vl * vl + 2 * 0.6 * d)); }
@@ -111,14 +113,14 @@ function stepTrain(dt) {
     cmd = n > 0 ? n / 4 * 1.0 * (train.v < 11 ? 1 : 11 / train.v) : n < 0 ? n / 7 * 1.1 : 0;
   }
   if (train.eb) cmd = -1.35;
-  if (train.v >= VMAX && cmd > 0) cmd = 0;
+  if ((train.v >= VMAX || (train.rev && train.v >= REV_MAX)) && cmd > 0) cmd = 0;
   train.a += (cmd - train.a) * Math.min(1, dt / 0.55);       // 저크 완화
   const resist = train.v > 0.05 ? 0.012 + 0.00011 * train.v * train.v : 0;
-  let acc = train.a - resist - 9.81 * grade(train.s);
+  let acc = train.a - resist - 9.81 * grade(train.s) * (train.rev ? -1 : 1);   // 후진 시 구배 방향 반대
   if (train.v <= 0 && acc < 0 && train.a <= 0.02) acc = 0;
   train.v = Math.max(0, train.v + acc * dt);
-  train.s = Math.min(END - 40, train.s + train.v * dt);
-  if (train.s >= END - 40) train.v = 0;
+  train.s = clamp(train.s + (train.rev ? -1 : 1) * train.v * dt, START + 50, END - 40);
+  if (train.s >= END - 40 || train.s <= START + 50) train.v = 0;
 }
 
 /* =====================================================================
@@ -129,6 +131,7 @@ let msgT = 0;
 function flash(t) { msg.textContent = t; msg.style.opacity = 1; msgT = 3.5; }
 function updateAtoBtn() {
   document.getElementById('btnAto').classList.toggle('on', train.ato);
+  document.getElementById('btnRev').classList.toggle('on', train.rev);
   document.getElementById('btnRain').classList.toggle('on', glass.rainOn);
   document.getElementById('btnWiper').textContent = '와이퍼: ' + WIPER_KO[glass.wiperMode];
 }
@@ -140,7 +143,7 @@ function drawHud() {
   const g = grade(train.s) * 1000;
   hud.innerHTML =
     `<div class="spd"><span class="${over ? 'bad' : ''}">${kmh.toFixed(0)}</span><small>km/h</small><span class="lim">${Math.round(lim * 3.6)}</span></div>` +
-    `<div class="row"><span>노치</span><span class="${train.eb ? 'warn' : ''}">${notchLabel()}${train.ato ? ' (ATO)' : ''}</span></div>` +
+    `<div class="row"><span>노치</span><span class="${train.eb ? 'warn' : ''}">${notchLabel()}${train.ato ? ' (ATO)' : ''}${train.rev ? ' <span class="warn">후진</span>' : ''}</span></div>` +
     (here && train.v < 0.1 ? `<div class="row"><span>정차 중</span><span class="ok">${here.id} ${here.name}${train.dwell > 0 ? ` · 출발 ${Math.ceil(train.dwell)}초` : ''}</span></div>` : '') +
     (ns ? `<div class="row"><span>다음 역</span><span>${ns.id} ${ns.name} ${d >= 1000 ? (d / 1000).toFixed(2) + ' km' : d.toFixed(1) + ' m'}</span></div>` : '') +
     `<div class="row"><span>구간</span><span>${ZONE_KO[zc(train.s)]} · 구배 ${g >= 0 ? '+' : ''}${g.toFixed(0)}‰</span></div>` +
@@ -163,7 +166,7 @@ const JUMPS = [
 }
 function jump(i) {
   const j = JUMPS[i]; if (!j) return;
-  Object.assign(train, { s: j.s, v: j.v, a: 0, eb: false, ato: j.v > 0, dwell: 0, target: null, notch: j.v > 0 ? 0 : -7, external: false });
+  Object.assign(train, { s: j.s, v: j.v, a: 0, eb: false, ato: j.v > 0, dwell: 0, target: null, notch: j.v > 0 ? 0 : -7, external: false, rev: false });
   updateAtoBtn();
   V.update({ s: train.s, v: train.v });
 }
@@ -174,7 +177,12 @@ function key(k) {
   else if (k === 'eb') { train.ato = false; train.eb = !train.eb; if (train.eb) train.notch = -7; }
   else if (k === 'rain') { glass.rainOn = !glass.rainOn; flash(glass.rainOn ? '비 내림 (지상 구간)' : '비 그침'); }
   else if (k === 'wiper') { glass.wiperMode = WIPER_MODES[(WIPER_MODES.indexOf(glass.wiperMode) + 1) % WIPER_MODES.length]; }
+  else if (k === 'rev') {   // 방향 전환: 정차 중에만, 후진은 수동 운전·15km/h 제한
+    if (train.v > 0.05) flash('정차한 뒤에 방향을 바꿀 수 있어요');
+    else { train.rev = !train.rev; train.ato = false; train.dwell = 0; train.notch = -7; flash(train.rev ? '후진 · ↑ 역행 (최고 15km/h)' : '전진'); }
+  }
   else if (k === 'ato') {
+    if (train.rev) { flash('후진 중에는 자동운전을 쓸 수 없어요'); return; }
     train.ato = !train.ato; train.eb = false;
     if (train.ato) { const st = atStation(train.s); train.target = null; train.dwell = st && train.v < 0.1 ? 3 : 0; flash('자동운전: 각 역 정위치 정차 후 20초 뒤 출발'); }
     else train.dwell = 0;
@@ -183,7 +191,7 @@ function key(k) {
 }
 addEventListener('keydown', e => {
   if (e.target.tagName === 'SELECT') return;
-  const m = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', KeyN: 'n', Space: 'eb', KeyA: 'ato', KeyR: 'rain', KeyF: 'wiper' }[e.code];
+  const m = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', KeyN: 'n', Space: 'eb', KeyA: 'ato', KeyB: 'rev', KeyR: 'rain', KeyF: 'wiper' }[e.code];
   if (m) { key(m); e.preventDefault(); }
 });
 addEventListener('wheel', e => key(e.deltaY < 0 ? 'up' : 'down'), { passive: true });
@@ -198,7 +206,14 @@ window.CabDemo = {
   stations: STN, portals: PORTALS, canal: CANAL,
 };
 document.getElementById('loading').remove();
-flash(window.IC2 && window.IC2.custom ? '경로 편집기에서 만든 노선으로 보는 중입니다' : 'A: 자동운전 · ↑/↓: 노치 · Space: 비상 · R: 비 · F: 와이퍼');
+/* ?at=역번호 : 그 역 승강장 진입 직전(승강장 시작 45m 앞)에 제동 상태로 정차 (model-prep.html '승강장에서 보기') */
+const AT = new URLSearchParams(location.search).get('at');
+if (AT && SID[AT]) {
+  Object.assign(train, { s: clamp(SID[AT].s0 - 45, START + 50, END - 40), v: 0, a: 0, eb: false, ato: false, dwell: 0, target: null, notch: -7, external: false });
+  updateAtoBtn(); V.update({ s: train.s, v: train.v });
+}
+flash(AT && SID[AT] ? `${SID[AT].name}역 진입 직전 · ↑ 역행으로 천천히 들어가 보세요`
+  : window.IC2 && window.IC2.custom ? '경로 편집기에서 만든 노선으로 보는 중입니다' : 'A: 자동운전 · ↑/↓: 노치 · Space: 비상 · B: 후진 · R: 비 · F: 와이퍼');
 let last = performance.now();
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
