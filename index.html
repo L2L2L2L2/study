@@ -7365,8 +7365,8 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label>내장 & 커스텀 시나리오 목록</label>
-          <select id="scenario-selector" class="form-control" size="4" onchange="previewScenarioInfo()">
+          <label>내장 & 커스텀 시나리오 목록 <span style="color:#8b949e; font-weight:normal;">(더블클릭하면 바로 시작)</span></label>
+          <select id="scenario-selector" class="form-control" size="4" onchange="previewScenarioInfo()" ondblclick="if (event.target.tagName === 'OPTION') loadSelectedScenario()">
           </select>
         </div>
         <div id="scenario-preview-desc" style="font-size:12px; color:#8b949e; line-height:1.4;"></div>
