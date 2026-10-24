@@ -198,7 +198,14 @@ window.CabDemo = {
   stations: STN, portals: PORTALS, canal: CANAL,
 };
 document.getElementById('loading').remove();
-flash(window.IC2 && window.IC2.custom ? '경로 편집기에서 만든 노선으로 보는 중입니다' : 'A: 자동운전 · ↑/↓: 노치 · Space: 비상 · R: 비 · F: 와이퍼');
+/* ?at=역번호 : 그 역 승강장 진입 직전(승강장 시작 45m 앞)에 제동 상태로 정차 (model-prep.html '승강장에서 보기') */
+const AT = new URLSearchParams(location.search).get('at');
+if (AT && SID[AT]) {
+  Object.assign(train, { s: clamp(SID[AT].s0 - 45, START + 50, END - 40), v: 0, a: 0, eb: false, ato: false, dwell: 0, target: null, notch: -7, external: false });
+  updateAtoBtn(); V.update({ s: train.s, v: train.v });
+}
+flash(AT && SID[AT] ? `${SID[AT].name}역 진입 직전 · ↑ 역행으로 천천히 들어가 보세요`
+  : window.IC2 && window.IC2.custom ? '경로 편집기에서 만든 노선으로 보는 중입니다' : 'A: 자동운전 · ↑/↓: 노치 · Space: 비상 · R: 비 · F: 와이퍼');
 let last = performance.now();
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;

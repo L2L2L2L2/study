@@ -214,7 +214,7 @@ $('try').onclick = () => {
   rq.onsuccess = () => {
     const tx = rq.result.transaction('models', 'readwrite');
     tx.objectStore('models').put({ buf: out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength), height: outH }, 'person');
-    tx.oncomplete = () => open('view-demo.html?people=local', '_blank');
+    tx.oncomplete = () => open('view-demo.html?people=local&at=202', '_blank');
   };
 };
 </script>
